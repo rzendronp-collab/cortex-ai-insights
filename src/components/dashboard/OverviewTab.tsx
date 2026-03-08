@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
+import { useMetaData } from '@/hooks/useMetaData';
+import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useProfile } from '@/hooks/useProfile';
 import KPICard from './KPICard';
-import { mockCampaigns, mockDailyData, mockHourlyData, mockGenderData, mockAgeData, mockPlatformData, getRoasColor, getRecommendation, formatCurrency } from '@/lib/mockData';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Area, AreaChart, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
-import { Inbox } from 'lucide-react';
+import { mockCampaigns, mockDailyData, mockHourlyData, mockGenderData, mockAgeData, mockPlatformData, getRoasColor, formatCurrency } from '@/lib/mockData';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
+import { Inbox, Zap, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const chartColors = {
   primary: 'hsl(216, 91%, 64%)',

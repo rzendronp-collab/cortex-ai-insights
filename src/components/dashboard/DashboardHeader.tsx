@@ -23,7 +23,7 @@ export default function DashboardHeader() {
       <div className="h-[54px] flex items-center justify-between px-5">
         <div>
           <h1 className="text-sm font-semibold text-foreground">Loja Demo</h1>
-          <p className="text-[11px] text-muted-foreground">Conta de anúncios principal</p>
+          <p className="text-[11px] text-muted-foreground">act_demo_123456 • {selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`}</p>
         </div>
 
         <div className="flex items-center gap-3">

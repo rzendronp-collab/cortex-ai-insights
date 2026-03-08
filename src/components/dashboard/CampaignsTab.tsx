@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import { mockCampaigns, getRoasColor, getRecommendation } from '@/lib/mockData';
+import { ChevronDown, ChevronRight, Inbox } from 'lucide-react';
+import { useDashboard } from '@/context/DashboardContext';
+import { useProfile } from '@/hooks/useProfile';
+import { mockCampaigns, getRoasColor, formatCurrency } from '@/lib/mockData';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 
 const chartColors = {
@@ -12,48 +14,44 @@ const chartColors = {
 
 export default function CampaignsTab() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const totalBudget = mockCampaigns.reduce((s, c) => s + c.budgetDaily, 0);
-  const totalRecommended = mockCampaigns.reduce((s, c) => s + c.budgetRecommended, 0);
+  const { analysisData } = useDashboard();
+  const { profile } = useProfile();
+  const roasTarget = profile?.roas_target || 3.0;
+  const currency = profile?.currency || 'R$';
+
+  const campaigns = analysisData?.campaigns || mockCampaigns.map(c => ({
+    ...c, purchases: c.sales, cpv: c.spend / c.sales, budgetDaily: c.budgetDaily, budgetRecommended: c.budgetRecommended,
+  }));
+
+  const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
+
+  if (analysisData && campaigns.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-center">
+        <Inbox className="w-12 h-12 text-muted-foreground mb-4" />
+        <h3 className="text-sm font-semibold text-foreground mb-1">Sem campanhas para este período</h3>
+        <p className="text-xs text-muted-foreground">Selecione um período maior ou verifique a conta.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
-      {/* Budget overview */}
-      <div className="flex gap-4">
-        <div className="bg-card border border-border rounded-lg p-4 flex items-center gap-3 animate-fade-up">
-          <ResponsiveContainer width={48} height={48}>
-            <PieChart>
-              <Pie data={[{ v: totalBudget }, { v: 100 }]} innerRadius={16} outerRadius={22} dataKey="v" strokeWidth={0}>
-                <Cell fill={chartColors.primary} />
-                <Cell fill="hsl(224,30%,16%)" />
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase">Budget Atual</p>
-            <p className="text-sm font-bold text-foreground">R$ {totalBudget}/dia</p>
-          </div>
-        </div>
-        <div className="bg-card border border-border rounded-lg p-4 flex items-center gap-3 animate-fade-up">
-          <ResponsiveContainer width={48} height={48}>
-            <PieChart>
-              <Pie data={[{ v: totalRecommended }, { v: 100 }]} innerRadius={16} outerRadius={22} dataKey="v" strokeWidth={0}>
-                <Cell fill={chartColors.success} />
-                <Cell fill="hsl(224,30%,16%)" />
-              </Pie>
-            </PieChart>
-          </ResponsiveContainer>
-          <div>
-            <p className="text-[10px] text-muted-foreground uppercase">Recomendado</p>
-            <p className="text-sm font-bold text-success">R$ {totalRecommended}/dia</p>
-          </div>
-        </div>
-      </div>
-
       {/* Campaign cards */}
-      {mockCampaigns.map(c => {
-        const rec = getRecommendation(c);
+      {campaigns.map(c => {
         const expanded = expandedId === c.id;
-        const borderColor = c.roas >= 3 * 1.2 ? 'border-l-success' : c.roas >= 3 ? 'border-l-primary' : c.roas >= 3 * 0.7 ? 'border-l-warning' : 'border-l-destructive';
+        const roas = c.roas;
+        const rec = roas >= roasTarget * 1.5
+          ? { label: '🚀 Escalar', color: 'text-success', bg: 'bg-success/10 border-success/20' }
+          : roas >= roasTarget
+            ? { label: '🔧 Otimizar', color: 'text-primary', bg: 'bg-primary/10 border-primary/20' }
+            : roas > 0
+              ? { label: '⚠ Atenção', color: 'text-warning', bg: 'bg-warning/10 border-warning/20' }
+              : { label: '⏸ Pausar', color: 'text-destructive', bg: 'bg-destructive/10 border-destructive/20' };
+        const borderColor = roas >= roasTarget * 1.2 ? 'border-l-success' : roas >= roasTarget ? 'border-l-primary' : roas >= roasTarget * 0.7 ? 'border-l-warning' : 'border-l-destructive';
+        const purchases = 'purchases' in c ? c.purchases : (c as any).sales || 0;
+        const revenue = c.revenue;
+        const budgetPct = totalSpend > 0 ? ((c.spend / totalSpend) * 100).toFixed(0) : '0';
 
         return (
           <div key={c.id} className={`bg-card border border-border rounded-lg overflow-hidden animate-fade-up border-l-[3px] ${borderColor}`}>
@@ -64,24 +62,24 @@ export default function CampaignsTab() {
                     <p className="text-sm font-semibold text-foreground truncate">{c.name}</p>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${rec.bg} ${rec.color}`}>{rec.label}</span>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{c.status} • R$ {c.budgetDaily}/dia ({((c.spend / (mockCampaigns.reduce((s, x) => s + x.spend, 0))) * 100).toFixed(0)}% budget)</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{c.status} • {budgetPct}% do budget</p>
                 </div>
               </div>
               <div className="flex items-center gap-6">
                 <div className="text-right">
-                  <p className={`text-lg font-extrabold ${getRoasColor(c.roas)}`}>{c.roas}x</p>
+                  <p className={`text-lg font-extrabold ${getRoasColor(roas, roasTarget)}`}>{roas.toFixed(1)}x</p>
                   <p className="text-[10px] text-muted-foreground">ROAS</p>
                 </div>
                 <div className="text-right hidden md:block">
-                  <p className="text-sm font-bold text-foreground">R$ {c.spend.toFixed(0)}</p>
+                  <p className="text-sm font-bold text-foreground">{formatCurrency(c.spend, currency)}</p>
                   <p className="text-[10px] text-muted-foreground">Gasto</p>
                 </div>
                 <div className="text-right hidden md:block">
-                  <p className="text-sm font-bold text-foreground">{c.sales}</p>
+                  <p className="text-sm font-bold text-foreground">{purchases}</p>
                   <p className="text-[10px] text-muted-foreground">Vendas</p>
                 </div>
                 <div className="text-right hidden lg:block">
-                  <p className="text-sm font-bold text-foreground">{c.ctr}%</p>
+                  <p className="text-sm font-bold text-foreground">{c.ctr.toFixed(1)}%</p>
                   <p className="text-[10px] text-muted-foreground">CTR</p>
                 </div>
                 {expanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
@@ -89,15 +87,15 @@ export default function CampaignsTab() {
             </button>
 
             {expanded && (
-              <div className="border-t border-border p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 bg-card-secondary animate-fade-up">
+              <div className="border-t border-border p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 bg-muted/20 animate-fade-up">
                 <div className="space-y-2">
                   <h4 className="text-[10px] uppercase text-muted-foreground font-medium">Métricas Completas</h4>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { label: 'Receita', value: `R$ ${c.revenue.toFixed(0)}` },
-                      { label: 'Lucro', value: `R$ ${(c.revenue - c.spend).toFixed(0)}` },
-                      { label: 'CPC', value: `R$ ${c.cpc.toFixed(2)}` },
-                      { label: 'CPV', value: `R$ ${(c.spend / c.sales).toFixed(2)}` },
+                      { label: 'Receita', value: formatCurrency(revenue, currency) },
+                      { label: 'Lucro', value: formatCurrency(revenue - c.spend, currency) },
+                      { label: 'CPC', value: `${currency} ${c.cpc.toFixed(2)}` },
+                      { label: 'CPV', value: `${currency} ${(c.cpv || 0).toFixed(2)}` },
                       { label: 'Impressões', value: c.impressions.toLocaleString() },
                       { label: 'Cliques', value: c.clicks.toLocaleString() },
                     ].map(m => (
@@ -109,35 +107,20 @@ export default function CampaignsTab() {
                   </div>
                 </div>
                 <div>
-                  <h4 className="text-[10px] uppercase text-muted-foreground font-medium mb-2">Orçamento</h4>
-                  <p className="text-xs text-foreground">Atual: <span className="font-bold">R$ {c.budgetDaily}/dia</span></p>
-                  <p className="text-xs text-success mt-1">Recomendado: <span className="font-bold">R$ {c.budgetRecommended}/dia</span></p>
-                  {c.budgetRecommended > c.budgetDaily && (
-                    <p className="text-[10px] text-primary mt-1">↑ Aumentar R$ {c.budgetRecommended - c.budgetDaily}/dia</p>
-                  )}
-                  {c.budgetRecommended < c.budgetDaily && (
-                    <p className="text-[10px] text-warning mt-1">↓ Reduzir R$ {c.budgetDaily - c.budgetRecommended}/dia</p>
-                  )}
-                </div>
-                <div>
                   <h4 className="text-[10px] uppercase text-muted-foreground font-medium mb-2">Análise IA</h4>
-                  <p className="text-[11px] text-text-secondary leading-relaxed">
-                    {c.roas >= 4 ? 'Campanha performando acima da meta. Considere escalar o orçamento gradualmente em 20-30%.' :
-                     c.roas >= 3 ? 'Performance estável. Teste novos criativos para melhorar ainda mais.' :
-                     c.roas >= 1.5 ? 'Performance abaixo da meta. Revise públicos e criativos.' :
-                     'Performance crítica. Considere pausar e realocar orçamento.'}
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    {roas >= roasTarget * 1.5 ? 'Campanha performando muito acima da meta. Considere escalar o orçamento gradualmente em 20-30%.' :
+                     roas >= roasTarget ? 'Performance estável acima da meta. Teste novos criativos para melhorar ainda mais.' :
+                     roas > 0 ? 'Performance abaixo da meta. Revise públicos e criativos ou considere pausar.' :
+                     'Sem retorno. Considere pausar imediatamente e realocar orçamento.'}
                   </p>
                 </div>
                 <div>
-                  <h4 className="text-[10px] uppercase text-muted-foreground font-medium mb-2">Copies A/B</h4>
+                  <h4 className="text-[10px] uppercase text-muted-foreground font-medium mb-2">Sugestões</h4>
                   <div className="space-y-2">
                     <div className="bg-muted rounded-md p-2">
-                      <p className="text-[10px] text-primary font-medium">Copy A</p>
-                      <p className="text-[11px] text-foreground">🔥 Últimas unidades! Aproveite {(c.roas * 10).toFixed(0)}% de desconto hoje.</p>
-                    </div>
-                    <div className="bg-muted rounded-md p-2">
-                      <p className="text-[10px] text-secondary font-medium">Copy B</p>
-                      <p className="text-[11px] text-foreground">✨ Transforme seu dia com nosso produto mais vendido. Frete grátis!</p>
+                      <p className="text-[10px] text-primary font-medium">Copy Sugestão</p>
+                      <p className="text-[11px] text-foreground">🔥 Últimas unidades! Aproveite desconto exclusivo hoje.</p>
                     </div>
                   </div>
                 </div>

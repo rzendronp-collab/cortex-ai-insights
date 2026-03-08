@@ -14,8 +14,8 @@ export default function DashboardSidebar() {
   const { profile, updateProfile } = useProfile();
   const [activeTab, setActiveTab] = useState<'accounts' | 'config'>('accounts');
   const [bmExpanded, setBmExpanded] = useState(true);
-  const [saving, setSaving] = useState(false);
-
+  const [saving, setSaving] = false ? useState(false) : useState(false);
+  const [showApiKey, setShowApiKey] = useState(false);
   // Config state
   const [apiKey, setApiKey] = useState(profile?.claude_api_key || '');
   const [roasTarget, setRoasTarget] = useState(profile?.roas_target?.toString() || '3.0');

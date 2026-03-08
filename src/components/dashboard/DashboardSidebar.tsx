@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Brain, LogOut, Settings, BarChart3, ChevronDown, ChevronRight, Circle, Save, Loader2, CheckCircle2 } from 'lucide-react';
+import { Brain, LogOut, Settings, BarChart3, ChevronDown, ChevronRight, Circle, Save, Loader2, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
@@ -15,11 +15,12 @@ export default function DashboardSidebar() {
   const { user, signOut } = useAuth();
   const { profile, updateProfile } = useProfile();
   const { connection, adAccounts, isConnected, isTokenExpired, connectMeta, connectionLoading } = useMetaConnection();
-  const { selectedAccountId, setSelectedAccountId } = useDashboard();
+  const { selectedAccountId, setSelectedAccountId, setSelectedAccountName } = useDashboard();
   const [activeTab, setActiveTab] = useState<'accounts' | 'config'>('accounts');
-  const [bmExpanded, setBmExpanded] = useState(true);
+  const [bmExpanded, setBmExpanded] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const [showInactive, setShowInactive] = useState(false);
 
   // Config state
   const [apiKey, setApiKey] = useState('');
@@ -60,15 +61,26 @@ export default function DashboardSidebar() {
     }
   };
 
+  const handleSelectAccount = (accountId: string | null, accountName: string | null) => {
+    setSelectedAccountId(accountId);
+    setSelectedAccountName(accountName);
+  };
+
   const initials = profile?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 
-  // Group accounts by business
-  const accountsByBusiness = adAccounts.reduce((acc, account) => {
+  // Filter and group accounts
+  const filteredAccounts = showInactive ? adAccounts : adAccounts.filter(a => a.is_active !== false);
+  const accountsByBusiness = filteredAccounts.reduce((acc, account) => {
     const bizName = account.business_name || 'Sem Business Manager';
     if (!acc[bizName]) acc[bizName] = [];
     acc[bizName].push(account);
     return acc;
   }, {} as Record<string, typeof adAccounts>);
+
+  const toggleBm = (bizName: string) => {
+    setBmExpanded(prev => ({ ...prev, [bizName]: !prev[bizName] }));
+  };
+  const isBmExpanded = (bizName: string) => bmExpanded[bizName] !== false; // default expanded
 
   return (
     <div className="w-56 h-screen bg-sidebar border-r border-border flex flex-col fixed left-0 top-0 z-40">
@@ -140,33 +152,44 @@ export default function DashboardSidebar() {
               )}
             </div>
 
-            {/* Real Ad Accounts */}
+            {/* Show/hide inactive toggle */}
             {isConnected && adAccounts.length > 0 && (
+              <button
+                onClick={() => setShowInactive(!showInactive)}
+                className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors w-full"
+              >
+                {showInactive ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                {showInactive ? 'Ocultar inativas' : 'Mostrar inativas'}
+              </button>
+            )}
+
+            {/* Real Ad Accounts */}
+            {isConnected && filteredAccounts.length > 0 && (
               Object.entries(accountsByBusiness).map(([bizName, accounts]) => (
                 <div key={bizName}>
                   <button
-                    onClick={() => setBmExpanded(!bmExpanded)}
+                    onClick={() => toggleBm(bizName)}
                     className="flex items-center gap-1.5 w-full text-xs text-muted-foreground hover:text-foreground"
                   >
-                    {bmExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                    {bizName}
+                    {isBmExpanded(bizName) ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                    {bizName} ({accounts.length})
                   </button>
-                  {bmExpanded && (
+                  {isBmExpanded(bizName) && (
                     <div className="mt-2 space-y-1.5 ml-2">
                       {accounts.map(account => (
                         <div
                           key={account.id}
-                          onClick={() => setSelectedAccountId(account.account_id)}
+                          onClick={() => handleSelectAccount(account.account_id, account.account_name)}
                           className={`rounded-md p-2.5 cursor-pointer transition-all ${
                             selectedAccountId === account.account_id
-                              ? 'bg-primary/10 border border-primary/30'
+                              ? 'bg-primary/15 border border-primary/40 shadow-sm'
                               : 'bg-muted/30 border border-transparent hover:border-border'
                           }`}
                         >
                           <p className="text-xs font-medium text-foreground truncate">{account.account_name || `act_${account.account_id}`}</p>
                           <div className="flex items-center justify-between mt-1">
                             <span className="text-[10px] text-muted-foreground">{account.currency}</span>
-                            <span className={`text-[10px] ${account.is_active ? 'text-success' : 'text-destructive'}`}>
+                            <span className={`text-[10px] font-medium ${account.is_active ? 'text-success' : 'text-destructive'}`}>
                               {account.is_active ? 'Ativa' : 'Inativa'}
                             </span>
                           </div>
@@ -178,17 +201,24 @@ export default function DashboardSidebar() {
               ))
             )}
 
+            {/* No accounts message */}
+            {isConnected && filteredAccounts.length === 0 && adAccounts.length > 0 && (
+              <p className="text-[10px] text-muted-foreground text-center py-4">
+                Todas as contas estão inativas. Clique em "Mostrar inativas" acima.
+              </p>
+            )}
+
             {/* Demo fallback when not connected */}
             {!isConnected && (
               <div>
                 <button
-                  onClick={() => setBmExpanded(!bmExpanded)}
+                  onClick={() => toggleBm('demo')}
                   className="flex items-center gap-1.5 w-full text-xs text-muted-foreground hover:text-foreground"
                 >
-                  {bmExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                  {isBmExpanded('demo') ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                   Demo Business
                 </button>
-                {bmExpanded && (
+                {isBmExpanded('demo') && (
                   <div className="mt-2 space-y-1.5 ml-2">
                     <div className="bg-primary/5 border border-primary/20 rounded-md p-2.5 cursor-pointer">
                       <p className="text-xs font-medium text-foreground">Loja Demo</p>
@@ -205,7 +235,7 @@ export default function DashboardSidebar() {
         ) : (
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-[11px] text-text-secondary">API Key Claude</Label>
+              <Label className="text-[11px] text-muted-foreground">API Key Claude</Label>
               <Input
                 type="password"
                 value={apiKey}
@@ -216,7 +246,7 @@ export default function DashboardSidebar() {
               <p className="text-[10px] text-muted-foreground">Chave salva com segurança no servidor</p>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[11px] text-text-secondary">ROAS Target</Label>
+              <Label className="text-[11px] text-muted-foreground">ROAS Target</Label>
               <Input
                 type="number"
                 step="0.1"
@@ -226,7 +256,7 @@ export default function DashboardSidebar() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[11px] text-text-secondary">Moeda</Label>
+              <Label className="text-[11px] text-muted-foreground">Moeda</Label>
               <Select value={currency} onValueChange={setCurrency}>
                 <SelectTrigger className="h-8 text-xs bg-muted border-border">
                   <SelectValue />
@@ -239,7 +269,7 @@ export default function DashboardSidebar() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-[11px] text-text-secondary">Nicho</Label>
+              <Label className="text-[11px] text-muted-foreground">Nicho</Label>
               <Input
                 value={niche}
                 onChange={(e) => setNiche(e.target.value)}

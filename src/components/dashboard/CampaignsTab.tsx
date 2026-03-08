@@ -3,7 +3,7 @@ import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, Copy, Check
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
-import { mockCampaigns, getRoasColor, formatCurrency, formatNumber } from '@/lib/mockData';
+import { getRoasColor, formatCurrency, formatNumber } from '@/lib/mockData';
 import { ProcessedCampaign } from '@/hooks/useMetaData';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';

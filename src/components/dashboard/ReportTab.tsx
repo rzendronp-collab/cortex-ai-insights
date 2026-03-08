@@ -1,68 +1,187 @@
-import { Bot } from 'lucide-react';
+import { useState } from 'react';
+import { Bot, Loader2, Zap, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useDashboard } from '@/context/DashboardContext';
+import { useProfile } from '@/hooks/useProfile';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import ReactMarkdown from 'react-markdown';
 
-const sections = [
-  {
-    icon: '🎯',
-    title: 'DIAGNÓSTICO EXECUTIVO',
-    content: 'Suas campanhas apresentam ROAS médio de 3.5x, 17% acima da meta de 3.0x. O retargeting é o maior destaque com 6.1x de retorno. Porém, 2 campanhas operam abaixo da meta, consumindo 33% do orçamento com apenas 16% das vendas. Há oportunidade clara de redistribuição para maximizar resultados.',
-  },
-  {
-    icon: '⚡',
-    title: 'TOP 5 AÇÕES PRÓXIMAS 24H',
-    content: '1. Aumentar budget do Retargeting de R$100 para R$150/dia\n2. Pausar Story Ads (ROAS 0.6x) e realocar R$80\n3. Testar 3 novos criativos no Lookalike\n4. Criar público semelhante baseado nos compradores de Retargeting\n5. Ajustar lance da campanha Broad para otimizar CTR',
-  },
-  {
-    icon: '💰',
-    title: 'REDISTRIBUIÇÃO DE BUDGET',
-    content: 'Budget atual: R$650/dia → Recomendado: R$610/dia\n\n• Campanha Principal: R$200 → R$280 (+40%)\n• Retargeting: R$100 → R$150 (+50%)\n• Lookalike: R$150 → R$80 (-47%)\n• Broad: R$120 → R$100 (-17%)\n• Story Ads: R$80 → R$0 (pausar)',
-  },
-  {
-    icon: '🎨',
-    title: '3 COPIES PRONTOS',
-    content: '📝 Copy 1 - Urgência:\n"⏰ ÚLTIMAS HORAS! Desconto exclusivo de 40% termina à meia-noite. Aproveite agora →"\n\n📝 Copy 2 - Social Proof:\n"⭐ +2.000 clientes satisfeitos! Descubra por que somos o #1 em satisfação. Frete grátis hoje!"\n\n📝 Copy 3 - Benefício:\n"✨ Transforme sua rotina em 7 dias. Garantia de 30 dias ou seu dinheiro de volta."',
-  },
-  {
-    icon: '🎯',
-    title: 'PÚBLICOS PARA TESTAR',
-    content: '1. Lookalike 1% dos compradores últimos 30 dias\n2. Interesse em marcas concorrentes + faixa 25-34\n3. Engajaram com stories nos últimos 14 dias\n4. Visitaram checkout mas não compraram (últimos 7 dias)',
-  },
-  {
-    icon: '⏰',
-    title: 'MELHORES HORÁRIOS',
-    content: 'Pico de conversão: 19h - 22h (45% das vendas)\nSegundo melhor: 12h - 14h (18% das vendas)\nEvitar: 01h - 06h (2% das vendas, CPV 3x maior)\n\nRecomendação: Concentrar 60% do budget entre 18h-23h',
-  },
-  {
-    icon: '📊',
-    title: 'PREVISÃO 7 DIAS',
-    content: 'Com as otimizações sugeridas:\n\n📈 ROAS estimado: 4.0x (+14% vs atual)\n💰 Receita projetada: R$17.2k (+38%)\n🛒 Vendas estimadas: 135 (+43%)\n💵 Economia de budget: R$280/semana\n\nRisco: Médio-baixo. Principais variáveis: saturação de público e sazonalidade.',
-  },
-];
+function buildReportPrompt(ctx: {
+  campaigns: any[];
+  campaignsPrev: any[];
+  dailyData: any[];
+  hourlyData: any[];
+  roasTarget: number;
+  currency: string;
+  accountName: string | null;
+}) {
+  const { campaigns, campaignsPrev, dailyData, hourlyData, roasTarget, currency, accountName } = ctx;
+  const active = campaigns.filter((c: any) => c.spend > 0);
+  const totalSpend = active.reduce((s: number, c: any) => s + c.spend, 0);
+  const totalRevenue = active.reduce((s: number, c: any) => s + c.revenue, 0);
+  const totalSales = active.reduce((s: number, c: any) => s + c.purchases, 0);
+  const avgRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+
+  const prevActive = campaignsPrev.filter((c: any) => c.spend > 0);
+  const prevSpend = prevActive.reduce((s: number, c: any) => s + c.spend, 0);
+  const prevRevenue = prevActive.reduce((s: number, c: any) => s + c.revenue, 0);
+  const prevSales = prevActive.reduce((s: number, c: any) => s + c.purchases, 0);
+
+  const peakHours = [...hourlyData].sort((a: any, b: any) => b.spend - a.spend).filter((h: any) => h.spend > 0).slice(0, 5).map((h: any) => h.hour);
+
+  const campLines = active
+    .sort((a: any, b: any) => b.spend - a.spend)
+    .map((c: any) => {
+      const prev = campaignsPrev.find((p: any) => p.id === c.id);
+      return `"${c.name}" | Status: ${c.status} | ROAS: ${c.roas.toFixed(2)}x | Gasto: ${currency}${c.spend.toFixed(2)} | Receita: ${currency}${c.revenue.toFixed(2)} | Vendas: ${c.purchases} | CTR: ${c.ctr.toFixed(2)}% | CPC: ${currency}${c.cpc.toFixed(2)} | CPM: ${currency}${c.cpm.toFixed(2)}${prev && prev.spend > 0 ? ` | Antes: ROAS ${prev.roas.toFixed(1)}x, ${currency}${prev.spend.toFixed(0)}, ${prev.purchases} vendas` : ''}`;
+    }).join('\n');
+
+  const dailyLines = dailyData.map((d: any) =>
+    `${d.date}: ROAS ${d.roas.toFixed(1)}x | ${currency}${d.spend.toFixed(0)} | ${currency}${d.revenue.toFixed(0)} | ${d.sales}v`
+  ).join('\n');
+
+  return `Gere um relatório executivo completo para um gestor de tráfego sênior. Use markdown com headers ##, negrito, listas. Seja ESPECÍFICO com os números reais — nunca genérico.
+
+CONTA: ${accountName || 'Conta'}
+META ROAS: ${roasTarget}x | MOEDA: ${currency}
+
+TOTAIS:
+Gasto: ${currency}${totalSpend.toFixed(2)} | Receita: ${currency}${totalRevenue.toFixed(2)} | ROAS: ${avgRoas.toFixed(2)}x | Vendas: ${totalSales}
+${prevSpend > 0 ? `Anterior: Gasto ${currency}${prevSpend.toFixed(2)} | Receita ${currency}${prevRevenue.toFixed(2)} | ROAS ${(prevSpend > 0 ? prevRevenue / prevSpend : 0).toFixed(2)}x | Vendas ${prevSales}` : ''}
+Horários pico: ${peakHours.join(', ') || 'N/A'}
+
+CAMPANHAS (${active.length}):
+${campLines}
+
+EVOLUÇÃO DIÁRIA:
+${dailyLines}
+
+ESTRUTURA OBRIGATÓRIA DO RELATÓRIO:
+1. **🎯 DIAGNÓSTICO EXECUTIVO** — Resumo de 3-4 frases com os números reais. O que vai bem, o que vai mal.
+2. **⚡ TOP 5 AÇÕES PRÓXIMAS 24H** — Ações numeradas com valores exatos (ex: "Aumentar budget de R$60 para R$150")
+3. **💰 REDISTRIBUIÇÃO DE BUDGET** — Tabela com budget atual → recomendado para cada campanha, com % de mudança
+4. **🎨 3 COPIES PRONTOS** — 3 copies de anúncio com emoji, urgência, social proof ou benefício
+5. **🎯 PÚBLICOS PARA TESTAR** — 4 sugestões de público baseadas nos dados
+6. **⏰ MELHORES HORÁRIOS** — Análise baseada nos dados horários reais
+7. **📊 PREVISÃO 7 DIAS** — Projeção de ROAS, receita e vendas com as otimizações
+
+Fale como consultor sênior. Sem enrolação. Números reais sempre.`;
+}
 
 export default function ReportTab() {
+  const { analysisData, selectedAccountName } = useDashboard();
+  const { profile } = useProfile();
+  const roasTarget = profile?.roas_target || 3.0;
+  const currency = profile?.currency || 'R$';
+  const [report, setReport] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const generateReport = async () => {
+    if (!analysisData) {
+      toast.error('Analise uma conta primeiro (Visão Geral → Analisar).');
+      return;
+    }
+    setLoading(true);
+    try {
+      const prompt = buildReportPrompt({
+        campaigns: analysisData.campaigns,
+        campaignsPrev: analysisData.campaignsPrev,
+        dailyData: analysisData.dailyData,
+        hourlyData: analysisData.hourlyData,
+        roasTarget,
+        currency,
+        accountName: selectedAccountName,
+      });
+
+      const { data, error } = await supabase.functions.invoke('claude-proxy', {
+        body: {
+          messages: [{ role: 'user', content: prompt }],
+          system: 'Você é um consultor sênior de Meta Ads. Gere relatórios executivos precisos com dados reais. Use markdown. Responda em português do Brasil.',
+          max_tokens: 4096,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setReport(data.content);
+    } catch (err: any) {
+      toast.error('Erro ao gerar relatório: ' + (err?.message || 'Erro desconhecido'));
+    }
+    setLoading(false);
+  };
+
+  // No data state
+  if (!analysisData) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-up">
+        <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+          <Bot className="w-10 h-10 text-primary" />
+        </div>
+        <h3 className="text-base font-semibold text-foreground mb-2">Relatório Inteligente</h3>
+        <p className="text-sm text-muted-foreground mb-6 max-w-xs">
+          Primeiro analise uma conta na aba Visão Geral, depois gere o relatório completo com IA.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-card border border-border rounded-lg p-6 animate-fade-up">
+    <div className="bg-card border border-border rounded-lg animate-fade-up">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
-          <Bot className="w-5 h-5 text-primary-foreground" />
+      <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
+            <Bot className="w-5 h-5 text-primary-foreground" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-foreground">Relatório Inteligente CortexAds</h2>
+            <p className="text-[11px] text-muted-foreground">
+              {report ? 'Gerado por IA com dados reais' : 'Pronto para gerar'} • {selectedAccountName || 'Conta'}
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-sm font-bold text-foreground">Relatório Inteligente CortexAds</h2>
-          <p className="text-[11px] text-muted-foreground">Gerado por IA • Últimos 7 dias</p>
-        </div>
+        <Button
+          onClick={generateReport}
+          disabled={loading}
+          className="h-9 px-4 text-xs gradient-primary text-primary-foreground gap-2"
+        >
+          {loading ? (
+            <><Loader2 className="w-3.5 h-3.5 animate-spin" />Gerando...</>
+          ) : report ? (
+            <><RefreshCw className="w-3.5 h-3.5" />Regenerar</>
+          ) : (
+            <><Zap className="w-3.5 h-3.5" />Gerar Relatório</>
+          )}
+        </Button>
       </div>
 
-      {/* Sections */}
-      <div className="space-y-6">
-        {sections.map((s, i) => (
-          <div key={i}>
-            <h3 className="text-xs font-bold text-primary uppercase tracking-wide mb-2">
-              {s.icon} {s.title}
-            </h3>
-            <div className="h-px bg-border mb-3" />
-            <p className="text-[13px] text-text-secondary leading-relaxed whitespace-pre-wrap">{s.content}</p>
+      {/* Content */}
+      <div className="p-6">
+        {loading ? (
+          <div className="space-y-6">
+            {[0, 1, 2, 3, 4].map(i => (
+              <div key={i} className="space-y-3">
+                <Skeleton className="h-5 w-48" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-5/6" />
+              </div>
+            ))}
           </div>
-        ))}
+        ) : report ? (
+          <div className="prose prose-sm prose-invert max-w-none [&_h2]:text-primary [&_h2]:text-sm [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-2 [&_h3]:text-xs [&_h3]:font-bold [&_h3]:mt-4 [&_h3]:mb-1 [&_p]:text-[13px] [&_p]:text-foreground/80 [&_p]:leading-relaxed [&_li]:text-[13px] [&_li]:text-foreground/80 [&_strong]:text-foreground [&_table]:text-[12px] [&_th]:text-muted-foreground [&_th]:text-left [&_th]:py-1 [&_th]:pr-4 [&_td]:py-1 [&_td]:pr-4">
+            <ReactMarkdown>{report}</ReactMarkdown>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-sm text-muted-foreground">
+              Clique em <strong className="text-foreground">"Gerar Relatório"</strong> para criar um diagnóstico completo com IA usando os dados reais da sua conta.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

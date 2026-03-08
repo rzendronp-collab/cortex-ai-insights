@@ -1,1 +1,4 @@
 project_id = "xmgmienmkqemrzhxgtgr"
+
+[functions.claude-proxy]
+verify_jwt = false

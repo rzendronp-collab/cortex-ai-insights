@@ -5,7 +5,6 @@ import { useAuth } from './useAuth';
 interface Profile {
   id: string;
   name: string | null;
-  claude_api_key: string | null;
   roas_target: number;
   currency: string;
   niche: string | null;

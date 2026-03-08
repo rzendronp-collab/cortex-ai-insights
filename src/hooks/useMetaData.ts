@@ -119,10 +119,9 @@ function processCampaign(campaign: any): ProcessedCampaign {
 
 export function useMetaData() {
   const { callMetaApi, isConnected, isTokenExpired } = useMetaConnection();
-  const { selectedAccountId, selectedPeriod } = useDashboard();
+  const { selectedAccountId, selectedPeriod, setAnalysisForAccount } = useDashboard();
   const { profile } = useProfile();
   const { user } = useAuth();
-  const [data, setData] = useState<AnalysisData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -148,7 +147,7 @@ export function useMetaData() {
     const acctPath = `act_${selectedAccountId}`;
 
     try {
-      // Check cache first
+      // Check Supabase cache first
       if (user) {
         const { data: cached } = await supabase
           .from('analysis_cache')
@@ -160,8 +159,8 @@ export function useMetaData() {
 
         if (cached?.data && cached.updated_at) {
           const cacheAge = Date.now() - new Date(cached.updated_at).getTime();
-          if (cacheAge < 15 * 60 * 1000) { // 15 min cache
-            setData(cached.data as unknown as AnalysisData);
+          if (cacheAge < 15 * 60 * 1000) {
+            setAnalysisForAccount(selectedAccountId, selectedPeriod, cached.data as unknown as AnalysisData);
             setLoading(false);
             toast.success('Dados carregados do cache.');
             return;
@@ -170,14 +169,7 @@ export function useMetaData() {
       }
 
       // Parallel API calls
-      const [
-        campaignsRes,
-        campaignsPrevRes,
-        hourlyRes,
-        platformRes,
-        dailyRes,
-        demoRes,
-      ] = await Promise.all([
+      const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes] = await Promise.all([
         callMetaApi(`${acctPath}/campaigns`, {
           fields: 'id,name,status,insights.date_preset(' + period + '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
           limit: '50',
@@ -211,11 +203,9 @@ export function useMetaData() {
         }),
       ]);
 
-      // Process campaigns
       const campaigns: ProcessedCampaign[] = (campaignsRes?.data || []).map(processCampaign);
       const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map(processCampaign);
 
-      // Process daily data
       const dailyData: DailyData[] = (dailyRes?.data || []).map((d: any) => {
         const spend = parseFloat(d.spend || '0');
         const revenue = extractRevenue(d.action_values);
@@ -223,15 +213,13 @@ export function useMetaData() {
         return {
           date: d.date_start ? new Date(d.date_start).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '',
           roas: spend > 0 ? revenue / spend : 0,
-          spend,
-          revenue,
+          spend, revenue,
           ctr: parseFloat(d.ctr || '0'),
           sales: purchases,
           cpm: parseFloat(d.cpm || '0'),
         };
       });
 
-      // Process hourly data
       const rawHourly = hourlyRes?.data || [];
       const hourlyAgg: Record<string, { spend: number; sales: number }> = {};
       rawHourly.forEach((h: any) => {
@@ -245,28 +233,20 @@ export function useMetaData() {
         const agg = hourlyAgg[key] || hourlyAgg[String(i)] || { spend: 0, sales: 0 };
         return { hour: `${i}h`, spend: agg.spend, sales: agg.sales, isPeak: false };
       });
-      // Mark peak hours
       const maxSpend = Math.max(...hourlyData.map(h => h.spend), 1);
       hourlyData.forEach(h => { h.isPeak = h.spend > maxSpend * 0.7; });
 
-      // Process platform data
       const rawPlatform = platformRes?.data || [];
       const totalPlatformSpend = rawPlatform.reduce((s: number, p: any) => s + parseFloat(p.spend || '0'), 0) || 1;
       const platformData: PlatformData[] = rawPlatform.map((p: any) => {
         const spend = parseFloat(p.spend || '0');
-        return {
-          name: p.publisher_platform || 'Outro',
-          value: Math.round((spend / totalPlatformSpend) * 100),
-          spend,
-        };
+        return { name: p.publisher_platform || 'Outro', value: Math.round((spend / totalPlatformSpend) * 100), spend };
       });
 
-      // Process demographic data
       const rawDemo = demoRes?.data || [];
       const genderAgg: Record<string, number> = {};
       const ageAgg: Record<string, number> = {};
       const totalDemoSpend = rawDemo.reduce((s: number, d: any) => s + parseFloat(d.spend || '0'), 0) || 1;
-
       rawDemo.forEach((d: any) => {
         const spend = parseFloat(d.spend || '0');
         const gender = d.gender === 'male' ? 'Masculino' : d.gender === 'female' ? 'Feminino' : 'Outro';
@@ -280,42 +260,29 @@ export function useMetaData() {
         'Outro': 'hsl(218, 25%, 38%)',
       };
       const genderData: GenderData[] = Object.entries(genderAgg).map(([name, spend]) => ({
-        name,
-        value: Math.round((spend / totalDemoSpend) * 100),
-        fill: genderColors[name] || 'hsl(218, 25%, 38%)',
+        name, value: Math.round((spend / totalDemoSpend) * 100), fill: genderColors[name] || 'hsl(218, 25%, 38%)',
       }));
-
       const ageData: AgeData[] = Object.entries(ageAgg)
         .sort(([a], [b]) => a.localeCompare(b))
-        .map(([age, spend]) => ({
-          age,
-          percentage: Math.round((spend / totalDemoSpend) * 100),
-        }));
+        .map(([age, spend]) => ({ age, percentage: Math.round((spend / totalDemoSpend) * 100) }));
 
       const now = new Date().toISOString();
-      const analysisData: AnalysisData = {
-        campaigns,
-        campaignsPrev,
-        dailyData,
-        hourlyData,
-        platformData,
-        genderData,
-        ageData,
-        lastUpdated: now,
+      const analysisResult: AnalysisData = {
+        campaigns, campaignsPrev, dailyData, hourlyData, platformData, genderData, ageData, lastUpdated: now,
       };
 
-      setData(analysisData);
+      // Save to context cache
+      setAnalysisForAccount(selectedAccountId, selectedPeriod, analysisResult);
 
-      // Save to cache
+      // Save to Supabase cache
       if (user) {
         const cachePayload = {
           user_id: user.id,
           account_id: selectedAccountId,
           period: selectedPeriod,
-          data: analysisData as any,
+          data: analysisResult as any,
           updated_at: now,
         };
-
         const { data: existing } = await supabase
           .from('analysis_cache')
           .select('id')
@@ -323,7 +290,6 @@ export function useMetaData() {
           .eq('account_id', selectedAccountId)
           .eq('period', selectedPeriod)
           .maybeSingle();
-
         if (existing) {
           await supabase.from('analysis_cache').update(cachePayload).eq('id', existing.id);
         } else {
@@ -344,7 +310,7 @@ export function useMetaData() {
     } finally {
       setLoading(false);
     }
-  }, [selectedAccountId, selectedPeriod, isConnected, isTokenExpired, callMetaApi, user]);
+  }, [selectedAccountId, selectedPeriod, isConnected, isTokenExpired, callMetaApi, user, setAnalysisForAccount]);
 
-  return { data, loading, error, analyze, roasTarget: profile?.roas_target || 3.0 };
+  return { loading, error, analyze, roasTarget: profile?.roas_target || 3.0 };
 }

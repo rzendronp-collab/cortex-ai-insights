@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
+import { useMetaData } from '@/hooks/useMetaData';
+import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useProfile } from '@/hooks/useProfile';
 import KPICard from './KPICard';
-import { mockCampaigns, mockDailyData, mockHourlyData, mockGenderData, mockAgeData, mockPlatformData, getRoasColor, getRecommendation, formatCurrency } from '@/lib/mockData';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Area, AreaChart, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
-import { Inbox } from 'lucide-react';
+import { mockCampaigns, mockDailyData, mockHourlyData, mockGenderData, mockAgeData, mockPlatformData, getRoasColor, formatCurrency } from '@/lib/mockData';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
+import { Inbox, Zap, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const chartColors = {
   primary: 'hsl(216, 91%, 64%)',
@@ -26,21 +29,43 @@ const dailyMetricLabels: Record<string, string> = {
 
 export default function OverviewTab() {
   const [dailyMetric, setDailyMetric] = useState('roas');
-  const { analysisData } = useDashboard();
+  const { analysisData, selectedAccountId } = useDashboard();
+  const { isConnected } = useMetaConnection();
+  const { analyze, loading } = useMetaData();
   const { profile } = useProfile();
   const roasTarget = profile?.roas_target || 3.0;
   const currency = profile?.currency || 'R$';
 
-  // Use real or mock data
-  const campaigns = analysisData?.campaigns || mockCampaigns.map(c => ({
+  // Show empty state if account selected but no data
+  if (selectedAccountId && !analysisData && isConnected) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-up">
+        <div className="w-20 h-20 rounded-2xl gradient-subtle flex items-center justify-center mb-6">
+          <Zap className="w-10 h-10 text-primary" />
+        </div>
+        <h3 className="text-base font-semibold text-foreground mb-2">Pronto para analisar</h3>
+        <p className="text-sm text-muted-foreground mb-6 max-w-xs">Selecione um período e clique em Analisar para carregar os dados desta conta.</p>
+        <Button
+          onClick={() => analyze()}
+          disabled={loading}
+          className="h-11 px-8 text-sm gradient-primary text-primary-foreground gap-2"
+        >
+          {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Analisando...</> : <><Zap className="w-4 h-4" />Analisar Agora</>}
+        </Button>
+      </div>
+    );
+  }
+
+  // Use real or mock data (mock only when not connected)
+  const campaigns = analysisData?.campaigns || (!isConnected ? mockCampaigns.map(c => ({
     ...c, purchases: c.sales, cpv: c.spend / c.sales,
-  }));
+  })) : []);
   const campaignsPrev = analysisData?.campaignsPrev || [];
-  const dailyData = analysisData?.dailyData || mockDailyData;
-  const hourlyData = analysisData?.hourlyData || mockHourlyData;
-  const platformData = analysisData?.platformData || mockPlatformData;
-  const genderData = analysisData?.genderData || mockGenderData;
-  const ageData = analysisData?.ageData || mockAgeData;
+  const dailyData = analysisData?.dailyData || (!isConnected ? mockDailyData : []);
+  const hourlyData = analysisData?.hourlyData || (!isConnected ? mockHourlyData : []);
+  const platformData = analysisData?.platformData || (!isConnected ? mockPlatformData : []);
+  const genderData = analysisData?.genderData || (!isConnected ? mockGenderData : []);
+  const ageData = analysisData?.ageData || (!isConnected ? mockAgeData : []);
 
   const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
   const totalRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);

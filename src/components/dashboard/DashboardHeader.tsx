@@ -1,7 +1,7 @@
 import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
-import { BarChart3, Target, Calendar, Settings, Globe, MessageSquare, FileText, Zap, Loader2, Clock, AlertTriangle } from 'lucide-react';
+import { BarChart3, Target, Calendar, Settings, Globe, MessageSquare, FileText, Zap, Loader2, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getRoasColor } from '@/lib/mockData';
 
@@ -18,15 +18,10 @@ const tabs = [
 ];
 
 export default function DashboardHeader() {
-  const { selectedPeriod, setSelectedPeriod, activeTab, setActiveTab, selectedAccountId, selectedAccountName, analysisData, setAnalysisData, setLastUpdated } = useDashboard();
-  const { isConnected, isTokenExpired, connectMeta } = useMetaConnection();
-  const { analyze, loading, data, roasTarget } = useMetaData();
+  const { selectedPeriod, setSelectedPeriod, activeTab, setActiveTab, selectedAccountId, selectedAccountName, analysisData, isFromCache, cacheTimestamp } = useDashboard();
+  const { isTokenExpired, connectMeta } = useMetaConnection();
+  const { analyze, loading, roasTarget } = useMetaData();
 
-  const handleAnalyze = async () => {
-    await analyze();
-  };
-
-  // Use real data if available
   const ad = analysisData;
   const totalSpend = ad?.campaigns.reduce((s, c) => s + c.spend, 0) || 0;
   const totalRevenue = ad?.campaigns.reduce((s, c) => s + c.revenue, 0) || 0;
@@ -42,20 +37,14 @@ export default function DashboardHeader() {
       })()
     : 0;
 
-  // When data updates from hook, sync to context
-  if (data && data !== analysisData) {
-    setAnalysisData(data);
-    setLastUpdated(data.lastUpdated);
-  }
-
   const accountTitle = selectedAccountName || (selectedAccountId ? `act_${selectedAccountId}` : 'Selecione uma conta');
   const accountSubtitle = selectedAccountId ? `act_${selectedAccountId}` : '';
 
   const lastTime = ad?.lastUpdated ? new Date(ad.lastUpdated).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
+  const cacheTime = cacheTimestamp ? new Date(cacheTimestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
 
   return (
     <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border">
-      {/* Token expired banner */}
       {isTokenExpired && (
         <div className="bg-warning/10 border-b border-warning/30 px-5 py-2 flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-warning" />
@@ -64,7 +53,6 @@ export default function DashboardHeader() {
         </div>
       )}
 
-      {/* Top bar */}
       <div className="h-[54px] flex items-center justify-between px-5">
         <div>
           <h1 className="text-sm font-semibold text-foreground">{accountTitle}</h1>
@@ -72,11 +60,15 @@ export default function DashboardHeader() {
             {accountSubtitle && `${accountSubtitle} • `}
             {selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`}
             {lastTime && <span className="ml-2"><Clock className="w-3 h-3 inline" /> {lastTime}</span>}
+            {isFromCache && cacheTime && (
+              <span className="ml-2 text-primary">
+                <RefreshCw className="w-3 h-3 inline" /> cache {cacheTime}
+              </span>
+            )}
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Period pills */}
           <div className="flex bg-muted rounded-lg p-0.5">
             {periods.map((p) => (
               <button
@@ -96,7 +88,7 @@ export default function DashboardHeader() {
           <Button
             size="sm"
             className="h-8 text-xs gradient-primary text-primary-foreground gap-1.5"
-            onClick={handleAnalyze}
+            onClick={() => analyze()}
             disabled={loading || !selectedAccountId}
           >
             {loading ? (
@@ -108,7 +100,6 @@ export default function DashboardHeader() {
         </div>
       </div>
 
-      {/* Status bar */}
       <div className="h-9 flex items-center gap-4 px-5 bg-card/50 border-t border-border text-[11px]">
         {ad ? (
           <>
@@ -124,11 +115,12 @@ export default function DashboardHeader() {
             <span className="text-foreground">{aboveMeta} acima da meta • {belowMeta} abaixo</span>
           </>
         ) : (
-          <span className="text-muted-foreground">Selecione uma conta e clique em Analisar para ver dados reais</span>
+          <span className="text-muted-foreground">
+            {selectedAccountId ? 'Clique em Analisar para carregar os dados desta conta' : 'Selecione uma conta na sidebar'}
+          </span>
         )}
       </div>
 
-      {/* Tabs */}
       <div className="flex items-center gap-1 px-5 py-1 overflow-x-auto hide-scrollbar">
         {tabs.map((tab) => (
           <button

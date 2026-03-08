@@ -104,9 +104,7 @@ export default function CampaignsTab() {
   const roasTarget = profile?.roas_target || 3.0;
   const currency = profile?.currency || 'R$';
 
-  const rawCampaigns: ProcessedCampaign[] = analysisData?.campaigns || mockCampaigns.map(c => ({
-    ...c, purchases: c.sales, cpv: c.spend / c.sales,
-  }));
+  const rawCampaigns: ProcessedCampaign[] = analysisData?.campaigns || [];
 
   const prevCampaigns = analysisData?.campaignsPrev || [];
   const prevMap = useMemo(() => {

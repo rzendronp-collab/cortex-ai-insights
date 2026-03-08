@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
     const userId = user.id;
 
     // Parse request body
-    const { messages, system } = await req.json();
+    const { messages, system, max_tokens } = await req.json();
     if (!messages || !Array.isArray(messages)) {
       return new Response(
         JSON.stringify({ error: "messages array is required" }),
@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
-          max_tokens: 1024,
+          max_tokens: max_tokens || 2048,
           system:
             system ||
             "Você é o assistente CortexAds, especialista em Meta Ads. Responda em português do Brasil de forma concisa e prática.",

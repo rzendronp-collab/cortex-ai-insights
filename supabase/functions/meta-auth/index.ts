@@ -223,20 +223,13 @@ async function handleOAuthCallback(code: string, req: Request) {
       }
     }
 
-    // Redirect to dashboard with success
-    const dashboardUrl = Deno.env.get("META_REDIRECT_URI")!
-      .replace("/auth/meta-callback", "/dashboard")
-      .replace(/\/functions\/v1\/meta-auth$/, "");
-    
-    // Construct the app URL from SUPABASE_URL
-    // The app URL should be the published app URL, not the Supabase URL
-    // We'll redirect to a relative path that the frontend handles
-    const appBaseUrl = redirectUri.replace(/\/auth\/meta-callback.*$/, "").replace(/\/functions\/v1\/meta-auth$/, "");
-    
+    // Redirect to the published frontend app
+    const APP_URL = "https://cortex-ai-insights.lovable.app";
+
     return new Response(null, {
       status: 302,
       headers: {
-        Location: `${appBaseUrl}/dashboard?connected=true`,
+        Location: `${APP_URL}/dashboard?connected=true`,
       },
     });
   } catch (error) {
@@ -246,11 +239,11 @@ async function handleOAuthCallback(code: string, req: Request) {
 }
 
 function redirectWithError(message: string) {
-  return new Response(
-    `<html><body><script>window.location.href='/dashboard?meta_error=${encodeURIComponent(message)}';</script></body></html>`,
-    {
-      status: 200,
-      headers: { "Content-Type": "text/html" },
-    }
-  );
+  const APP_URL = "https://cortex-ai-insights.lovable.app";
+  return new Response(null, {
+    status: 302,
+    headers: {
+      Location: `${APP_URL}/dashboard?meta_error=${encodeURIComponent(message)}`,
+    },
+  });
 }

@@ -1,5 +1,11 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { AnalysisData } from '@/hooks/useMetaData';
+
+interface CachedAnalysis {
+  data: AnalysisData;
+  timestamp: number;
+  period: string;
+}
 
 interface DashboardContextType {
   selectedAccountId: string | null;
@@ -11,20 +17,57 @@ interface DashboardContextType {
   activeTab: string;
   setActiveTab: (t: string) => void;
   analysisData: AnalysisData | null;
-  setAnalysisData: (d: AnalysisData | null) => void;
-  lastUpdated: string | null;
-  setLastUpdated: (t: string | null) => void;
+  isFromCache: boolean;
+  cacheTimestamp: number | null;
+  setAnalysisForAccount: (accountId: string, period: string, data: AnalysisData) => void;
+  clearCurrentAnalysis: () => void;
 }
 
 const DashboardContext = createContext<DashboardContextType | null>(null);
 
+const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+
 export function DashboardProvider({ children }: { children: ReactNode }) {
-  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
+  const [selectedAccountId, setSelectedAccountIdRaw] = useState<string | null>(null);
   const [selectedAccountName, setSelectedAccountName] = useState<string | null>(null);
-  const [selectedPeriod, setSelectedPeriod] = useState('7d');
+  const [selectedPeriod, setSelectedPeriodRaw] = useState('7d');
   const [activeTab, setActiveTab] = useState('overview');
-  const [analysisData, setAnalysisData] = useState<AnalysisData | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [analysisCache, setAnalysisCache] = useState<Record<string, CachedAnalysis>>({});
+
+  // Derive current analysis from cache
+  const cacheKey = selectedAccountId ? `${selectedAccountId}__${selectedPeriod}` : null;
+  const cached = cacheKey ? analysisCache[cacheKey] : null;
+  const isFresh = cached ? (Date.now() - cached.timestamp < CACHE_TTL) : false;
+  const analysisData = (cached && isFresh) ? cached.data : null;
+  const isFromCache = !!(cached && isFresh);
+  const cacheTimestamp = cached?.timestamp ?? null;
+
+  const setAnalysisForAccount = useCallback((accountId: string, period: string, data: AnalysisData) => {
+    const key = `${accountId}__${period}`;
+    setAnalysisCache(prev => ({
+      ...prev,
+      [key]: { data, timestamp: Date.now(), period },
+    }));
+  }, []);
+
+  const clearCurrentAnalysis = useCallback(() => {
+    if (cacheKey) {
+      setAnalysisCache(prev => {
+        const next = { ...prev };
+        delete next[cacheKey];
+        return next;
+      });
+    }
+  }, [cacheKey]);
+
+  // When switching accounts, no need to do anything — derived state handles it
+  const setSelectedAccountId = useCallback((id: string | null) => {
+    setSelectedAccountIdRaw(id);
+  }, []);
+
+  const setSelectedPeriod = useCallback((p: string) => {
+    setSelectedPeriodRaw(p);
+  }, []);
 
   return (
     <DashboardContext.Provider value={{
@@ -32,8 +75,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       selectedAccountName, setSelectedAccountName,
       selectedPeriod, setSelectedPeriod,
       activeTab, setActiveTab,
-      analysisData, setAnalysisData,
-      lastUpdated, setLastUpdated,
+      analysisData, isFromCache, cacheTimestamp,
+      setAnalysisForAccount, clearCurrentAnalysis,
     }}>
       {children}
     </DashboardContext.Provider>

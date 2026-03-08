@@ -35,10 +35,8 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } =
-      await supabaseUser.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
+    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+    if (userError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -47,7 +45,7 @@ Deno.serve(async (req) => {
 
     const appId = Deno.env.get("META_APP_ID")!;
     const redirectUri = Deno.env.get("META_REDIRECT_URI")!;
-    const userId = claimsData.claims.sub;
+    const userId = user.id;
 
     // Build Meta OAuth URL with state containing user ID
     const state = btoa(JSON.stringify({ userId }));

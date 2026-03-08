@@ -288,22 +288,25 @@ Responda SOMENTE com o JSON, sem markdown.`;
         // Sparkline data from daily ROAS
         const sparkData = dailyData.map(d => d.roas);
 
-        // Compute real deltas
-        const computeDelta = (curr: number, prevVal: number | undefined) => {
-          if (prevVal === undefined || prevVal === null) return null;
-          if (prevVal === 0) return curr > 0 ? 100 : 0;
-          return ((curr - prevVal) / Math.abs(prevVal)) * 100;
+        // Compute real deltas — only when prev has meaningful data
+        const hasPrevData = prev && prev.spend > 0;
+        const computeDelta = (curr: number, prevVal: number | undefined): number | null => {
+          if (!hasPrevData || prevVal === undefined || prevVal === null) return null;
+          if (prevVal === 0 && curr === 0) return null;
+          if (prevVal === 0) return null; // can't compute % change from zero
+          const delta = ((curr - prevVal) / Math.abs(prevVal)) * 100;
+          return delta;
         };
 
         const metrics = [
-          { label: 'Receita', value: formatCurrency(revenue, currency), sem: getMetricSemaphore(revenue, { good: c.spend * roasTarget, warn: c.spend, higher: true }), delta: prev ? computeDelta(revenue, prev.revenue) : null },
-          { label: 'Lucro Bruto', value: formatCurrency(revenue - c.spend, currency), sem: getMetricSemaphore(revenue - c.spend, { good: 0, warn: -c.spend * 0.2, higher: true }), delta: prev ? computeDelta(revenue - c.spend, prev.revenue - prev.spend) : null },
-          { label: 'CPC', value: `${currency} ${c.cpc.toFixed(2)}`, sem: getMetricSemaphore(c.cpc, { good: 1.0, warn: 2.5, higher: false }), delta: prev ? computeDelta(c.cpc, prev.cpc) : null, invert: true },
-          { label: 'CPV', value: `${currency} ${(c.cpv || 0).toFixed(2)}`, sem: getMetricSemaphore(c.cpv, { good: 30, warn: 80, higher: false }), delta: prev ? computeDelta(c.cpv, prev.cpv) : null, invert: true },
-          { label: 'Impressões', value: formatNumber(c.impressions), sem: getMetricSemaphore(c.impressions, { good: 10000, warn: 2000, higher: true }), delta: prev ? computeDelta(c.impressions, prev.impressions) : null },
-          { label: 'Cliques', value: formatNumber(c.clicks), sem: getMetricSemaphore(c.clicks, { good: 500, warn: 100, higher: true }), delta: prev ? computeDelta(c.clicks, prev.clicks) : null },
-          { label: 'CPM', value: `${currency} ${c.cpm.toFixed(2)}`, sem: getMetricSemaphore(c.cpm, { good: 20, warn: 40, higher: false }), delta: prev ? computeDelta(c.cpm, prev.cpm) : null, invert: true },
-          { label: 'CTR', value: `${c.ctr.toFixed(2)}%`, sem: getMetricSemaphore(c.ctr, { good: 2.0, warn: 1.0, higher: true }), delta: prev ? computeDelta(c.ctr, prev.ctr) : null },
+          { label: 'Receita', value: formatCurrency(revenue, currency), sem: getMetricSemaphore(revenue, { good: c.spend * roasTarget, warn: c.spend, higher: true }), delta: computeDelta(revenue, prev?.revenue), invert: false },
+          { label: 'Lucro Bruto', value: formatCurrency(revenue - c.spend, currency), sem: getMetricSemaphore(revenue - c.spend, { good: 0, warn: -c.spend * 0.2, higher: true }), delta: prev ? computeDelta(revenue - c.spend, prev.revenue - prev.spend) : null, invert: false },
+          { label: 'CPC', value: `${currency} ${c.cpc.toFixed(2)}`, sem: getMetricSemaphore(c.cpc, { good: 1.0, warn: 2.5, higher: false }), delta: computeDelta(c.cpc, prev?.cpc), invert: true },
+          { label: 'CPV', value: `${currency} ${(c.cpv || 0).toFixed(2)}`, sem: getMetricSemaphore(c.cpv, { good: 30, warn: 80, higher: false }), delta: computeDelta(c.cpv, prev?.cpv), invert: true },
+          { label: 'Impressões', value: formatNumber(c.impressions), sem: getMetricSemaphore(c.impressions, { good: 10000, warn: 2000, higher: true }), delta: computeDelta(c.impressions, prev?.impressions), invert: false },
+          { label: 'Cliques', value: formatNumber(c.clicks), sem: getMetricSemaphore(c.clicks, { good: 500, warn: 100, higher: true }), delta: computeDelta(c.clicks, prev?.clicks), invert: false },
+          { label: 'CPM', value: `${currency} ${c.cpm.toFixed(2)}`, sem: getMetricSemaphore(c.cpm, { good: 20, warn: 40, higher: false }), delta: computeDelta(c.cpm, prev?.cpm), invert: true },
+          { label: 'CTR', value: `${c.ctr.toFixed(2)}%`, sem: getMetricSemaphore(c.ctr, { good: 2.0, warn: 1.0, higher: true }), delta: computeDelta(c.ctr, prev?.ctr), invert: false },
         ];
 
         return (

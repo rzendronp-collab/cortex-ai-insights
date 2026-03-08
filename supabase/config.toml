@@ -2,3 +2,9 @@ project_id = "xmgmienmkqemrzhxgtgr"
 
 [functions.claude-proxy]
 verify_jwt = false
+
+[functions.meta-auth]
+verify_jwt = false
+
+[functions.meta-proxy]
+verify_jwt = false

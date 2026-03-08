@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import MetaCallback from "./pages/MetaCallback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/auth/meta-callback" element={<MetaCallback />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

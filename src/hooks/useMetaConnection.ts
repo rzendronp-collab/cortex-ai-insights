@@ -1,0 +1,92 @@
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
+
+interface MetaConnection {
+  id: string;
+  meta_user_id: string | null;
+  meta_user_name: string | null;
+  token_expires_at: string | null;
+}
+
+interface AdAccount {
+  id: string;
+  account_id: string | null;
+  account_name: string | null;
+  business_id: string | null;
+  business_name: string | null;
+  currency: string | null;
+  is_active: boolean | null;
+}
+
+export function useMetaConnection() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data: connection, isLoading: connectionLoading } = useQuery({
+    queryKey: ['meta-connection', user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from('meta_connections')
+        .select('id, meta_user_id, meta_user_name, token_expires_at')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data as MetaConnection | null;
+    },
+    enabled: !!user,
+  });
+
+  const { data: adAccounts, isLoading: accountsLoading } = useQuery({
+    queryKey: ['ad-accounts', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data, error } = await supabase
+        .from('ad_accounts')
+        .select('id, account_id, account_name, business_id, business_name, currency, is_active')
+        .eq('user_id', user.id);
+      if (error) throw error;
+      return (data || []) as AdAccount[];
+    },
+    enabled: !!user,
+  });
+
+  const isConnected = !!connection?.meta_user_id;
+  const isTokenExpired = connection?.token_expires_at
+    ? new Date(connection.token_expires_at) < new Date()
+    : false;
+
+  const connectMeta = async () => {
+    const { data, error } = await supabase.functions.invoke('meta-auth', {});
+    if (error) throw error;
+    if (data?.url) {
+      window.location.href = data.url;
+    }
+  };
+
+  const refreshAccounts = () => {
+    queryClient.invalidateQueries({ queryKey: ['ad-accounts'] });
+    queryClient.invalidateQueries({ queryKey: ['meta-connection'] });
+  };
+
+  const callMetaApi = async (path: string, params?: Record<string, string>) => {
+    const { data, error } = await supabase.functions.invoke('meta-proxy', {
+      body: { path, params },
+    });
+    if (error) throw error;
+    return data;
+  };
+
+  return {
+    connection,
+    adAccounts: adAccounts || [],
+    isConnected,
+    isTokenExpired,
+    connectionLoading,
+    accountsLoading,
+    connectMeta,
+    refreshAccounts,
+    callMetaApi,
+  };
+}

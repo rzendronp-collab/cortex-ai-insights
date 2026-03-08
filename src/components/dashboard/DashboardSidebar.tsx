@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Brain, LogOut, Settings, BarChart3, ChevronDown, ChevronRight, Circle, Save, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Brain, LogOut, Settings, BarChart3, ChevronDown, ChevronRight, Circle, Save, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { useMetaConnection } from '@/hooks/useMetaConnection';
+import { useDashboard } from '@/context/DashboardContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,10 +14,13 @@ import { toast } from 'sonner';
 export default function DashboardSidebar() {
   const { user, signOut } = useAuth();
   const { profile, updateProfile } = useProfile();
+  const { connection, adAccounts, isConnected, isTokenExpired, connectMeta, connectionLoading } = useMetaConnection();
+  const { selectedAccountId, setSelectedAccountId } = useDashboard();
   const [activeTab, setActiveTab] = useState<'accounts' | 'config'>('accounts');
   const [bmExpanded, setBmExpanded] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showApiKey, setShowApiKey] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+
   // Config state
   const [apiKey, setApiKey] = useState('');
   const [roasTarget, setRoasTarget] = useState(profile?.roas_target?.toString() || '3.0');
@@ -25,7 +30,6 @@ export default function DashboardSidebar() {
   const handleSaveConfig = async () => {
     setSaving(true);
     try {
-      // Save API key directly to DB (not fetched client-side for security)
       if (apiKey.trim()) {
         const { error: keyError } = await supabase
           .from('profiles')
@@ -46,7 +50,25 @@ export default function DashboardSidebar() {
     setSaving(false);
   };
 
+  const handleConnectMeta = async () => {
+    setConnecting(true);
+    try {
+      await connectMeta();
+    } catch {
+      toast.error('Erro ao iniciar conexão com Meta');
+      setConnecting(false);
+    }
+  };
+
   const initials = profile?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
+
+  // Group accounts by business
+  const accountsByBusiness = adAccounts.reduce((acc, account) => {
+    const bizName = account.business_name || 'Sem Business Manager';
+    if (!acc[bizName]) acc[bizName] = [];
+    acc[bizName].push(account);
+    return acc;
+  }, {} as Record<string, typeof adAccounts>);
 
   return (
     <div className="w-56 h-screen bg-sidebar border-r border-border flex flex-col fixed left-0 top-0 z-40">
@@ -84,37 +106,101 @@ export default function DashboardSidebar() {
         {activeTab === 'accounts' ? (
           <div className="space-y-3">
             {/* Meta Status */}
-            <div className="bg-muted/50 rounded-lg border border-border-hover p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Circle className="w-2.5 h-2.5 fill-destructive text-destructive animate-pulse-dot" />
-                <span className="text-xs text-foreground/80">Meta desconectado</span>
-              </div>
-              <Button size="sm" className="w-full h-8 text-xs gradient-primary text-primary-foreground">
-                Conectar Meta
-              </Button>
-            </div>
-
-            {/* Demo BM */}
-            <div>
-              <button
-                onClick={() => setBmExpanded(!bmExpanded)}
-                className="flex items-center gap-1.5 w-full text-xs text-text-secondary hover:text-foreground"
-              >
-                {bmExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                Demo Business
-              </button>
-              {bmExpanded && (
-                <div className="mt-2 space-y-1.5 ml-2">
-                  <div className="bg-primary/5 border border-primary/20 rounded-md p-2.5 cursor-pointer">
-                    <p className="text-xs font-medium text-foreground">Loja Demo</p>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-[10px] text-success font-bold">ROAS 3.5x</span>
-                      <span className="text-[10px] text-muted-foreground">R$ 3.5k</span>
-                    </div>
+            <div className="bg-muted/50 rounded-lg border border-border p-3">
+              {isConnected && !isTokenExpired ? (
+                <>
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+                    <span className="text-xs text-foreground font-medium">Meta conectado</span>
                   </div>
-                </div>
+                  <p className="text-[10px] text-muted-foreground ml-5">
+                    {connection?.meta_user_name || 'Usuário Meta'}
+                  </p>
+                </>
+              ) : isTokenExpired ? (
+                <>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Circle className="w-2.5 h-2.5 fill-warning text-warning animate-pulse-dot" />
+                    <span className="text-xs text-foreground/80">Token expirado</span>
+                  </div>
+                  <Button onClick={handleConnectMeta} disabled={connecting} size="sm" className="w-full h-8 text-xs gradient-primary text-primary-foreground">
+                    {connecting ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Reconectar Meta'}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Circle className="w-2.5 h-2.5 fill-destructive text-destructive animate-pulse-dot" />
+                    <span className="text-xs text-foreground/80">Meta desconectado</span>
+                  </div>
+                  <Button onClick={handleConnectMeta} disabled={connecting} size="sm" className="w-full h-8 text-xs gradient-primary text-primary-foreground">
+                    {connecting ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Conectar Meta'}
+                  </Button>
+                </>
               )}
             </div>
+
+            {/* Real Ad Accounts */}
+            {isConnected && adAccounts.length > 0 && (
+              Object.entries(accountsByBusiness).map(([bizName, accounts]) => (
+                <div key={bizName}>
+                  <button
+                    onClick={() => setBmExpanded(!bmExpanded)}
+                    className="flex items-center gap-1.5 w-full text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    {bmExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                    {bizName}
+                  </button>
+                  {bmExpanded && (
+                    <div className="mt-2 space-y-1.5 ml-2">
+                      {accounts.map(account => (
+                        <div
+                          key={account.id}
+                          onClick={() => setSelectedAccountId(account.account_id)}
+                          className={`rounded-md p-2.5 cursor-pointer transition-all ${
+                            selectedAccountId === account.account_id
+                              ? 'bg-primary/10 border border-primary/30'
+                              : 'bg-muted/30 border border-transparent hover:border-border'
+                          }`}
+                        >
+                          <p className="text-xs font-medium text-foreground truncate">{account.account_name || `act_${account.account_id}`}</p>
+                          <div className="flex items-center justify-between mt-1">
+                            <span className="text-[10px] text-muted-foreground">{account.currency}</span>
+                            <span className={`text-[10px] ${account.is_active ? 'text-success' : 'text-destructive'}`}>
+                              {account.is_active ? 'Ativa' : 'Inativa'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+
+            {/* Demo fallback when not connected */}
+            {!isConnected && (
+              <div>
+                <button
+                  onClick={() => setBmExpanded(!bmExpanded)}
+                  className="flex items-center gap-1.5 w-full text-xs text-muted-foreground hover:text-foreground"
+                >
+                  {bmExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                  Demo Business
+                </button>
+                {bmExpanded && (
+                  <div className="mt-2 space-y-1.5 ml-2">
+                    <div className="bg-primary/5 border border-primary/20 rounded-md p-2.5 cursor-pointer">
+                      <p className="text-xs font-medium text-foreground">Loja Demo</p>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-[10px] text-success font-bold">ROAS 3.5x</span>
+                        <span className="text-[10px] text-muted-foreground">R$ 3.5k</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className="space-y-4">

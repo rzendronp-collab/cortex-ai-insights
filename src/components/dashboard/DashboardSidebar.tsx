@@ -124,9 +124,10 @@ export default function DashboardSidebar() {
                 type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-ant-..."
+                placeholder="sk-ant-... (salva no servidor)"
                 className="h-8 text-xs bg-muted border-border"
               />
+              <p className="text-[10px] text-muted-foreground">Chave salva com segurança no servidor</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-[11px] text-text-secondary">ROAS Target</Label>

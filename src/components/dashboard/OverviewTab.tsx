@@ -80,8 +80,9 @@ export default function OverviewTab() {
         <div className="bg-card border border-border rounded-lg p-4 animate-fade-up">
           <h3 className="text-xs font-semibold text-foreground mb-3">Funil de Conversão</h3>
           <div className="space-y-3 mt-4">
-            {funnelData.map((item, i) => {
-              const width = (item.value / funnelData[0].value) * 100;
+        {funnelData.map((item, i) => {
+              const maxVal = funnelData[0].value;
+              const width = Math.max((item.value / maxVal) * 100, 3);
               const rate = i > 0 ? ((item.value / funnelData[i - 1].value) * 100).toFixed(1) : null;
               return (
                 <div key={item.name}>

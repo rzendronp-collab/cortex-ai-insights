@@ -30,11 +30,11 @@ export default function Register() {
     }
     setLoading(true);
     const { error: err } = await signUp(email, password, name);
+    setLoading(false);
     if (err) {
       setError(err.message);
-      setLoading(false);
     } else {
-      navigate('/dashboard');
+      setSuccess('Conta criada! Verifique seu email para confirmar ou faça login.');
     }
   };
 

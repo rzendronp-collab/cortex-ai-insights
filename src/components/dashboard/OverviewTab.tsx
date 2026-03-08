@@ -5,9 +5,10 @@ import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useProfile } from '@/hooks/useProfile';
 import KPICard from './KPICard';
 import { mockCampaigns, mockDailyData, mockHourlyData, mockGenderData, mockAgeData, mockPlatformData, getRoasColor, formatCurrency } from '@/lib/mockData';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, ReferenceLine } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, ReferenceLine, Line, ComposedChart } from 'recharts';
 import { Inbox, Zap, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const chartColors = {
   primary: 'hsl(216, 91%, 64%)',
@@ -18,23 +19,32 @@ const chartColors = {
   muted: 'hsl(218, 25%, 38%)',
 };
 
-const dailyMetricLabels: Record<string, string> = {
-  roas: 'ROAS',
-  spend: 'Gasto',
-  revenue: 'Receita',
-  ctr: 'CTR',
-  sales: 'Vendas',
-  cpm: 'CPM',
+const dailyMetricConfig: Record<string, { label: string; color: string; type: 'line' | 'bar'; yAxisId: 'left' | 'right' }> = {
+  roas: { label: 'ROAS', color: chartColors.primary, type: 'line', yAxisId: 'right' },
+  spend: { label: 'Gasto', color: chartColors.secondary, type: 'bar', yAxisId: 'left' },
+  revenue: { label: 'Receita', color: chartColors.success, type: 'line', yAxisId: 'left' },
+  ctr: { label: 'CTR', color: chartColors.warning, type: 'line', yAxisId: 'right' },
+  sales: { label: 'Vendas', color: 'hsl(180, 60%, 50%)', type: 'bar', yAxisId: 'left' },
+  cpm: { label: 'CPM', color: chartColors.destructive, type: 'line', yAxisId: 'right' },
 };
 
 export default function OverviewTab() {
-  const [dailyMetric, setDailyMetric] = useState('roas');
+  const [visibleMetrics, setVisibleMetrics] = useState<Set<string>>(new Set(['roas', 'spend']));
   const { analysisData, selectedAccountId } = useDashboard();
   const { isConnected } = useMetaConnection();
   const { analyze, loading } = useMetaData();
   const { profile } = useProfile();
   const roasTarget = profile?.roas_target || 3.0;
   const currency = profile?.currency || 'R$';
+
+  const toggleMetric = (m: string) => {
+    setVisibleMetrics(prev => {
+      const next = new Set(prev);
+      if (next.has(m)) next.delete(m);
+      else next.add(m);
+      return next;
+    });
+  };
 
   // Show empty state if account selected but no data
   if (selectedAccountId && !analysisData && isConnected) {
@@ -67,36 +77,49 @@ export default function OverviewTab() {
   const genderData = analysisData?.genderData || (!isConnected ? mockGenderData : []);
   const ageData = analysisData?.ageData || (!isConnected ? mockAgeData : []);
 
-  const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
-  const totalRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
-  const totalSales = campaigns.reduce((s, c) => s + (('purchases' in c ? c.purchases : (c as any).sales) || 0), 0);
+  // Only campaigns with real spend for aggregations
+  const activeCampaigns = campaigns.filter(c => c.spend > 0);
+
+  const totalSpend = activeCampaigns.reduce((s, c) => s + c.spend, 0);
+  const totalRevenue = activeCampaigns.reduce((s, c) => s + c.revenue, 0);
+  const totalSales = activeCampaigns.reduce((s, c) => s + (('purchases' in c ? c.purchases : (c as any).sales) || 0), 0);
   const avgRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
-  const avgCtr = campaigns.length > 0 ? campaigns.reduce((s, c) => s + c.ctr, 0) / campaigns.length : 0;
+  const avgCtr = activeCampaigns.length > 0 ? activeCampaigns.reduce((s, c) => s + c.ctr, 0) / activeCampaigns.length : 0;
   const costPerSale = totalSales > 0 ? totalSpend / totalSales : 0;
 
-  // Deltas from prev period
-  const prevSpend = campaignsPrev.reduce((s, c) => s + c.spend, 0);
-  const prevRevenue = campaignsPrev.reduce((s, c) => s + c.revenue, 0);
-  const prevSales = campaignsPrev.reduce((s, c) => s + c.purchases, 0);
+  // Deltas from prev period — only campaigns with real spend
+  const activePrev = campaignsPrev.filter(c => c.spend > 0);
+  const prevSpend = activePrev.reduce((s, c) => s + c.spend, 0);
+  const prevRevenue = activePrev.reduce((s, c) => s + c.revenue, 0);
+  const prevSales = activePrev.reduce((s, c) => s + c.purchases, 0);
   const prevRoas = prevSpend > 0 ? prevRevenue / prevSpend : 0;
-  const prevCtr = campaignsPrev.length > 0 ? campaignsPrev.reduce((s, c) => s + c.ctr, 0) / campaignsPrev.length : 0;
+  const prevCtr = activePrev.length > 0 ? activePrev.reduce((s, c) => s + c.ctr, 0) / activePrev.length : 0;
   const prevCpv = prevSales > 0 ? prevSpend / prevSales : 0;
 
-  const calcDelta = (curr: number, prev: number) => prev > 0 ? Math.round(((curr - prev) / prev) * 100) : undefined;
+  // Fix #4: Only show delta when prev has meaningful data
+  const calcDelta = (curr: number, prev: number): number | undefined => {
+    if (!prev || prev === 0) return undefined;
+    const d = Math.round(((curr - prev) / Math.abs(prev)) * 100);
+    return d;
+  };
 
-  const roasCampaignData = campaigns.map(c => ({
+  // Fix #1: Top 10 campaigns by spend, with full name in tooltip
+  const top10Campaigns = [...activeCampaigns].sort((a, b) => b.spend - a.spend).slice(0, 10);
+  const roasCampaignData = top10Campaigns.map(c => ({
     name: c.name.length > 18 ? c.name.slice(0, 18) + '...' : c.name,
+    fullName: c.name,
     roas: parseFloat(c.roas.toFixed(1)),
     fill: c.roas >= roasTarget * 1.2 ? chartColors.success : c.roas >= roasTarget ? chartColors.primary : c.roas >= roasTarget * 0.7 ? chartColors.warning : chartColors.destructive,
   }));
 
   const funnelData = [
-    { name: 'Impressões', value: campaigns.reduce((s, c) => s + c.impressions, 0) },
-    { name: 'Cliques', value: campaigns.reduce((s, c) => s + c.clicks, 0) },
+    { name: 'Impressões', value: activeCampaigns.reduce((s, c) => s + c.impressions, 0) },
+    { name: 'Cliques', value: activeCampaigns.reduce((s, c) => s + c.clicks, 0) },
     { name: 'Vendas', value: totalSales },
   ];
 
-  const actions = campaigns.map(c => {
+  // Fix #2: Only campaigns with spend > 0 in action plan
+  const actions = activeCampaigns.map(c => {
     const roas = c.roas;
     const rec = roas >= roasTarget * 1.5
       ? { label: '🚀 Escalar', color: 'text-success', bg: 'bg-success/10 border-success/20' }
@@ -111,7 +134,8 @@ export default function OverviewTab() {
     return (order[a.recommendation.label] ?? 4) - (order[b.recommendation.label] ?? 4);
   });
 
-  const dailyMetrics = Object.keys(dailyMetricLabels);
+  // Fix #3: Determine active metrics for chart
+  const activeMetrics = visibleMetrics.size > 0 ? Array.from(visibleMetrics) : Object.keys(dailyMetricConfig);
 
   if (analysisData && campaigns.length === 0) {
     return (
@@ -122,6 +146,18 @@ export default function OverviewTab() {
       </div>
     );
   }
+
+  // Custom tooltip for ROAS chart showing full name
+  const RoasTooltip = ({ active, payload }: any) => {
+    if (!active || !payload?.length) return null;
+    const data = payload[0].payload;
+    return (
+      <div className="bg-popover border border-border rounded-lg px-3 py-2 shadow-lg">
+        <p className="text-[11px] text-foreground font-medium mb-0.5">{data.fullName}</p>
+        <p className="text-[11px] text-muted-foreground">ROAS: <span className="text-foreground font-semibold">{data.roas}x</span></p>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-5">
@@ -137,15 +173,15 @@ export default function OverviewTab() {
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        {/* ROAS por campanha */}
+        {/* Fix #1: ROAS por campanha — top 10, fixed height, full name tooltip */}
         <div className="bg-card border border-border rounded-lg p-4 animate-fade-up">
-          <h3 className="text-xs font-semibold text-foreground mb-3">ROAS por Campanha</h3>
-          <ResponsiveContainer width="100%" height={Math.max(200, roasCampaignData.length * 32)}>
+          <h3 className="text-xs font-semibold text-foreground mb-3">ROAS por Campanha <span className="text-muted-foreground font-normal">(top 10)</span></h3>
+          <ResponsiveContainer width="100%" height={320}>
             <BarChart data={roasCampaignData} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(224,30%,16%)" />
               <XAxis type="number" tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
               <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: 'hsl(218,25%,38%)' }} width={90} />
-              <Tooltip contentStyle={{ background: 'hsl(228,20%,7%)', border: '1px solid hsl(224,30%,16%)', borderRadius: 8, fontSize: 11 }} />
+              <Tooltip content={<RoasTooltip />} />
               <ReferenceLine x={roasTarget} stroke={chartColors.muted} strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 9, fill: chartColors.muted }} />
               <Bar dataKey="roas" radius={[0, 4, 4, 0]}>
                 {roasCampaignData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
@@ -160,7 +196,7 @@ export default function OverviewTab() {
           <div className="space-y-3 mt-4">
             {funnelData.map((item, i) => {
               const maxVal = funnelData[0].value || 1;
-              const width = Math.max((item.value / maxVal) * 100, 15); // min 15% width
+              const width = Math.max((item.value / maxVal) * 100, 15);
               const rate = i > 0 ? ((item.value / (funnelData[i - 1].value || 1)) * 100).toFixed(1) : null;
               return (
                 <div key={item.name}>
@@ -196,32 +232,50 @@ export default function OverviewTab() {
         </div>
       </div>
 
-      {/* Daily chart */}
+      {/* Fix #3: Daily chart — multi-metric with checkboxes and dual Y axis */}
       <div className="bg-card border border-border rounded-lg p-4 animate-fade-up">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h3 className="text-xs font-semibold text-foreground">Evolução Diária</h3>
-          <div className="flex gap-1">
-            {dailyMetrics.map(m => (
-              <button key={m} onClick={() => setDailyMetric(m)} className={`px-2 py-1 text-[10px] rounded-md ${dailyMetric === m ? 'gradient-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground bg-muted'}`}>
-                {dailyMetricLabels[m]}
-              </button>
+          <div className="flex gap-3 flex-wrap">
+            {Object.entries(dailyMetricConfig).map(([key, cfg]) => (
+              <label key={key} className="flex items-center gap-1.5 cursor-pointer select-none">
+                <Checkbox
+                  checked={visibleMetrics.has(key)}
+                  onCheckedChange={() => toggleMetric(key)}
+                  className="h-3.5 w-3.5"
+                />
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: cfg.color }} />
+                  <span className="text-[10px] text-muted-foreground">{cfg.label}</span>
+                </span>
+              </label>
             ))}
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={220}>
-          <AreaChart data={dailyData}>
+        <ResponsiveContainer width="100%" height={240}>
+          <ComposedChart data={dailyData}>
             <defs>
-              <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#4F8EF7" stopOpacity={0.08} />
-                <stop offset="95%" stopColor="#4F8EF7" stopOpacity={0} />
-              </linearGradient>
+              {Object.entries(dailyMetricConfig).map(([key, cfg]) => (
+                <linearGradient key={key} id={`grad-${key}`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={cfg.color} stopOpacity={0.08} />
+                  <stop offset="95%" stopColor={cfg.color} stopOpacity={0} />
+                </linearGradient>
+              ))}
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(224,30%,16%)" />
             <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
-            <YAxis tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
+            <YAxis yAxisId="left" tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
             <Tooltip contentStyle={{ background: 'hsl(228,20%,7%)', border: '1px solid hsl(224,30%,16%)', borderRadius: 8, fontSize: 11 }} />
-            <Area type="monotone" dataKey={dailyMetric} stroke="#4F8EF7" fill="url(#areaGrad)" strokeWidth={2} />
-          </AreaChart>
+            {activeMetrics.map(key => {
+              const cfg = dailyMetricConfig[key];
+              if (!cfg) return null;
+              if (cfg.type === 'bar') {
+                return <Bar key={key} dataKey={key} yAxisId={cfg.yAxisId} fill={cfg.color} fillOpacity={0.6} radius={[3, 3, 0, 0]} barSize={16} />;
+              }
+              return <Line key={key} type="monotone" dataKey={key} yAxisId={cfg.yAxisId} stroke={cfg.color} strokeWidth={2} dot={false} />;
+            })}
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
 
@@ -293,7 +347,7 @@ export default function OverviewTab() {
         </div>
       </div>
 
-      {/* Action plan */}
+      {/* Fix #2: Action plan — only campaigns with spend > 0 */}
       <div className="bg-card border border-border rounded-lg p-4 animate-fade-up">
         <h3 className="text-xs font-semibold text-foreground mb-3">🎯 Plano de Ação</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">

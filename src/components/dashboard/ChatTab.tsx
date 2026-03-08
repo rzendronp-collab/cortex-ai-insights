@@ -52,7 +52,7 @@ export default function ChatTab() {
             <div className={`max-w-[75%] rounded-lg px-4 py-3 text-[13px] leading-relaxed ${
               m.role === 'user'
                 ? 'gradient-primary text-primary-foreground'
-                : 'bg-card-secondary text-foreground'
+                : 'bg-muted text-foreground'
             }`}>
               <p className="whitespace-pre-wrap">{m.content}</p>
             </div>

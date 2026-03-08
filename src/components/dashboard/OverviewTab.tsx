@@ -220,7 +220,7 @@ export default function OverviewTab() {
         <h3 className="text-xs font-semibold text-foreground mb-3">🎯 Plano de Ação</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
           {actions.map(a => (
-            <div key={a.id} className={`border rounded-lg p-3 ${a.recommendation.bg}`}>
+            <div key={a.id} className={`border rounded-lg p-3 ${a.recommendation.bg} border-l-[3px] ${a.recommendation.label.includes('Pausar') || a.recommendation.label.includes('Zero') ? 'border-l-destructive' : a.recommendation.label.includes('Otimizar') ? 'border-l-warning' : 'border-l-success'}`}>
               <div className="flex items-center justify-between mb-1">
                 <span className={`text-[11px] font-bold ${a.recommendation.color}`}>{a.recommendation.label}</span>
                 <span className="text-[10px] text-muted-foreground">ROAS {a.roas}x</span>

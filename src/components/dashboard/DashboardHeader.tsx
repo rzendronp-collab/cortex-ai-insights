@@ -62,7 +62,7 @@ export default function DashboardHeader() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 px-5 py-1 overflow-x-auto">
+      <div className="flex items-center gap-1 px-5 py-1 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
         {tabs.map((tab) => (
           <button
             key={tab.id}

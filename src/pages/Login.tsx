@@ -45,6 +45,7 @@ export default function Login() {
             </div>
             <span className="text-2xl font-bold text-foreground">CortexAds</span>
           </div>
+          <p className="text-center text-sm text-muted-foreground -mt-4 mb-4">Dados inteligentes. Decisões mais rápidas.</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">

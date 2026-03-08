@@ -142,7 +142,7 @@ export default function OverviewTab() {
             <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
             <YAxis tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
             <Tooltip contentStyle={{ background: 'hsl(228,20%,7%)', border: '1px solid hsl(224,30%,16%)', borderRadius: 8, fontSize: 11 }} />
-            <Area type="monotone" dataKey={dailyMetric} stroke={chartColors.primary} fill="url(#areaGrad)" strokeWidth={2} />
+            <Area type="monotone" dataKey={dailyMetric} stroke="#4F8EF7" fill="url(#areaGrad)" strokeWidth={2} />
           </AreaChart>
         </ResponsiveContainer>
       </div>

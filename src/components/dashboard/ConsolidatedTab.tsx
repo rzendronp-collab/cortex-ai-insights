@@ -56,7 +56,12 @@ export default function ConsolidatedTab() {
             <YAxis tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
             <Tooltip contentStyle={{ background: 'hsl(228,20%,7%)', border: '1px solid hsl(224,30%,16%)', borderRadius: 8, fontSize: 11 }} />
             <ReferenceLine y={roasTarget} stroke="hsl(218,25%,38%)" strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
-            <Bar dataKey="roas" fill="hsl(216, 91%, 64%)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="roas" radius={[4, 4, 0, 0]}>
+              {accounts.map((a, i) => {
+                const fill = a.roas >= roasTarget * 1.2 ? 'hsl(152, 72%, 44%)' : a.roas >= roasTarget ? 'hsl(34, 87%, 53%)' : 'hsl(349, 83%, 62%)';
+                return <Cell key={i} fill={fill} />;
+              })}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>

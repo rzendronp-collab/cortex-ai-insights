@@ -72,7 +72,10 @@ export default function Register() {
 
             {error && <p className="text-destructive text-sm">{error}</p>}
 
-            <Button type="submit" disabled={loading} className="w-full h-11 gradient-primary text-primary-foreground font-semibold hover:opacity-90">
+            {error && <p className="text-destructive text-sm">{error}</p>}
+            {success && <p className="text-success text-sm">{success}</p>}
+
+            <Button type="submit" disabled={loading || !!success} className="w-full h-11 gradient-primary text-primary-foreground font-semibold hover:opacity-90">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Criar conta'}
             </Button>
           </form>

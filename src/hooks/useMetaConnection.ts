@@ -61,7 +61,11 @@ export function useMetaConnection() {
     const { data, error } = await supabase.functions.invoke('meta-auth', {});
     if (error) throw error;
     if (data?.url) {
-      window.location.href = data.url;
+      // Use window.open as fallback for iframe environments (Lovable preview)
+      const newWindow = window.open(data.url, '_blank');
+      if (!newWindow) {
+        window.location.href = data.url;
+      }
     }
   };
 

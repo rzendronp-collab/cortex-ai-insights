@@ -5,7 +5,6 @@ import { useAuth } from './useAuth';
 interface Profile {
   id: string;
   name: string | null;
-  claude_api_key: string | null;
   roas_target: number;
   currency: string;
   niche: string | null;
@@ -21,7 +20,7 @@ export function useProfile() {
       if (!user) return null;
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, name, roas_target, currency, niche')
         .eq('id', user.id)
         .single();
       if (error) throw error;

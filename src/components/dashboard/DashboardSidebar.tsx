@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Brain, LogOut, Settings, BarChart3, ChevronDown, ChevronRight, Circle, Save, Loader2 } from 'lucide-react';
+import { Brain, LogOut, Settings, BarChart3, ChevronDown, ChevronRight, Circle, Save, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,9 +15,9 @@ export default function DashboardSidebar() {
   const [activeTab, setActiveTab] = useState<'accounts' | 'config'>('accounts');
   const [bmExpanded, setBmExpanded] = useState(true);
   const [saving, setSaving] = useState(false);
-
+  const [showApiKey, setShowApiKey] = useState(false);
   // Config state
-  const [apiKey, setApiKey] = useState(profile?.claude_api_key || '');
+  const [apiKey, setApiKey] = useState('');
   const [roasTarget, setRoasTarget] = useState(profile?.roas_target?.toString() || '3.0');
   const [currency, setCurrency] = useState(profile?.currency || 'R$');
   const [niche, setNiche] = useState(profile?.niche || '');
@@ -24,13 +25,21 @@ export default function DashboardSidebar() {
   const handleSaveConfig = async () => {
     setSaving(true);
     try {
+      // Save API key directly to DB (not fetched client-side for security)
+      if (apiKey.trim()) {
+        const { error: keyError } = await supabase
+          .from('profiles')
+          .update({ claude_api_key: apiKey, updated_at: new Date().toISOString() })
+          .eq('id', user!.id);
+        if (keyError) throw keyError;
+      }
       await updateProfile.mutateAsync({
-        claude_api_key: apiKey,
         roas_target: parseFloat(roasTarget),
         currency,
         niche,
       });
       toast.success('Configurações salvas!');
+      setApiKey('');
     } catch {
       toast.error('Erro ao salvar');
     }
@@ -115,9 +124,10 @@ export default function DashboardSidebar() {
                 type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                placeholder="sk-ant-..."
+                placeholder="sk-ant-... (salva no servidor)"
                 className="h-8 text-xs bg-muted border-border"
               />
+              <p className="text-[10px] text-muted-foreground">Chave salva com segurança no servidor</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-[11px] text-text-secondary">ROAS Target</Label>

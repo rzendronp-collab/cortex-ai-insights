@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User } from 'lucide-react';
+import { Send, Bot, User, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -20,26 +21,45 @@ export default function ChatTab() {
     { role: 'assistant', content: 'Olá! Sou o assistente CortexAds. Posso analisar suas campanhas, sugerir otimizações e gerar copies. Como posso ajudar?' }
   ]);
   const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-  const sendMessage = (text: string) => {
-    if (!text.trim()) return;
-    setMessages(prev => [...prev, { role: 'user', content: text }]);
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || loading) return;
+    const userMessage: Message = { role: 'user', content: text };
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
+    setLoading(true);
 
-    // Simulated response
-    setTimeout(() => {
+    try {
+      const chatMessages = [...messages.filter(m => m.role !== 'assistant' || messages.indexOf(m) > 0), userMessage]
+        .map(m => ({ role: m.role, content: m.content }));
+
+      const { data, error } = await supabase.functions.invoke('claude-proxy', {
+        body: { messages: chatMessages },
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        setMessages(prev => [...prev, { role: 'assistant', content: `⚠️ ${data.error}` }]);
+      } else {
+        setMessages(prev => [...prev, { role: 'assistant', content: data.content }]);
+      }
+    } catch (err) {
+      console.error('Chat error:', err);
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: `Baseado nos dados da sua conta:\n\n📊 **Análise rápida:**\nSuas campanhas estão com ROAS médio de 3.5x, acima da meta de 3.0x.\n\n🎯 **Recomendações:**\n1. **Escalar** "Retargeting - Carrinho" (ROAS 6.1x) - aumente budget em 50%\n2. **Pausar** "Story Ads" (ROAS 0.6x) - realoque R$80/dia\n3. **Otimizar** "Lookalike" (ROAS 1.8x) - teste novos criativos\n\n💡 Deseja mais detalhes sobre alguma campanha específica?`
+        content: '⚠️ Erro ao conectar com a IA. Verifique se sua API Key Claude está configurada em Config na sidebar.'
       }]);
-    }, 800);
+    }
+    setLoading(false);
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg flex flex-col h-[600px] animate-fade-up" style={{ backgroundColor: 'hsl(228, 20%, 7%)' }}>
+    <div className="bg-card border border-border rounded-lg flex flex-col h-[600px] animate-fade-up" style={{ backgroundColor: '#0F1117' }}>
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((m, i) => (
@@ -63,6 +83,16 @@ export default function ChatTab() {
             )}
           </div>
         ))}
+        {loading && (
+          <div className="flex gap-3">
+            <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center flex-shrink-0">
+              <Bot className="w-4 h-4 text-primary-foreground" />
+            </div>
+            <div className="bg-muted rounded-lg px-4 py-3">
+              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+            </div>
+          </div>
+        )}
         <div ref={endRef} />
       </div>
 
@@ -70,7 +100,7 @@ export default function ChatTab() {
       {messages.length <= 2 && (
         <div className="px-4 pb-2 flex gap-2 flex-wrap">
           {suggestions.map(s => (
-            <button key={s} onClick={() => sendMessage(s)} className="text-[11px] px-3 py-1.5 rounded-full border border-border text-text-secondary hover:text-foreground hover:border-primary/50 transition-all">
+            <button key={s} onClick={() => sendMessage(s)} className="text-[11px] px-3 py-1.5 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all">
               {s}
             </button>
           ))}
@@ -83,11 +113,12 @@ export default function ChatTab() {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); } }}
-          placeholder="Pergunte sobre suas campanhas..."
+          placeholder="Digite sua mensagem..."
           className="flex-1 bg-muted border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:border-primary min-h-[40px] max-h-[100px]"
           rows={1}
+          disabled={loading}
         />
-        <Button onClick={() => sendMessage(input)} disabled={!input.trim()} size="icon" className="h-10 w-10 gradient-primary text-primary-foreground">
+        <Button onClick={() => sendMessage(input)} disabled={!input.trim() || loading} size="icon" className="h-10 w-10 gradient-primary text-primary-foreground">
           <Send className="w-4 h-4" />
         </Button>
       </div>

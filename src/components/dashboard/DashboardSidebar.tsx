@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { Brain, LogOut, Settings, BarChart3, ChevronDown, ChevronRight, Circle, Save, Loader2 } from 'lucide-react';
+import { Brain, LogOut, Settings, BarChart3, ChevronDown, ChevronRight, Circle, Save, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

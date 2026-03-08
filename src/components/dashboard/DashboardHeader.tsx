@@ -1,6 +1,9 @@
 import { useDashboard } from '@/context/DashboardContext';
-import { BarChart3, Target, Calendar, Settings, Globe, MessageSquare, FileText, Zap } from 'lucide-react';
+import { useMetaData } from '@/hooks/useMetaData';
+import { useMetaConnection } from '@/hooks/useMetaConnection';
+import { BarChart3, Target, Calendar, Settings, Globe, MessageSquare, FileText, Zap, Loader2, Clock, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { getRoasColor } from '@/lib/mockData';
 
 const periods = ['Hoje', '3d', '7d', '14d', '30d'];
 
@@ -15,15 +18,61 @@ const tabs = [
 ];
 
 export default function DashboardHeader() {
-  const { selectedPeriod, setSelectedPeriod, activeTab, setActiveTab } = useDashboard();
+  const { selectedPeriod, setSelectedPeriod, activeTab, setActiveTab, selectedAccountId, selectedAccountName, analysisData, setAnalysisData, setLastUpdated } = useDashboard();
+  const { isConnected, isTokenExpired, connectMeta } = useMetaConnection();
+  const { analyze, loading, data, roasTarget } = useMetaData();
+
+  const handleAnalyze = async () => {
+    await analyze();
+  };
+
+  // Use real data if available
+  const ad = analysisData;
+  const totalSpend = ad?.campaigns.reduce((s, c) => s + c.spend, 0) || 0;
+  const totalRevenue = ad?.campaigns.reduce((s, c) => s + c.revenue, 0) || 0;
+  const avgRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+  const aboveMeta = ad?.campaigns.filter(c => c.roas >= roasTarget).length || 0;
+  const belowMeta = ad?.campaigns.filter(c => c.roas < roasTarget && c.spend > 0).length || 0;
+  const delta = ad && ad.campaignsPrev.length > 0
+    ? (() => {
+        const prevSpend = ad.campaignsPrev.reduce((s, c) => s + c.spend, 0);
+        const prevRevenue = ad.campaignsPrev.reduce((s, c) => s + c.revenue, 0);
+        const prevRoas = prevSpend > 0 ? prevRevenue / prevSpend : 0;
+        return prevRoas > 0 ? ((avgRoas - prevRoas) / prevRoas * 100) : 0;
+      })()
+    : 0;
+
+  // When data updates from hook, sync to context
+  if (data && data !== analysisData) {
+    setAnalysisData(data);
+    setLastUpdated(data.lastUpdated);
+  }
+
+  const accountTitle = selectedAccountName || (selectedAccountId ? `act_${selectedAccountId}` : 'Selecione uma conta');
+  const accountSubtitle = selectedAccountId ? `act_${selectedAccountId}` : '';
+
+  const lastTime = ad?.lastUpdated ? new Date(ad.lastUpdated).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
 
   return (
     <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border">
+      {/* Token expired banner */}
+      {isTokenExpired && (
+        <div className="bg-warning/10 border-b border-warning/30 px-5 py-2 flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-warning" />
+          <span className="text-xs text-warning font-medium">Sua conexão Meta expirou.</span>
+          <button onClick={() => connectMeta()} className="text-xs text-warning underline font-semibold">Reconectar →</button>
+        </div>
+      )}
+
       {/* Top bar */}
       <div className="h-[54px] flex items-center justify-between px-5">
         <div>
-          <h1 className="text-sm font-semibold text-foreground">Loja Demo</h1>
-          <p className="text-[11px] text-muted-foreground">act_demo_123456 • {selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`}</p>
+          <h1 className="text-sm font-semibold text-foreground">{accountTitle}</h1>
+          <p className="text-[11px] text-muted-foreground">
+            {accountSubtitle && `${accountSubtitle} • `}
+            {selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`}
+            {lastTime && <span className="ml-2"><Clock className="w-3 h-3 inline" /> {lastTime}</span>}
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
@@ -44,25 +93,43 @@ export default function DashboardHeader() {
             ))}
           </div>
 
-          <Button size="sm" className="h-8 text-xs gradient-primary text-primary-foreground gap-1.5">
-            <Zap className="w-3.5 h-3.5" />Analisar
+          <Button
+            size="sm"
+            className="h-8 text-xs gradient-primary text-primary-foreground gap-1.5"
+            onClick={handleAnalyze}
+            disabled={loading || !selectedAccountId}
+          >
+            {loading ? (
+              <><Loader2 className="w-3.5 h-3.5 animate-spin" />Analisando...</>
+            ) : (
+              <><Zap className="w-3.5 h-3.5" />Analisar</>
+            )}
           </Button>
         </div>
       </div>
 
       {/* Status bar */}
       <div className="h-9 flex items-center gap-4 px-5 bg-card/50 border-t border-border text-[11px]">
-        <span className="text-success font-bold">ROAS 3.5x <span className="text-success/70">↑12%</span></span>
-        <span className="text-muted-foreground">|</span>
-        <span className="text-foreground">Gasto: <span className="font-semibold">R$ 3.5k</span></span>
-        <span className="text-muted-foreground">|</span>
-        <span className="text-foreground">Receita: <span className="font-semibold text-success">R$ 12.4k</span></span>
-        <span className="text-muted-foreground">|</span>
-        <span className="text-foreground">3 acima da meta • 2 abaixo</span>
+        {ad ? (
+          <>
+            <span className={`font-bold ${getRoasColor(avgRoas, roasTarget)}`}>
+              ROAS {avgRoas.toFixed(1)}x
+              {delta !== 0 && <span className="opacity-70 ml-1">{delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(0)}%</span>}
+            </span>
+            <span className="text-muted-foreground">|</span>
+            <span className="text-foreground">Gasto: <span className="font-semibold">R$ {(totalSpend / 1000).toFixed(1)}k</span></span>
+            <span className="text-muted-foreground">|</span>
+            <span className="text-foreground">Receita: <span className="font-semibold text-success">R$ {(totalRevenue / 1000).toFixed(1)}k</span></span>
+            <span className="text-muted-foreground">|</span>
+            <span className="text-foreground">{aboveMeta} acima da meta • {belowMeta} abaixo</span>
+          </>
+        ) : (
+          <span className="text-muted-foreground">Selecione uma conta e clique em Analisar para ver dados reais</span>
+        )}
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 px-5 py-1 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
+      <div className="flex items-center gap-1 px-5 py-1 overflow-x-auto hide-scrollbar">
         {tabs.map((tab) => (
           <button
             key={tab.id}

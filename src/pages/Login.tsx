@@ -20,7 +20,10 @@ export default function Login() {
     setLoading(true);
     const { error: err } = await signIn(email, password);
     if (err) {
-      setError(err.message === 'Invalid login credentials' ? 'Email ou senha incorretos' : err.message);
+      const msg = err.message.includes('Invalid login credentials') ? 'Email ou senha incorretos'
+        : err.message.includes('Email not confirmed') ? 'Email não confirmado. Verifique sua caixa de entrada.'
+        : err.message;
+      setError(msg);
       setLoading(false);
     } else {
       navigate('/dashboard');

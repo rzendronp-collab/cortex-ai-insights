@@ -39,7 +39,7 @@ export default function ChatTab() {
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg flex flex-col h-[600px] animate-fade-up">
+    <div className="bg-card border border-border rounded-lg flex flex-col h-[600px] animate-fade-up" style={{ backgroundColor: 'hsl(228, 20%, 7%)' }}>
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((m, i) => (

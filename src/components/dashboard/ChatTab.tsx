@@ -39,7 +39,7 @@ export default function ChatTab() {
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg flex flex-col h-[600px] animate-fade-up">
+    <div className="bg-card border border-border rounded-lg flex flex-col h-[600px] animate-fade-up" style={{ backgroundColor: 'hsl(228, 20%, 7%)' }}>
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((m, i) => (
@@ -52,7 +52,7 @@ export default function ChatTab() {
             <div className={`max-w-[75%] rounded-lg px-4 py-3 text-[13px] leading-relaxed ${
               m.role === 'user'
                 ? 'gradient-primary text-primary-foreground'
-                : 'bg-card-secondary text-foreground'
+                : 'bg-muted text-foreground'
             }`}>
               <p className="whitespace-pre-wrap">{m.content}</p>
             </div>

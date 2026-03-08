@@ -75,10 +75,10 @@ export default function DashboardSidebar() {
         {activeTab === 'accounts' ? (
           <div className="space-y-3">
             {/* Meta Status */}
-            <div className="bg-card rounded-lg border border-border p-3">
+            <div className="bg-muted/50 rounded-lg border border-border-hover p-3">
               <div className="flex items-center gap-2 mb-2">
-                <Circle className="w-2.5 h-2.5 fill-muted-foreground text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Meta desconectado</span>
+                <Circle className="w-2.5 h-2.5 fill-destructive text-destructive animate-pulse-dot" />
+                <span className="text-xs text-foreground/80">Meta desconectado</span>
               </div>
               <Button size="sm" className="w-full h-8 text-xs gradient-primary text-primary-foreground">
                 Conectar Meta

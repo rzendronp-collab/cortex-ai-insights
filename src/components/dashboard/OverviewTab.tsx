@@ -80,8 +80,9 @@ export default function OverviewTab() {
         <div className="bg-card border border-border rounded-lg p-4 animate-fade-up">
           <h3 className="text-xs font-semibold text-foreground mb-3">Funil de Conversão</h3>
           <div className="space-y-3 mt-4">
-            {funnelData.map((item, i) => {
-              const width = (item.value / funnelData[0].value) * 100;
+        {funnelData.map((item, i) => {
+              const maxVal = funnelData[0].value;
+              const width = Math.max((item.value / maxVal) * 100, 3);
               const rate = i > 0 ? ((item.value / funnelData[i - 1].value) * 100).toFixed(1) : null;
               return (
                 <div key={item.name}>
@@ -133,15 +134,15 @@ export default function OverviewTab() {
           <AreaChart data={mockDailyData}>
             <defs>
               <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={chartColors.primary} stopOpacity={0.3} />
-                <stop offset="95%" stopColor={chartColors.primary} stopOpacity={0} />
+               <stop offset="5%" stopColor="#4F8EF7" stopOpacity={0.08} />
+                <stop offset="95%" stopColor="#4F8EF7" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(224,30%,16%)" />
             <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
             <YAxis tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
             <Tooltip contentStyle={{ background: 'hsl(228,20%,7%)', border: '1px solid hsl(224,30%,16%)', borderRadius: 8, fontSize: 11 }} />
-            <Area type="monotone" dataKey={dailyMetric} stroke={chartColors.primary} fill="url(#areaGrad)" strokeWidth={2} />
+            <Area type="monotone" dataKey={dailyMetric} stroke="#4F8EF7" fill="url(#areaGrad)" strokeWidth={2} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -219,7 +220,7 @@ export default function OverviewTab() {
         <h3 className="text-xs font-semibold text-foreground mb-3">🎯 Plano de Ação</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
           {actions.map(a => (
-            <div key={a.id} className={`border rounded-lg p-3 ${a.recommendation.bg}`}>
+            <div key={a.id} className={`border rounded-lg p-3 ${a.recommendation.bg} border-l-[3px] ${a.recommendation.label.includes('Pausar') || a.recommendation.label.includes('Zero') ? 'border-l-destructive' : a.recommendation.label.includes('Otimizar') ? 'border-l-warning' : 'border-l-success'}`}>
               <div className="flex items-center justify-between mb-1">
                 <span className={`text-[11px] font-bold ${a.recommendation.color}`}>{a.recommendation.label}</span>
                 <span className="text-[10px] text-muted-foreground">ROAS {a.roas}x</span>

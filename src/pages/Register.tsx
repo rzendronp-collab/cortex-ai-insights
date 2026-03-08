@@ -12,6 +12,7 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -29,11 +30,11 @@ export default function Register() {
     }
     setLoading(true);
     const { error: err } = await signUp(email, password, name);
+    setLoading(false);
     if (err) {
       setError(err.message);
-      setLoading(false);
     } else {
-      navigate('/dashboard');
+      setSuccess('Conta criada! Verifique seu email para confirmar ou faça login.');
     }
   };
 
@@ -70,8 +71,9 @@ export default function Register() {
             </div>
 
             {error && <p className="text-destructive text-sm">{error}</p>}
+            {success && <p className="text-success text-sm">{success}</p>}
 
-            <Button type="submit" disabled={loading} className="w-full h-11 gradient-primary text-primary-foreground font-semibold hover:opacity-90">
+            <Button type="submit" disabled={loading || !!success} className="w-full h-11 gradient-primary text-primary-foreground font-semibold hover:opacity-90">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Criar conta'}
             </Button>
           </form>

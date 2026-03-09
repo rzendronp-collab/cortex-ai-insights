@@ -111,7 +111,21 @@ const CACHE_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
 const RATE_LIMIT_DELAY_MS = 60 * 1000; // 60 seconds
 const MAX_RETRIES = 3;
 
-function getPrevTimeRange(period: string): { since: string; until: string } {
+function getPrevTimeRange(period: string, dateRange?: { from: string; to: string } | null): { since: string; until: string } {
+  const fmt = (d: Date) => d.toISOString().split('T')[0];
+
+  // For custom date range, compute previous period of same length
+  if (dateRange) {
+    const fromDate = new Date(dateRange.from + 'T00:00:00');
+    const toDate = new Date(dateRange.to + 'T00:00:00');
+    const days = Math.ceil((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const prevUntil = new Date(fromDate);
+    prevUntil.setDate(prevUntil.getDate() - 1);
+    const prevSince = new Date(prevUntil);
+    prevSince.setDate(prevSince.getDate() - days + 1);
+    return { since: fmt(prevSince), until: fmt(prevUntil) };
+  }
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
@@ -126,7 +140,6 @@ function getPrevTimeRange(period: string): { since: string; until: string } {
   const since = new Date(until);
   since.setDate(since.getDate() - days);
   
-  const fmt = (d: Date) => d.toISOString().split('T')[0];
   return { since: fmt(since), until: fmt(until) };
 }
 
@@ -215,7 +228,11 @@ export function useMetaData() {
     setLoading(true);
     setError(null);
 
+    // Build a unique cache period key (includes date range for custom)
+    const cachePeriodKey = dateRange ? `custom_${dateRange.from}_${dateRange.to}` : selectedPeriod;
+
     try {
+
       // Layer 1: Try Supabase persistent cache
       if (user) {
         try {
@@ -224,7 +241,7 @@ export function useMetaData() {
             .select('data, updated_at')
             .eq('user_id', user.id)
             .eq('account_id', selectedAccountId)
-            .eq('period', selectedPeriod)
+            .eq('period', cachePeriodKey)
             .maybeSingle();
 
           if (cached?.data && cached.updated_at && (cached.data as any).budgetByCampaignId) {
@@ -244,12 +261,16 @@ export function useMetaData() {
       // Layer 2: Fresh fetch from Meta API (with retry)
       const period = periodMap[selectedPeriod] || 'last_7d';
       const acctPath = `act_${selectedAccountId}`;
-      const { since, until } = getPrevTimeRange(selectedPeriod);
+      const { since, until } = getPrevTimeRange(selectedPeriod, dateRange);
 
       // Build date params: use time_range for custom, date_preset for presets
       const isCustom = !!dateRange;
       const datePresetParam = isCustom ? undefined : period;
       const timeRangeParam = isCustom ? JSON.stringify({ since: dateRange.from, until: dateRange.to }) : undefined;
+
+      if (isCustom) {
+        console.log('[META] Custom date range:', dateRange.from, '->', dateRange.to, 'time_range:', timeRangeParam);
+      }
 
       // Helper to build params with the right date filter
       const withDateFilter = (extra: Record<string, string>): Record<string, string> => {
@@ -516,7 +537,7 @@ export function useMetaData() {
           const cachePayload = {
             user_id: user.id,
             account_id: selectedAccountId,
-            period: selectedPeriod,
+            period: cachePeriodKey,
             data: analysisResult as any,
             updated_at: now,
           };
@@ -525,7 +546,7 @@ export function useMetaData() {
             .select('id')
             .eq('user_id', user.id)
             .eq('account_id', selectedAccountId)
-            .eq('period', selectedPeriod)
+            .eq('period', cachePeriodKey)
             .maybeSingle();
           if (existing) {
             await supabase.from('analysis_cache').update(cachePayload).eq('id', existing.id);
@@ -555,7 +576,7 @@ export function useMetaData() {
             .select('data')
             .eq('user_id', user.id)
             .eq('account_id', selectedAccountId)
-            .eq('period', selectedPeriod)
+            .eq('period', cachePeriodKey)
             .maybeSingle();
           if (fallback?.data && (fallback.data as any).budgetByCampaignId) {
             setAnalysisForAccount(selectedAccountId, selectedPeriod, fallback.data as unknown as AnalysisData);

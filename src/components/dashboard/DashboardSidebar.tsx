@@ -251,11 +251,10 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                             onClick={() => {
                               if (account.account_id) {
                                 console.log('[SIDEBAR] conta clicada:', account.account_id, account.account_name);
-                                toggleActiveAccount(account.account_id);
                                 setSelectedAccountId(account.account_id);
-                                setSelectedAccountName(account.account_name || null);
+                                setSelectedAccountName(account.account_name || account.account_id);
                                 setSelectedAccountCurrency(account.currency || null);
-                                setTimeout(() => analyze(account.account_id), 200);
+                                setTimeout(() => analyzeRef.current?.(account.account_id), 200);
                               }
                             }}
                           >

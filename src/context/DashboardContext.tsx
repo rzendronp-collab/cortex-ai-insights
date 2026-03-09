@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useRef, ReactNode, useCallback, MutableRefObject } from 'react';
 import { AnalysisData } from '@/hooks/useMetaData';
 import { getCurrencySymbol } from '@/lib/currencyUtils';
 

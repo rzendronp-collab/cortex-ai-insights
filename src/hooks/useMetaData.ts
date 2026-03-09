@@ -144,7 +144,7 @@ export function useMetaData() {
     setError(null);
 
     const period = periodMap[selectedPeriod] || 'last_7d';
-    const prevPeriod = prevPeriodMap[selectedPeriod] || 'last_14d';
+    const doublePeriod = doublePeriodMap[selectedPeriod] || 'last_14d';
     const acctPath = `act_${selectedAccountId}`;
 
     try {

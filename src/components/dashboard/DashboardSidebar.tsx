@@ -4,7 +4,7 @@ import SettingsDialog from './SettingsDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
-import { useMetaData } from '@/hooks/useMetaData';
+
 import { useDashboard } from '@/context/DashboardContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';

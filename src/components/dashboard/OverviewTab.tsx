@@ -300,7 +300,7 @@ export default function OverviewTab() {
 
       {/* Demographics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-card border border-border rounded-lg p-4 animate-fade-up">
+        <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 animate-fade-up">
           <h3 className="text-xs font-semibold text-foreground mb-3">Gênero</h3>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>

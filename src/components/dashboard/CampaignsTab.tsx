@@ -912,6 +912,83 @@ Responda SOMENTE com o JSON, sem markdown.`;
                         {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                       </td>
                     </tr>
+
+                    {/* ADSETS SUB-TABLE */}
+                    {adsetExpandedId === c.id && (() => {
+                      const campaignAdsets = adsets.get(c.id);
+                      const isAdsetLoading = adsetsLoading.has(c.id);
+                      return (
+                        <tr className="bg-[#090D18] border-b border-[#1C2538]">
+                          <td colSpan={activeColumns.length + 1} className="p-0">
+                            <div className="pl-10 pr-4 py-3 border-l-2 border-l-data-blue/40 animate-fade-up">
+                              <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider mb-2">Conjuntos de Anúncios</p>
+                              {isAdsetLoading ? (
+                                <div className="space-y-2">
+                                  {[0,1,2].map(i => (
+                                    <div key={i} className="flex items-center gap-4 py-2">
+                                      <Skeleton className="h-4 w-8" />
+                                      <Skeleton className="h-4 w-40" />
+                                      <Skeleton className="h-4 w-16" />
+                                      <Skeleton className="h-4 w-16" />
+                                      <Skeleton className="h-4 w-12" />
+                                      <Skeleton className="h-4 w-12" />
+                                      <Skeleton className="h-4 w-12" />
+                                      <Skeleton className="h-4 w-16" />
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : !campaignAdsets || campaignAdsets.length === 0 ? (
+                                <p className="text-xs text-muted-foreground py-3">Nenhum adset encontrado</p>
+                              ) : (
+                                <table className="w-full text-left text-xs">
+                                  <thead>
+                                    <tr className="border-b border-[#1C2538]/50">
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase w-10">Status</th>
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase">Nome</th>
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">Gasto</th>
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">ROAS</th>
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">Vendas</th>
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">CTR</th>
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">CPM</th>
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">Budget</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {campaignAdsets.map(adset => {
+                                      const adsetActive = adset.status === 'ACTIVE';
+                                      let abBg: string, abText: string, abBorder: string;
+                                      if (adset.roas >= roasTarget) { abBg = 'rgba(52,211,153,0.12)'; abText = '#34D399'; abBorder = 'rgba(52,211,153,0.25)'; }
+                                      else if (adset.roas >= roasTarget * 0.7) { abBg = 'rgba(251,191,36,0.12)'; abText = '#FBBF24'; abBorder = 'rgba(251,191,36,0.25)'; }
+                                      else { abBg = 'rgba(248,113,113,0.12)'; abText = '#F87171'; abBorder = 'rgba(248,113,113,0.25)'; }
+                                      return (
+                                        <tr key={adset.id} className={`border-b border-[#1C2538]/30 hover:bg-[#0E1420]/50 transition-colors ${!adsetActive ? 'opacity-50' : ''}`}>
+                                          <td className="py-2 px-2">
+                                            <span className={`inline-block w-2 h-2 rounded-full ${adsetActive ? 'bg-success' : 'bg-muted-foreground'}`} />
+                                          </td>
+                                          <td className="py-2 px-2">
+                                            <p className="text-[12px] text-text-primary truncate max-w-[180px]">{adset.name}</p>
+                                          </td>
+                                          <td className="py-2 px-2 text-right text-[12px] text-text-primary">{formatCurrency(adset.spend, currency)}</td>
+                                          <td className="py-2 px-2 text-right">
+                                            <span className="text-[11px] font-bold inline-block" style={{ background: abBg, color: abText, border: `1px solid ${abBorder}`, borderRadius: 5, padding: '1px 6px' }}>
+                                              {adset.roas.toFixed(2)}x
+                                            </span>
+                                          </td>
+                                          <td className="py-2 px-2 text-right text-[12px] text-text-primary">{adset.purchases}</td>
+                                          <td className="py-2 px-2 text-right text-[12px] text-text-primary">{adset.ctr.toFixed(2)}%</td>
+                                          <td className="py-2 px-2 text-right text-[12px] text-text-primary">{formatCurrency(adset.cpm, currency)}</td>
+                                          <td className="py-2 px-2 text-right text-[12px] text-text-primary">{adset.dailyBudget != null ? formatCurrency(adset.dailyBudget, currency) : '—'}</td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })()}
                     
                     {/* EXPANDED CONTENT */}
                     {expanded && (

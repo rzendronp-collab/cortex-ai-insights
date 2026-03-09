@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, ArrowUpDown, ArrowDown, ArrowUp, Pencil } from 'lucide-react';
+import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, ArrowUpDown, ArrowDown, ArrowUp, Pencil, Download } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
@@ -56,6 +56,13 @@ export default function CampaignsTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused'>('all');
   const [activeTodayFilter, setActiveTodayFilter] = useState(false);
+  const [roasFilter, setRoasFilter] = useState<'all' | 'above' | 'near' | 'below' | 'scaling'>('all');
+  const [roasDropdownOpen, setRoasDropdownOpen] = useState(false);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 20;
+  const tableRef = React.useRef<HTMLDivElement>(null);
   
   // Sorting
   const [sortColumn, setSortColumn] = useState<SortColumn>('spend');
@@ -111,9 +118,14 @@ export default function CampaignsTab() {
       if (statusFilter === 'active' && effStatus !== 'ACTIVE') return false;
       if (statusFilter === 'paused' && effStatus !== 'PAUSED') return false;
       if (activeTodayFilter && c.spend <= 0) return false;
+      // ROAS filter
+      if (roasFilter === 'above' && c.roas < roasTarget) return false;
+      if (roasFilter === 'near' && (c.roas < roasTarget * 0.7 || c.roas >= roasTarget)) return false;
+      if (roasFilter === 'below' && c.roas >= roasTarget * 0.7) return false;
+      if (roasFilter === 'scaling' && c.roas < roasTarget * 1.5) return false;
       return true;
     });
-  }, [rawCampaigns, searchQuery, statusFilter, activeTodayFilter, localStatuses]);
+  }, [rawCampaigns, searchQuery, statusFilter, activeTodayFilter, localStatuses, roasFilter, roasTarget]);
 
   const sortedCampaigns = useMemo(() => {
     return [...filteredCampaigns].sort((a, b) => {
@@ -254,6 +266,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
     }
   }, [budgetCache, budgetFetching, callMetaApi]);
 
+  // Reset page when filters change (must be before early returns)
+  React.useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, activeTodayFilter, roasFilter]);
+
   // Loading skeleton state
   if (selectedAccountId && !analysisData) {
     return <CampaignsTableSkeleton />;
@@ -299,8 +314,115 @@ Responda SOMENTE com o JSON, sem markdown.`;
     { key: 'recommendation', label: 'Recom.', align: 'center' },
   ] as const;
 
+  // Pagination logic
+  const totalPages = Math.ceil(sortedCampaigns.length / PAGE_SIZE);
+  const paginatedCampaigns = sortedCampaigns.length > PAGE_SIZE
+    ? sortedCampaigns.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+    : sortedCampaigns;
+
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  // CSV Export
+  const exportCsv = () => {
+    const accountName = selectedAccountId || 'conta';
+    const date = new Date().toISOString().slice(0, 10);
+    const headers = ['Nome', 'Gasto', 'Orçamento', 'Faturamento', 'Lucro', 'ROAS', 'Vendas', 'CPA', 'CTR', 'CPM', 'Impressões', 'Cliques'];
+    const rows = sortedCampaigns.map(c => {
+      const budget = analysisData?.budgetByCampaignId?.[c.id] ?? '';
+      const profit = c.revenue - c.spend;
+      const cpa = c.purchases > 0 ? (c.spend / c.purchases).toFixed(2) : '0';
+      return [
+        `"${c.name.replace(/"/g, '""')}"`,
+        c.spend.toFixed(2), budget !== '' ? Number(budget).toFixed(2) : '',
+        c.revenue.toFixed(2), profit.toFixed(2), c.roas.toFixed(2),
+        c.purchases, cpa, c.ctr.toFixed(2), c.cpm.toFixed(2),
+        c.impressions, c.clicks,
+      ].join(',');
+    });
+    const bom = '\uFEFF';
+    const csv = bom + [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `campanhas_${accountName}_${date}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success('CSV exportado ✓');
+  };
+
+  const roasFilterOptions = [
+    { value: 'all', label: 'Todos' },
+    { value: 'scaling', label: '🚀 Escalando' },
+    { value: 'above', label: '✅ Acima da meta' },
+    { value: 'near', label: '⚠️ Próximo da meta' },
+    { value: 'below', label: '❌ Abaixo da meta' },
+  ] as const;
+
+  const roasFilterLabel = roasFilterOptions.find(o => o.value === roasFilter)?.label || 'ROAS';
+
+  // Pagination bar component
+  const PaginationBar = () => {
+    if (sortedCampaigns.length <= PAGE_SIZE) return null;
+    const start = (currentPage - 1) * PAGE_SIZE + 1;
+    const end = Math.min(currentPage * PAGE_SIZE, sortedCampaigns.length);
+    const maxVisible = 5;
+    const pages: (number | string)[] = [];
+    if (totalPages <= maxVisible + 2) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push('...');
+      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push('…');
+      pages.push(totalPages);
+    }
+    return (
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 py-3 border-t border-[#1C2538]">
+        <span className="text-[11px] text-text-muted">Mostrando {start}-{end} de {sortedCampaigns.length} campanhas</span>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-2 py-1 text-[11px] font-medium border border-border-default rounded-md text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:pointer-events-none transition-colors"
+          >
+            ← Anterior
+          </button>
+          {pages.map((p, i) =>
+            typeof p === 'string' ? (
+              <span key={`dots-${i}`} className="px-1 text-[11px] text-text-muted">...</span>
+            ) : (
+              <button
+                key={p}
+                onClick={() => handlePageChange(p)}
+                className={`w-7 h-7 text-[11px] font-medium rounded-md transition-colors ${
+                  currentPage === p
+                    ? 'bg-data-blue text-white'
+                    : 'border border-border-default text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                {p}
+              </button>
+            )
+          )}
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-2 py-1 text-[11px] font-medium border border-border-default rounded-md text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:pointer-events-none transition-colors"
+          >
+            Próximo →
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" ref={tableRef}>
       {/* Filters */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-2">
@@ -336,7 +458,50 @@ Responda SOMENTE com o JSON, sem markdown.`;
           >
             Ativas hoje
           </button>
+
+          {/* ROAS Filter Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setRoasDropdownOpen(!roasDropdownOpen)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-md transition-colors ${
+                roasFilter !== 'all'
+                  ? 'bg-primary/15 text-primary border-primary/40'
+                  : 'bg-card border-border text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {roasFilterLabel}
+              <ChevronDown className={`w-3 h-3 transition-transform ${roasDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {roasDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setRoasDropdownOpen(false)} />
+                <div className="absolute top-full left-0 mt-1 w-48 bg-bg-card border border-border-default rounded-lg shadow-xl z-50 py-1">
+                  {roasFilterOptions.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { setRoasFilter(opt.value); setRoasDropdownOpen(false); }}
+                      className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                        roasFilter === opt.value ? 'bg-primary/10 text-primary font-medium' : 'text-text-secondary hover:bg-bg-card-hover hover:text-text-primary'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
+
+        {/* Export CSV */}
+        <button
+          onClick={exportCsv}
+          disabled={sortedCampaigns.length === 0}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-border-default rounded-md text-text-secondary hover:text-text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none shrink-0"
+        >
+          <Download className="w-3.5 h-3.5" />
+          CSV
+        </button>
       </div>
 
       {/* Mobile Card View */}
@@ -344,7 +509,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
         {sortedCampaigns.length === 0 ? (
           <p className="text-center py-8 text-xs text-muted-foreground">Nenhuma campanha encontrada com os filtros atuais.</p>
         ) : (
-          sortedCampaigns.map((c, idx) => {
+          paginatedCampaigns.map((c, idx) => {
             const effectiveStatus = localStatuses[c.id] || c.status;
             const isActive = effectiveStatus === 'ACTIVE';
             const isToggling = togglingIds.has(c.id);
@@ -428,6 +593,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
           })
         )}
       </div>
+      <div className="md:hidden"><PaginationBar /></div>
 
       {/* Desktop Table */}
       <div className="hidden md:block bg-[#0E1420] border border-[#1E2D4A] rounded-lg overflow-x-auto">
@@ -457,7 +623,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 </td>
               </tr>
             ) : (
-              sortedCampaigns.map((c, rowIndex) => {
+              paginatedCampaigns.map((c, rowIndex) => {
                 const expanded = expandedId === c.id;
                 const effectiveStatus = localStatuses[c.id] || c.status;
                 const isActive = effectiveStatus === 'ACTIVE';
@@ -846,6 +1012,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
             )}
           </tbody>
         </table>
+        <PaginationBar />
       </div>
 
       {/* Confirmation Dialog */}

@@ -4,7 +4,7 @@ import SettingsDialog from './SettingsDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
-import { useMetaData } from '@/hooks/useMetaData';
+
 import { useDashboard } from '@/context/DashboardContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -39,7 +39,6 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
   const { profile, updateProfile } = useProfile();
   const { adAccounts, isConnected, isTokenExpired, connectMeta, disconnectMeta } = useMetaConnection();
   const { activeTab: currentTab, setActiveTab, activeAccountIds, toggleActiveAccount, setActiveAccountIds, analysisCache, analyzeRef, setSelectedAccountId, setSelectedAccountName, setSelectedAccountCurrency } = useDashboard();
-  const { analyze } = useMetaData();
   const [configOpen, setConfigOpen] = useState(false);
   const [openBMs, setOpenBMs] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
@@ -252,11 +251,10 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                             onClick={() => {
                               if (account.account_id) {
                                 console.log('[SIDEBAR] conta clicada:', account.account_id, account.account_name);
-                                toggleActiveAccount(account.account_id);
                                 setSelectedAccountId(account.account_id);
-                                setSelectedAccountName(account.account_name || null);
+                                setSelectedAccountName(account.account_name || account.account_id);
                                 setSelectedAccountCurrency(account.currency || null);
-                                setTimeout(() => analyze(account.account_id), 200);
+                                setTimeout(() => analyzeRef.current?.(account.account_id), 200);
                               }
                             }}
                           >

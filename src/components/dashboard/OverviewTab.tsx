@@ -290,7 +290,7 @@ export default function OverviewTab() {
       {/* Hourly */}
       <div className="bg-card border border-border rounded-lg p-4 animate-fade-up">
         <h3 className="text-xs font-semibold text-foreground mb-3">Desempenho por Hora</h3>
-        <HourlyBarChart data={hourlyData} />
+        <HourlyBarChart data={hourlyData} currency={currency} />
       </div>
 
       {/* Demographics */}

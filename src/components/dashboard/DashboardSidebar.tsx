@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, Settings, ChevronDown, ChevronRight, Circle, Save, Loader2, Eye, EyeOff, BarChart3, Target, Calendar, Cog, Globe, MessageCircle, FileText } from 'lucide-react';
+import { LogOut, Settings, ChevronDown, ChevronRight, Circle, Save, Loader2, Eye, EyeOff, BarChart3, Target, Calendar, Cog, Globe, MessageCircle, FileText, Unplug } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
 function CortexLogo() {
@@ -32,7 +33,7 @@ function CortexLogo() {
 export default function DashboardSidebar() {
   const { user, signOut } = useAuth();
   const { profile, updateProfile } = useProfile();
-  const { connection, adAccounts, isConnected, isTokenExpired, connectMeta, connectionLoading } = useMetaConnection();
+  const { connection, adAccounts, isConnected, isTokenExpired, connectMeta, disconnectMeta, connectionLoading } = useMetaConnection();
   const { selectedAccountId, setSelectedAccountId, setSelectedAccountName, setSelectedAccountCurrency, analysisData, activeTab: currentTab, setActiveTab } = useDashboard();
   const [metaExpanded, setMetaExpanded] = useState(true);
   const [bmExpanded, setBmExpanded] = useState<Record<string, boolean>>({});
@@ -77,6 +78,15 @@ export default function DashboardSidebar() {
     } catch {
       toast.error('Erro ao iniciar conexão com Meta');
       setConnecting(false);
+    }
+  };
+
+  const handleDisconnectMeta = async () => {
+    try {
+      await disconnectMeta();
+      toast.success('Conta Meta desconectada');
+    } catch {
+      toast.error('Erro ao desconectar Meta');
     }
   };
 
@@ -170,7 +180,28 @@ export default function DashboardSidebar() {
               </div>
               <span className="text-[13px] font-medium text-foreground flex-1 text-left">Meta Ads</span>
               {isConnected && !isTokenExpired && (
-                <Circle className="w-2 h-2 fill-success text-success" />
+                <>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button className="p-0.5 text-muted-foreground hover:text-destructive transition-colors" title="Desconectar Meta">
+                        <Unplug className="w-3.5 h-3.5" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="bg-[#0E1420] border-[#1E2D4A]">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-[#F0F4FF]">Desconectar Meta?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-[#94A3B8]">
+                          Você precisará reconectar para continuar analisando campanhas.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-[#080B14] border-[#1E2D4A] text-[#94A3B8] hover:bg-[#1E2D4A]">Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDisconnectMeta} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Desconectar</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <Circle className="w-2 h-2 fill-success text-success" />
+                </>
               )}
               <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${metaExpanded ? 'rotate-90' : ''}`} />
             </CollapsibleTrigger>

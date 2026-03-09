@@ -69,6 +69,19 @@ export function useMetaConnection() {
     }
   };
 
+  const disconnectMeta = async () => {
+    if (!user) throw new Error('Not authenticated');
+    const { error } = await supabase
+      .from('meta_connections')
+      .delete()
+      .eq('user_id', user.id);
+    if (error) throw error;
+    // Also delete ad accounts
+    await supabase.from('ad_accounts').delete().eq('user_id', user.id);
+    queryClient.invalidateQueries({ queryKey: ['meta-connection'] });
+    queryClient.invalidateQueries({ queryKey: ['ad-accounts'] });
+  };
+
   const refreshAccounts = () => {
     queryClient.invalidateQueries({ queryKey: ['ad-accounts'] });
     queryClient.invalidateQueries({ queryKey: ['meta-connection'] });
@@ -91,6 +104,7 @@ export function useMetaConnection() {
     connectionLoading,
     accountsLoading,
     connectMeta,
+    disconnectMeta,
     refreshAccounts,
     callMetaApi,
   };

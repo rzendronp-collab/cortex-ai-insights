@@ -34,8 +34,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    const userId = user.id;
-
     const { path, params, method: reqMethod } = await req.json();
     if (!path) {
       return new Response(JSON.stringify({ error: "path is required" }), {
@@ -52,81 +50,60 @@ Deno.serve(async (req) => {
     const { data: connection, error: connError } = await supabaseAdmin
       .from("meta_connections")
       .select("access_token, token_expires_at")
-      .eq("user_id", userId)
+      .eq("user_id", user.id)
       .maybeSingle();
 
     if (connError || !connection?.access_token) {
       return new Response(
-        JSON.stringify({ error: "Meta not connected. Please connect your Meta account first." }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: "Meta not connected." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    if (connection.token_expires_at) {
-      const expiresAt = new Date(connection.token_expires_at);
-      if (expiresAt < new Date()) {
-        return new Response(
-          JSON.stringify({ error: "Meta token expired. Please reconnect your Meta account." }),
-          {
-            status: 401,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
+    if (connection.token_expires_at && new Date(connection.token_expires_at) < new Date()) {
+      return new Response(
+        JSON.stringify({ error: "Meta token expired. Please reconnect." }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    const graphMethod = (reqMethod || 'GET').toUpperCase();
-    const systemToken = Deno.env.get('META_SYSTEM_TOKEN');
+    const graphMethod = (reqMethod || "GET").toUpperCase();
+    const systemToken = Deno.env.get("META_SYSTEM_TOKEN");
+    const p = params || {};
 
-    console.log(`[meta-proxy] method=${graphMethod} path=${path} systemToken=${systemToken ? 'present' : 'missing'}`);
+    console.log(`[meta-proxy] ${graphMethod} /${path} system=${!!systemToken}`);
 
     let graphRes: Response;
 
-    if (graphMethod === 'POST') {
-      // POST: use System Token for writes (full access, never expires)
-      const writeToken = systemToken || connection.access_token;
-      const graphUrl = `https://graph.facebook.com/v19.0/${path}`;
-      const formData = new URLSearchParams();
-      const p = params || {};
-      for (const [key, value] of Object.entries(p)) {
-        formData.append(key, String(value));
-      }
-      formData.append('access_token', writeToken);
-      console.log(`[meta-proxy] POST ${graphUrl} using ${systemToken ? 'SYSTEM_TOKEN' : 'user_token'}`);
-      graphRes = await fetch(graphUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: formData.toString(),
+    if (graphMethod === "POST") {
+      const token = systemToken || connection.access_token;
+      const form = new URLSearchParams();
+      for (const [k, v] of Object.entries(p)) form.append(k, String(v));
+      form.append("access_token", token);
+      graphRes = await fetch(`https://graph.facebook.com/v19.0/${path}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: form.toString(),
       });
     } else {
-      // GET: use user OAuth token for reads
-      const p = params || {};
-      const parts: string[] = [];
-      for (const [key, value] of Object.entries(p)) {
-        parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
-      }
-      parts.append(`access_token=${encodeURIComponent(connection.access_token)}`);
-      const graphUrl = `https://graph.facebook.com/v19.0/${path}?${parts.join('&')}`;
-      graphRes = await fetch(graphUrl);
+      const qs = new URLSearchParams({ ...p, access_token: connection.access_token });
+      graphRes = await fetch(`https://graph.facebook.com/v19.0/${path}?${qs.toString()}`);
     }
 
     const graphData = await graphRes.json();
-    console.log(`[meta-proxy] Graph response status=${graphRes.status}`, JSON.stringify(graphData).substring(0, 500));
 
     if (!graphRes.ok) {
-      console.error("[meta-proxy] Graph API error:", JSON.stringify(graphData));
-      return new Response(JSON.stringify({ error: graphData.error?.message || "Graph API error" }), {
-        status: graphRes.status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error("[meta-proxy] error:", JSON.stringify(graphData));
+      return new Response(
+        JSON.stringify({ error: graphData.error?.message || "Graph API error" }),
+        { status: graphRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     return new Response(JSON.stringify(graphData), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
   } catch (error) {
     console.error("Meta proxy error:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {

@@ -186,7 +186,7 @@ export default function OverviewTab() {
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* Fix #1: ROAS por campanha — top 10, fixed height, full name tooltip */}
-        <div className="bg-card border border-border rounded-lg p-4 animate-fade-up">
+        <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 animate-fade-up">
           <h3 className="text-xs font-semibold text-foreground mb-3">ROAS por Campanha <span className="text-muted-foreground font-normal">(top 10)</span></h3>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={roasCampaignData} layout="vertical">

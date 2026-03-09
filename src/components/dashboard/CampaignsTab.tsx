@@ -621,7 +621,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 </td>
               </tr>
             ) : (
-              sortedCampaigns.map((c, rowIndex) => {
+              paginatedCampaigns.map((c, rowIndex) => {
                 const expanded = expandedId === c.id;
                 const effectiveStatus = localStatuses[c.id] || c.status;
                 const isActive = effectiveStatus === 'ACTIVE';

@@ -5,6 +5,7 @@ import { useProfile } from './useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { useAlerts } from './useAlerts';
 
 export interface ProcessedCampaign {
   id: string;
@@ -143,6 +144,7 @@ export function useMetaData() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { checkAndCreateAlerts } = useAlerts();
 
   const analyze = useCallback(async () => {
     if (!selectedAccountId) {
@@ -391,6 +393,9 @@ export function useMetaData() {
         }
       }
 
+      // Check and create alerts based on campaign data
+      await checkAndCreateAlerts(campaigns, selectedAccountId);
+
       toast.success('Análise concluída!');
     } catch (err: any) {
       console.error('Analysis error:', err);
@@ -404,7 +409,7 @@ export function useMetaData() {
     } finally {
       setLoading(false);
     }
-  }, [selectedAccountId, selectedPeriod, isConnected, isTokenExpired, callMetaApi, user, setAnalysisForAccount]);
+  }, [selectedAccountId, selectedPeriod, isConnected, isTokenExpired, callMetaApi, user, setAnalysisForAccount, checkAndCreateAlerts]);
 
   return { loading, error, analyze, roasTarget: profile?.roas_target || 3.0 };
 }

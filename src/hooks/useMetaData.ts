@@ -196,7 +196,8 @@ export function useMetaData() {
           limit: '50',
         }),
         callMetaApi(`${acctPath}/campaigns`, {
-          fields: `id,name,status,insights.time_range({"since":"${since}","until":"${until}"}){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}`,
+          fields: `id,name,status,insights{spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}`,
+          time_range: JSON.stringify(getPrevTimeRange(selectedPeriod)),
           limit: '50',
         }),
         callMetaApi(`${acctPath}/insights`, {

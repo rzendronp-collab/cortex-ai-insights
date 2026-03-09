@@ -75,12 +75,13 @@ const periodMap: Record<string, string> = {
   '30d': 'last_30d',
 };
 
-const prevPeriodMap: Record<string, string> = {
-  'Hoje': 'yesterday',
-  '3d': 'last_7d',
-  '7d': 'last_14d',
-  '14d': 'last_28d',
-  '30d': 'last_30d',
+// For delta comparison, we fetch a "double window" and subtract current period to get previous-only
+const doublePeriodMap: Record<string, string> = {
+  'Hoje': 'last_3d',       // Will subtract today to get yesterday+day-before
+  '3d': 'last_7d',         // Subtract 3d to get previous 4 days
+  '7d': 'last_14d',        // Subtract 7d to get previous 7 days
+  '14d': 'last_30d',       // Subtract 14d to get previous ~16 days
+  '30d': 'last_90d',       // Subtract 30d to get previous 60 days
 };
 
 function extractPurchases(actions: any[]): number {
@@ -143,7 +144,7 @@ export function useMetaData() {
     setError(null);
 
     const period = periodMap[selectedPeriod] || 'last_7d';
-    const prevPeriod = prevPeriodMap[selectedPeriod] || 'last_14d';
+    const doublePeriod = doublePeriodMap[selectedPeriod] || 'last_14d';
     const acctPath = `act_${selectedAccountId}`;
 
     try {
@@ -174,10 +175,10 @@ export function useMetaData() {
           fields: 'id,name,status,insights.date_preset(' + period + '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
           limit: '50',
         }),
-        callMetaApi(`${acctPath}/campaigns`, {
-          fields: 'id,name,status,insights.date_preset(' + prevPeriod + '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
-          limit: '50',
-        }),
+      callMetaApi(`${acctPath}/campaigns`, {
+        fields: 'id,name,status,insights.date_preset(' + doublePeriod + '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
+        limit: '50',
+      }),
         callMetaApi(`${acctPath}/insights`, {
           breakdowns: 'hourly_stats_aggregated_by_advertiser_time_zone',
           fields: 'spend,actions,impressions,clicks',
@@ -204,7 +205,43 @@ export function useMetaData() {
       ]);
 
       const campaigns: ProcessedCampaign[] = (campaignsRes?.data || []).map(processCampaign);
-      const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map(processCampaign);
+      const campaignsDouble: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map(processCampaign);
+
+      // Compute previous period by subtracting current from double-window
+      // prev = double - current (for each metric)
+      const campaignsPrev: ProcessedCampaign[] = campaigns.map(curr => {
+        const double = campaignsDouble.find(d => d.id === curr.id);
+        if (!double) {
+          // No double-window data, return zeros
+          return { ...curr, spend: 0, impressions: 0, clicks: 0, ctr: 0, cpm: 0, cpc: 0, purchases: 0, revenue: 0, roas: 0, cpv: 0 };
+        }
+        const prevSpend = Math.max(0, double.spend - curr.spend);
+        const prevImpressions = Math.max(0, double.impressions - curr.impressions);
+        const prevClicks = Math.max(0, double.clicks - curr.clicks);
+        const prevPurchases = Math.max(0, double.purchases - curr.purchases);
+        const prevRevenue = Math.max(0, double.revenue - curr.revenue);
+        const prevRoas = prevSpend > 0 ? prevRevenue / prevSpend : 0;
+        const prevCtr = prevImpressions > 0 ? (prevClicks / prevImpressions) * 100 : 0;
+        const prevCpm = prevImpressions > 0 ? (prevSpend / prevImpressions) * 1000 : 0;
+        const prevCpc = prevClicks > 0 ? prevSpend / prevClicks : 0;
+        const prevCpv = prevPurchases > 0 ? prevSpend / prevPurchases : 0;
+
+        return {
+          id: curr.id,
+          name: curr.name,
+          status: curr.status,
+          spend: prevSpend,
+          impressions: prevImpressions,
+          clicks: prevClicks,
+          ctr: prevCtr,
+          cpm: prevCpm,
+          cpc: prevCpc,
+          purchases: prevPurchases,
+          revenue: prevRevenue,
+          roas: prevRoas,
+          cpv: prevCpv,
+        };
+      });
 
       const dailyData: DailyData[] = (dailyRes?.data || []).map((d: any) => {
         const spend = parseFloat(d.spend || '0');

@@ -18,14 +18,16 @@ export default function DashboardHeader() {
   const avgRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
   const aboveMeta = ad?.campaigns.filter(c => c.roas >= roasTarget).length || 0;
   const belowMeta = ad?.campaigns.filter(c => c.roas < roasTarget && c.spend > 0).length || 0;
-  const delta = ad && ad.campaignsPrev.length > 0
+  // Calculate delta only if previous period has meaningful data
+  const delta: number | null = ad && ad.campaignsPrev.length > 0
     ? (() => {
         const prevSpend = ad.campaignsPrev.reduce((s, c) => s + c.spend, 0);
         const prevRevenue = ad.campaignsPrev.reduce((s, c) => s + c.revenue, 0);
         const prevRoas = prevSpend > 0 ? prevRevenue / prevSpend : 0;
-        return prevRoas > 0 ? ((avgRoas - prevRoas) / prevRoas * 100) : 0;
+        if (prevRoas === 0) return null; // Hide delta if no previous data
+        return ((avgRoas - prevRoas) / prevRoas * 100);
       })()
-    : 0;
+    : null;
 
   const accountTitle = selectedAccountName || (selectedAccountId ? `act_${selectedAccountId}` : 'Selecione uma conta');
   const accountSubtitle = selectedAccountId ? `act_${selectedAccountId}` : '';
@@ -95,7 +97,7 @@ export default function DashboardHeader() {
           <>
             <span className={`font-bold ${getRoasColor(avgRoas, roasTarget)}`}>
               ROAS {avgRoas.toFixed(1)}x
-              {delta !== 0 && <span className="opacity-70 ml-1">{delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(0)}%</span>}
+              {delta !== null && delta !== 0 && <span className="opacity-70 ml-1">{delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(0)}%</span>}
             </span>
             <span className="text-muted-foreground">|</span>
             <span className="text-foreground">Gasto: <span className="font-semibold">R$ {(totalSpend / 1000).toFixed(1)}k</span></span>

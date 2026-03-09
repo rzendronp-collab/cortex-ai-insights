@@ -100,9 +100,9 @@ export default function DashboardHeader() {
               {delta !== null && delta !== 0 && <span className="opacity-70 ml-1">{delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(0)}%</span>}
             </span>
             <span className="text-muted-foreground">|</span>
-            <span className="text-foreground">Gasto: <span className="font-semibold">R$ {(totalSpend / 1000).toFixed(1)}k</span></span>
+            <span className="text-foreground">Gasto: <span className="font-semibold">{currencySymbol} {(totalSpend / 1000).toFixed(1)}k</span></span>
             <span className="text-muted-foreground">|</span>
-            <span className="text-foreground">Receita: <span className="font-semibold text-success">R$ {(totalRevenue / 1000).toFixed(1)}k</span></span>
+            <span className="text-foreground">Receita: <span className="font-semibold text-success">{currencySymbol} {(totalRevenue / 1000).toFixed(1)}k</span></span>
             <span className="text-muted-foreground">|</span>
             <span className="text-foreground">{aboveMeta} acima da meta • {belowMeta} abaixo</span>
           </>

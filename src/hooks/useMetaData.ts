@@ -341,6 +341,7 @@ export function useMetaData() {
         platformData,
         genderData,
         ageData,
+        budgetByCampaignId,
         lastUpdated: now,
       };
 

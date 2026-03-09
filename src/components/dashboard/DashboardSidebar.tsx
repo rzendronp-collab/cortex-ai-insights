@@ -42,6 +42,7 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
   const { selectedAccountId, setSelectedAccountId, setSelectedAccountName, setSelectedAccountCurrency, analysisData, activeTab: currentTab, setActiveTab, activeAccountIds, toggleActiveAccount, setActiveAccountIds, analysisCache } = useDashboard();
   const [configOpen, setConfigOpen] = useState(false);
   const [accountsOpen, setAccountsOpen] = useState(true);
+  const [openBMs, setOpenBMs] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
   const [connecting, setConnecting] = useState(false);
 

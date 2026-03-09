@@ -8,6 +8,11 @@ interface CachedAnalysis {
   period: string;
 }
 
+export interface DateRange {
+  from: string;
+  to: string;
+}
+
 interface DashboardContextType {
   selectedAccountId: string | null;
   setSelectedAccountId: (id: string | null) => void;
@@ -15,6 +20,8 @@ interface DashboardContextType {
   setSelectedAccountName: (name: string | null) => void;
   selectedPeriod: string;
   setSelectedPeriod: (p: string) => void;
+  dateRange: DateRange | null;
+  setDateRange: (range: DateRange | null) => void;
   activeTab: string;
   setActiveTab: (t: string) => void;
   analysisData: AnalysisData | null;

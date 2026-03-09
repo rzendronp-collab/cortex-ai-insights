@@ -5,6 +5,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useCampaignNotes } from '@/hooks/useCampaignNotes';
 import { useColumnPreferences, ALL_COLUMNS } from '@/hooks/useColumnPreferences';
+import { useAdsets, ProcessedAdset } from '@/hooks/useAdsets';
 import { getRoasColor, formatCurrency, formatNumber } from '@/lib/mockData';
 import { ProcessedCampaign } from '@/hooks/useMetaData';
 import { Switch } from '@/components/ui/switch';
@@ -155,6 +156,7 @@ function NotePopover({ campaignId, accountId, note, isSaving, onSave, onDelete }
 
 export default function CampaignsTab() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [adsetExpandedId, setAdsetExpandedId] = useState<string | null>(null);
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -189,7 +191,7 @@ export default function CampaignsTab() {
   const [budgetCache, setBudgetCache] = useState<Record<string, number | null>>({});
   const [budgetFetching, setBudgetFetching] = useState<Set<string>>(new Set());
 
-  const { analysisData, selectedAccountId, currencySymbol } = useDashboard();
+  const { analysisData, selectedAccountId, selectedPeriod, currencySymbol } = useDashboard();
   const { profile } = useProfile();
   const { callMetaApi, isConnected } = useMetaConnection();
   const { notes, saving: noteSaving, fetchNotes, saveNote, deleteNote } = useCampaignNotes();
@@ -203,6 +205,7 @@ export default function CampaignsTab() {
       reorderColumns(oldIndex, newIndex);
     }
   }, [orderedColumns, reorderColumns]);
+  const { adsets, adsetsLoading, fetchAdsets } = useAdsets();
   const roasTarget = profile?.roas_target || 3.0;
   const currency = currencySymbol;
 
@@ -811,18 +814,30 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     case 'status':
                       return (
                         <td key={colId} className="px-3" onClick={e => e.stopPropagation()}>
-                          {isToggling ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />
-                          ) : (
+                          <div className="flex items-center gap-1.5">
                             <button
-                              onClick={() => setConfirmDialog({ id: c.id, name: c.name, currentStatus: effectiveStatus })}
-                              className="relative inline-flex items-center cursor-pointer"
-                              style={{ width: 36, height: 20, borderRadius: 10 }}
+                              onClick={() => {
+                                const isOpen = adsetExpandedId === c.id;
+                                setAdsetExpandedId(isOpen ? null : c.id);
+                                if (!isOpen) fetchAdsets(c.id, selectedPeriod);
+                              }}
+                              className="p-0.5 text-muted-foreground hover:text-foreground transition-transform"
                             >
-                              <span className="block w-full h-full rounded-[10px] transition-colors duration-200 ease-in-out" style={{ backgroundColor: isActive ? '#10B981' : '#374151' }} />
-                              <span className="absolute block w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out" style={{ top: 2, left: isActive ? 18 : 2 }} />
+                              <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ${adsetExpandedId === c.id ? 'rotate-90' : ''}`} />
                             </button>
-                          )}
+                            {isToggling ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                            ) : (
+                              <button
+                                onClick={() => setConfirmDialog({ id: c.id, name: c.name, currentStatus: effectiveStatus })}
+                                className="relative inline-flex items-center cursor-pointer"
+                                style={{ width: 36, height: 20, borderRadius: 10 }}
+                              >
+                                <span className="block w-full h-full rounded-[10px] transition-colors duration-200 ease-in-out" style={{ backgroundColor: isActive ? '#10B981' : '#374151' }} />
+                                <span className="absolute block w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out" style={{ top: 2, left: isActive ? 18 : 2 }} />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       );
                     case 'campaign':
@@ -909,6 +924,83 @@ Responda SOMENTE com o JSON, sem markdown.`;
                         {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                       </td>
                     </tr>
+
+                    {/* ADSETS SUB-TABLE */}
+                    {adsetExpandedId === c.id && (() => {
+                      const campaignAdsets = adsets.get(c.id);
+                      const isAdsetLoading = adsetsLoading.has(c.id);
+                      return (
+                        <tr className="bg-[#090D18] border-b border-[#1C2538]">
+                          <td colSpan={activeColumns.length + 1} className="p-0">
+                            <div className="pl-10 pr-4 py-3 border-l-2 border-l-data-blue/40 animate-fade-up">
+                              <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider mb-2">Conjuntos de Anúncios</p>
+                              {isAdsetLoading ? (
+                                <div className="space-y-2">
+                                  {[0,1,2].map(i => (
+                                    <div key={i} className="flex items-center gap-4 py-2">
+                                      <Skeleton className="h-4 w-8" />
+                                      <Skeleton className="h-4 w-40" />
+                                      <Skeleton className="h-4 w-16" />
+                                      <Skeleton className="h-4 w-16" />
+                                      <Skeleton className="h-4 w-12" />
+                                      <Skeleton className="h-4 w-12" />
+                                      <Skeleton className="h-4 w-12" />
+                                      <Skeleton className="h-4 w-16" />
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : !campaignAdsets || campaignAdsets.length === 0 ? (
+                                <p className="text-xs text-muted-foreground py-3">Nenhum adset encontrado</p>
+                              ) : (
+                                <table className="w-full text-left text-xs">
+                                  <thead>
+                                    <tr className="border-b border-[#1C2538]/50">
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase w-10">Status</th>
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase">Nome</th>
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">Gasto</th>
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">ROAS</th>
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">Vendas</th>
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">CTR</th>
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">CPM</th>
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">Budget</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {campaignAdsets.map(adset => {
+                                      const adsetActive = adset.status === 'ACTIVE';
+                                      let abBg: string, abText: string, abBorder: string;
+                                      if (adset.roas >= roasTarget) { abBg = 'rgba(52,211,153,0.12)'; abText = '#34D399'; abBorder = 'rgba(52,211,153,0.25)'; }
+                                      else if (adset.roas >= roasTarget * 0.7) { abBg = 'rgba(251,191,36,0.12)'; abText = '#FBBF24'; abBorder = 'rgba(251,191,36,0.25)'; }
+                                      else { abBg = 'rgba(248,113,113,0.12)'; abText = '#F87171'; abBorder = 'rgba(248,113,113,0.25)'; }
+                                      return (
+                                        <tr key={adset.id} className={`border-b border-[#1C2538]/30 hover:bg-[#0E1420]/50 transition-colors ${!adsetActive ? 'opacity-50' : ''}`}>
+                                          <td className="py-2 px-2">
+                                            <span className={`inline-block w-2 h-2 rounded-full ${adsetActive ? 'bg-success' : 'bg-muted-foreground'}`} />
+                                          </td>
+                                          <td className="py-2 px-2">
+                                            <p className="text-[12px] text-text-primary truncate max-w-[180px]">{adset.name}</p>
+                                          </td>
+                                          <td className="py-2 px-2 text-right text-[12px] text-text-primary">{formatCurrency(adset.spend, currency)}</td>
+                                          <td className="py-2 px-2 text-right">
+                                            <span className="text-[11px] font-bold inline-block" style={{ background: abBg, color: abText, border: `1px solid ${abBorder}`, borderRadius: 5, padding: '1px 6px' }}>
+                                              {adset.roas.toFixed(2)}x
+                                            </span>
+                                          </td>
+                                          <td className="py-2 px-2 text-right text-[12px] text-text-primary">{adset.purchases}</td>
+                                          <td className="py-2 px-2 text-right text-[12px] text-text-primary">{adset.ctr.toFixed(2)}%</td>
+                                          <td className="py-2 px-2 text-right text-[12px] text-text-primary">{formatCurrency(adset.cpm, currency)}</td>
+                                          <td className="py-2 px-2 text-right text-[12px] text-text-primary">{adset.dailyBudget != null ? formatCurrency(adset.dailyBudget, currency) : '—'}</td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })()}
                     
                     {/* EXPANDED CONTENT */}
                     {expanded && (

@@ -41,7 +41,7 @@ function DashboardContent() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="flex flex-row h-screen overflow-hidden bg-background">
       <OnboardingModal />
 
       {/* Mobile sidebar overlay */}
@@ -65,7 +65,7 @@ function DashboardContent() {
         <DashboardSidebar />
       )}
 
-      <div className={isMobile ? 'ml-0' : 'ml-[220px]'}>
+      <div className={`flex-1 overflow-y-auto h-screen ${isMobile ? '' : ''}`}>
         <DashboardHeader onOpenSidebar={() => setSidebarOpen(true)} />
         {isTokenExpired && (
           <div className="mx-4 md:mx-6 mt-4 bg-warning/10 border border-warning/30 rounded-lg px-4 py-3 flex items-center gap-3">

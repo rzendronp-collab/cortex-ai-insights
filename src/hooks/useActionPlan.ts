@@ -108,6 +108,14 @@ export function useActionPlan() {
       const insights = extraData[1].status === 'fulfilled'
         ? (extraData[1] as PromiseFulfilledResult<any>).value?.data || [] : [];
 
+      const periodDays = (() => {
+        const p = analysisData?.period || '7d';
+        const map: Record<string, number> = {
+          'today': 1, '1d': 1, '3d': 3, '7d': 7, '14d': 14, '30d': 30
+        };
+        return map[p] || 7;
+      })();
+
       const campaignsData = campaigns.map(c => {
         const detail = campDetails.find((d: any) => d.id === c.id) || {};
         const insight = insights.find((i: any) => i.campaign_id === c.id) || {};
@@ -134,6 +142,10 @@ export function useActionPlan() {
           created_days_ago: createdDaysAgo,
           frequency: parseFloat(insight.frequency) || null,
           reach: parseInt(insight.reach) || null,
+          spend_diario: periodDays > 0 ? parseFloat((c.spend / periodDays).toFixed(2)) : c.spend,
+          revenue_diario: periodDays > 0 ? parseFloat((c.revenue / periodDays).toFixed(2)) : c.revenue,
+          period_days: periodDays,
+          tipo_budget: (analysisData?.budgetByCampaignId?.[c.id] || 0) > 0 ? 'CBO' : 'ABO',
         };
       });
 
@@ -151,14 +163,35 @@ CONTEXTO DO NEGÓCIO:
 - Objetivo: ${objectiveLabels[context.objective || ''] || 'não informado'}
 - Budget total disponível: ${context.total_budget ? currency + ' ' + context.total_budget : 'não informado'}
 
-REGRAS DE ANÁLISE:
-- Campanhas com menos de 3 dias: não pausar, aguardar aprendizado
-- Frequency > 3.5: público saturado, sugerir novo criativo ou público
-- Frequency > 5.0: pausar ou trocar criativo urgente
-- ROAS >= meta * 1.5: escalar budget 20-40%
-- ROAS < meta * 0.5 AND spend > 20 AND created_days_ago > 7: pausar
-- CPM > 40: público caro, sugerir otimização de segmentação
-- CTR < 1% AND spend > 15: criativo fraco
+REGRAS DE BUDGET (baseadas em gasto DIÁRIO):
+- valor_atual e valor_novo devem ser sempre em budget DIÁRIO
+- Aumento máximo por ação: +30% do budget diário atual (Meta penaliza escala agressiva)
+- Budget mínimo viável: ${currency} 10/dia (abaixo = sem dados suficientes)
+- Campanhas com spend_diario < 5: não alterar budget ainda
+- Para escalar: valor_novo = valor_atual * 1.20 (máx 1.30)
+- Para reduzir: valor_novo = valor_atual * 0.70 (máx redução 50%)
+- Se budget = 0 (CBO): não sugerir alteração de budget, apenas pause/resume
+
+REGRAS DE SEGURANÇA:
+- Máximo 3 pausas por plano — priorizar as piores
+- Não pausar se conta tiver menos de 3 campanhas ativas
+- Não sugerir aumento total de budget da conta > 50% num único plano
+- Campanhas 0-3 dias: NUNCA pausar, NUNCA alterar budget — apenas observar
+- Campanhas 3-7 dias: otimizar com cautela, máx +20% budget
+- Campanhas 7+ dias: análise confiável, pode escalar até +30%
+
+REGRAS DE TEMPO E APRENDIZADO:
+- Fase de aprendizado Meta: mínimo 50 eventos de conversão ou 7 dias
+- Não pausar campanha que teve venda nas últimas 24h (purchases > 0 em spend_diario)
+- Campanhas reativadas recentemente (resume): aguardar 3 dias antes de nova otimização
+
+REGRAS DE QUALIDADE:
+- Frequency > 3.5: público saturado → sugerir novo criativo
+- Frequency > 5.0: pausar urgente ou trocar criativo
+- CTR < 1% após 7+ dias e spend > 15/dia: criativo fraco → pausar
+- CPM > 40: público caro → otimizar segmentação
+- ROAS >= meta * 1.5 e 7+ dias: escalar +20%
+- ROAS >= meta * 2.0 e 7+ dias: escalar +30%
 ${context.margin ? `- Margem ${context.margin}%: ROAS mínimo viável = ${(100 / context.margin).toFixed(1)}x` : ''}
 `;
 

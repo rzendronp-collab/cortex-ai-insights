@@ -351,7 +351,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
           <tbody>
             {sortedCampaigns.length === 0 ? (
               <tr>
-                <td colSpan={13} className="text-center py-8 text-xs text-muted-foreground">
+                <td colSpan={14} className="text-center py-8 text-xs text-muted-foreground">
                   Nenhuma campanha encontrada com os filtros atuais.
                 </td>
               </tr>

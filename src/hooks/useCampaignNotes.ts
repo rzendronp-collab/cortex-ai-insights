@@ -1,18 +1,16 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
 
-export function useCampaignNotes() {
-  const { user } = useAuth();
+export function useCampaignNotes(userId: string | undefined | null) {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<Set<string>>(new Set());
 
   const fetchNotes = useCallback(async (accountId: string) => {
-    if (!user) return;
+    if (!userId) return;
     const { data, error } = await supabase
       .from('campaign_notes')
       .select('campaign_id, content')
-      .eq('user_id', user.id)
+      .eq('user_id', userId)
       .eq('account_id', accountId);
     if (error) return;
     const map: Record<string, string> = {};
@@ -20,17 +18,16 @@ export function useCampaignNotes() {
       if (n.campaign_id && n.content) map[n.campaign_id] = n.content;
     });
     setNotes(map);
-  }, [user]);
+  }, [userId]);
 
   const saveNote = useCallback(async (campaignId: string, accountId: string, content: string) => {
-    if (!user) return;
+    if (!userId) return;
     setSaving(prev => new Set(prev).add(campaignId));
     try {
-      // Check if exists
       const { data: existing } = await supabase
         .from('campaign_notes')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('campaign_id', campaignId)
         .eq('account_id', accountId)
         .maybeSingle();
@@ -43,22 +40,22 @@ export function useCampaignNotes() {
       } else {
         await supabase
           .from('campaign_notes')
-          .insert({ user_id: user.id, campaign_id: campaignId, account_id: accountId, content });
+          .insert({ user_id: userId, campaign_id: campaignId, account_id: accountId, content });
       }
       setNotes(prev => ({ ...prev, [campaignId]: content }));
     } finally {
       setSaving(prev => { const n = new Set(prev); n.delete(campaignId); return n; });
     }
-  }, [user]);
+  }, [userId]);
 
   const deleteNote = useCallback(async (campaignId: string, accountId: string) => {
-    if (!user) return;
+    if (!userId) return;
     setSaving(prev => new Set(prev).add(campaignId));
     try {
       await supabase
         .from('campaign_notes')
         .delete()
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .eq('campaign_id', campaignId)
         .eq('account_id', accountId);
       setNotes(prev => {
@@ -69,7 +66,7 @@ export function useCampaignNotes() {
     } finally {
       setSaving(prev => { const n = new Set(prev); n.delete(campaignId); return n; });
     }
-  }, [user]);
+  }, [userId]);
 
   return { notes, saving, fetchNotes, saveNote, deleteNote };
 }

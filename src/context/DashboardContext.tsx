@@ -32,7 +32,7 @@ interface DashboardContextType {
   clearCurrentAnalysis: () => void;
   currencySymbol: string;
   setSelectedAccountCurrency: (currency: string | null) => void;
-  analyzeRef: MutableRefObject<(() => void) | null>;
+  analyzeRef: MutableRefObject<((overrideAccountId?: string) => void) | null>;
   // Multi-account
   activeAccountIds: string[];
   setActiveAccountIds: React.Dispatch<React.SetStateAction<string[]>>;

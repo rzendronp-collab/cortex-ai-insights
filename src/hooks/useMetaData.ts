@@ -324,6 +324,16 @@ export function useMetaData() {
         .map(([age, spend]) => ({ age, percentage: Math.round((spend / totalDemoSpend) * 100) }));
 
       const rawAdsets = adsetsRes?.data || [];
+      console.log('[ADSETS DEBUG]', {
+        total: rawAdsets.length,
+        first: rawAdsets[0],
+        sample: rawAdsets.slice(0, 3).map((a: any) => ({
+          id: a.id,
+          campaign_id: a.campaign_id,
+          daily_budget: a.daily_budget,
+          lifetime_budget: a.lifetime_budget,
+        }))
+      });
       const budgetByCampaignId: Record<string, number> = {};
       rawAdsets.forEach((adset: any) => {
         if (adset.campaign_id) {

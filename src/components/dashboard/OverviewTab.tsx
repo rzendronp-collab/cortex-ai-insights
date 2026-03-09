@@ -246,7 +246,7 @@ export default function OverviewTab() {
       </div>
 
       {/* Fix #3: Daily chart — multi-metric with checkboxes and dual Y axis */}
-      <div className="bg-card border border-border rounded-lg p-4 animate-fade-up">
+      <div className="bg-card border border-border rounded-lg p-4 mb-6 animate-fade-up" style={{ minHeight: 280 }}>
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h3 className="text-xs font-semibold text-foreground">Evolução Diária</h3>
           <div className="flex gap-3 flex-wrap">

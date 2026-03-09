@@ -76,6 +76,7 @@ export function useCampaignActions() {
 
       await invalidateCache();
       clearCurrentAnalysis();
+      triggerReanalyze();
       return confirmedStatus;
     } catch (err: any) {
       console.error(`[TOGGLE] Error:`, err);

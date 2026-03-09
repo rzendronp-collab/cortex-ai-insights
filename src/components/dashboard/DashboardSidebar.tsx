@@ -287,18 +287,80 @@ export default function DashboardSidebar() {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="p-3 border-t border-border">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
-            {initials}
+      {/* CONFIGURAÇÕES Section - Footer */}
+      <div className="border-t border-border">
+        <Collapsible open={configOpen} onOpenChange={setConfigOpen}>
+          <CollapsibleTrigger className="flex items-center gap-2 w-full px-4 py-3 hover:bg-muted/50 transition-colors">
+            <Settings className="w-4 h-4 text-muted-foreground" />
+            <span className="text-xs font-medium text-foreground">Config</span>
+            <ChevronRight className={`w-3.5 h-3.5 ml-auto text-muted-foreground transition-transform ${configOpen ? 'rotate-90' : ''}`} />
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent className="px-3 pb-3">
+            <div className="space-y-3 pt-2">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground">API Key Claude</Label>
+                <Input
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="sk-ant-..."
+                  className="h-7 text-[10px] bg-muted border-border"
+                />
+                <p className="text-[9px] text-muted-foreground">Salva com segurança no servidor</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground">ROAS Target</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={roasTarget}
+                  onChange={(e) => setRoasTarget(e.target.value)}
+                  className="h-7 text-[10px] bg-muted border-border"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground">Moeda</Label>
+                <Select value={currency} onValueChange={setCurrency}>
+                  <SelectTrigger className="h-7 text-[10px] bg-muted border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="R$">R$ (BRL)</SelectItem>
+                    <SelectItem value="$">$ (USD)</SelectItem>
+                    <SelectItem value="€">€ (EUR)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground">Nicho</Label>
+                <Input
+                  value={niche}
+                  onChange={(e) => setNiche(e.target.value)}
+                  placeholder="Ex: E-commerce, SaaS..."
+                  className="h-7 text-[10px] bg-muted border-border"
+                />
+              </div>
+              <Button onClick={handleSaveConfig} disabled={saving} size="sm" className="w-full h-7 text-[10px] gradient-primary text-primary-foreground">
+                {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Save className="w-3 h-3 mr-1" />Salvar</>}
+              </Button>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* User Footer */}
+        <div className="p-3 border-t border-border">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-foreground truncate">{profile?.name || 'Usuário'}</p>
+            </div>
+            <button onClick={signOut} className="text-muted-foreground hover:text-destructive transition-colors">
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-foreground truncate">{profile?.name || 'Usuário'}</p>
-          </div>
-          <button onClick={signOut} className="text-muted-foreground hover:text-destructive transition-colors">
-            <LogOut className="w-4 h-4" />
-          </button>
         </div>
       </div>
     </div>

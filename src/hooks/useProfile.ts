@@ -8,6 +8,8 @@ interface Profile {
   roas_target: number;
   currency: string;
   niche: string | null;
+  claude_api_key: string | null;
+  onboarding_completed: boolean | null;
 }
 
 export function useProfile() {
@@ -20,7 +22,7 @@ export function useProfile() {
       if (!user) return null;
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, name, roas_target, currency, niche')
+        .select('id, name, roas_target, currency, niche, claude_api_key, onboarding_completed')
         .eq('id', user.id)
         .single();
       if (error) throw error;
@@ -43,5 +45,25 @@ export function useProfile() {
     },
   });
 
-  return { profile, isLoading, updateProfile };
+  const saveClaudeKey = async (key: string) => {
+    if (!user) throw new Error('Not authenticated');
+    const { error } = await supabase
+      .from('profiles')
+      .update({ claude_api_key: key, updated_at: new Date().toISOString() })
+      .eq('id', user.id);
+    if (error) throw error;
+    queryClient.invalidateQueries({ queryKey: ['profile'] });
+  };
+
+  const completeOnboarding = async () => {
+    if (!user) throw new Error('Not authenticated');
+    const { error } = await supabase
+      .from('profiles')
+      .update({ onboarding_completed: true, updated_at: new Date().toISOString() })
+      .eq('id', user.id);
+    if (error) throw error;
+    queryClient.invalidateQueries({ queryKey: ['profile'] });
+  };
+
+  return { profile, isLoading, updateProfile, saveClaudeKey, completeOnboarding };
 }

@@ -17,7 +17,7 @@ export default function KPICard({ label, value, subtitle, delta, valueClassName 
         : 'bg-[#0E1420] border border-[#1E2D4A] hover:shadow-card-hover'
     }`}>
       <div className="flex items-center justify-between mb-1">
-        <p className="text-[10px] uppercase tracking-[1px] text-muted-foreground font-medium">{label}</p>
+        <p className="text-[10px] uppercase tracking-[1px] text-[#64748B] font-medium">{label}</p>
         {delta !== undefined && (
           <div className={`flex items-center gap-0.5 text-[10px] font-semibold ${delta >= 0 ? 'text-success' : 'text-destructive'}`}>
             {delta >= 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}

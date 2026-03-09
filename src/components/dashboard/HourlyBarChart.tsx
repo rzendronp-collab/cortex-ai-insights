@@ -14,10 +14,10 @@ function parseHourToNumber(hour: string): number {
 }
 
 const BAR_COLORS = {
-  peak: '#1FBF72',
-  high: '#4F8EF7',
-  normal: '#7C6EFA',
-  low: '#1A2035',
+  peak: '#10B981',
+  high: '#3B82F6',
+  normal: '#8B5CF6',
+  low: '#1E2D4A',
 };
 
 export function HourlyBarChart({ data, emptyMessage, currency = 'R$' }: HourlyBarChartProps) {

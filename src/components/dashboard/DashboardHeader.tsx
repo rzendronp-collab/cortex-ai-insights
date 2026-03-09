@@ -231,7 +231,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
           </>
         ) : (
           <span className="text-text-muted">
-            {selectedAccountId ? 'Clique em Atualizar para carregar dados' : 'Selecione uma conta'}
+            Clique em Atualizar para carregar dados
           </span>
         )}
       </div>

@@ -165,6 +165,7 @@ export default function CampaignsTab() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused'>('all');
   const [activeTodayFilter, setActiveTodayFilter] = useState(false);
   const [roasFilter, setRoasFilter] = useState<'all' | 'above' | 'near' | 'below' | 'scaling'>('all');
+  const [countryFilter, setCountryFilter] = useState<'all' | 'PT' | 'ES' | 'GR' | 'BR'>('all');
   const [roasDropdownOpen, setRoasDropdownOpen] = useState(false);
   
   // Pagination
@@ -261,6 +262,24 @@ export default function CampaignsTab() {
     }
   };
 
+  const detectCountry = useCallback((name: string): string => {
+    const lower = name.toLowerCase();
+    if (lower.includes('portugal') || lower.includes(' pt') || lower.includes('_pt') || lower.includes('pt_')) return 'PT';
+    if (lower.includes('spain') || lower.includes('espanha') || lower.includes('madrid') || lower.includes(' es') || lower.includes('es_')) return 'ES';
+    if (lower.includes('greece') || lower.includes('grecia') || lower.includes('grécia') || lower.includes('athen') || lower.includes(' gr') || lower.includes('gr_')) return 'GR';
+    if (lower.includes('brasil') || lower.includes('brazil') || lower.includes(' br') || lower.includes('br_')) return 'BR';
+    return 'OTHER';
+  }, []);
+
+  const availableCountries = useMemo(() => {
+    const found = new Set<string>();
+    rawCampaigns.forEach(c => {
+      const country = detectCountry(c.name);
+      if (country !== 'OTHER') found.add(country);
+    });
+    return Array.from(found);
+  }, [rawCampaigns, detectCountry]);
+
   const filteredCampaigns = useMemo(() => {
     return rawCampaigns.filter(c => {
       if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -273,9 +292,13 @@ export default function CampaignsTab() {
       if (roasFilter === 'near' && (c.roas < roasTarget * 0.7 || c.roas >= roasTarget)) return false;
       if (roasFilter === 'below' && c.roas >= roasTarget * 0.7) return false;
       if (roasFilter === 'scaling' && c.roas < roasTarget * 1.5) return false;
+      // Country filter
+      if (countryFilter !== 'all') {
+        if (detectCountry(c.name) !== countryFilter) return false;
+      }
       return true;
     });
-  }, [rawCampaigns, searchQuery, statusFilter, activeTodayFilter, localStatuses, roasFilter, roasTarget]);
+  }, [rawCampaigns, searchQuery, statusFilter, activeTodayFilter, localStatuses, roasFilter, roasTarget, countryFilter, detectCountry]);
 
   const sortedCampaigns = useMemo(() => {
     return [...filteredCampaigns].sort((a, b) => {
@@ -548,7 +571,10 @@ Responda SOMENTE com o JSON, sem markdown.`;
   }, [budgetCache, budgetFetching, callMetaApi]);
 
   // Reset page when filters change (must be before early returns)
-  React.useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, activeTodayFilter, roasFilter]);
+  React.useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, activeTodayFilter, roasFilter, countryFilter]);
+
+  // Reset country filter when account changes
+  React.useEffect(() => { setCountryFilter('all'); }, [selectedAccountId]);
 
   // Pagination logic (must be before early returns for hooks)
   const totalPages = Math.ceil(sortedCampaigns.length / PAGE_SIZE);
@@ -794,6 +820,27 @@ Responda SOMENTE com o JSON, sem markdown.`;
               </>
             )}
           </div>
+
+          {/* Country Filter */}
+          {availableCountries.length > 0 && (
+            <div className="flex items-center bg-[#0E1420] border border-[#1E2D4A] rounded-md">
+              <button
+                onClick={() => setCountryFilter('all')}
+                className={`px-2 py-1.5 text-xs font-medium transition-colors ${countryFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                🌍
+              </button>
+              {availableCountries.map(c => (
+                <button
+                  key={c}
+                  onClick={() => setCountryFilter(c as any)}
+                  className={`px-2 py-1.5 text-xs font-medium border-l border-[#1E2D4A] transition-colors ${countryFilter === c ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  {{ PT: '🇵🇹', ES: '🇪🇸', GR: '🇬🇷', BR: '🇧🇷' }[c]}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Export CSV + Columns */}

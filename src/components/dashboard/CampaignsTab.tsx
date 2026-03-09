@@ -66,6 +66,9 @@ export default function CampaignsTab() {
   const [aiResults, setAiResults] = useState<Record<string, any>>({});
   const [localStatuses, setLocalStatuses] = useState<Record<string, string>>({});
   
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{ id: string; name: string; currentStatus: string } | null>(null);
+  
   const { analysisData, selectedAccountId } = useDashboard();
   const { profile } = useProfile();
   const { callMetaApi, isConnected } = useMetaConnection();

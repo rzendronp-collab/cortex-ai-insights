@@ -271,6 +271,12 @@ Responda SOMENTE com o JSON, sem markdown.`;
     return sortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-primary" /> : <ArrowDown className="w-3 h-3 text-primary" />;
   };
 
+  const getRecommendation = (campaign: ProcessedCampaign) => {
+    if (campaign.roas >= roasTarget * 1.3) return { label: 'Escalar', bg: 'rgba(52,211,153,0.1)', text: '#34D399', border: 'rgba(52,211,153,0.25)' };
+    if (campaign.roas < roasTarget * 0.5 && campaign.spend > 10) return { label: 'Pausar', bg: 'rgba(248,113,113,0.1)', text: '#F87171', border: 'rgba(248,113,113,0.25)' };
+    return { label: 'Otimizar', bg: 'rgba(96,165,250,0.1)', text: '#60A5FA', border: 'rgba(96,165,250,0.25)' };
+  };
+
   const columns = [
     { key: 'status', label: 'Status', align: 'left' },
     { key: 'name', label: 'Campanha', align: 'left' },
@@ -285,6 +291,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
     { key: 'cpm', label: 'CPM', align: 'right' },
     { key: 'impressions', label: 'Impr.', align: 'right' },
     { key: 'clicks', label: 'Cliques', align: 'right' },
+    { key: 'recommendation', label: 'Recom.', align: 'center' },
   ] as const;
 
   return (

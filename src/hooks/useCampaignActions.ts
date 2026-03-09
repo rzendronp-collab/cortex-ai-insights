@@ -5,8 +5,19 @@ import { toast } from 'sonner';
 
 export function useCampaignActions() {
   const { callMetaApi, isConnected } = useMetaConnection();
-  const { selectedAccountId, clearCurrentAnalysis } = useDashboard();
+  const { selectedAccountId, selectedPeriod, analysisData, setAnalysisForAccount, clearCurrentAnalysis } = useDashboard();
   const [loading, setLoading] = useState(false);
+
+  const syncCacheStatus = useCallback((campaignId: string, updates: Record<string, any>) => {
+    if (!analysisData || !selectedAccountId) return;
+    const updatedCampaigns = (analysisData.campaigns || []).map(c =>
+      c.id === campaignId ? { ...c, ...updates } : c
+    );
+    setAnalysisForAccount(selectedAccountId, selectedPeriod, {
+      ...analysisData,
+      campaigns: updatedCampaigns,
+    });
+  }, [analysisData, selectedAccountId, selectedPeriod, setAnalysisForAccount]);
 
   const toggleCampaignStatus = useCallback(async (campaignId: string, currentStatus: string) => {
     if (!isConnected || !selectedAccountId) {
@@ -19,7 +30,6 @@ export function useCampaignActions() {
       console.log(`[TOGGLE] Sending POST to ${campaignId}: status=${newStatus}`);
       const result = await callMetaApi(campaignId, { status: newStatus, _method: 'POST' });
       console.log(`[TOGGLE] Response:`, result);
-      // Invalidate cache so next fetch gets fresh status
       clearCurrentAnalysis();
       return newStatus;
     } catch (err: any) {
@@ -41,7 +51,6 @@ export function useCampaignActions() {
       const budgetCents = String(Math.round(newDailyBudget * 100));
       const acctPath = `act_${selectedAccountId}`;
 
-      // Fetch adsets for this campaign using proper filtering
       const adSetsRes = await callMetaApi(`${acctPath}/adsets`, {
         fields: 'id,name,daily_budget,lifetime_budget,bid_amount,status',
         filtering: JSON.stringify([{
@@ -51,12 +60,9 @@ export function useCampaignActions() {
         }]),
       });
       const adsets = adSetsRes?.data || [];
-
-      // ABO: adsets have their own daily_budget
       const aboAdsets = adsets.filter((a: any) => a.daily_budget);
 
       if (aboAdsets.length > 0) {
-        // ABO: update each active adset's daily_budget
         const activeAdsets = aboAdsets.filter((a: any) => a.status === 'ACTIVE');
         const targets = activeAdsets.length > 0 ? activeAdsets : aboAdsets;
         await Promise.all(
@@ -65,13 +71,10 @@ export function useCampaignActions() {
           )
         );
       } else {
-        // CBO: update campaign budget directly
         await callMetaApi(campaignId, { daily_budget: budgetCents, _method: 'POST' });
       }
 
-      // Invalidate analysis cache so next fetch gets fresh budget data
       clearCurrentAnalysis();
-
       toast.success('✅ Orçamento atualizado');
       return true;
     } catch (err: any) {
@@ -83,5 +86,24 @@ export function useCampaignActions() {
     }
   }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis]);
 
-  return { loading, toggleCampaignStatus, updateBudget };
+  const updateCampaignName = useCallback(async (campaignId: string, newName: string) => {
+    if (!isConnected || !selectedAccountId) {
+      toast.error('Conecte sua conta Meta primeiro.');
+      return false;
+    }
+    setLoading(true);
+    try {
+      await callMetaApi(campaignId, { name: newName, _method: 'POST' });
+      syncCacheStatus(campaignId, { name: newName });
+      toast.success('Nome atualizado ✓');
+      return true;
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao atualizar nome.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [isConnected, selectedAccountId, callMetaApi, syncCacheStatus]);
+
+  return { loading, toggleCampaignStatus, updateBudget, updateCampaignName, syncCacheStatus };
 }

@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, Copy, Check, BarChart3, TrendingUp, TrendingDown, LineChart } from 'lucide-react';
+import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, Flame, Snowflake } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 type FilterType = 'all' | 'scale' | 'optimize' | 'pause';
 
@@ -60,34 +61,20 @@ function Sparkline({ data, color = 'hsl(var(--primary))' }: { data: number[]; co
   );
 }
 
-/** Horizontal bar for hourly chart */
-function HourlyBar({ hour, value, maxValue, rank }: { hour: string; value: number; maxValue: number; rank: number }) {
+/** Compact horizontal bar for hourly chart */
+function CompactHourlyBar({ hour, value, maxValue, isTop, isBottom }: { hour: string; value: number; maxValue: number; isTop: boolean; isBottom: boolean }) {
   const pct = maxValue > 0 ? (value / maxValue) * 100 : 0;
-  const barColor = rank <= 3 ? 'bg-success' : pct > 50 ? 'bg-warning' : 'bg-muted-foreground/30';
+  const barColor = isTop ? 'bg-success' : isBottom ? 'bg-destructive/50' : 'bg-muted-foreground/30';
   return (
-    <div className="flex items-center gap-2 h-5">
-      <span className="text-[9px] text-muted-foreground w-6 text-right font-mono">{hour}</span>
-      <div className="flex-1 h-3 bg-muted/50 rounded-sm overflow-hidden relative">
+    <div className="flex items-center gap-1.5 h-4">
+      <span className="text-[9px] text-muted-foreground w-5 text-right font-mono">{hour}</span>
+      <div className="flex-1 h-2.5 bg-muted/50 rounded-sm overflow-hidden relative">
         <div className={`h-full rounded-sm transition-all ${barColor}`} style={{ width: `${Math.max(pct, 2)}%` }} />
       </div>
-      <span className="text-[9px] text-muted-foreground w-8 text-right font-mono">{value > 0 ? value.toFixed(0) : '-'}</span>
-      {rank <= 3 && <span className="text-[9px]">🔥</span>}
+      <span className="text-[9px] text-muted-foreground w-7 text-right font-mono">{value > 0 ? value.toFixed(0) : '-'}</span>
+      {isTop && <Flame className="w-2.5 h-2.5 text-success" />}
+      {isBottom && <Snowflake className="w-2.5 h-2.5 text-destructive/70" />}
     </div>
-  );
-}
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return (
-    <button onClick={handleCopy} className="text-[10px] flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded bg-muted/50 hover:bg-muted">
-      {copied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
-      {copied ? 'Copiado!' : 'Copiar'}
-    </button>
   );
 }
 
@@ -149,12 +136,7 @@ export default function CampaignsTab() {
     return [...hourlyData].sort((a, b) => b.spend - a.spend);
   }, [hourlyData]);
 
-  const hourlyRankMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    hourlySorted.forEach((h, i) => { map[h.hour] = i + 1; });
-    return map;
-  }, [hourlySorted]);
-
+  
   const topHours = useMemo(() => {
     return hourlySorted.filter(h => h.spend > 0).slice(0, 3).map(h => h.hour);
   }, [hourlySorted]);
@@ -182,7 +164,7 @@ export default function CampaignsTab() {
     try {
       const prev = prevMap[campaign.id];
       const hourlyCtx = topHours.length > 0 ? `\nHorários com mais gasto: ${topHours.join(', ')}` : '';
-      const prompt = `Analise esta campanha Meta Ads e responda em JSON com as chaves: diagnostico (2-3 frases com números reais), acao_principal (1 ação com valor exato, ex: "Aumentar budget de R$X para R$Y (+Z%)"), budget_por_hora (string com distribuição, ex: "00h-08h: 10% | 08h-12h: 25% | 12h-18h: 40% | 18h-24h: 25%"), previsao_roas_7d (número estimado), budget_recomendado (valor em ${currency}), hook (frase máx 8 palavras), copy_a (2-3 frases de anúncio), copy_b (variação com ângulo diferente), qual_testar ("A" ou "B"), motivo_teste (por quê testar esse primeiro, 1 frase), publico_sugerido (string), proximo_passo (string).
+      const prompt = `Analise esta campanha Meta Ads e responda em JSON com as chaves: diagnostico (2-3 frases com números reais), acao_principal (1 ação com valor exato, ex: "Aumentar budget de R$X para R$Y (+Z%)"), budget_por_hora (string com distribuição, ex: "00h-08h: 10% | 08h-12h: 25% | 12h-18h: 40% | 18h-24h: 25%"), previsao_roas_7d (número estimado), budget_recomendado (valor em ${currency}).
 
 Dados da campanha:
 - Nome: ${campaign.name}
@@ -299,6 +281,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
         };
 
         const metrics = [
+          { label: 'Gasto', value: formatCurrency(c.spend, currency), sem: getMetricSemaphore(c.spend, { good: c.spend * 0.5, warn: c.spend * 1.5, higher: false }), delta: computeDelta(c.spend, prev?.spend), invert: true },
           { label: 'Receita', value: formatCurrency(revenue, currency), sem: getMetricSemaphore(revenue, { good: c.spend * roasTarget, warn: c.spend, higher: true }), delta: computeDelta(revenue, prev?.revenue), invert: false },
           { label: 'Lucro Bruto', value: formatCurrency(revenue - c.spend, currency), sem: getMetricSemaphore(revenue - c.spend, { good: 0, warn: -c.spend * 0.2, higher: true }), delta: prev ? computeDelta(revenue - c.spend, prev.revenue - prev.spend) : null, invert: false },
           { label: 'CPC', value: `${currency} ${c.cpc.toFixed(2)}`, sem: getMetricSemaphore(c.cpc, { good: 1.0, warn: 2.5, higher: false }), delta: computeDelta(c.cpc, prev?.cpc), invert: true },
@@ -499,97 +482,100 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       )}
                     </div>
 
-                    {/* BLOCO 3 — PERFORMANCE POR HORA */}
+                    {/* BLOCO 3 — PERFORMANCE POR HORA (Compacto) */}
                     <div className="bg-card border border-border rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <Clock className="w-3.5 h-3.5 text-success" />
                         <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Performance por Hora</h4>
                       </div>
                       {hourlyData.length > 0 ? (
-                        <div className="space-y-0.5">
-                          {hourlyData.map(h => (
-                            <HourlyBar
-                              key={h.hour}
-                              hour={h.hour}
-                              value={h.spend}
-                              maxValue={maxHourlySpend}
-                              rank={hourlyRankMap[h.hour] || 99}
-                            />
-                          ))}
-                          {topHours.length > 0 && (
-                            <div className="mt-3 pt-2 border-t border-border">
-                              <p className="text-[10px] text-success">
-                                💡 Concentre 60% do budget entre {topHours[0]} e {topHours[topHours.length - 1]}
-                              </p>
-                            </div>
-                          )}
+                        <div className="space-y-0.5 max-h-[120px] overflow-y-auto">
+                          {(() => {
+                            const sorted = [...hourlyData].sort((a, b) => b.spend - a.spend);
+                            const top6 = sorted.slice(0, 6).map(h => h.hour);
+                            const bottom3 = sorted.slice(-3).map(h => h.hour);
+                            const selected = hourlyData.filter(h => top6.includes(h.hour) || bottom3.includes(h.hour));
+                            return selected.map(h => (
+                              <CompactHourlyBar
+                                key={h.hour}
+                                hour={h.hour}
+                                value={h.spend}
+                                maxValue={maxHourlySpend}
+                                isTop={top6.includes(h.hour)}
+                                isBottom={bottom3.includes(h.hour)}
+                              />
+                            ));
+                          })()}
                         </div>
                       ) : (
                         <p className="text-[11px] text-muted-foreground text-center py-6">
-                          Dados horários não disponíveis. Clique em Analisar.
+                          Dados horários não disponíveis.
                         </p>
                       )}
                     </div>
 
-                    {/* BLOCO 4 — COPY A/B */}
+                    {/* BLOCO 4 — EVOLUÇÃO DIÁRIA */}
                     <div className="bg-card border border-border rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-3">
-                        <Sparkles className="w-3.5 h-3.5 text-warning" />
-                        <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Copy A/B</h4>
+                        <LineChart className="w-3.5 h-3.5 text-primary" />
+                        <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Evolução Diária</h4>
                       </div>
-                      {ai ? (
-                        <div className="space-y-3">
-                          {ai.hook && (
-                            <div className="bg-warning/5 border border-warning/10 rounded-md p-2.5">
-                              <p className="text-[10px] text-warning font-semibold mb-0.5">🪝 Hook</p>
-                              <p className="text-base font-bold text-accent-foreground">{ai.hook}</p>
-                            </div>
-                          )}
-                          <div className="space-y-2">
-                            <div className="bg-primary/5 border border-primary/15 rounded-md p-3 relative">
-                              <div className="flex items-center justify-between mb-1">
-                                <p className="text-[10px] text-primary font-semibold">Copy A</p>
-                                <div className="flex items-center gap-1.5">
-                                  {ai.qual_testar === 'A' && (
-                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20 font-semibold">✅ Testar primeiro</span>
-                                  )}
-                                  <CopyButton text={ai.copy_a || ''} />
-                                </div>
-                              </div>
-                              <p className="text-[11px] text-foreground/90 leading-relaxed">{ai.copy_a || '-'}</p>
-                            </div>
-                            <div className="bg-secondary/5 border border-secondary/15 rounded-md p-3 relative">
-                              <div className="flex items-center justify-between mb-1">
-                                <p className="text-[10px] text-secondary font-semibold">Copy B</p>
-                                <div className="flex items-center gap-1.5">
-                                  {ai.qual_testar === 'B' && (
-                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20 font-semibold">✅ Testar primeiro</span>
-                                  )}
-                                  <CopyButton text={ai.copy_b || ''} />
-                                </div>
-                              </div>
-                              <p className="text-[11px] text-foreground/90 leading-relaxed">{ai.copy_b || '-'}</p>
-                            </div>
-                          </div>
-                          {ai.motivo_teste && (
-                            <p className="text-[10px] text-muted-foreground italic">💡 {ai.motivo_teste}</p>
-                          )}
-                          {ai.publico_sugerido && (
-                            <div className="bg-muted rounded-md p-2 mt-2">
-                              <p className="text-[10px] text-muted-foreground mb-0.5">👥 Público Sugerido</p>
-                              <p className="text-[11px] text-foreground">{ai.publico_sugerido}</p>
-                            </div>
-                          )}
-                          {ai.proximo_passo && (
-                            <div className="bg-success/5 border border-success/10 rounded-md p-2">
-                              <p className="text-[10px] text-success font-semibold mb-0.5">✅ Próximo Passo</p>
-                              <p className="text-[11px] text-foreground">{ai.proximo_passo}</p>
-                            </div>
-                          )}
-                        </div>
+                      {dailyData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={180}>
+                          <RechartsLineChart data={dailyData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                            <XAxis 
+                              dataKey="date" 
+                              tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
+                              tickFormatter={(v) => new Date(v).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                            />
+                            <YAxis 
+                              yAxisId="left"
+                              tick={{ fontSize: 9, fill: 'hsl(var(--primary))' }}
+                              tickFormatter={(v) => `${v.toFixed(1)}x`}
+                            />
+                            <YAxis 
+                              yAxisId="right" 
+                              orientation="right"
+                              tick={{ fontSize: 9, fill: 'hsl(var(--success))' }}
+                              tickFormatter={(v) => `${currency}${v.toFixed(0)}`}
+                            />
+                            <Tooltip 
+                              contentStyle={{ 
+                                background: 'hsl(var(--card))', 
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '6px',
+                                fontSize: '10px'
+                              }}
+                              labelFormatter={(v) => new Date(v).toLocaleDateString('pt-BR')}
+                            />
+                            <Legend 
+                              wrapperStyle={{ fontSize: '10px' }}
+                              iconSize={8}
+                            />
+                            <Line 
+                              yAxisId="left"
+                              type="monotone" 
+                              dataKey="roas" 
+                              stroke="hsl(var(--primary))" 
+                              strokeWidth={2}
+                              name="ROAS"
+                              dot={{ r: 2 }}
+                            />
+                            <Line 
+                              yAxisId="right"
+                              type="monotone" 
+                              dataKey="spend" 
+                              stroke="hsl(var(--success))" 
+                              strokeWidth={2}
+                              name="Gasto"
+                              dot={{ r: 2 }}
+                            />
+                          </RechartsLineChart>
+                        </ResponsiveContainer>
                       ) : (
                         <p className="text-[11px] text-muted-foreground text-center py-6">
-                          Gere a análise IA para criar copies A/B personalizados.
+                          Dados diários não disponíveis.
                         </p>
                       )}
                     </div>

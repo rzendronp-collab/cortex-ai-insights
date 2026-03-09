@@ -118,7 +118,12 @@ function extractRevenue(actionValues: any[]): number {
 }
 
 function processCampaign(campaign: any): ProcessedCampaign {
-  const insights = campaign.insights?.data?.[0] || {};
+  const insightsData = campaign.insights?.data?.[0] 
+    || campaign.insights?.data 
+    || campaign.insights 
+    || {};
+  const insights = Array.isArray(insightsData) ? insightsData[0] || {} : insightsData;
+
   const spend = parseFloat(insights.spend || '0');
   const impressions = parseInt(insights.impressions || '0', 10);
   const clicks = parseInt(insights.clicks || '0', 10);
@@ -134,16 +139,8 @@ function processCampaign(campaign: any): ProcessedCampaign {
     id: campaign.id,
     name: campaign.name,
     status: campaign.status,
-    spend,
-    impressions,
-    clicks,
-    ctr,
-    cpm,
-    cpc,
-    purchases,
-    revenue,
-    roas,
-    cpv,
+    spend, impressions, clicks, ctr, cpm, cpc,
+    purchases, revenue, roas, cpv,
   };
 }
 
@@ -236,6 +233,7 @@ export function useMetaData() {
 
       const campaigns: ProcessedCampaign[] = (campaignsRes?.data || []).map(processCampaign);
       const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map(processCampaign);
+      console.log('[PREV RAW]', campaignsPrevRes?.data?.[0]);
 
       const prevTotalSpend = campaignsPrev.reduce((s, c) => s + c.spend, 0);
       const currTotalSpend = campaigns.reduce((s, c) => s + c.spend, 0);

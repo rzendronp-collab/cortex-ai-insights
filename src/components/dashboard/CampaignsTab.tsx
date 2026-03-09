@@ -181,6 +181,7 @@ export default function CampaignsTab() {
   
   // Confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{ id: string; name: string; currentStatus: string } | null>(null);
+  const [dontAskAgain, setDontAskAgain] = useState(false);
   
   // Budget dialog state
   const [budgetDialog, setBudgetDialog] = useState<{ id: string; name: string; currentSpend: number } | null>(null);

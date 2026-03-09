@@ -14,6 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      action_history: {
+        Row: {
+          account_id: string
+          action_type: string
+          applied_at: string | null
+          campaign_id: string
+          campaign_name: string | null
+          error_message: string | null
+          id: string
+          new_value: string | null
+          old_value: string | null
+          success: boolean | null
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          action_type: string
+          applied_at?: string | null
+          campaign_id: string
+          campaign_name?: string | null
+          error_message?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          success?: boolean | null
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          action_type?: string
+          applied_at?: string | null
+          campaign_id?: string
+          campaign_name?: string | null
+          error_message?: string | null
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          success?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      action_plans: {
+        Row: {
+          account_id: string
+          actions: Json | null
+          estimated_roas_gain: number | null
+          generated_at: string | null
+          id: string
+          period: string
+          status: string | null
+          total_campaigns: number | null
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          actions?: Json | null
+          estimated_roas_gain?: number | null
+          generated_at?: string | null
+          id?: string
+          period: string
+          status?: string | null
+          total_campaigns?: number | null
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          actions?: Json | null
+          estimated_roas_gain?: number | null
+          generated_at?: string | null
+          id?: string
+          period?: string
+          status?: string | null
+          total_campaigns?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ad_accounts: {
         Row: {
           account_id: string | null
@@ -101,6 +179,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      alerts: {
+        Row: {
+          account_id: string
+          campaign_id: string | null
+          campaign_name: string | null
+          created_at: string | null
+          id: string
+          message: string
+          read: boolean | null
+          severity: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          campaign_id?: string | null
+          campaign_name?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          read?: boolean | null
+          severity?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          campaign_id?: string | null
+          campaign_name?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          severity?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       analysis_cache: {
         Row: {

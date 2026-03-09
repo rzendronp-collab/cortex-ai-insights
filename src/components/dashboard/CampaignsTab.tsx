@@ -165,6 +165,7 @@ export default function CampaignsTab() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused'>('all');
   const [activeTodayFilter, setActiveTodayFilter] = useState(false);
   const [roasFilter, setRoasFilter] = useState<'all' | 'above' | 'near' | 'below' | 'scaling'>('all');
+  const [countryFilter, setCountryFilter] = useState<'all' | 'PT' | 'ES' | 'GR' | 'BR'>('all');
   const [roasDropdownOpen, setRoasDropdownOpen] = useState(false);
   
   // Pagination

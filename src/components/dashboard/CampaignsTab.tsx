@@ -487,97 +487,100 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       )}
                     </div>
 
-                    {/* BLOCO 3 — PERFORMANCE POR HORA */}
+                    {/* BLOCO 3 — PERFORMANCE POR HORA (Compacto) */}
                     <div className="bg-card border border-border rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <Clock className="w-3.5 h-3.5 text-success" />
                         <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Performance por Hora</h4>
                       </div>
                       {hourlyData.length > 0 ? (
-                        <div className="space-y-0.5">
-                          {hourlyData.map(h => (
-                            <HourlyBar
-                              key={h.hour}
-                              hour={h.hour}
-                              value={h.spend}
-                              maxValue={maxHourlySpend}
-                              rank={hourlyRankMap[h.hour] || 99}
-                            />
-                          ))}
-                          {topHours.length > 0 && (
-                            <div className="mt-3 pt-2 border-t border-border">
-                              <p className="text-[10px] text-success">
-                                💡 Concentre 60% do budget entre {topHours[0]} e {topHours[topHours.length - 1]}
-                              </p>
-                            </div>
-                          )}
+                        <div className="space-y-0.5 max-h-[120px] overflow-y-auto">
+                          {(() => {
+                            const sorted = [...hourlyData].sort((a, b) => b.spend - a.spend);
+                            const top6 = sorted.slice(0, 6).map(h => h.hour);
+                            const bottom3 = sorted.slice(-3).map(h => h.hour);
+                            const selected = hourlyData.filter(h => top6.includes(h.hour) || bottom3.includes(h.hour));
+                            return selected.map(h => (
+                              <CompactHourlyBar
+                                key={h.hour}
+                                hour={h.hour}
+                                value={h.spend}
+                                maxValue={maxHourlySpend}
+                                isTop={top6.includes(h.hour)}
+                                isBottom={bottom3.includes(h.hour)}
+                              />
+                            ));
+                          })()}
                         </div>
                       ) : (
                         <p className="text-[11px] text-muted-foreground text-center py-6">
-                          Dados horários não disponíveis. Clique em Analisar.
+                          Dados horários não disponíveis.
                         </p>
                       )}
                     </div>
 
-                    {/* BLOCO 4 — COPY A/B */}
+                    {/* BLOCO 4 — EVOLUÇÃO DIÁRIA */}
                     <div className="bg-card border border-border rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-3">
-                        <Sparkles className="w-3.5 h-3.5 text-warning" />
-                        <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Copy A/B</h4>
+                        <LineChart className="w-3.5 h-3.5 text-primary" />
+                        <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Evolução Diária</h4>
                       </div>
-                      {ai ? (
-                        <div className="space-y-3">
-                          {ai.hook && (
-                            <div className="bg-warning/5 border border-warning/10 rounded-md p-2.5">
-                              <p className="text-[10px] text-warning font-semibold mb-0.5">🪝 Hook</p>
-                              <p className="text-base font-bold text-accent-foreground">{ai.hook}</p>
-                            </div>
-                          )}
-                          <div className="space-y-2">
-                            <div className="bg-primary/5 border border-primary/15 rounded-md p-3 relative">
-                              <div className="flex items-center justify-between mb-1">
-                                <p className="text-[10px] text-primary font-semibold">Copy A</p>
-                                <div className="flex items-center gap-1.5">
-                                  {ai.qual_testar === 'A' && (
-                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20 font-semibold">✅ Testar primeiro</span>
-                                  )}
-                                  <CopyButton text={ai.copy_a || ''} />
-                                </div>
-                              </div>
-                              <p className="text-[11px] text-foreground/90 leading-relaxed">{ai.copy_a || '-'}</p>
-                            </div>
-                            <div className="bg-secondary/5 border border-secondary/15 rounded-md p-3 relative">
-                              <div className="flex items-center justify-between mb-1">
-                                <p className="text-[10px] text-secondary font-semibold">Copy B</p>
-                                <div className="flex items-center gap-1.5">
-                                  {ai.qual_testar === 'B' && (
-                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20 font-semibold">✅ Testar primeiro</span>
-                                  )}
-                                  <CopyButton text={ai.copy_b || ''} />
-                                </div>
-                              </div>
-                              <p className="text-[11px] text-foreground/90 leading-relaxed">{ai.copy_b || '-'}</p>
-                            </div>
-                          </div>
-                          {ai.motivo_teste && (
-                            <p className="text-[10px] text-muted-foreground italic">💡 {ai.motivo_teste}</p>
-                          )}
-                          {ai.publico_sugerido && (
-                            <div className="bg-muted rounded-md p-2 mt-2">
-                              <p className="text-[10px] text-muted-foreground mb-0.5">👥 Público Sugerido</p>
-                              <p className="text-[11px] text-foreground">{ai.publico_sugerido}</p>
-                            </div>
-                          )}
-                          {ai.proximo_passo && (
-                            <div className="bg-success/5 border border-success/10 rounded-md p-2">
-                              <p className="text-[10px] text-success font-semibold mb-0.5">✅ Próximo Passo</p>
-                              <p className="text-[11px] text-foreground">{ai.proximo_passo}</p>
-                            </div>
-                          )}
-                        </div>
+                      {dailyData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={180}>
+                          <RechartsLineChart data={dailyData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                            <XAxis 
+                              dataKey="date" 
+                              tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
+                              tickFormatter={(v) => new Date(v).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                            />
+                            <YAxis 
+                              yAxisId="left"
+                              tick={{ fontSize: 9, fill: 'hsl(var(--primary))' }}
+                              tickFormatter={(v) => `${v.toFixed(1)}x`}
+                            />
+                            <YAxis 
+                              yAxisId="right" 
+                              orientation="right"
+                              tick={{ fontSize: 9, fill: 'hsl(var(--success))' }}
+                              tickFormatter={(v) => `${currency}${v.toFixed(0)}`}
+                            />
+                            <Tooltip 
+                              contentStyle={{ 
+                                background: 'hsl(var(--card))', 
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '6px',
+                                fontSize: '10px'
+                              }}
+                              labelFormatter={(v) => new Date(v).toLocaleDateString('pt-BR')}
+                            />
+                            <Legend 
+                              wrapperStyle={{ fontSize: '10px' }}
+                              iconSize={8}
+                            />
+                            <Line 
+                              yAxisId="left"
+                              type="monotone" 
+                              dataKey="roas" 
+                              stroke="hsl(var(--primary))" 
+                              strokeWidth={2}
+                              name="ROAS"
+                              dot={{ r: 2 }}
+                            />
+                            <Line 
+                              yAxisId="right"
+                              type="monotone" 
+                              dataKey="spend" 
+                              stroke="hsl(var(--success))" 
+                              strokeWidth={2}
+                              name="Gasto"
+                              dot={{ r: 2 }}
+                            />
+                          </RechartsLineChart>
+                        </ResponsiveContainer>
                       ) : (
                         <p className="text-[11px] text-muted-foreground text-center py-6">
-                          Gere a análise IA para criar copies A/B personalizados.
+                          Dados diários não disponíveis.
                         </p>
                       )}
                     </div>

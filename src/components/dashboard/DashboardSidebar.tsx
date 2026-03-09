@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, Settings, ChevronDown, ChevronRight, Circle, Save, Loader2, Eye, EyeOff, BarChart3, Target, Calendar, Cog, Globe, MessageCircle, FileText } from 'lucide-react';
+import { LogOut, Settings, ChevronDown, ChevronRight, Circle, Save, Loader2, Eye, EyeOff, BarChart3, Target, Calendar, Cog, Globe, MessageCircle, FileText, Unplug } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';

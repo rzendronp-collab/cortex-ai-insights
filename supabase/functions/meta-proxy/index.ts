@@ -111,9 +111,10 @@ Deno.serve(async (req) => {
 
     // Call Meta Graph API
     const graphData = await graphRes.json();
+    console.log(`[meta-proxy] Graph response status=${graphRes.status}`, JSON.stringify(graphData).substring(0, 500));
 
     if (!graphRes.ok) {
-      console.error("Graph API error:", graphData);
+      console.error("[meta-proxy] Graph API error:", JSON.stringify(graphData));
       return new Response(JSON.stringify({ error: graphData.error?.message || "Graph API error" }), {
         status: graphRes.status,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -31,7 +31,7 @@ const dailyMetricConfig: Record<string, { label: string; color: string; type: 'l
 
 export default function OverviewTab() {
   const [visibleMetrics, setVisibleMetrics] = useState<Set<string>>(new Set(['roas', 'spend']));
-  const { analysisData, selectedAccountId } = useDashboard();
+  const { analysisData, selectedAccountId, currencySymbol } = useDashboard();
   const { isConnected } = useMetaConnection();
   const { analyze, loading } = useMetaData();
   const { profile } = useProfile();

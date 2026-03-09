@@ -80,7 +80,7 @@ REGRAS:
 }
 
 export default function ChatTab() {
-  const { analysisData, selectedAccountName } = useDashboard();
+  const { analysisData, selectedAccountName, currencySymbol } = useDashboard();
   const { profile } = useProfile();
   const roasTarget = profile?.roas_target || 3.0;
   const currency = currencySymbol;

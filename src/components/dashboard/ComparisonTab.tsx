@@ -10,7 +10,7 @@ const chartColors = {
 };
 
 export default function ComparisonTab() {
-  const { analysisData } = useDashboard();
+  const { analysisData, currencySymbol } = useDashboard();
   const { profile } = useProfile();
   const currency = currencySymbol;
 

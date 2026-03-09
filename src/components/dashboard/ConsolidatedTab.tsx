@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Inbox } from 'lucide-react';
 
 export default function ConsolidatedTab() {
-  const { analysisData } = useDashboard();
+  const { analysisData, currencySymbol } = useDashboard();
   const { adAccounts } = useMetaConnection();
   const { profile } = useProfile();
   const roasTarget = profile?.roas_target || 3.0;

@@ -92,7 +92,7 @@ Fale como consultor sênior. Sem enrolação. Números reais sempre.`;
 }
 
 export default function ReportTab() {
-  const { analysisData, selectedAccountName } = useDashboard();
+  const { analysisData, selectedAccountName, currencySymbol } = useDashboard();
   const { profile } = useProfile();
   const roasTarget = profile?.roas_target || 3.0;
   const currency = currencySymbol;

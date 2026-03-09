@@ -14,7 +14,17 @@ export interface BudgetInfo {
 export function useCampaignActions() {
   const { callMetaApi, isConnected } = useMetaConnection();
   const { selectedAccountId, selectedPeriod, analysisData, setAnalysisForAccount, clearCurrentAnalysis } = useDashboard();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+
+  const invalidateCache = useCallback(async () => {
+    if (!user || !selectedAccountId) return;
+    await supabase
+      .from('analysis_cache')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('account_id', selectedAccountId);
+  }, [user, selectedAccountId]);
 
   const syncCacheStatus = useCallback((campaignId: string, updates: Record<string, any>) => {
     if (!analysisData || !selectedAccountId) return;

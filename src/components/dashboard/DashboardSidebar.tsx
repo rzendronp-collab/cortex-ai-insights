@@ -16,9 +16,10 @@ export default function DashboardSidebar() {
   const { user, signOut } = useAuth();
   const { profile, updateProfile } = useProfile();
   const { connection, adAccounts, isConnected, isTokenExpired, connectMeta, connectionLoading } = useMetaConnection();
-  const { selectedAccountId, setSelectedAccountId, setSelectedAccountName } = useDashboard();
-  const [activeTab, setActiveTab] = useState<'accounts' | 'config'>('accounts');
+  const { selectedAccountId, setSelectedAccountId, setSelectedAccountName, activeTab: currentTab, setActiveTab } = useDashboard();
+  const [metaExpanded, setMetaExpanded] = useState(true);
   const [bmExpanded, setBmExpanded] = useState<Record<string, boolean>>({});
+  const [configOpen, setConfigOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [showInactive, setShowInactive] = useState(false);

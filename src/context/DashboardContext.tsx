@@ -61,6 +61,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const analysisData = (cached && isFresh) ? cached.data : null;
   const isFromCache = !!(cached && isFresh);
   const cacheTimestamp = cached?.timestamp ?? null;
+  const isStale = !!(cached && !isFresh);
 
   const setAnalysisForAccount = useCallback((accountId: string, period: string, data: AnalysisData) => {
     const key = `${accountId}__${period}`;

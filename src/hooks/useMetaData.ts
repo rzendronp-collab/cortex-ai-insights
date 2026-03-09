@@ -201,16 +201,16 @@ export function useMetaData() {
         }
       }
 
-      // Parallel API calls
+      // IMPORTANT: For /campaigns endpoint, time_range must be embedded inside the
+      // insights field spec, NOT as a separate query param (which is ignored by Meta API).
+      const insightsFields = 'spend,impressions,clicks,ctr,cpm,cpc,actions,action_values';
       const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes] = await Promise.all([
         callMetaApi(`${acctPath}/campaigns`, {
-          fields: 'id,name,status,insights{spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
-          time_range: currentTimeRange,
+          fields: `id,name,status,insights.time_range(${currentTimeRange}){${insightsFields}}`,
           limit: '50',
         }),
         callMetaApi(`${acctPath}/campaigns`, {
-          fields: 'id,name,status,insights{spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
-          time_range: previousTimeRange,
+          fields: `id,name,status,insights.time_range(${previousTimeRange}){${insightsFields}}`,
           limit: '50',
         }),
         callMetaApi(`${acctPath}/insights`, {

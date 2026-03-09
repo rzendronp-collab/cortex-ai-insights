@@ -112,6 +112,7 @@ export function useCampaignActions() {
 
       await callMetaApi(budgetInfo.targetId, { daily_budget: budgetCents, _method: 'POST' });
 
+      await invalidateCache();
       clearCurrentAnalysis();
       toast.success(`✅ Orçamento atualizado (${budgetInfo.isCBO ? 'CBO' : 'ABO'})`);
       return true;

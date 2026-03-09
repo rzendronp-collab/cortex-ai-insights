@@ -934,6 +934,14 @@ Responda SOMENTE com o JSON, sem markdown.`;
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr className="border-b border-[#1C2538] bg-[#0D1121] sticky top-0 z-10">
+              {/* Checkbox column */}
+              <th className="px-2 py-2.5 w-8" onClick={e => e.stopPropagation()}>
+                <Checkbox
+                  checked={paginatedCampaigns.length > 0 && paginatedCampaigns.every(c => selectedIds.has(c.id))}
+                  onCheckedChange={() => handleSelectAll()}
+                  className="h-3.5 w-3.5"
+                />
+              </th>
               {activeColumns.map(col => {
                 const align = colAlign[col.id] || 'right';
                 const sortKey = colSortKey[col.id];
@@ -950,7 +958,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                   </th>
                 );
               })}
-              <th className="px-3 py-2.5 w-8"></th>
+              <th className="px-3 py-2.5 w-16"></th>
             </tr>
           </thead>
           <tbody>

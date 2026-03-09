@@ -262,45 +262,58 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                 <button onClick={handleDeselectAll} className="text-[9px] text-text-muted hover:text-text-primary font-medium">Desmarcar todas</button>
               </div>
 
-              {Object.entries(accountsByBm).map(([bmName, accounts]) => (
-                <div key={bmName} className="mb-1">
-                  <p className="text-[9px] text-text-muted uppercase tracking-wider font-semibold px-2 pt-1.5 pb-0.5 flex items-center gap-1.5">
-                    {bmName !== 'Contas Pessoais' ? '▼' : '▼'} {bmName}
-                  </p>
-                  {accounts.map(account => {
-                    const isChecked = activeAccountIds.includes(account.account_id || '');
-                    const status = getAccountStatus(account.account_id);
-                    return (
-                      <div
-                        key={account.id}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-bg-card-hover transition-colors cursor-pointer group"
-                        onClick={() => {
-                          if (account.account_id) {
-                            toggleActiveAccount(account.account_id);
-                          }
-                        }}
-                      >
-                        <Checkbox
-                          checked={isChecked}
-                          onCheckedChange={() => {
-                            if (account.account_id) toggleActiveAccount(account.account_id);
-                          }}
-                          className="h-3.5 w-3.5"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[11px] text-text-primary font-medium truncate">
-                            {account.account_name || 'Sem nome'}
-                          </p>
-                          <p className="text-[9px] text-text-muted truncate">
-                            act_{account.account_id}
-                          </p>
-                        </div>
-                        <span className="text-[10px]">{status}</span>
+              {Object.entries(accountsByBm).map(([bmName, accounts], idx) => {
+                const bmKey = bmName;
+                const isOpen = openBMs[bmKey] ?? idx === 0;
+                return (
+                  <div key={bmName} className="mb-1">
+                    <div
+                      className="flex items-center justify-between cursor-pointer select-none px-2 py-1.5 hover:bg-bg-card-hover rounded-lg"
+                      onClick={() => setOpenBMs(prev => ({ ...prev, [bmKey]: !isOpen }))}
+                    >
+                      <span className="text-[9px] text-text-muted uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                        {bmName}
+                      </span>
+                      <ChevronDown className={`w-3 h-3 text-text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </div>
+                    {isOpen && (
+                      <div className="pl-1 flex flex-col gap-0.5">
+                        {accounts.map(account => {
+                          const isChecked = activeAccountIds.includes(account.account_id || '');
+                          const status = getAccountStatus(account.account_id);
+                          return (
+                            <div
+                              key={account.id}
+                              className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-bg-card-hover transition-colors cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (account.account_id) toggleActiveAccount(account.account_id);
+                              }}
+                            >
+                              <Checkbox
+                                checked={isChecked}
+                                onCheckedChange={() => {
+                                  if (account.account_id) toggleActiveAccount(account.account_id);
+                                }}
+                                className="h-3.5 w-3.5"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[11px] text-text-primary font-medium truncate">
+                                  {account.account_name || 'Sem nome'}
+                                </p>
+                                <p className="text-[9px] text-text-muted truncate">
+                                  act_{account.account_id}
+                                </p>
+                              </div>
+                              <span className="text-[10px]">{status}</span>
+                            </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
-                </div>
-              ))}
+                    )}
+                  </div>
+                );
+              })}
             </CollapsibleContent>
           </Collapsible>
         )}

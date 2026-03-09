@@ -61,34 +61,20 @@ function Sparkline({ data, color = 'hsl(var(--primary))' }: { data: number[]; co
   );
 }
 
-/** Horizontal bar for hourly chart */
-function HourlyBar({ hour, value, maxValue, rank }: { hour: string; value: number; maxValue: number; rank: number }) {
+/** Compact horizontal bar for hourly chart */
+function CompactHourlyBar({ hour, value, maxValue, isTop, isBottom }: { hour: string; value: number; maxValue: number; isTop: boolean; isBottom: boolean }) {
   const pct = maxValue > 0 ? (value / maxValue) * 100 : 0;
-  const barColor = rank <= 3 ? 'bg-success' : pct > 50 ? 'bg-warning' : 'bg-muted-foreground/30';
+  const barColor = isTop ? 'bg-success' : isBottom ? 'bg-destructive/50' : 'bg-muted-foreground/30';
   return (
-    <div className="flex items-center gap-2 h-5">
-      <span className="text-[9px] text-muted-foreground w-6 text-right font-mono">{hour}</span>
-      <div className="flex-1 h-3 bg-muted/50 rounded-sm overflow-hidden relative">
+    <div className="flex items-center gap-1.5 h-4">
+      <span className="text-[9px] text-muted-foreground w-5 text-right font-mono">{hour}</span>
+      <div className="flex-1 h-2.5 bg-muted/50 rounded-sm overflow-hidden relative">
         <div className={`h-full rounded-sm transition-all ${barColor}`} style={{ width: `${Math.max(pct, 2)}%` }} />
       </div>
-      <span className="text-[9px] text-muted-foreground w-8 text-right font-mono">{value > 0 ? value.toFixed(0) : '-'}</span>
-      {rank <= 3 && <span className="text-[9px]">🔥</span>}
+      <span className="text-[9px] text-muted-foreground w-7 text-right font-mono">{value > 0 ? value.toFixed(0) : '-'}</span>
+      {isTop && <Flame className="w-2.5 h-2.5 text-success" />}
+      {isBottom && <Snowflake className="w-2.5 h-2.5 text-destructive/70" />}
     </div>
-  );
-}
-
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-  return (
-    <button onClick={handleCopy} className="text-[10px] flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded bg-muted/50 hover:bg-muted">
-      {copied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
-      {copied ? 'Copiado!' : 'Copiar'}
-    </button>
   );
 }
 

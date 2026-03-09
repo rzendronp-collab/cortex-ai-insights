@@ -1198,7 +1198,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       const isAdsetLoading = adsetsLoading.has(c.id);
                       return (
                         <tr className="bg-[#090D18] border-b border-[#1C2538]">
-                          <td colSpan={activeColumns.length + 1} className="p-0">
+                          <td colSpan={activeColumns.length + 3} className="p-0">
                             <div className="pl-10 pr-4 py-3 border-l-2 border-l-data-blue/40 animate-fade-up">
                               <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider mb-2">Conjuntos de Anúncios</p>
                               {isAdsetLoading ? (

@@ -286,6 +286,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
         };
 
         const metrics = [
+          { label: 'Gasto', value: formatCurrency(c.spend, currency), sem: getMetricSemaphore(c.spend, { good: c.spend * 0.5, warn: c.spend * 1.5, higher: false }), delta: computeDelta(c.spend, prev?.spend), invert: true },
           { label: 'Receita', value: formatCurrency(revenue, currency), sem: getMetricSemaphore(revenue, { good: c.spend * roasTarget, warn: c.spend, higher: true }), delta: computeDelta(revenue, prev?.revenue), invert: false },
           { label: 'Lucro Bruto', value: formatCurrency(revenue - c.spend, currency), sem: getMetricSemaphore(revenue - c.spend, { good: 0, warn: -c.spend * 0.2, higher: true }), delta: prev ? computeDelta(revenue - c.spend, prev.revenue - prev.spend) : null, invert: false },
           { label: 'CPC', value: `${currency} ${c.cpc.toFixed(2)}`, sem: getMetricSemaphore(c.cpc, { good: 1.0, warn: 2.5, higher: false }), delta: computeDelta(c.cpc, prev?.cpc), invert: true },

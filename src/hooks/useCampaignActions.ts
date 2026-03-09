@@ -67,7 +67,7 @@ export function useCampaignActions() {
       // Invalidate analysis cache so next fetch gets fresh budget data
       clearCurrentAnalysis();
 
-      toast.success('Budget atualizado ✓');
+      toast.success('✅ Orçamento atualizado');
       return true;
     } catch (err: any) {
       const msg = err?.message || 'Erro ao atualizar budget.';

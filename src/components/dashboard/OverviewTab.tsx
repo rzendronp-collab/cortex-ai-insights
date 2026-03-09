@@ -376,9 +376,12 @@ export default function OverviewTab() {
                 </p>
               </div>
             );
-          })}
-        </div>
-      </div>
+           })}
+         </div>
+         <button onClick={() => setActiveTab('action-plan')} className="text-xs text-[#3B82F6] hover:underline mt-2 cursor-pointer">
+           Ver Plano Completo ⚡ →
+         </button>
+       </div>
     </div>
   );
 }

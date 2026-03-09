@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, Copy, Check, BarChart3, TrendingUp, TrendingDown, LineChart } from 'lucide-react';
+import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, Flame, Snowflake } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';

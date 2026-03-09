@@ -118,9 +118,14 @@ export default function CampaignsTab() {
       if (statusFilter === 'active' && effStatus !== 'ACTIVE') return false;
       if (statusFilter === 'paused' && effStatus !== 'PAUSED') return false;
       if (activeTodayFilter && c.spend <= 0) return false;
+      // ROAS filter
+      if (roasFilter === 'above' && c.roas < roasTarget) return false;
+      if (roasFilter === 'near' && (c.roas < roasTarget * 0.7 || c.roas >= roasTarget)) return false;
+      if (roasFilter === 'below' && c.roas >= roasTarget * 0.7) return false;
+      if (roasFilter === 'scaling' && c.roas < roasTarget * 1.5) return false;
       return true;
     });
-  }, [rawCampaigns, searchQuery, statusFilter, activeTodayFilter, localStatuses]);
+  }, [rawCampaigns, searchQuery, statusFilter, activeTodayFilter, localStatuses, roasFilter, roasTarget]);
 
   const sortedCampaigns = useMemo(() => {
     return [...filteredCampaigns].sort((a, b) => {

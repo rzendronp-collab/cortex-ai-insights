@@ -332,9 +332,186 @@ export function useMetaData() {
         ? { fields: 'campaign_id,campaign_name,spend,impressions,clicks,ctr,cpm,cpc,actions,action_values', level: 'campaign', time_range: timeRangeParam!, limit: '50' }
         : { fields: 'campaign_id,campaign_name,spend,impressions,clicks,ctr,cpm,cpc,actions,action_values', level: 'campaign', date_preset: period, limit: '50' };
       const campaignInsightsAllData = await fetchAllPages(callMetaApiWithRetry, `${acctPath}/insights`, campaignInsightsParams);
+
+      const insightsMap: Record<string, any> = {};
+      campaignInsightsAllData.forEach((d: any) => {
+        insightsMap[d.campaign_id] = d;
       });
 
-      console.log('[BUDGET DEBUG]', budgetByCampaignId);
+      const campaignsProcessed: ProcessedCampaign[] = (campaignsRes?.data || []).map((c: any) => {
+        const ins = insightsMap[c.id] || {};
+        const spend = parseFloat(ins.spend || '0');
+        const purchases = extractPurchases(ins.actions);
+        const revenue = extractRevenue(ins.action_values);
+        return {
+          id: c.id,
+          name: c.name,
+          status: c.status,
+          spend,
+          impressions: parseInt(ins.impressions || '0', 10),
+          clicks: parseInt(ins.clicks || '0', 10),
+          ctr: parseFloat(ins.ctr || '0'),
+          cpm: parseFloat(ins.cpm || '0'),
+          cpc: parseFloat(ins.cpc || '0'),
+          purchases,
+          revenue,
+          roas: spend > 0 ? revenue / spend : 0,
+          cpv: purchases > 0 ? spend / purchases : 0,
+        };
+      });
+
+      const campaigns = campaignsProcessed;
+      const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map((d: any) => {
+        const spend = parseFloat(d.spend || '0');
+        const purchases = extractPurchases(d.actions);
+        const revenue = extractRevenue(d.action_values);
+        return {
+          id: d.campaign_id,
+          name: d.campaign_name,
+          status: 'ACTIVE',
+          spend,
+          impressions: parseInt(d.impressions || '0', 10),
+          clicks: parseInt(d.clicks || '0', 10),
+          ctr: parseFloat(d.ctr || '0'),
+          cpm: parseFloat(d.cpm || '0'),
+          cpc: parseFloat(d.cpc || '0'),
+          purchases,
+          revenue,
+          roas: spend > 0 ? revenue / spend : 0,
+          cpv: purchases > 0 ? spend / purchases : 0,
+        };
+      });
+
+      const dailyData: DailyData[] = (dailyRes?.data || []).map((d: any) => {
+        const spend = parseFloat(d.spend || '0');
+        const revenue = extractRevenue(d.action_values);
+        const purchases = extractPurchases(d.actions);
+        return {
+          date: d.date_start ? new Date(d.date_start + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '',
+          roas: spend > 0 ? revenue / spend : 0,
+          spend,
+          revenue,
+          ctr: parseFloat(d.ctr || '0'),
+          sales: purchases,
+          cpm: parseFloat(d.cpm || '0'),
+        };
+      });
+
+      const rawHourly = hourlyRes?.data || [];
+      const hourSpend: Record<number, number> = {};
+      const hourSales: Record<number, number> = {};
+      rawHourly.forEach((h: any) => {
+        const raw = h.hourly_stats_aggregated_by_advertiser_time_zone || '';
+        const parsed = parseInt(String(raw).split('-')[0].split(':')[0].replace(/[^0-9]/g, ''), 10);
+        const hourNum = isNaN(parsed) ? 0 : parsed;
+        hourSpend[hourNum] = (hourSpend[hourNum] || 0) + parseFloat(h.spend || '0');
+        hourSales[hourNum] = (hourSales[hourNum] || 0) + extractPurchases(h.actions);
+      });
+      const hourlyData: HourlyData[] = Array.from({ length: 24 }, (_, i) => ({
+        hour: `${i}h`,
+        spend: hourSpend[i] || 0,
+        sales: hourSales[i] || 0,
+        isPeak: false,
+      }));
+      const maxSpend = Math.max(...hourlyData.map(h => h.spend), 1);
+      hourlyData.forEach(h => {
+        h.isPeak = h.spend > maxSpend * 0.7;
+      });
+
+      const rawPlatform = platformRes?.data || [];
+      const totalPlatformSpend = rawPlatform.reduce((s: number, p: any) => s + parseFloat(p.spend || '0'), 0) || 1;
+      const platformData: PlatformData[] = rawPlatform.map((p: any) => {
+        const spend = parseFloat(p.spend || '0');
+        return { name: p.publisher_platform || 'Outro', value: Math.round((spend / totalPlatformSpend) * 100), spend };
+      });
+
+      const rawDemo = demoRes?.data || [];
+      const genderAgg: Record<string, number> = {};
+      const ageAgg: Record<string, number> = {};
+      const totalDemoSpend = rawDemo.reduce((s: number, d: any) => s + parseFloat(d.spend || '0'), 0) || 1;
+
+      const genderRich: Record<string, { spend: number; purchases: number; revenue: number }> = {};
+      const ageRich: Record<string, { spend: number; purchases: number; revenue: number }> = {};
+      const demographics: DemographicRow[] = [];
+
+      rawDemo.forEach((d: any) => {
+        const spend = parseFloat(d.spend || '0');
+        const purchases = extractPurchases(d.actions);
+        const revenue = extractRevenue(d.action_values);
+        const gender = d.gender === 'male' ? 'Masculino' : d.gender === 'female' ? 'Feminino' : 'Indefinido';
+        const age = d.age || 'unknown';
+
+        genderAgg[gender] = (genderAgg[gender] || 0) + spend;
+        ageAgg[age] = (ageAgg[age] || 0) + spend;
+
+        if (!genderRich[gender]) genderRich[gender] = { spend: 0, purchases: 0, revenue: 0 };
+        genderRich[gender].spend += spend;
+        genderRich[gender].purchases += purchases;
+        genderRich[gender].revenue += revenue;
+
+        if (!ageRich[age]) ageRich[age] = { spend: 0, purchases: 0, revenue: 0 };
+        ageRich[age].spend += spend;
+        ageRich[age].purchases += purchases;
+        ageRich[age].revenue += revenue;
+
+        demographics.push({ age, gender, spend, purchases, revenue, roas: spend > 0 ? revenue / spend : 0 });
+      });
+
+      const genderColors: Record<string, string> = {
+        Masculino: 'hsl(216, 91%, 64%)',
+        Feminino: 'hsl(250, 90%, 71%)',
+        Indefinido: 'hsl(218, 25%, 38%)',
+      };
+      const genderData: GenderData[] = Object.entries(genderAgg).map(([name, spend]) => ({
+        name,
+        value: Math.round((spend / totalDemoSpend) * 100),
+        fill: genderColors[name] || 'hsl(218, 25%, 38%)',
+      }));
+      const ageData: AgeData[] = Object.entries(ageAgg)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([age, spend]) => ({ age, percentage: Math.round((spend / totalDemoSpend) * 100) }));
+
+      const demoByGender: DemoGenderAgg[] = Object.entries(genderRich).map(([name, v]) => ({
+        name,
+        spend: v.spend,
+        purchases: v.purchases,
+        revenue: v.revenue,
+        roas: v.spend > 0 ? v.revenue / v.spend : 0,
+        fill: genderColors[name] || 'hsl(218, 25%, 38%)',
+      })).sort((a, b) => b.spend - a.spend);
+
+      const demoByAge: DemoAgeAgg[] = Object.entries(ageRich).map(([age, v]) => ({
+        age,
+        spend: v.spend,
+        purchases: v.purchases,
+        revenue: v.revenue,
+        roas: v.spend > 0 ? v.revenue / v.spend : 0,
+      })).sort((a, b) => b.spend - a.spend);
+
+      // Build budgetByCampaignId
+      const budgetByCampaignId: Record<string, number> = {};
+      const rawCampaigns = campaignsRes?.data || [];
+      rawCampaigns.forEach((campaign: any) => {
+        const dailyBudget = parseInt(campaign.daily_budget || '0', 10);
+        const lifetimeBudget = parseInt(campaign.lifetime_budget || '0', 10);
+        if (dailyBudget > 0) {
+          budgetByCampaignId[campaign.id] = dailyBudget / 100;
+        } else if (lifetimeBudget > 0) {
+          budgetByCampaignId[campaign.id] = lifetimeBudget / 100;
+        }
+      });
+
+      const rawAdsets = adsetsRes?.data || [];
+      rawAdsets.forEach((adset: any) => {
+        if (adset.campaign_id && !budgetByCampaignId[adset.campaign_id]) {
+          const dailyAdset = parseFloat(adset.daily_budget || '0');
+          const lifetimeAdset = parseFloat(adset.lifetime_budget || '0');
+          const budget = (dailyAdset > 0 ? dailyAdset : lifetimeAdset) / 100;
+          if (budget > 0) {
+            budgetByCampaignId[adset.campaign_id] = (budgetByCampaignId[adset.campaign_id] || 0) + budget;
+          }
+        }
+      });
 
       const now = new Date().toISOString();
       const analysisResult: AnalysisData = {

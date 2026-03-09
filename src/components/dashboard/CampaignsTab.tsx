@@ -338,20 +338,20 @@ Responda SOMENTE com o JSON, sem markdown.`;
       <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
-            <tr className="border-b border-[#1E2D4A] bg-[#080B14]">
+            <tr className="border-b border-[#1C2538] bg-[#0D1121] sticky top-0 z-10">
               {columns.map(col => (
                 <th
                   key={col.key}
-                  onClick={() => handleSort(col.key as SortColumn)}
-                  className={`px-3 py-2 text-[10px] font-semibold text-[#64748B] uppercase tracking-wider cursor-pointer hover:bg-[#111827] transition-colors select-none ${col.align === 'right' ? 'text-right' : 'text-left'}`}
+                  onClick={() => col.key !== 'recommendation' ? handleSort(col.key as SortColumn) : undefined}
+                  className={`px-3 py-2.5 text-[11px] font-semibold text-text-muted uppercase tracking-wider ${col.key !== 'recommendation' ? 'cursor-pointer hover:bg-[#111827]' : ''} transition-colors select-none ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'}`}
                 >
-                  <div className={`flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : 'justify-start'}`}>
                     {col.label}
-                    <SortIcon column={col.key as SortColumn} />
+                    {col.key !== 'recommendation' && <SortIcon column={col.key as SortColumn} />}
                   </div>
                 </th>
               ))}
-              <th className="px-3 py-2 w-8"></th>
+              <th className="px-3 py-2.5 w-8"></th>
             </tr>
           </thead>
           <tbody>

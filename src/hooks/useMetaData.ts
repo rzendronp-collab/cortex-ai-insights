@@ -339,7 +339,7 @@ export function useMetaData() {
         campaignsProcessed = (campaignsRes?.data || []).map(processCampaign);
       }
 
-      const campaigns: ProcessedCampaign[] = (campaignsRes?.data || []).map(processCampaign);
+      const campaigns = campaignsProcessed;
       const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map((d: any) => {
         const spend = parseFloat(d.spend || '0');
         const purchases = extractPurchases(d.actions);

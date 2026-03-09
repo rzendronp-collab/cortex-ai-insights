@@ -32,7 +32,7 @@ interface DashboardContextType {
   clearCurrentAnalysis: () => void;
   currencySymbol: string;
   setSelectedAccountCurrency: (currency: string | null) => void;
-  analyzeRef: MutableRefObject<(() => void) | null>;
+  analyzeRef: MutableRefObject<((overrideAccountId?: string) => void) | null>;
   // Multi-account
   activeAccountIds: string[];
   setActiveAccountIds: React.Dispatch<React.SetStateAction<string[]>>;
@@ -58,7 +58,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [analysisCache, setAnalysisCache] = useState<Record<string, CachedAnalysis>>({});
   const [accountCurrency, setAccountCurrency] = useState<string | null>(null);
-  const analyzeRef = useRef<(() => void) | null>(null);
+  const analyzeRef = useRef<((overrideAccountId?: string) => void) | null>(null);
 
   // Multi-account active list
   const [activeAccountIds, setActiveAccountIds] = useState<string[]>(() => {

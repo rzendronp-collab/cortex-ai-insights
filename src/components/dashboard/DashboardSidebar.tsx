@@ -37,7 +37,7 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
   const { user, signOut } = useAuth();
   const { profile, updateProfile } = useProfile();
   const { adAccounts, isConnected, isTokenExpired, connectMeta, disconnectMeta } = useMetaConnection();
-  const { activeTab: currentTab, setActiveTab, activeAccountIds, toggleActiveAccount, setActiveAccountIds, analysisCache } = useDashboard();
+  const { activeTab: currentTab, setActiveTab, activeAccountIds, toggleActiveAccount, setActiveAccountIds, analysisCache, analyzeRef, setSelectedAccountId, setSelectedAccountName, setSelectedAccountCurrency } = useDashboard();
   const [configOpen, setConfigOpen] = useState(false);
   const [openBMs, setOpenBMs] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
@@ -248,7 +248,13 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                             key={account.id}
                             className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-bg-card-hover cursor-pointer select-none"
                             onClick={() => {
-                              if (account.account_id) toggleActiveAccount(account.account_id);
+                              if (account.account_id) {
+                                toggleActiveAccount(account.account_id);
+                                setSelectedAccountId(account.account_id);
+                                setSelectedAccountName(account.account_name || null);
+                                setSelectedAccountCurrency(account.currency || null);
+                                setTimeout(() => { analyzeRef.current?.(account.account_id); }, 100);
+                              }
                             }}
                           >
                             <Switch

@@ -205,6 +205,7 @@ export default function CampaignsTab() {
       reorderColumns(oldIndex, newIndex);
     }
   }, [orderedColumns, reorderColumns]);
+  const { adsets, adsetsLoading, fetchAdsets } = useAdsets();
   const roasTarget = profile?.roas_target || 3.0;
   const currency = currencySymbol;
 

@@ -876,3 +876,43 @@ Responda SOMENTE com o JSON, sem markdown.`;
     </div>
   );
 }
+
+/* ═══ TABLE SKELETON ═══ */
+function CampaignsTableSkeleton() {
+  const colWidths = [36, 200, 80, 80, 80, 80, 60, 50, 60, 50, 60, 60, 50];
+  return (
+    <div className="space-y-4 animate-fade-in">
+      {/* Filter skeleton */}
+      <div className="flex items-center gap-2">
+        <div className="h-8 w-64 bg-[#1C2538] rounded-md animate-pulse" />
+        <div className="h-8 w-36 bg-[#1C2538] rounded-md animate-pulse" />
+        <div className="h-8 w-24 bg-[#1C2538] rounded-md animate-pulse" />
+      </div>
+      {/* Table skeleton */}
+      <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center gap-2 px-3 py-2.5 bg-[#0D1121] border-b border-[#1C2538]">
+          {colWidths.map((w, i) => (
+            <div key={i} className="h-3 bg-[#2A3850] rounded" style={{ width: w, flexShrink: 0 }} />
+          ))}
+        </div>
+        {/* Rows */}
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-2 px-3 border-b border-[#1C2538] animate-pulse"
+            style={{ height: 52, animationDelay: `${i * 60}ms` }}
+          >
+            {colWidths.map((w, j) => (
+              <div
+                key={j}
+                className="h-3.5 bg-[#1C2538] rounded"
+                style={{ width: w + Math.random() * 20, flexShrink: 0 }}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

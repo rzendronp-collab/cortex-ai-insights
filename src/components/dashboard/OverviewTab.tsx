@@ -149,7 +149,7 @@ export default function OverviewTab() {
         <h3 className="text-base font-semibold text-text-primary mb-2">Pronto para atualizar</h3>
         <p className="text-sm text-text-secondary mb-6 max-w-xs">Selecione um período e clique em Atualizar para carregar os dados.</p>
         <Button
-          onClick={() => analyze()}
+          onClick={async () => { for (const id of activeAccountIds) { await analyze(id); } }}
           disabled={loading}
           className="h-11 px-8 text-sm gradient-blue text-white gap-2"
         >

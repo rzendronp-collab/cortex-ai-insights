@@ -239,8 +239,9 @@ export function useMetaData() {
     }
   }, [callMetaApi]);
 
-  const analyze = useCallback(async () => {
-    if (!selectedAccountId) {
+  const analyze = useCallback(async (overrideAccountId?: string) => {
+    const accountId = overrideAccountId || selectedAccountId;
+    if (!accountId) {
       // No toast — multi-account flow handles this via activeAccountIds
       return;
     }
@@ -263,7 +264,7 @@ export function useMetaData() {
 
       // Always fetch fresh from Meta API (cache is only used as fallback on rate limit)
       const period = periodMap[selectedPeriod] || 'last_7d';
-      const acctPath = `act_${selectedAccountId}`;
+      const acctPath = `act_${accountId}`;
       const { since, until } = getPrevTimeRange(selectedPeriod, dateRange);
 
       // Build date params: use time_range for custom, date_preset for presets
@@ -529,14 +530,14 @@ export function useMetaData() {
         lastUpdated: now,
       };
 
-      setAnalysisForAccount(selectedAccountId, selectedPeriod, analysisResult);
+      setAnalysisForAccount(accountId, cachePeriodKey, analysisResult);
 
       // Save to Supabase persistent cache
       if (user) {
         try {
           const cachePayload = {
             user_id: user.id,
-            account_id: selectedAccountId,
+            account_id: accountId,
             period: cachePeriodKey,
             data: analysisResult as any,
             updated_at: now,
@@ -545,7 +546,7 @@ export function useMetaData() {
             .from('analysis_cache')
             .select('id')
             .eq('user_id', user.id)
-            .eq('account_id', selectedAccountId)
+            .eq('account_id', accountId)
             .eq('period', cachePeriodKey)
             .maybeSingle();
           if (existing) {
@@ -559,7 +560,7 @@ export function useMetaData() {
       }
 
       // Check and create alerts based on campaign data
-      await checkAndCreateAlerts(campaigns, selectedAccountId);
+      await checkAndCreateAlerts(campaigns, accountId);
 
       toast.success('Análise concluída!');
     } catch (err: any) {
@@ -575,11 +576,11 @@ export function useMetaData() {
             .from('analysis_cache')
             .select('data')
             .eq('user_id', user.id)
-            .eq('account_id', selectedAccountId)
+            .eq('account_id', accountId)
             .eq('period', cachePeriodKey)
             .maybeSingle();
           if (fallback?.data && (fallback.data as any).budgetByCampaignId) {
-            setAnalysisForAccount(selectedAccountId, selectedPeriod, fallback.data as unknown as AnalysisData);
+            setAnalysisForAccount(accountId, cachePeriodKey, fallback.data as unknown as AnalysisData);
             toast.warning('Limite da API atingido — usando dados do cache.');
             return;
           }

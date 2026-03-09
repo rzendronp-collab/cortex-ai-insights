@@ -46,7 +46,12 @@ const DashboardContext = createContext<DashboardContextType | null>(null);
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
-  const [selectedAccountId, setSelectedAccountIdRaw] = useState<string | null>(null);
+  const [selectedAccountId, setSelectedAccountIdRaw] = useState<string | null>(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('cortexads_active_accounts') || '[]');
+      return saved.length > 0 ? saved[0] : null;
+    } catch { return null; }
+  });
   const [selectedAccountName, setSelectedAccountName] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriodRaw] = useState(localStorage.getItem('cortexads_period') || '3d');
   const [dateRange, setDateRangeRaw] = useState<DateRange | null>(null);
@@ -66,6 +71,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setActiveAccountIds(prev => {
       const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
       localStorage.setItem('cortexads_active_accounts', JSON.stringify(next));
+      // Auto-sync selectedAccountId to first active account
+      if (next.length > 0) {
+        setSelectedAccountIdRaw(next[0]);
+      } else {
+        setSelectedAccountIdRaw(null);
+      }
       return next;
     });
   }, []);

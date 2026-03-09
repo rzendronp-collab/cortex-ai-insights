@@ -192,7 +192,7 @@ export default function CampaignsTab() {
   const [budgetCache, setBudgetCache] = useState<Record<string, number | null>>({});
   const [budgetFetching, setBudgetFetching] = useState<Set<string>>(new Set());
 
-  const { analysisData, selectedAccountId, selectedPeriod, currencySymbol } = useDashboard();
+  const { analysisData, selectedAccountId, selectedPeriod, currencySymbol, setAnalysisForAccount } = useDashboard();
   const { profile } = useProfile();
   const { callMetaApi, isConnected } = useMetaConnection();
   const { notes, saving: noteSaving, fetchNotes, saveNote, deleteNote } = useCampaignNotes();
@@ -215,7 +215,12 @@ export default function CampaignsTab() {
     if (selectedAccountId) fetchNotes(selectedAccountId);
   }, [selectedAccountId, fetchNotes]);
 
-  const rawCampaigns: ProcessedCampaign[] = analysisData?.campaigns || [];
+  // Merge localStatuses into campaigns so status persists across remounts
+  const rawCampaigns: ProcessedCampaign[] = useMemo(() => {
+    const base = analysisData?.campaigns || [];
+    if (Object.keys(localStatuses).length === 0) return base;
+    return base.map(c => localStatuses[c.id] ? { ...c, status: localStatuses[c.id] } : c);
+  }, [analysisData?.campaigns, localStatuses]);
   const prevCampaigns = analysisData?.campaignsPrev || [];
   const prevMap = useMemo(() => {
     const map: Record<string, ProcessedCampaign> = {};
@@ -306,13 +311,33 @@ export default function CampaignsTab() {
     try {
       await callMetaApi(campaignId, { status: newStatus, _method: 'POST' });
       setLocalStatuses(prev => ({ ...prev, [campaignId]: newStatus }));
+
+      // Sync global analysis cache so status persists across tab switches
+      if (analysisData && selectedAccountId) {
+        const updatedCampaigns = (analysisData.campaigns || []).map(c =>
+          c.id === campaignId ? { ...c, status: newStatus } : c
+        );
+        const updatedData = { ...analysisData, campaigns: updatedCampaigns };
+        setAnalysisForAccount(selectedAccountId, selectedPeriod, updatedData);
+
+        // Also update Supabase analysis_cache so it persists across reloads
+        supabase
+          .from('analysis_cache')
+          .update({ data: updatedData as any, updated_at: new Date().toISOString() })
+          .eq('account_id', selectedAccountId)
+          .eq('period', selectedPeriod)
+          .then(({ error }) => {
+            if (error) console.warn('[TOGGLE] Failed to update analysis_cache:', error.message);
+          });
+      }
+
       toast.success(newStatus === 'ACTIVE' ? 'Campanha ativada ✓' : 'Campanha pausada ✓');
     } catch (err: any) {
       toast.error(err?.message || 'Erro ao alterar status da campanha.');
     } finally {
       setTogglingIds(prev => { const n = new Set(prev); n.delete(campaignId); return n; });
     }
-  }, [callMetaApi]);
+  }, [callMetaApi, analysisData, selectedAccountId, selectedPeriod, setAnalysisForAccount]);
 
   const handleToggleClick = useCallback((id: string, name: string, currentStatus: string) => {
     const skipConfirm = localStorage.getItem('cortexads_toggle_confirmed') === 'true';

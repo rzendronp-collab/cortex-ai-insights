@@ -56,9 +56,10 @@ export function HourlyBarChart({ data, emptyMessage, currency = '€' }: HourlyB
 
   const maxSpend = Math.max(...fullData.map(h => h.spend), 0.01);
 
-  const getBarColor = (spend: number): string => {
+  const getBarColor = (spend: number, sales: number): string => {
     if (spend <= 0) return BAR_COLORS.low;
-    if (spend === maxSpend) return BAR_COLORS.peak;
+    if (spend === maxSpend) return 'hsl(25, 95%, 60%)';       // 🔥 peak - orange
+    if (sales > 0) return 'hsl(142, 71%, 45%)';               // 💰 with sales - green
     if (spend >= maxSpend * 0.7) return BAR_COLORS.high;
     if (spend < maxSpend * 0.2) return BAR_COLORS.low;
     return BAR_COLORS.normal;

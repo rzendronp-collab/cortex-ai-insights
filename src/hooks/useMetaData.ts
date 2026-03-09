@@ -143,6 +143,34 @@ function getPrevTimeRange(period: string, dateRange?: { from: string; to: string
   return { since: fmt(since), until: fmt(until) };
 }
 
+// Feature 6: Cursor-based pagination helper
+async function fetchAllPages(
+  callFn: (path: string, params?: Record<string, string>) => Promise<any>,
+  path: string,
+  initialParams: Record<string, string>
+): Promise<any[]> {
+  let allData: any[] = [];
+  let params = { ...initialParams };
+  let hasNext = true;
+  let pageCount = 0;
+
+  while (hasNext && pageCount < 10) { // max 10 pages = 500 items
+    const res = await callFn(path, params);
+    const data = res?.data || [];
+    allData = [...allData, ...data];
+
+    const nextCursor = res?.paging?.cursors?.after;
+    if (nextCursor && data.length > 0 && res?.paging?.next) {
+      params = { ...initialParams, after: nextCursor };
+      pageCount++;
+    } else {
+      hasNext = false;
+    }
+  }
+
+  return allData;
+}
+
 function extractPurchases(actions: any[]): number {
   if (!actions) return 0;
   const found = actions.find((a: any) => a.action_type === 'purchase' || a.action_type === 'offsite_conversion.fb_pixel_purchase');

@@ -111,7 +111,21 @@ const CACHE_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
 const RATE_LIMIT_DELAY_MS = 60 * 1000; // 60 seconds
 const MAX_RETRIES = 3;
 
-function getPrevTimeRange(period: string): { since: string; until: string } {
+function getPrevTimeRange(period: string, dateRange?: { from: string; to: string } | null): { since: string; until: string } {
+  const fmt = (d: Date) => d.toISOString().split('T')[0];
+
+  // For custom date range, compute previous period of same length
+  if (dateRange) {
+    const fromDate = new Date(dateRange.from + 'T00:00:00');
+    const toDate = new Date(dateRange.to + 'T00:00:00');
+    const days = Math.ceil((toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const prevUntil = new Date(fromDate);
+    prevUntil.setDate(prevUntil.getDate() - 1);
+    const prevSince = new Date(prevUntil);
+    prevSince.setDate(prevSince.getDate() - days + 1);
+    return { since: fmt(prevSince), until: fmt(prevUntil) };
+  }
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
@@ -126,7 +140,6 @@ function getPrevTimeRange(period: string): { since: string; until: string } {
   const since = new Date(until);
   since.setDate(since.getDate() - days);
   
-  const fmt = (d: Date) => d.toISOString().split('T')[0];
   return { since: fmt(since), until: fmt(until) };
 }
 

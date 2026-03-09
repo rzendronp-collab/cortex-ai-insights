@@ -2,6 +2,7 @@ import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { Zap, Loader2, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
+import AlertsPanel from './AlertsPanel';
 import { Button } from '@/components/ui/button';
 import { getRoasColor } from '@/lib/mockData';
 

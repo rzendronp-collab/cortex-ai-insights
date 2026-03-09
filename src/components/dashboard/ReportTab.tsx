@@ -166,19 +166,51 @@ export default function ReportTab() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={generateReport}
-          disabled={loading}
-          className="h-9 px-4 text-xs bg-gradient-to-r from-[#3B82F6] to-[#2563EB] text-white hover:opacity-90 rounded-lg font-semibold gap-2"
-        >
-          {loading ? (
-            <><Loader2 className="w-3.5 h-3.5 animate-spin" />Gerando...</>
-          ) : report ? (
-            <><RefreshCw className="w-3.5 h-3.5" />Regenerar</>
-          ) : (
-            <><Zap className="w-3.5 h-3.5" />Gerar Relatório</>
+        <div className="flex items-center gap-2">
+          {report && (
+            <Button
+              onClick={async () => {
+                setExporting(true);
+                try {
+                  generatePDF({
+                    accountName: selectedAccountName || 'Conta',
+                    period: selectedPeriod || '7d',
+                    analysisData: analysisData!,
+                    aiReport: report,
+                    currency,
+                    roasTarget,
+                  });
+                  toast.success('PDF exportado com sucesso!');
+                } catch {
+                  toast.error('Erro ao gerar PDF');
+                }
+                setExporting(false);
+              }}
+              disabled={exporting}
+              variant="outline"
+              className="h-9 px-4 text-xs border-data-blue text-data-blue hover:bg-data-blue hover:text-white rounded-lg font-semibold gap-2"
+            >
+              {exporting ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" />Gerando...</>
+              ) : (
+                <><Download className="w-3.5 h-3.5" />Exportar PDF</>
+              )}
+            </Button>
           )}
-        </Button>
+          <Button
+            onClick={generateReport}
+            disabled={loading}
+            className="h-9 px-4 text-xs bg-gradient-to-r from-[#3B82F6] to-[#2563EB] text-white hover:opacity-90 rounded-lg font-semibold gap-2"
+          >
+            {loading ? (
+              <><Loader2 className="w-3.5 h-3.5 animate-spin" />Gerando...</>
+            ) : report ? (
+              <><RefreshCw className="w-3.5 h-3.5" />Regenerar</>
+            ) : (
+              <><Zap className="w-3.5 h-3.5" />Gerar Relatório</>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Content */}

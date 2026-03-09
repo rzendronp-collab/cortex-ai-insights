@@ -179,20 +179,43 @@ export default function DashboardSidebar() {
                     </button>
                   )}
 
-                  <ScrollArea className="max-h-[140px]">
-                    <div className="space-y-1 pr-2">
-                      {filteredAccounts.map(account => (
-                        <div
-                          key={account.id}
-                          onClick={() => handleSelectAccount(account.account_id, account.account_name)}
-                          className={`flex items-center gap-2 rounded-md px-2 py-1.5 cursor-pointer transition-all ${
-                            selectedAccountId === account.account_id
-                              ? 'bg-accent text-accent-foreground'
-                              : 'hover:bg-muted/50 text-foreground'
-                          }`}
-                        >
-                          <Circle className={`w-1.5 h-1.5 flex-shrink-0 ${account.is_active ? 'fill-success text-success' : 'fill-muted-foreground text-muted-foreground'}`} />
-                          <span className="text-[10px] truncate flex-1">{account.account_name || `act_${account.account_id}`}</span>
+                  <ScrollArea className="max-h-[180px]">
+                    <div className="space-y-2 pr-2">
+                      {Object.entries(accountsByBusiness).map(([bizName, accounts]) => (
+                        <div key={bizName} className="space-y-0.5">
+                          <button
+                            onClick={() => toggleBm(bizName)}
+                            className="flex items-center gap-1.5 w-full text-[10px] text-muted-foreground hover:text-foreground px-1"
+                          >
+                            {isBmExpanded(bizName) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                            {bizName} ({accounts.length})
+                          </button>
+                          {isBmExpanded(bizName) && (
+                            <div className="space-y-0.5 ml-2">
+                              {accounts.map(account => {
+                                const isSelected = selectedAccountId === account.account_id;
+                                return (
+                                  <div
+                                    key={account.id}
+                                    onClick={() => handleSelectAccount(account.account_id, account.account_name)}
+                                    className={`flex items-center gap-2 rounded-md px-2 py-1.5 cursor-pointer transition-all ${
+                                      isSelected
+                                        ? 'bg-accent/60 border-l-2 border-l-accent-foreground'
+                                        : 'hover:bg-muted/50 border-l-2 border-l-transparent'
+                                    }`}
+                                  >
+                                    <Circle className={`w-1.5 h-1.5 flex-shrink-0 ${account.is_active ? 'fill-success text-success' : 'fill-muted-foreground text-muted-foreground'}`} />
+                                    <span className="text-[10px] truncate flex-1">{account.account_name || `act_${account.account_id}`}</span>
+                                    {isSelected && currentRoas > 0 && (
+                                      <span className={`text-[9px] font-bold flex-shrink-0 ${currentRoas >= 3 ? 'text-success' : currentRoas >= 2 ? 'text-warning' : 'text-destructive'}`}>
+                                        {currentRoas.toFixed(1)}x
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       ))}
                       
@@ -227,31 +250,27 @@ export default function DashboardSidebar() {
           </div>
         </div>
 
-        {/* ZONA 2: CONTA ATIVA */}
-        {selectedAccountId && (
-          <>
-            <Separator />
-            <div className="space-y-1.5">
-              <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Conta Ativa</h3>
-              <div className="bg-accent/50 border border-accent rounded-lg p-2.5">
-                <p className="text-[11px] font-medium text-foreground truncate">{selectedAccountName || `act_${selectedAccountId}`}</p>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-[10px] text-muted-foreground">{selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`}</span>
-                  {currentRoas > 0 && (
-                    <span className={`text-[10px] font-bold ${currentRoas >= 3 ? 'text-success' : currentRoas >= 2 ? 'text-warning' : 'text-destructive'}`}>
-                      ROAS {currentRoas.toFixed(1)}x
-                    </span>
-                  )}
-                </div>
-                <button
-                  onClick={() => { setSelectedAccountId(null); setSelectedAccountName(null); }}
-                  className="flex items-center gap-1 text-[9px] text-muted-foreground hover:text-foreground mt-2 transition-colors"
-                >
-                  <RefreshCw className="w-3 h-3" />
-                  Trocar conta
-                </button>
-              </div>
-            </div>
+        {/* NAVEGAÇÃO */}
+        <Separator />
+        <div className="space-y-1.5">
+          <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Navegação</h3>
+          <div className="space-y-0.5">
+            {navItems.map(item => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-md transition-all ${
+                  currentTab === item.id
+                    ? 'bg-accent text-accent-foreground font-medium'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                }`}
+              >
+                <item.icon className="w-4 h-4" />
+                <span className="text-xs">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
           </>
         )}
 

@@ -51,16 +51,6 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
     return () => clearInterval(interval);
   }, [checkStale]);
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setAccountDropdownOpen(false);
-      }
-    };
-    if (accountDropdownOpen) document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [accountDropdownOpen]);
-
   const ad = analysisData;
   const totalSpend = ad?.campaigns.reduce((s, c) => s + c.spend, 0) || 0;
   const totalRevenue = ad?.campaigns.reduce((s, c) => s + c.revenue, 0) || 0;

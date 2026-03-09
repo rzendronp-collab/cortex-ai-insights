@@ -546,7 +546,7 @@ export function useMetaData() {
             .from('analysis_cache')
             .select('id')
             .eq('user_id', user.id)
-            .eq('account_id', selectedAccountId)
+            .eq('account_id', accountId)
             .eq('period', cachePeriodKey)
             .maybeSingle();
           if (existing) {

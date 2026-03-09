@@ -257,7 +257,7 @@ export function useMetaData() {
       // Layer 2: Fresh fetch from Meta API (with retry)
       const period = periodMap[selectedPeriod] || 'last_7d';
       const acctPath = `act_${selectedAccountId}`;
-      const { since, until } = getPrevTimeRange(selectedPeriod);
+      const { since, until } = getPrevTimeRange(selectedPeriod, dateRange);
 
       // Build date params: use time_range for custom, date_preset for presets
       const isCustom = !!dateRange;

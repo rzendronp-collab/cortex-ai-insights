@@ -16,15 +16,20 @@ export function useCampaignActions() {
     const newStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
     setLoading(true);
     try {
-      await callMetaApi(campaignId, { status: newStatus, _method: 'POST' });
+      console.log(`[TOGGLE] Sending POST to ${campaignId}: status=${newStatus}`);
+      const result = await callMetaApi(campaignId, { status: newStatus, _method: 'POST' });
+      console.log(`[TOGGLE] Response:`, result);
+      // Invalidate cache so next fetch gets fresh status
+      clearCurrentAnalysis();
       return newStatus;
     } catch (err: any) {
+      console.error(`[TOGGLE] Error:`, err);
       toast.error(err?.message || 'Erro ao alterar status da campanha.');
       return null;
     } finally {
       setLoading(false);
     }
-  }, [isConnected, selectedAccountId, callMetaApi]);
+  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis]);
 
   const updateBudget = useCallback(async (campaignId: string, newDailyBudget: number) => {
     if (!isConnected || !selectedAccountId) {

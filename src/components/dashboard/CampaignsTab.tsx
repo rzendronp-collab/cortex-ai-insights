@@ -564,24 +564,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                     <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Performance por Hora</h4>
                                   </div>
                                   {hourlyData.length > 0 ? (
-                                    <div className="space-y-0.5 max-h-[120px] overflow-y-auto">
-                                      {(() => {
-                                        const sorted = [...hourlyData].sort((a, b) => b.spend - a.spend);
-                                        const top6 = sorted.slice(0, 6).map(h => h.hour);
-                                        const bottom3 = sorted.slice(-3).map(h => h.hour);
-                                        const selected = hourlyData.filter(h => top6.includes(h.hour) || bottom3.includes(h.hour));
-                                        return selected.map(h => (
-                                          <CompactHourlyBar
-                                            key={h.hour}
-                                            hour={h.hour}
-                                            value={h.spend}
-                                            maxValue={maxHourlySpend}
-                                            isTop={top6.includes(h.hour)}
-                                            isBottom={bottom3.includes(h.hour)}
-                                          />
-                                        ));
-                                      })()}
-                                    </div>
+                                    <HourlyBarChart data={hourlyData} />
                                   ) : (
                                     <p className="text-[11px] text-muted-foreground text-center py-6">
                                       Dados horários não disponíveis.

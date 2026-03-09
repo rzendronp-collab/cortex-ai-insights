@@ -1034,14 +1034,41 @@ Responda SOMENTE com o JSON, sem markdown.`;
                           </div>
                         </td>
                       );
-                    case 'campaign':
+                    case 'campaign': {
+                      const displayName = localNames[c.id] || c.name;
+                      const isEditingName = editingNameId === c.id;
+                      const isSavingName = savingNameId === c.id;
+                      const nFeedback = nameFeedback[c.id];
+                      const feedbackBorder = nFeedback === 'success' ? 'border-[#34D399]' : nFeedback === 'error' ? 'border-[#F87171]' : '';
                       return (
-                        <td key={colId} className="px-3">
-                          <TooltipProvider><Tooltip><TooltipTrigger asChild>
-                            <p className="text-[13px] font-semibold text-text-primary truncate max-w-[200px] cursor-default">{c.name}</p>
-                          </TooltipTrigger><TooltipContent><p className="text-xs max-w-xs">{c.name}</p></TooltipContent></Tooltip></TooltipProvider>
+                        <td key={colId} className="px-3" onClick={e => e.stopPropagation()}>
+                          {isEditingName ? (
+                            <input
+                              autoFocus
+                              type="text"
+                              value={editingNameValue}
+                              onChange={e => setEditingNameValue(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') saveNameInline(c.id);
+                                if (e.key === 'Escape') setEditingNameId(null);
+                              }}
+                              onBlur={() => saveNameInline(c.id)}
+                              className="w-full text-[13px] font-semibold bg-transparent border border-primary/40 rounded px-1.5 py-0.5 text-text-primary outline-none focus:ring-1 focus:ring-primary"
+                            />
+                          ) : (
+                            <div className={`flex items-center gap-1 group/name ${feedbackBorder ? `border ${feedbackBorder} rounded px-1` : ''}`}>
+                              {isSavingName ? (
+                                <Loader2 className="w-3 h-3 animate-spin text-muted-foreground mr-1" />
+                              ) : null}
+                              <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                                <p className="text-[13px] font-semibold text-text-primary truncate max-w-[200px] cursor-default">{displayName}</p>
+                              </TooltipTrigger><TooltipContent><p className="text-xs max-w-xs">{displayName}</p></TooltipContent></Tooltip></TooltipProvider>
+                              <Pencil className="w-3 h-3 shrink-0 text-muted-foreground/0 group-hover/name:text-muted-foreground cursor-pointer hover:text-primary transition-all" onClick={() => startNameEdit(c.id, displayName)} />
+                            </div>
+                          )}
                         </td>
                       );
+                    }
                     case 'spend':
                       return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(c.spend, currency)}</p></td>;
                     case 'budget':

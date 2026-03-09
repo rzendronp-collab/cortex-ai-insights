@@ -130,13 +130,25 @@ export default function OverviewTab() {
     );
   }
 
-  // Data loading
-  if (!effectiveData) {
+  // Account selected but loading/no data
+  if (selectedAccountId && !analysisData) {
+    if (loading) {
+      return <OverviewSkeleton />;
+    }
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center">
-        <div className="text-[80px] leading-none mb-6 opacity-10 select-none">📊</div>
-        <h3 className="text-lg font-semibold text-text-primary mb-2">Carregando dados...</h3>
-        <p className="text-sm text-text-muted mb-6 max-w-xs">Aguarde enquanto buscamos os dados da conta selecionada.</p>
+      <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
+        <div className="w-20 h-20 rounded-2xl bg-data-blue/10 flex items-center justify-center mb-6">
+          <Zap className="w-10 h-10 text-data-blue" />
+        </div>
+        <h3 className="text-base font-semibold text-text-primary mb-2">Pronto para analisar</h3>
+        <p className="text-sm text-text-secondary mb-6 max-w-xs">Selecione um período e clique em Analisar para carregar os dados desta conta.</p>
+        <Button
+          onClick={() => analyze()}
+          disabled={loading}
+          className="h-11 px-8 text-sm gradient-blue text-white gap-2"
+        >
+          {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Analisando...</> : <><Zap className="w-4 h-4" />Analisar Agora</>}
+        </Button>
       </div>
     );
   }

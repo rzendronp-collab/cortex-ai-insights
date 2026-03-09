@@ -5,9 +5,12 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { ArrowUp, ArrowDown, Inbox } from 'lucide-react';
 
 const chartColors = {
-  primary: 'hsl(216, 91%, 64%)',
-  secondary: 'hsl(250, 90%, 71%)',
+  primary: '#3B82F6',
+  secondary: '#8B5CF6',
 };
+const chartGrid = 'rgba(30,45,74,0.8)';
+const chartAxisTick = '#64748B';
+const chartTooltipStyle = { background: '#0E1420', border: '1px solid #1E2D4A', borderRadius: 8, fontSize: 11, color: '#F0F4FF' };
 
 export default function ComparisonTab() {
   const { analysisData, currencySymbol } = useDashboard();

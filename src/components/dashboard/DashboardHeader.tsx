@@ -147,8 +147,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
         {/* Desktop: full control bar */}
         {!isMobile && (
           <div className="flex items-center bg-bg-card border border-border-default rounded-[10px] p-[6px] gap-1">
-            {accountDropdown}
-            <div className="w-px h-5 bg-border-default" />
+            {periodSelector}
             {periodSelector}
             {isCustomActive && dateRange && (
               <>

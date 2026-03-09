@@ -13,9 +13,15 @@ export interface BudgetInfo {
 
 export function useCampaignActions() {
   const { callMetaApi, isConnected } = useMetaConnection();
-  const { selectedAccountId, selectedPeriod, analysisData, setAnalysisForAccount, clearCurrentAnalysis } = useDashboard();
+  const { selectedAccountId, selectedPeriod, analysisData, setAnalysisForAccount, clearCurrentAnalysis, analyzeRef } = useDashboard();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+
+  const triggerReanalyze = useCallback(() => {
+    setTimeout(() => {
+      analyzeRef.current?.();
+    }, 2000);
+  }, [analyzeRef]);
 
   const invalidateCache = useCallback(async () => {
     if (!user || !selectedAccountId) return;

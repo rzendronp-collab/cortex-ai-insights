@@ -259,11 +259,10 @@ export function useMetaData() {
       const prevRevenue = campaignsPrev.reduce((s, c) => s + c.revenue, 0);
       const prevRoas = prevSpend > 0 ? prevRevenue / prevSpend : 0;
       console.log('[DELTA DEBUG]', {
-        prevSpend, prevRevenue, prevRoas, currRoas,
-        prevTimeRange: previousRange,
-        currTimeRange: currentRange,
-        prevCampaignsCount: campaignsPrev.length,
-        prevRawData: campaignsPrevRes?.data?.slice(0, 2),
+        since,
+        until,
+        campaigns: campaignsPrev.length,
+        prevTotalSpend: campaignsPrev.reduce((s, c) => s + c.spend, 0),
       });
 
       const dailyData: DailyData[] = (dailyRes?.data || []).map((d: any) => {

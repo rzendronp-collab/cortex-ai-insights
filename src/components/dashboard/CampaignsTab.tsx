@@ -90,8 +90,14 @@ export default function CampaignsTab() {
   const { analysisData, selectedAccountId, currencySymbol } = useDashboard();
   const { profile } = useProfile();
   const { callMetaApi, isConnected } = useMetaConnection();
+  const { notes, saving: noteSaving, fetchNotes, saveNote, deleteNote } = useCampaignNotes();
   const roasTarget = profile?.roas_target || 3.0;
   const currency = currencySymbol;
+
+  // Fetch notes when account changes
+  useEffect(() => {
+    if (selectedAccountId) fetchNotes(selectedAccountId);
+  }, [selectedAccountId, fetchNotes]);
 
   const rawCampaigns: ProcessedCampaign[] = analysisData?.campaigns || [];
   const prevCampaigns = analysisData?.campaignsPrev || [];

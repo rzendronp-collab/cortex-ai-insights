@@ -14,10 +14,10 @@ interface PDFData {
   roasTarget: number;
 }
 
-const PRIMARY = [79, 142, 247]; // #4F8EF7
-const DARK = [30, 30, 40];
-const MUTED = [120, 120, 140];
-const LIGHT_BG = [245, 247, 252];
+const PRIMARY: [number, number, number] = [79, 142, 247];
+const DARK: [number, number, number] = [30, 30, 40];
+const MUTED: [number, number, number] = [120, 120, 140];
+const LIGHT_BG: [number, number, number] = [245, 247, 252];
 
 function addFooter(doc: jsPDF, dateStr: string) {
   const pageCount = doc.getNumberOfPages();

@@ -100,6 +100,7 @@ export default function ReportTab() {
   const currency = currencySymbol;
   const [report, setReport] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const generateReport = async () => {
     if (!analysisData) {

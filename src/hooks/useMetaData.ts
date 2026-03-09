@@ -143,62 +143,6 @@ export function useMetaData() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadFromSupabaseCache = useCallback(async (): Promise<boolean> => {
-    if (!user || !selectedAccountId) return false;
-
-    try {
-      const { data: cached } = await supabase
-        .from('analysis_cache')
-        .select('data, updated_at')
-        .eq('user_id', user.id)
-        .eq('account_id', selectedAccountId)
-        .eq('period', selectedPeriod)
-        .maybeSingle();
-
-      if (cached?.data && cached.updated_at) {
-        const cacheAge = Date.now() - new Date(cached.updated_at).getTime();
-        if (cacheAge < CACHE_MAX_AGE_MS) {
-          setAnalysisForAccount(selectedAccountId, selectedPeriod, cached.data as unknown as AnalysisData);
-          toast.success('♻️ Dados do cache');
-          return true;
-        }
-      }
-    } catch {
-      // Cache miss — proceed to fresh fetch
-    }
-    return false;
-  }, [user, selectedAccountId, selectedPeriod, setAnalysisForAccount]);
-
-  const saveToSupabaseCache = useCallback(async (analysisResult: AnalysisData, now: string) => {
-    if (!user || !selectedAccountId) return;
-
-    const cachePayload = {
-      user_id: user.id,
-      account_id: selectedAccountId,
-      period: selectedPeriod,
-      data: analysisResult as any,
-      updated_at: now,
-    };
-
-    try {
-      const { data: existing } = await supabase
-        .from('analysis_cache')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('account_id', selectedAccountId)
-        .eq('period', selectedPeriod)
-        .maybeSingle();
-
-      if (existing) {
-        await supabase.from('analysis_cache').update(cachePayload).eq('id', existing.id);
-      } else {
-        await supabase.from('analysis_cache').insert(cachePayload);
-      }
-    } catch {
-      // Silent cache save failure
-    }
-  }, [user, selectedAccountId, selectedPeriod]);
-
   const analyze = useCallback(async () => {
     if (!selectedAccountId) {
       toast.error('Selecione uma conta na sidebar primeiro.');
@@ -218,10 +162,28 @@ export function useMetaData() {
 
     try {
       // Layer 1: Try Supabase persistent cache
-      const cacheHit = await loadFromSupabaseCache();
-      if (cacheHit) {
-        setLoading(false);
-        return;
+      if (user) {
+        try {
+          const { data: cached } = await supabase
+            .from('analysis_cache')
+            .select('data, updated_at')
+            .eq('user_id', user.id)
+            .eq('account_id', selectedAccountId)
+            .eq('period', selectedPeriod)
+            .maybeSingle();
+
+          if (cached?.data && cached.updated_at) {
+            const cacheAge = Date.now() - new Date(cached.updated_at).getTime();
+            if (cacheAge < CACHE_MAX_AGE_MS) {
+              setAnalysisForAccount(selectedAccountId, selectedPeriod, cached.data as unknown as AnalysisData);
+              toast.success('♻️ Dados do cache');
+              setLoading(false);
+              return;
+            }
+          }
+        } catch {
+          // Cache miss — proceed to fresh fetch
+        }
       }
 
       // Layer 2: Fresh fetch from Meta API
@@ -367,9 +329,34 @@ export function useMetaData() {
         lastUpdated: now,
       };
 
-      // Save to memory (DashboardContext) + Supabase persistent cache
       setAnalysisForAccount(selectedAccountId, selectedPeriod, analysisResult);
-      await saveToSupabaseCache(analysisResult, now);
+
+      // Save to Supabase persistent cache
+      if (user) {
+        try {
+          const cachePayload = {
+            user_id: user.id,
+            account_id: selectedAccountId,
+            period: selectedPeriod,
+            data: analysisResult as any,
+            updated_at: now,
+          };
+          const { data: existing } = await supabase
+            .from('analysis_cache')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('account_id', selectedAccountId)
+            .eq('period', selectedPeriod)
+            .maybeSingle();
+          if (existing) {
+            await supabase.from('analysis_cache').update(cachePayload).eq('id', existing.id);
+          } else {
+            await supabase.from('analysis_cache').insert(cachePayload);
+          }
+        } catch {
+          // Silent cache save failure
+        }
+      }
 
       toast.success('Análise concluída!');
     } catch (err: any) {
@@ -384,7 +371,7 @@ export function useMetaData() {
     } finally {
       setLoading(false);
     }
-  }, [selectedAccountId, selectedPeriod, isConnected, isTokenExpired, callMetaApi, user, setAnalysisForAccount, loadFromSupabaseCache, saveToSupabaseCache]);
+  }, [selectedAccountId, selectedPeriod, isConnected, isTokenExpired, callMetaApi, user, setAnalysisForAccount]);
 
-  return { loading, error, analyze, loadFromSupabaseCache, roasTarget: profile?.roas_target || 3.0 };
+  return { loading, error, analyze, roasTarget: profile?.roas_target || 3.0 };
 }

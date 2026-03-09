@@ -11,26 +11,36 @@ import { Inbox, Zap, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 
-const chartColors = {
-  primary: '#3B82F6',
-  secondary: '#8B5CF6',
-  success: '#10B981',
-  warning: '#F59E0B',
-  destructive: '#EF4444',
-  muted: '#64748B',
+// ─── Chart theme constants ───
+const CHART_GRID = '#1A2235';
+const CHART_AXIS = '#475569';
+const TOOLTIP_BG = '#1E2D45';
+const TOOLTIP_BORDER = '#4F8EF7';
+
+const DATA_BLUE = '#60A5FA';
+const DATA_GREEN = '#34D399';
+const DATA_RED = '#F87171';
+const DATA_YELLOW = '#FBBF24';
+const DATA_PURPLE = '#A78BFA';
+const MUTED = '#475569';
+
+const chartTooltipStyle = {
+  background: TOOLTIP_BG,
+  border: `1px solid ${TOOLTIP_BORDER}`,
+  borderRadius: 8,
+  fontSize: 11,
+  color: '#F1F5F9',
+  fontFamily: "'Plus Jakarta Sans', sans-serif",
+  padding: '10px 12px',
 };
 
-const chartGrid = 'rgba(30,45,74,0.8)';
-const chartAxisTick = '#64748B';
-const chartTooltipStyle = { background: '#0E1420', border: '1px solid #1E2D4A', borderRadius: 8, fontSize: 11, color: '#F0F4FF' };
-
 const dailyMetricConfig: Record<string, { label: string; color: string; type: 'line' | 'bar'; yAxisId: 'left' | 'right' }> = {
-  roas: { label: 'ROAS', color: chartColors.primary, type: 'line', yAxisId: 'right' },
-  spend: { label: 'Gasto', color: chartColors.secondary, type: 'bar', yAxisId: 'left' },
-  revenue: { label: 'Receita', color: chartColors.success, type: 'line', yAxisId: 'left' },
-  ctr: { label: 'CTR', color: chartColors.warning, type: 'line', yAxisId: 'right' },
+  roas: { label: 'ROAS', color: DATA_BLUE, type: 'line', yAxisId: 'right' },
+  spend: { label: 'Gasto', color: DATA_PURPLE, type: 'bar', yAxisId: 'left' },
+  revenue: { label: 'Receita', color: DATA_GREEN, type: 'line', yAxisId: 'left' },
+  ctr: { label: 'CTR', color: DATA_YELLOW, type: 'line', yAxisId: 'right' },
   sales: { label: 'Vendas', color: 'hsl(180, 60%, 50%)', type: 'bar', yAxisId: 'left' },
-  cpm: { label: 'CPM', color: chartColors.destructive, type: 'line', yAxisId: 'right' },
+  cpm: { label: 'CPM', color: DATA_RED, type: 'line', yAxisId: 'right' },
 };
 
 export default function OverviewTab() {
@@ -55,15 +65,15 @@ export default function OverviewTab() {
   if (selectedAccountId && !analysisData && isConnected) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-up">
-        <div className="w-20 h-20 rounded-2xl gradient-subtle flex items-center justify-center mb-6">
-          <Zap className="w-10 h-10 text-primary" />
+        <div className="w-20 h-20 rounded-2xl bg-data-blue/10 flex items-center justify-center mb-6">
+          <Zap className="w-10 h-10 text-data-blue" />
         </div>
-        <h3 className="text-base font-semibold text-foreground mb-2">Pronto para analisar</h3>
-        <p className="text-sm text-muted-foreground mb-6 max-w-xs">Selecione um período e clique em Analisar para carregar os dados desta conta.</p>
+        <h3 className="text-base font-semibold text-text-primary mb-2">Pronto para analisar</h3>
+        <p className="text-sm text-text-secondary mb-6 max-w-xs">Selecione um período e clique em Analisar para carregar os dados desta conta.</p>
         <Button
           onClick={() => analyze()}
           disabled={loading}
-          className="h-11 px-8 text-sm gradient-primary text-primary-foreground gap-2"
+          className="h-11 px-8 text-sm gradient-blue text-white gap-2"
         >
           {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Analisando...</> : <><Zap className="w-4 h-4" />Analisar Agora</>}
         </Button>
@@ -84,10 +94,7 @@ export default function OverviewTab() {
 
   const normalizeStatus = (s: unknown) => String(s ?? '').trim().toUpperCase();
 
-  // Only campaigns with real spend for aggregations (include paused if they had spend in the period)
   const activeCampaigns = campaigns.filter(c => c.spend > 0);
-
-  // Plano de Ação: considerar SOMENTE campanhas realmente ativas
   const actionPlanCampaigns = campaigns.filter(c =>
     c.spend > 0 && normalizeStatus((c as any).status ?? (c as any).effective_status) === 'ACTIVE'
   );
@@ -99,7 +106,6 @@ export default function OverviewTab() {
   const avgCtr = activeCampaigns.length > 0 ? activeCampaigns.reduce((s, c) => s + c.ctr, 0) / activeCampaigns.length : 0;
   const costPerSale = totalSales > 0 ? totalSpend / totalSales : 0;
 
-  // Deltas from prev period — only campaigns with real spend
   const activePrev = campaignsPrev.filter(c => c.spend > 0);
   const prevSpend = activePrev.reduce((s, c) => s + c.spend, 0);
   const prevRevenue = activePrev.reduce((s, c) => s + c.revenue, 0);
@@ -108,119 +114,135 @@ export default function OverviewTab() {
   const prevCtr = activePrev.length > 0 ? activePrev.reduce((s, c) => s + c.ctr, 0) / activePrev.length : 0;
   const prevCpv = prevSales > 0 ? prevSpend / prevSales : 0;
 
-  // Fix #4: Only show delta when prev has meaningful data
   const calcDelta = (curr: number, prev: number): number | undefined => {
     if (!prev || prev === 0) return undefined;
     const d = Math.round(((curr - prev) / Math.abs(prev)) * 100);
     return d;
   };
 
-  // Fix #1: Top 10 campaigns by spend, with full name in tooltip
   const top10Campaigns = [...activeCampaigns].sort((a, b) => b.spend - a.spend).slice(0, 10);
   const roasCampaignData = top10Campaigns.map(c => ({
     name: c.name.length > 18 ? c.name.slice(0, 18) + '...' : c.name,
     fullName: c.name,
     roas: parseFloat(c.roas.toFixed(1)),
-    fill: c.roas >= roasTarget * 1.3 ? '#10B981' : c.roas >= roasTarget * 0.7 ? '#F59E0B' : '#EF4444',
+    fill: c.roas >= roasTarget ? DATA_GREEN : DATA_RED,
   }));
 
   const funnelData = [
-    { name: 'Impressões', value: activeCampaigns.reduce((s, c) => s + c.impressions, 0) },
-    { name: 'Cliques', value: activeCampaigns.reduce((s, c) => s + c.clicks, 0) },
-    { name: 'Vendas', value: totalSales },
+    { name: 'Impressões', value: activeCampaigns.reduce((s, c) => s + c.impressions, 0), color: DATA_BLUE },
+    { name: 'Cliques', value: activeCampaigns.reduce((s, c) => s + c.clicks, 0), color: DATA_PURPLE },
+    { name: 'Vendas', value: totalSales, color: DATA_GREEN },
   ];
 
-  // Plano de Ação: somente campanhas ACTIVE (ignora PAUSED)
   const actions = actionPlanCampaigns.map(c => {
     const roas = c.roas;
     const rec = roas >= roasTarget * 1.5
-      ? { label: '🚀 Escalar', color: 'text-success', bg: 'bg-success/10 border-success/20' }
+      ? { label: '🚀 Escalar', color: 'text-data-green', bg: 'bg-data-green/10 border-data-green/20' }
       : roas >= roasTarget
-        ? { label: '🔧 Otimizar', color: 'text-primary', bg: 'bg-primary/10 border-primary/20' }
+        ? { label: '🔧 Otimizar', color: 'text-data-blue', bg: 'bg-data-blue/10 border-data-blue/20' }
         : roas > 0
-          ? { label: '⚠ Atenção', color: 'text-warning', bg: 'bg-warning/10 border-warning/20' }
-          : { label: '⏸ Pausar', color: 'text-destructive', bg: 'bg-destructive/10 border-destructive/20' };
+          ? { label: '⚠ Atenção', color: 'text-data-yellow', bg: 'bg-data-yellow/10 border-data-yellow/20' }
+          : { label: '⏸ Pausar', color: 'text-data-red', bg: 'bg-data-red/10 border-data-red/20' };
     return { ...c, recommendation: rec, purchases: 'purchases' in c ? c.purchases : (c as any).sales };
   }).sort((a, b) => {
     const order: Record<string, number> = { '⏸ Pausar': 0, '⚠ Atenção': 1, '🔧 Otimizar': 2, '🚀 Escalar': 3 };
     return (order[a.recommendation.label] ?? 4) - (order[b.recommendation.label] ?? 4);
   });
 
-  // Fix #3: Determine active metrics for chart
   const activeMetrics = visibleMetrics.size > 0 ? Array.from(visibleMetrics) : Object.keys(dailyMetricConfig);
 
   if (analysisData && campaigns.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Inbox className="w-12 h-12 text-muted-foreground mb-4" />
-        <h3 className="text-sm font-semibold text-foreground mb-1">Sem dados para este período</h3>
-        <p className="text-xs text-muted-foreground">Tente selecionar um período maior ou verifique se a conta possui campanhas ativas.</p>
+        <Inbox className="w-12 h-12 text-text-muted mb-4" />
+        <h3 className="text-sm font-semibold text-text-primary mb-1">Sem dados para este período</h3>
+        <p className="text-xs text-text-secondary">Tente selecionar um período maior ou verifique se a conta possui campanhas ativas.</p>
       </div>
     );
   }
 
-  // Custom tooltip for ROAS chart showing full name
+  // Custom ROAS tooltip
   const RoasTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null;
     const data = payload[0].payload;
     return (
-      <div style={chartTooltipStyle} className="rounded-lg px-3 py-2 shadow-lg">
-        <p className="text-[11px] text-foreground font-medium mb-0.5">{data.fullName}</p>
-        <p className="text-[11px] text-muted-foreground">ROAS: <span className="text-foreground font-semibold">{data.roas}x</span></p>
+      <div style={chartTooltipStyle} className="rounded-lg shadow-xl">
+        <p className="text-[11px] text-text-primary font-medium mb-0.5">{data.fullName}</p>
+        <p className="text-[11px] text-text-secondary">ROAS: <span className="text-text-primary font-semibold">{data.roas}x</span></p>
       </div>
     );
   };
 
+  // Determine ROAS hero color class
+  const roasValueClass = avgRoas >= roasTarget ? 'text-data-green' : 'text-data-red';
+
   return (
     <div className="space-y-4">
-      {/* KPIs */}
+      {/* ─── KPIs ─── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <KPICard label="ROAS" value={`${avgRoas.toFixed(1)}x`} subtitle="Retorno sobre investimento" delta={calcDelta(avgRoas, prevRoas)} valueClassName={getRoasColor(avgRoas, roasTarget)} isHero />
+        <KPICard label="ROAS" value={`${avgRoas.toFixed(1)}x`} subtitle="Retorno sobre investimento" delta={calcDelta(avgRoas, prevRoas)} valueClassName={roasValueClass} isHero />
         <KPICard label="Investido" value={formatCurrency(totalSpend, currency)} subtitle="Período selecionado" delta={calcDelta(totalSpend, prevSpend)} />
-        <KPICard label="Receita" value={formatCurrency(totalRevenue, currency)} subtitle="Total gerado" delta={calcDelta(totalRevenue, prevRevenue)} valueClassName="text-success" />
+        <KPICard label="Receita" value={formatCurrency(totalRevenue, currency)} subtitle="Total gerado" delta={calcDelta(totalRevenue, prevRevenue)} valueClassName="text-data-green" />
         <KPICard label="Vendas" value={totalSales.toString()} subtitle="Conversões" delta={calcDelta(totalSales, prevSales)} />
         <KPICard label="CTR Médio" value={`${avgCtr.toFixed(1)}%`} subtitle="Taxa de cliques" delta={calcDelta(avgCtr, prevCtr)} />
-        <KPICard label="Custo/Venda" value={`${currency} ${costPerSale.toFixed(2)}`} subtitle="CPV médio" delta={calcDelta(costPerSale, prevCpv)} valueClassName="text-warning" />
+        <KPICard label="Custo/Venda" value={`${currency} ${costPerSale.toFixed(2)}`} subtitle="CPV médio" delta={calcDelta(costPerSale, prevCpv)} valueClassName="text-data-yellow" />
       </div>
 
-      {/* Charts Row 1 */}
+      {/* ─── Charts Row 1 ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        {/* Fix #1: ROAS por campanha — top 10, fixed height, full name tooltip */}
-        <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 animate-fade-up">
-          <h3 className="text-xs font-semibold text-foreground mb-3">ROAS por Campanha <span className="text-muted-foreground font-normal">(top 10)</span></h3>
+        {/* ROAS por Campanha */}
+        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+          <h3 className="text-xs font-semibold text-text-primary mb-4">ROAS por Campanha <span className="text-text-muted font-normal">(top 10)</span></h3>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={roasCampaignData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
-              <XAxis type="number" tick={{ fontSize: 10, fill: chartAxisTick }} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: chartAxisTick }} width={90} />
+              <defs>
+                <linearGradient id="barGreen" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor={DATA_GREEN} stopOpacity={0.9} />
+                  <stop offset="100%" stopColor={DATA_GREEN} stopOpacity={0.4} />
+                </linearGradient>
+                <linearGradient id="barRed" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stopColor={DATA_RED} stopOpacity={0.9} />
+                  <stop offset="100%" stopColor={DATA_RED} stopOpacity={0.4} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="4 4" stroke={CHART_GRID} horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: CHART_AXIS }} width={90} axisLine={false} tickLine={false} />
               <Tooltip content={<RoasTooltip />} />
-              <ReferenceLine x={roasTarget} stroke={chartColors.muted} strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 9, fill: chartColors.muted }} />
-              <Bar dataKey="roas" radius={[0, 4, 4, 0]}>
-                {roasCampaignData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
+              <ReferenceLine x={roasTarget} stroke={MUTED} strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 9, fill: MUTED }} />
+              <Bar dataKey="roas" radius={[0, 6, 6, 0]} animationDuration={800}>
+                {roasCampaignData.map((entry, i) => (
+                  <Cell key={i} fill={entry.roas >= roasTarget ? 'url(#barGreen)' : 'url(#barRed)'} />
+                ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Funil */}
-        <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 animate-fade-up">
-          <h3 className="text-xs font-semibold text-foreground mb-3">Funil de Conversão</h3>
-          <div className="space-y-3 mt-4">
+        {/* Funil de Conversão */}
+        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+          <h3 className="text-xs font-semibold text-text-primary mb-4">Funil de Conversão</h3>
+          <div className="space-y-4 mt-4">
             {funnelData.map((item, i) => {
               const maxVal = funnelData[0].value || 1;
               const width = Math.max((item.value / maxVal) * 100, 15);
               const rate = i > 0 ? ((item.value / (funnelData[i - 1].value || 1)) * 100).toFixed(1) : null;
-              const barColor = i === 0 ? '#3B82F6' : i === 1 ? '#8B5CF6' : '#10B981';
               return (
-                <div key={item.name}>
-                  <div className="flex justify-between text-[11px] mb-1">
-                    <span className="text-muted-foreground">{item.name}</span>
-                    <span className="text-foreground font-semibold">{item.value.toLocaleString()}</span>
+                <div key={item.name} className="animate-fade-up" style={{ animationDelay: `${i * 100}ms` }}>
+                  <div className="flex justify-between text-[11px] mb-1.5">
+                    <span className="text-text-secondary">{item.name}</span>
+                    <span className="text-text-primary font-semibold">{item.value.toLocaleString()}</span>
                   </div>
-                  <div className="h-7 bg-muted rounded-md overflow-hidden">
-                    <div className="h-full rounded-md transition-all" style={{ width: `${width}%`, backgroundColor: barColor }} />
+                  <div className="h-8 bg-bg-base rounded-lg overflow-hidden flex items-center justify-center relative">
+                    <div
+                      className="h-full rounded-lg transition-all duration-500 absolute left-0 top-0"
+                      style={{
+                        width: `${width}%`,
+                        background: `linear-gradient(90deg, ${item.color}, ${item.color}88)`,
+                      }}
+                    />
                   </div>
-                  {rate && <p className="text-[10px] mt-0.5" style={{ color: barColor }}>{i === 1 ? 'CTR' : 'CVR'}: {rate}%</p>}
+                  {rate && <p className="text-[10px] mt-1 font-medium" style={{ color: item.color }}>{i === 1 ? 'CTR' : 'CVR'}: {rate}%</p>}
                 </div>
               );
             })}
@@ -228,27 +250,60 @@ export default function OverviewTab() {
         </div>
 
         {/* Origem tráfego */}
-        <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 animate-fade-up">
-          <h3 className="text-xs font-semibold text-foreground mb-3">Origem do Tráfego</h3>
-          <div className="space-y-2.5 mt-2">
-            {platformData.map((p, i) => (
-              <div key={p.name} className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full" style={{ background: [chartColors.primary, chartColors.secondary, chartColors.warning, chartColors.muted][i % 4] }} />
-                <span className="text-[11px] text-muted-foreground flex-1 capitalize">{p.name}</span>
-                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${p.value}%`, background: [chartColors.primary, chartColors.secondary, chartColors.warning, chartColors.muted][i % 4] }} />
+        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+          <h3 className="text-xs font-semibold text-text-primary mb-4">Origem do Tráfego</h3>
+          <div className="space-y-3 mt-2">
+            {platformData.map((p, i) => {
+              const colors = [DATA_BLUE, DATA_PURPLE, DATA_YELLOW, MUTED];
+              const c = colors[i % colors.length];
+              return (
+                <div key={p.name} className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c }} />
+                  <span className="text-[11px] text-text-secondary flex-1 capitalize">{p.name}</span>
+                  <div className="flex-1 h-2 bg-bg-base rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-500" style={{ width: `${p.value}%`, background: c }} />
+                  </div>
+                  <span className="text-[11px] text-text-primary font-semibold w-8 text-right">{p.value}%</span>
                 </div>
-                <span className="text-[11px] text-foreground font-semibold w-8 text-right">{p.value}%</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* Fix #3: Daily chart — multi-metric with checkboxes and dual Y axis */}
-      <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 mb-6 animate-fade-up" style={{ minHeight: 320 }}>
-        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h3 className="text-xs font-semibold text-foreground">Evolução Diária</h3>
+      {/* ─── Gasto vs Receita (Area Chart) ─── */}
+      <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+        <h3 className="text-xs font-semibold text-text-primary mb-4">Gasto vs Receita</h3>
+        <ResponsiveContainer width="100%" height={220}>
+          <AreaChart data={dailyData}>
+            <defs>
+              <linearGradient id="gradSpendArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={DATA_BLUE} stopOpacity={0.15} />
+                <stop offset="95%" stopColor={DATA_BLUE} stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="gradRevenueArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor={DATA_GREEN} stopOpacity={0.15} />
+                <stop offset="95%" stopColor={DATA_GREEN} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="4 4" stroke={CHART_GRID} />
+            <XAxis dataKey="date" tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} />
+            <Tooltip contentStyle={chartTooltipStyle} />
+            <Area type="monotone" dataKey="spend" stroke={DATA_BLUE} strokeWidth={2} fill="url(#gradSpendArea)" dot={{ r: 3, fill: DATA_BLUE, strokeWidth: 2, stroke: '#141928' }} />
+            <Area type="monotone" dataKey="revenue" stroke={DATA_GREEN} strokeWidth={2} fill="url(#gradRevenueArea)" dot={{ r: 3, fill: DATA_GREEN, strokeWidth: 2, stroke: '#141928' }} />
+          </AreaChart>
+        </ResponsiveContainer>
+        <div className="flex justify-center gap-6 mt-2">
+          <span className="flex items-center gap-2 text-[11px] text-text-secondary"><span className="w-3 h-[2px] rounded-full inline-block" style={{ background: DATA_BLUE }} /> Gasto</span>
+          <span className="flex items-center gap-2 text-[11px] text-text-secondary"><span className="w-3 h-[2px] rounded-full inline-block" style={{ background: DATA_GREEN }} /> Receita</span>
+        </div>
+      </div>
+
+      {/* ─── Daily Evolution ─── */}
+      <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up" style={{ minHeight: 320 }}>
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <h3 className="text-xs font-semibold text-text-primary">Evolução Diária</h3>
           <div className="flex gap-3 flex-wrap">
             {Object.entries(dailyMetricConfig).map(([key, cfg]) => (
               <label key={key} className="flex items-center gap-1.5 cursor-pointer select-none">
@@ -259,7 +314,7 @@ export default function OverviewTab() {
                 />
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full inline-block" style={{ background: cfg.color }} />
-                  <span className="text-[10px] text-muted-foreground">{cfg.label}</span>
+                  <span className="text-[10px] text-text-secondary">{cfg.label}</span>
                 </span>
               </label>
             ))}
@@ -270,38 +325,49 @@ export default function OverviewTab() {
             <defs>
               {Object.entries(dailyMetricConfig).map(([key, cfg]) => (
                 <linearGradient key={key} id={`grad-${key}`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={cfg.color} stopOpacity={0.08} />
+                  <stop offset="5%" stopColor={cfg.color} stopOpacity={0.15} />
                   <stop offset="95%" stopColor={cfg.color} stopOpacity={0} />
                 </linearGradient>
               ))}
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
-            <XAxis dataKey="date" tick={{ fontSize: 10, fill: chartAxisTick }} />
-            <YAxis yAxisId="left" tick={{ fontSize: 10, fill: chartAxisTick }} />
-            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: chartAxisTick }} />
+            <CartesianGrid strokeDasharray="4 4" stroke={CHART_GRID} />
+            <XAxis dataKey="date" tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} />
+            <YAxis yAxisId="left" tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} />
             <Tooltip contentStyle={chartTooltipStyle} />
             {activeMetrics.map(key => {
               const cfg = dailyMetricConfig[key];
               if (!cfg) return null;
               if (cfg.type === 'bar') {
-                return <Bar key={key} dataKey={key} yAxisId={cfg.yAxisId} fill={cfg.color} fillOpacity={0.6} radius={[3, 3, 0, 0]} barSize={16} />;
+                return <Bar key={key} dataKey={key} yAxisId={cfg.yAxisId} fill={cfg.color} fillOpacity={0.6} radius={[4, 4, 0, 0]} barSize={16} />;
               }
-              return <Line key={key} type="monotone" dataKey={key} yAxisId={cfg.yAxisId} stroke={cfg.color} strokeWidth={2} dot={false} />;
+              return (
+                <Line
+                  key={key}
+                  type="monotone"
+                  dataKey={key}
+                  yAxisId={cfg.yAxisId}
+                  stroke={cfg.color}
+                  strokeWidth={2}
+                  dot={{ r: 4, fill: cfg.color, strokeWidth: 2, stroke: '#141928' }}
+                  activeDot={{ r: 6, fill: cfg.color, strokeWidth: 2, stroke: '#141928' }}
+                />
+              );
             })}
           </ComposedChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Hourly */}
-      <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 animate-fade-up">
-        <h3 className="text-xs font-semibold text-foreground mb-3">Desempenho por Hora</h3>
+      {/* ─── Hourly ─── */}
+      <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+        <h3 className="text-xs font-semibold text-text-primary mb-4">Desempenho por Hora</h3>
         <HourlyBarChart data={hourlyData} currency={currency} />
       </div>
 
-      {/* Demographics */}
+      {/* ─── Demographics ─── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 animate-fade-up">
-          <h3 className="text-xs font-semibold text-foreground mb-3">Gênero</h3>
+        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+          <h3 className="text-xs font-semibold text-text-primary mb-4">Gênero</h3>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie data={genderData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={0}>
@@ -312,73 +378,69 @@ export default function OverviewTab() {
           </ResponsiveContainer>
           <div className="flex justify-center gap-4 mt-2">
             {genderData.map(g => (
-              <span key={g.name} className="text-[12px] text-[#94A3B8]"><span className="font-semibold text-[#F0F4FF]">{g.value}%</span> {g.name}</span>
+              <span key={g.name} className="text-[12px] text-text-secondary"><span className="font-semibold text-text-primary">{g.value}%</span> {g.name}</span>
             ))}
           </div>
         </div>
 
-        <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 animate-fade-up" style={{ minHeight: 220 }}>
-          <h3 className="text-xs font-semibold text-foreground mb-3">Faixa Etária</h3>
+        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up" style={{ minHeight: 220 }}>
+          <h3 className="text-xs font-semibold text-text-primary mb-4">Faixa Etária</h3>
           <div className="space-y-2.5 mt-2" style={{ minHeight: 180 }}>
             {ageData.map(a => (
               <div key={a.age} className="flex items-center gap-2">
-                <span className="text-[10px] text-muted-foreground w-10">{a.age}</span>
-                <div className="flex-1 h-3 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full gradient-primary rounded-full" style={{ width: `${a.percentage}%` }} />
+                <span className="text-[10px] text-text-muted w-10">{a.age}</span>
+                <div className="flex-1 h-3 bg-bg-base rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${a.percentage}%`, background: `linear-gradient(90deg, ${DATA_BLUE}, ${DATA_PURPLE})` }} />
                 </div>
-                <span className="text-[10px] text-foreground font-semibold w-7 text-right">{a.percentage}%</span>
+                <span className="text-[10px] text-text-primary font-semibold w-7 text-right">{a.percentage}%</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 animate-fade-up">
-          <h3 className="text-xs font-semibold text-foreground mb-3">Gasto vs Receita</h3>
+        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+          <h3 className="text-xs font-semibold text-text-primary mb-4">Gasto vs Receita</h3>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie data={[{ name: 'Gasto', value: totalSpend }, { name: 'Receita', value: totalRevenue }]} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={0}>
-                <Cell fill={chartColors.destructive} />
-                <Cell fill={chartColors.success} />
+                <Cell fill={DATA_BLUE} />
+                <Cell fill={DATA_GREEN} />
               </Pie>
               <Tooltip contentStyle={chartTooltipStyle} />
             </PieChart>
           </ResponsiveContainer>
           <div className="flex justify-center gap-4 mt-1">
-            <span className="text-[10px] text-muted-foreground"><span className="text-destructive font-semibold">{formatCurrency(totalSpend, currency)}</span> Gasto</span>
-            <span className="text-[10px] text-muted-foreground"><span className="text-success font-semibold">{formatCurrency(totalRevenue, currency)}</span> Receita</span>
+            <span className="text-[10px] text-text-secondary"><span className="text-data-blue font-semibold">{formatCurrency(totalSpend, currency)}</span> Gasto</span>
+            <span className="text-[10px] text-text-secondary"><span className="text-data-green font-semibold">{formatCurrency(totalRevenue, currency)}</span> Receita</span>
           </div>
         </div>
       </div>
 
-      {/* Fix #2: Action plan — only campaigns with spend > 0 */}
-      <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 animate-fade-up">
-        <h3 className="text-xs font-semibold text-[#F0F4FF] mb-3">🎯 Plano de Ação</h3>
+      {/* ─── Action Plan Summary ─── */}
+      <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+        <h3 className="text-xs font-semibold text-text-primary mb-3">🎯 Plano de Ação</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
           {actions.map(a => {
             const isPausar = a.recommendation.label.includes('Pausar');
             const isEscalar = a.recommendation.label.includes('Escalar');
             const isOtimizar = a.recommendation.label.includes('Otimizar');
-            const tagBg = isPausar ? 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/20'
-              : isEscalar ? 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20'
-              : isOtimizar ? 'bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/20'
-              : 'bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20';
-            const roasColor = isEscalar ? 'text-[#10B981]' : isPausar ? 'text-[#EF4444]' : isOtimizar ? 'text-[#3B82F6]' : 'text-[#F59E0B]';
-            const borderLeft = isPausar ? 'border-l-[#EF4444]' : isEscalar ? 'border-l-[#10B981]' : isOtimizar ? 'border-l-[#3B82F6]' : 'border-l-[#F59E0B]';
+            const borderColor = isPausar ? DATA_RED : isEscalar ? DATA_GREEN : isOtimizar ? DATA_BLUE : DATA_YELLOW;
+            const roasColor = isPausar ? 'text-data-red' : isEscalar ? 'text-data-green' : isOtimizar ? 'text-data-blue' : 'text-data-yellow';
             return (
-              <div key={a.id} className={`bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-3 border-l-[3px] ${borderLeft}`}>
+              <div key={a.id} className="bg-bg-base border border-border-default rounded-lg p-3" style={{ borderLeftWidth: 3, borderLeftColor: borderColor }}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${tagBg}`}>{a.recommendation.label}</span>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${a.recommendation.bg} border`}>{a.recommendation.label}</span>
                   <span className={`text-[10px] font-bold ${roasColor}`}>ROAS {a.roas.toFixed(1)}x</span>
                 </div>
-                <p className="text-xs text-[#F0F4FF] font-semibold truncate">{a.name}</p>
-                <p className="text-[10px] text-[#64748B] mt-1">
+                <p className="text-xs text-text-primary font-semibold truncate">{a.name}</p>
+                <p className="text-[10px] text-text-muted mt-1">
                   Gasto {currency} {a.spend.toFixed(0)} • {a.purchases} vendas • CTR {a.ctr.toFixed(1)}%
                 </p>
               </div>
             );
            })}
          </div>
-         <button onClick={() => setActiveTab('action-plan')} className="text-xs text-[#3B82F6] hover:underline mt-2 cursor-pointer">
+         <button onClick={() => setActiveTab('action-plan')} className="text-xs text-data-blue hover:underline mt-3 cursor-pointer font-medium">
            Ver Plano Completo ⚡ →
          </button>
        </div>

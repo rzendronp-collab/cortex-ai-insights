@@ -405,8 +405,17 @@ Responda SOMENTE com o JSON, sem markdown.`;
                           </Tooltip>
                         </TooltipProvider>
                       </td>
-                      <td className="px-3 py-3 text-right">
-                        <p className="text-xs text-foreground">{formatCurrency(c.spend, currency)}</p>
+                      <td className="px-3 py-3 text-right group/spend" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1">
+                          <p className="text-xs text-foreground">{formatCurrency(c.spend, currency)}</p>
+                          <Pencil
+                            className="w-3 h-3 text-muted-foreground/0 group-hover/spend:text-muted-foreground cursor-pointer hover:text-primary transition-all"
+                            onClick={() => {
+                              setBudgetDialog({ id: c.id, name: c.name, currentSpend: c.spend });
+                              setBudgetValue('');
+                            }}
+                          />
+                        </div>
                       </td>
                       <td className="px-3 py-3 text-right">
                         <p className="text-xs text-foreground">{formatCurrency(c.revenue, currency)}</p>

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Flame, Snowflake } from 'lucide-react';
 
 interface HourlyBarChartProps {
   data: Array<{ hour: string; spend: number; sales?: number; [key: string]: any }>;
@@ -14,10 +13,16 @@ function parseHourToNumber(hour: string): number {
   return isNaN(num) ? -1 : num;
 }
 
+const BAR_COLORS = {
+  peak: '#1FBF72',
+  high: '#4F8EF7',
+  normal: '#7C6EFA',
+  low: '#1A2035',
+};
+
 export function HourlyBarChart({ data, emptyMessage, currency = 'R$' }: HourlyBarChartProps) {
   const [hoveredHour, setHoveredHour] = useState<number | null>(null);
 
-  // Build maps from hour number → spend + sales
   const hourSpend = new Map<number, number>();
   const hourSales = new Map<number, number>();
 
@@ -43,60 +48,45 @@ export function HourlyBarChart({ data, emptyMessage, currency = 'R$' }: HourlyBa
     );
   }
 
-  // Build full 24-hour array
   const fullData = Array.from({ length: 24 }, (_, i) => ({
     hour: i,
     spend: hourSpend.get(i) || 0,
     sales: hourSales.get(i) || 0,
   }));
 
-  const spends = fullData.map(h => h.spend);
-  const maxSpend = Math.max(...spends, 0.01);
-  const posSpends = spends.filter(s => s > 0);
-  const minSpend = posSpends.length > 0 ? Math.min(...posSpends) : 0;
-  const threshold60 = maxSpend * 0.6;
+  const maxSpend = Math.max(...fullData.map(h => h.spend), 0.01);
 
-  // Hour with most sales
-  const maxSales = Math.max(...fullData.map(h => h.sales), 0);
+  const getBarColor = (spend: number): string => {
+    if (spend <= 0) return BAR_COLORS.low;
+    if (spend === maxSpend) return BAR_COLORS.peak;
+    if (spend >= maxSpend * 0.7) return BAR_COLORS.high;
+    if (spend < maxSpend * 0.2) return BAR_COLORS.low;
+    return BAR_COLORS.normal;
+  };
 
-  const getBarStyle = (spend: number, isMax: boolean, isMin: boolean) => {
-    if (spend <= 0) {
-      return { color: 'bg-muted/40', heightPx: 6, icon: null };
-    }
-    if (isMax) {
-      return {
-        color: 'bg-success brightness-125',
-        heightPx: null,
-        icon: <Flame className="w-2.5 h-2.5 text-success absolute -top-3.5 left-1/2 -translate-x-1/2" />,
-      };
-    }
-    if (spend >= threshold60) {
-      return { color: 'bg-success', heightPx: null, icon: null };
-    }
-    if (isMin) {
-      return {
-        color: 'bg-destructive',
-        heightPx: null,
-        icon: <Snowflake className="w-2.5 h-2.5 text-destructive absolute -top-3.5 left-1/2 -translate-x-1/2" />,
-      };
-    }
-    return { color: 'bg-muted-foreground/40', heightPx: null, icon: null };
+  const getBarIcon = (spend: number): string | null => {
+    if (spend === maxSpend && spend > 0) return '🔥';
+    if (spend > 0 && spend < maxSpend * 0.2) return '❄️';
+    return null;
   };
 
   return (
-    <div className="space-y-2">
-      {/* Chart area */}
+    <div className="space-y-3">
+      {/* Title */}
+      <div>
+        <h3 className="text-sm font-semibold text-foreground">⏰ Desempenho por Hora</h3>
+        <p className="text-[10px] text-muted-foreground">Distribuição de gasto e vendas nas 24h</p>
+      </div>
+
+      {/* Chart */}
       <div className="w-full h-[150px] flex items-end justify-between gap-[2px] pt-5">
         {fullData.map((item) => {
-          const isMax = item.spend === maxSpend && item.spend > 0;
-          const isMin = item.spend === minSpend && item.spend > 0 && item.spend < maxSpend;
-          const isTopSales = item.sales > 0 && item.sales === maxSales;
-          const hasSales = item.sales > 0;
-          const style = getBarStyle(item.spend, isMax, isMin);
           const pct = item.spend > 0 ? (item.spend / maxSpend) * 100 : 0;
-          const height = style.heightPx !== null ? `${style.heightPx}px` : `${Math.max(pct, 4)}%`;
-          const roas = item.spend > 0 ? (item.sales > 0 ? (item.sales / item.spend) : null) : null;
+          const height = item.spend <= 0 ? '6px' : `${Math.max(pct, 4)}%`;
+          const color = getBarColor(item.spend);
+          const icon = getBarIcon(item.spend);
           const isHovered = hoveredHour === item.hour;
+          const roas = item.spend > 0 ? (item.sales / item.spend) : 0;
 
           return (
             <div
@@ -105,40 +95,44 @@ export function HourlyBarChart({ data, emptyMessage, currency = 'R$' }: HourlyBa
               onMouseEnter={() => setHoveredHour(item.hour)}
               onMouseLeave={() => setHoveredHour(null)}
             >
-              {/* Sales label above bar */}
-              {hasSales && (
-                <span
-                  className={`absolute top-0 text-[7px] font-bold leading-none z-10 ${isTopSales ? 'text-success' : 'text-muted-foreground'}`}
-                  style={{ top: '-1px' }}
-                >
-                  {item.sales}v
+              {/* Icon above bar */}
+              {icon && (
+                <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-[10px] z-10 leading-none">
+                  {icon}
                 </span>
               )}
 
               {/* Tooltip */}
               {isHovered && (
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 bg-popover border border-border rounded-lg px-2 py-1.5 shadow-lg whitespace-nowrap pointer-events-none">
-                  <p className="text-[10px] font-semibold text-foreground mb-0.5">{item.hour}h–{item.hour + 1}h</p>
-                  <p className="text-[10px] text-muted-foreground">Gasto: <span className="text-foreground font-medium">{currency} {item.spend.toFixed(2)}</span></p>
-                  <p className="text-[10px] text-muted-foreground">Vendas: <span className="text-foreground font-medium">{item.sales}</span></p>
-                  {roas !== null && (
-                    <p className="text-[10px] text-muted-foreground">ROAS: <span className="text-success font-medium">{(item.sales / item.spend * 1).toFixed(2)}x</span></p>
-                  )}
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 bg-popover border border-border rounded-lg px-2.5 py-2 shadow-lg whitespace-nowrap pointer-events-none">
+                  <p className="text-[10px] font-semibold text-foreground mb-1">
+                    {item.hour}h - {item.hour + 1}h
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    Gasto: <span className="text-foreground font-medium">{currency} {item.spend.toFixed(2)}</span>
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    Vendas: <span className="text-foreground font-medium">{item.sales} vendas</span>
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    ROAS: <span className="font-medium" style={{ color: roas >= 1 ? BAR_COLORS.peak : '#ef4444' }}>{roas.toFixed(2)}x</span>
+                  </p>
                 </div>
               )}
 
-              {/* Bar column */}
+              {/* Bar */}
               <div className="flex-1 w-full flex items-end justify-center relative">
                 <div
-                  className={`w-full max-w-[14px] mx-auto ${style.color} transition-all relative ${hasSales ? 'border-t-2 border-t-success' : ''} ${isHovered ? 'opacity-80' : ''}`}
+                  className={`w-full max-w-[14px] mx-auto transition-all ${isHovered ? 'opacity-80 scale-x-110' : ''}`}
                   style={{
                     height,
                     borderRadius: '3px 3px 0 0',
-                    boxShadow: isTopSales ? '0 -2px 6px hsl(var(--success) / 0.5)' : undefined,
+                    backgroundColor: color,
+                    boxShadow: item.spend === maxSpend && item.spend > 0
+                      ? `0 0 8px ${BAR_COLORS.peak}66`
+                      : undefined,
                   }}
-                >
-                  {style.icon}
-                </div>
+                />
               </div>
 
               <span className="text-[7px] text-muted-foreground font-mono leading-none">
@@ -152,13 +146,13 @@ export function HourlyBarChart({ data, emptyMessage, currency = 'R$' }: HourlyBa
       {/* Legend */}
       <div className="flex items-center justify-center gap-4 pt-1">
         <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
-          <Flame className="w-2.5 h-2.5 text-success" /> Maior gasto
+          🔥 Pico de investimento
         </span>
         <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
-          <span className="text-[9px]">💰</span> Maior conversão
+          💰 Alta performance
         </span>
         <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
-          <Snowflake className="w-2.5 h-2.5 text-destructive" /> Menor gasto
+          ❄️ Menor atividade
         </span>
       </div>
     </div>

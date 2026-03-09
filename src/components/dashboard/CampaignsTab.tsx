@@ -262,6 +262,24 @@ export default function CampaignsTab() {
     }
   };
 
+  const detectCountry = useCallback((name: string): string => {
+    const lower = name.toLowerCase();
+    if (lower.includes('portugal') || lower.includes(' pt') || lower.includes('_pt') || lower.includes('pt_')) return 'PT';
+    if (lower.includes('spain') || lower.includes('espanha') || lower.includes('madrid') || lower.includes(' es') || lower.includes('es_')) return 'ES';
+    if (lower.includes('greece') || lower.includes('grecia') || lower.includes('grécia') || lower.includes('athen') || lower.includes(' gr') || lower.includes('gr_')) return 'GR';
+    if (lower.includes('brasil') || lower.includes('brazil') || lower.includes(' br') || lower.includes('br_')) return 'BR';
+    return 'OTHER';
+  }, []);
+
+  const availableCountries = useMemo(() => {
+    const found = new Set<string>();
+    rawCampaigns.forEach(c => {
+      const country = detectCountry(c.name);
+      if (country !== 'OTHER') found.add(country);
+    });
+    return Array.from(found);
+  }, [rawCampaigns, detectCountry]);
+
   const filteredCampaigns = useMemo(() => {
     return rawCampaigns.filter(c => {
       if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
@@ -274,9 +292,13 @@ export default function CampaignsTab() {
       if (roasFilter === 'near' && (c.roas < roasTarget * 0.7 || c.roas >= roasTarget)) return false;
       if (roasFilter === 'below' && c.roas >= roasTarget * 0.7) return false;
       if (roasFilter === 'scaling' && c.roas < roasTarget * 1.5) return false;
+      // Country filter
+      if (countryFilter !== 'all') {
+        if (detectCountry(c.name) !== countryFilter) return false;
+      }
       return true;
     });
-  }, [rawCampaigns, searchQuery, statusFilter, activeTodayFilter, localStatuses, roasFilter, roasTarget]);
+  }, [rawCampaigns, searchQuery, statusFilter, activeTodayFilter, localStatuses, roasFilter, roasTarget, countryFilter, detectCountry]);
 
   const sortedCampaigns = useMemo(() => {
     return [...filteredCampaigns].sort((a, b) => {

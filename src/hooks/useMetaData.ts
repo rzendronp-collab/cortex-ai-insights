@@ -194,7 +194,7 @@ export function useMetaData() {
 
       const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes, adsetsRes] = await Promise.all([
         callMetaApi(`${acctPath}/campaigns`, {
-          fields: `id,name,status,insights.date_preset(${period}){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}`,
+          fields: `id,name,status,daily_budget,lifetime_budget,insights.date_preset(${period}){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}`,
           limit: '50',
         }),
         callMetaApi(`${acctPath}/insights`, {

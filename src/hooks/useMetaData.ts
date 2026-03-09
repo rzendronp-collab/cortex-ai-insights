@@ -67,22 +67,46 @@ export interface AnalysisData {
   lastUpdated: string;
 }
 
-const periodMap: Record<string, string> = {
-  'Hoje': 'today',
-  '3d': 'last_3d',
-  '7d': 'last_7d',
-  '14d': 'last_14d',
-  '30d': 'last_30d',
+const periodDaysMap: Record<string, number> = {
+  'Hoje': 1,
+  '3d': 3,
+  '7d': 7,
+  '14d': 14,
+  '30d': 30,
 };
 
-// For delta comparison, we fetch a "double window" and subtract current period to get previous-only
-const doublePeriodMap: Record<string, string> = {
-  'Hoje': 'last_3d',       // Will subtract today to get yesterday+day-before
-  '3d': 'last_7d',         // Subtract 3d to get previous 4 days
-  '7d': 'last_14d',        // Subtract 7d to get previous 7 days
-  '14d': 'last_30d',       // Subtract 14d to get previous ~16 days
-  '30d': 'last_90d',       // Subtract 30d to get previous 60 days
-};
+function addDays(date: Date, days: number) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function startOfLocalDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function formatYmd(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function getMetaRanges(selectedPeriod: string, now = new Date()) {
+  const days = periodDaysMap[selectedPeriod] ?? 7;
+
+  // Meta time_range uses day granularity; use local-day boundaries for predictable windows
+  const currentUntilDate = startOfLocalDay(now);
+  const currentSinceDate = addDays(currentUntilDate, -(days - 1));
+
+  const previousUntilDate = addDays(currentSinceDate, -1);
+  const previousSinceDate = addDays(previousUntilDate, -(days - 1));
+
+  return {
+    current: { since: formatYmd(currentSinceDate), until: formatYmd(currentUntilDate) },
+    previous: { since: formatYmd(previousSinceDate), until: formatYmd(previousUntilDate) },
+  };
+}
 
 function extractPurchases(actions: any[]): number {
   if (!actions) return 0;

@@ -173,9 +173,13 @@ export default function CampaignsTab() {
   const PAGE_SIZE = 20;
   const tableRef = React.useRef<HTMLDivElement>(null);
   
-  // Sorting
-  const [sortColumn, setSortColumn] = useState<SortColumn>('spend');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  // Sorting with localStorage persistence
+  const [sortColumn, setSortColumn] = useState<SortColumn>(
+    (localStorage.getItem('cortexads_sort_column') as SortColumn) || 'spend'
+  );
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(
+    (localStorage.getItem('cortexads_sort_direction') as 'asc' | 'desc') || 'desc'
+  );
 
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
   const [aiLoadingIds, setAiLoadingIds] = useState<Set<string>>(new Set());

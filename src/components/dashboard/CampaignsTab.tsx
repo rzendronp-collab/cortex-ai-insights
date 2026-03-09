@@ -444,6 +444,7 @@ export default function CampaignsTab() {
     if (isNaN(val) || val <= 0) { setEditingBudgetId(null); return; }
     setSavingBudgetId(campaignId);
     setEditingBudgetId(null);
+    setEditingCampaignId(campaignId);
     try {
       const budgetCents = String(Math.round(val * 100));
       // Check ABO vs CBO

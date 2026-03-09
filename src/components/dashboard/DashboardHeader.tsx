@@ -235,6 +235,14 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
             <div className="w-px h-5 bg-border-default" />
             <AlertsPanel />
             <div className="w-px h-5 bg-border-default" />
+            {isStale && (
+              <button
+                onClick={() => analyze()}
+                className="bg-data-yellow/10 border border-data-yellow/30 text-data-yellow text-[10px] px-2 py-0.5 rounded-full hover:bg-data-yellow/20 transition-colors"
+              >
+                ⚠ Dados desatualizados
+              </button>
+            )}
             <button
               className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold text-white rounded-lg gradient-blue transition-all hover:opacity-90 hover:-translate-y-px disabled:opacity-50 disabled:pointer-events-none"
               onClick={() => analyze()}

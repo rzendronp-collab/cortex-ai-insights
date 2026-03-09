@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, Flame, Snowflake, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
+import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
+import { HourlyBarChart } from './HourlyBarChart';
 
 function getMetricSemaphore(value: number, thresholds: { good: number; warn: number; higher?: boolean }) {
   const { good, warn, higher = true } = thresholds;
@@ -44,21 +45,6 @@ function Sparkline({ data, color = 'hsl(var(--primary))' }: { data: number[]; co
   );
 }
 
-function CompactHourlyBar({ hour, value, maxValue, isTop, isBottom }: { hour: string; value: number; maxValue: number; isTop: boolean; isBottom: boolean }) {
-  const pct = maxValue > 0 ? (value / maxValue) * 100 : 0;
-  const barColor = isTop ? 'bg-success' : isBottom ? 'bg-destructive/50' : 'bg-muted-foreground/30';
-  return (
-    <div className="flex items-center gap-1.5 h-4">
-      <span className="text-[9px] text-muted-foreground w-5 text-right font-mono">{hour}</span>
-      <div className="flex-1 h-2.5 bg-muted/50 rounded-sm overflow-hidden relative">
-        <div className={`h-full rounded-sm transition-all ${barColor}`} style={{ width: `${Math.max(pct, 2)}%` }} />
-      </div>
-      <span className="text-[9px] text-muted-foreground w-7 text-right font-mono">{value > 0 ? value.toFixed(0) : '-'}</span>
-      {isTop && <Flame className="w-2.5 h-2.5 text-success" />}
-      {isBottom && <Snowflake className="w-2.5 h-2.5 text-destructive/70" />}
-    </div>
-  );
-}
 
 type SortColumn = 'status' | 'name' | 'spend' | 'revenue' | 'profit' | 'roas' | 'purchases' | 'cpa' | 'ctr' | 'cpm' | 'impressions' | 'clicks';
 
@@ -578,24 +564,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                     <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Performance por Hora</h4>
                                   </div>
                                   {hourlyData.length > 0 ? (
-                                    <div className="space-y-0.5 max-h-[120px] overflow-y-auto">
-                                      {(() => {
-                                        const sorted = [...hourlyData].sort((a, b) => b.spend - a.spend);
-                                        const top6 = sorted.slice(0, 6).map(h => h.hour);
-                                        const bottom3 = sorted.slice(-3).map(h => h.hour);
-                                        const selected = hourlyData.filter(h => top6.includes(h.hour) || bottom3.includes(h.hour));
-                                        return selected.map(h => (
-                                          <CompactHourlyBar
-                                            key={h.hour}
-                                            hour={h.hour}
-                                            value={h.spend}
-                                            maxValue={maxHourlySpend}
-                                            isTop={top6.includes(h.hour)}
-                                            isBottom={bottom3.includes(h.hour)}
-                                          />
-                                        ));
-                                      })()}
-                                    </div>
+                                    <HourlyBarChart data={hourlyData} />
                                   ) : (
                                     <p className="text-[11px] text-muted-foreground text-center py-6">
                                       Dados horários não disponíveis.

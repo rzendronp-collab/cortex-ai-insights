@@ -814,18 +814,30 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     case 'status':
                       return (
                         <td key={colId} className="px-3" onClick={e => e.stopPropagation()}>
-                          {isToggling ? (
-                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />
-                          ) : (
+                          <div className="flex items-center gap-1.5">
                             <button
-                              onClick={() => setConfirmDialog({ id: c.id, name: c.name, currentStatus: effectiveStatus })}
-                              className="relative inline-flex items-center cursor-pointer"
-                              style={{ width: 36, height: 20, borderRadius: 10 }}
+                              onClick={() => {
+                                const isOpen = adsetExpandedId === c.id;
+                                setAdsetExpandedId(isOpen ? null : c.id);
+                                if (!isOpen) fetchAdsets(c.id, selectedPeriod);
+                              }}
+                              className="p-0.5 text-muted-foreground hover:text-foreground transition-transform"
                             >
-                              <span className="block w-full h-full rounded-[10px] transition-colors duration-200 ease-in-out" style={{ backgroundColor: isActive ? '#10B981' : '#374151' }} />
-                              <span className="absolute block w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out" style={{ top: 2, left: isActive ? 18 : 2 }} />
+                              <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ${adsetExpandedId === c.id ? 'rotate-90' : ''}`} />
                             </button>
-                          )}
+                            {isToggling ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                            ) : (
+                              <button
+                                onClick={() => setConfirmDialog({ id: c.id, name: c.name, currentStatus: effectiveStatus })}
+                                className="relative inline-flex items-center cursor-pointer"
+                                style={{ width: 36, height: 20, borderRadius: 10 }}
+                              >
+                                <span className="block w-full h-full rounded-[10px] transition-colors duration-200 ease-in-out" style={{ backgroundColor: isActive ? '#10B981' : '#374151' }} />
+                                <span className="absolute block w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out" style={{ top: 2, left: isActive ? 18 : 2 }} />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       );
                     case 'campaign':

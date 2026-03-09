@@ -51,7 +51,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const currencySymbol = getCurrencySymbol(accountCurrency);
 
   // Derive current analysis from cache
-  const cacheKey = selectedAccountId ? `${selectedAccountId}__${selectedPeriod}` : null;
+  const cacheKey = selectedAccountId
+    ? dateRange
+      ? `${selectedAccountId}__custom_${dateRange.from}_${dateRange.to}`
+      : `${selectedAccountId}__${selectedPeriod}`
+    : null;
   const cached = cacheKey ? analysisCache[cacheKey] : null;
   const isFresh = cached ? (Date.now() - cached.timestamp < CACHE_TTL) : false;
   const analysisData = (cached && isFresh) ? cached.data : null;

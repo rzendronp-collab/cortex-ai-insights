@@ -745,26 +745,29 @@ Responda SOMENTE com o JSON, sem markdown.`;
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr className="border-b border-[#1C2538] bg-[#0D1121] sticky top-0 z-10">
-              {columns.map(col => (
-                <th
-                  key={col.key}
-                  onClick={() => col.key !== 'recommendation' ? handleSort(col.key as SortColumn) : undefined}
-                  className={`px-3 py-2.5 text-[11px] font-semibold text-text-muted uppercase tracking-wider ${col.key !== 'recommendation' ? 'cursor-pointer hover:bg-[#111827]' : ''} transition-colors select-none ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'}`}
-                >
-                  <div className={`flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : 'justify-start'}`}>
-                    {col.label}
-                    {col.key !== 'recommendation' && <SortIcon column={col.key as SortColumn} />}
-                  </div>
-                </th>
-              ))}
-              <th className="px-3 py-2.5 w-8 text-center text-[11px] font-semibold text-text-muted">📝</th>
+              {activeColumns.map(col => {
+                const align = colAlign[col.id] || 'right';
+                const sortKey = colSortKey[col.id];
+                return (
+                  <th
+                    key={col.id}
+                    onClick={() => sortKey ? handleSort(sortKey) : undefined}
+                    className={`px-3 py-2.5 text-[11px] font-semibold text-text-muted uppercase tracking-wider ${sortKey ? 'cursor-pointer hover:bg-[#111827]' : ''} transition-colors select-none ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'}`}
+                  >
+                    <div className={`flex items-center gap-1.5 ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start'}`}>
+                      {col.label}
+                      {sortKey && <SortIcon column={sortKey} />}
+                    </div>
+                  </th>
+                );
+              })}
               <th className="px-3 py-2.5 w-8"></th>
             </tr>
           </thead>
           <tbody>
             {sortedCampaigns.length === 0 ? (
               <tr>
-                <td colSpan={14} className="text-center py-8 text-xs text-muted-foreground">
+                <td colSpan={activeColumns.length + 1} className="text-center py-8 text-xs text-muted-foreground">
                   Nenhuma campanha encontrada com os filtros atuais.
                 </td>
               </tr>
@@ -774,8 +777,6 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 const effectiveStatus = localStatuses[c.id] || c.status;
                 const isActive = effectiveStatus === 'ACTIVE';
                 const isToggling = togglingIds.has(c.id);
-                
-
                 const profit = c.revenue - c.spend;
                 const cpa = c.purchases > 0 ? c.spend / c.purchases : 0;
                 
@@ -805,6 +806,95 @@ Responda SOMENTE com o JSON, sem markdown.`;
 
                 const rec = getRecommendation(c);
 
+                const renderCell = (colId: string) => {
+                  switch (colId) {
+                    case 'status':
+                      return (
+                        <td key={colId} className="px-3" onClick={e => e.stopPropagation()}>
+                          {isToggling ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />
+                          ) : (
+                            <button
+                              onClick={() => setConfirmDialog({ id: c.id, name: c.name, currentStatus: effectiveStatus })}
+                              className="relative inline-flex items-center cursor-pointer"
+                              style={{ width: 36, height: 20, borderRadius: 10 }}
+                            >
+                              <span className="block w-full h-full rounded-[10px] transition-colors duration-200 ease-in-out" style={{ backgroundColor: isActive ? '#10B981' : '#374151' }} />
+                              <span className="absolute block w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out" style={{ top: 2, left: isActive ? 18 : 2 }} />
+                            </button>
+                          )}
+                        </td>
+                      );
+                    case 'campaign':
+                      return (
+                        <td key={colId} className="px-3">
+                          <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                            <p className="text-[13px] font-semibold text-text-primary truncate max-w-[200px] cursor-default">{c.name}</p>
+                          </TooltipTrigger><TooltipContent><p className="text-xs max-w-xs">{c.name}</p></TooltipContent></Tooltip></TooltipProvider>
+                        </td>
+                      );
+                    case 'spend':
+                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(c.spend, currency)}</p></td>;
+                    case 'budget':
+                      return (
+                        <td key={colId} className="px-3 text-right" onClick={e => e.stopPropagation()}>
+                          {(() => {
+                            const rawBudget = analysisData?.budgetByCampaignId?.[c.id];
+                            const bVal = rawBudget != null && rawBudget > 0 ? rawBudget : null;
+                            return (
+                              <div className="flex items-center justify-end gap-1 group/budget">
+                                {bVal != null ? <p className="text-[13px] text-text-primary">{formatCurrency(bVal, currency)}</p> : <p className="text-[13px] text-text-muted">—</p>}
+                                <Pencil className="w-3 h-3 text-muted-foreground/0 group-hover/budget:text-muted-foreground cursor-pointer hover:text-primary transition-all" onClick={() => { setBudgetDialog({ id: c.id, name: c.name, currentSpend: bVal || 0 }); setBudgetValue(''); }} />
+                              </div>
+                            );
+                          })()}
+                        </td>
+                      );
+                    case 'revenue':
+                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(c.revenue, currency)}</p></td>;
+                    case 'profit':
+                      return (
+                        <td key={colId} className="px-3 text-right">
+                          <span className={`text-[13px] font-medium inline-flex items-center gap-0.5 ${profit >= 0 ? 'text-[#34D399]' : 'text-[#F87171]'}`}>
+                            {profit >= 0 ? '↑' : '↓'}{profit > 0 ? '+' : ''}{formatCurrency(profit, currency)}
+                          </span>
+                        </td>
+                      );
+                    case 'roas':
+                      return (
+                        <td key={colId} className="px-3 text-right">
+                          {(() => {
+                            let badgeBg: string, badgeText: string, badgeBorder: string;
+                            if (c.roas >= roasTarget) { badgeBg = 'rgba(52,211,153,0.12)'; badgeText = '#34D399'; badgeBorder = 'rgba(52,211,153,0.25)'; }
+                            else if (c.roas >= roasTarget * 0.7) { badgeBg = 'rgba(251,191,36,0.12)'; badgeText = '#FBBF24'; badgeBorder = 'rgba(251,191,36,0.25)'; }
+                            else { badgeBg = 'rgba(248,113,113,0.12)'; badgeText = '#F87171'; badgeBorder = 'rgba(248,113,113,0.25)'; }
+                            return <span className="text-[13px] font-bold inline-block" style={{ background: badgeBg, color: badgeText, border: `1px solid ${badgeBorder}`, borderRadius: 6, padding: '3px 8px' }}>{c.roas.toFixed(2)}x</span>;
+                          })()}
+                        </td>
+                      );
+                    case 'sales':
+                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{c.purchases}</p></td>;
+                    case 'cpa':
+                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(cpa, currency)}</p></td>;
+                    case 'ctr':
+                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{c.ctr.toFixed(2)}%</p></td>;
+                    case 'cpm':
+                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(c.cpm, currency)}</p></td>;
+                    case 'impressions':
+                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatNumber(c.impressions)}</p></td>;
+                    case 'clicks':
+                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatNumber(c.clicks)}</p></td>;
+                    case 'notes':
+                      return (
+                        <td key={colId} className="px-3 text-center" onClick={e => e.stopPropagation()}>
+                          <NotePopover campaignId={c.id} accountId={selectedAccountId!} note={notes[c.id] || ''} isSaving={noteSaving.has(c.id)} onSave={saveNote} onDelete={deleteNote} />
+                        </td>
+                      );
+                    default:
+                      return null;
+                  }
+                };
+
                 return (
                   <React.Fragment key={c.id}>
                     <tr 
@@ -814,143 +904,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       onMouseEnter={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(96,165,250,0.04)'; }}
                       onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = ''; }}
                     >
-                      {/* Switch Toggle */}
-                      <td className="px-3" onClick={e => e.stopPropagation()}>
-                        {isToggling ? (
-                          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />
-                        ) : (
-                          <button
-                            onClick={() => setConfirmDialog({ id: c.id, name: c.name, currentStatus: effectiveStatus })}
-                            className="relative inline-flex items-center cursor-pointer"
-                            style={{ width: 36, height: 20, borderRadius: 10 }}
-                          >
-                            <span
-                              className="block w-full h-full rounded-[10px] transition-colors duration-200 ease-in-out"
-                              style={{ backgroundColor: isActive ? '#10B981' : '#374151' }}
-                            />
-                            <span
-                              className="absolute block w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"
-                              style={{ top: 2, left: isActive ? 18 : 2 }}
-                            />
-                          </button>
-                        )}
-                      </td>
-                      {/* Name */}
-                      <td className="px-3">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <p className="text-[13px] font-semibold text-text-primary truncate max-w-[200px] cursor-default">{c.name}</p>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p className="text-xs max-w-xs">{c.name}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </td>
-                      {/* Spend */}
-                      <td className="px-3 text-right">
-                        <p className="text-[13px] text-text-primary">{formatCurrency(c.spend, currency)}</p>
-                      </td>
-                      {/* Budget */}
-                      <td className="px-3 text-right" onClick={e => e.stopPropagation()}>
-                        {(() => {
-                          const rawBudget = analysisData?.budgetByCampaignId?.[c.id];
-                          const bVal = rawBudget != null && rawBudget > 0 ? rawBudget : null;
-                          return (
-                            <div className="flex items-center justify-end gap-1 group/budget">
-                              {bVal != null ? (
-                                <p className="text-[13px] text-text-primary">{formatCurrency(bVal, currency)}</p>
-                              ) : (
-                                <p className="text-[13px] text-text-muted">—</p>
-                              )}
-                              <Pencil
-                                className="w-3 h-3 text-muted-foreground/0 group-hover/budget:text-muted-foreground cursor-pointer hover:text-primary transition-all"
-                                onClick={() => {
-                                  setBudgetDialog({ id: c.id, name: c.name, currentSpend: bVal || 0 });
-                                  setBudgetValue('');
-                                }}
-                              />
-                            </div>
-                          );
-                        })()}
-                      </td>
-                      {/* Revenue */}
-                      <td className="px-3 text-right">
-                        <p className="text-[13px] text-text-primary">{formatCurrency(c.revenue, currency)}</p>
-                      </td>
-                      {/* Profit with arrow */}
-                      <td className="px-3 text-right">
-                        <span className={`text-[13px] font-medium inline-flex items-center gap-0.5 ${profit >= 0 ? 'text-[#34D399]' : 'text-[#F87171]'}`}>
-                          {profit >= 0 ? '↑' : '↓'}{profit > 0 ? '+' : ''}{formatCurrency(profit, currency)}
-                        </span>
-                      </td>
-                      {/* ROAS Badge */}
-                      <td className="px-3 text-right">
-                        {(() => {
-                          let badgeBg: string, badgeText: string, badgeBorder: string;
-                          if (c.roas >= roasTarget) {
-                            badgeBg = 'rgba(52,211,153,0.12)'; badgeText = '#34D399'; badgeBorder = 'rgba(52,211,153,0.25)';
-                          } else if (c.roas >= roasTarget * 0.7) {
-                            badgeBg = 'rgba(251,191,36,0.12)'; badgeText = '#FBBF24'; badgeBorder = 'rgba(251,191,36,0.25)';
-                          } else {
-                            badgeBg = 'rgba(248,113,113,0.12)'; badgeText = '#F87171'; badgeBorder = 'rgba(248,113,113,0.25)';
-                          }
-                          return (
-                            <span
-                              className="text-[13px] font-bold inline-block"
-                              style={{ background: badgeBg, color: badgeText, border: `1px solid ${badgeBorder}`, borderRadius: 6, padding: '3px 8px' }}
-                            >
-                              {c.roas.toFixed(2)}x
-                            </span>
-                          );
-                        })()}
-                      </td>
-                      {/* Purchases */}
-                      <td className="px-3 text-right">
-                        <p className="text-[13px] text-text-primary">{c.purchases}</p>
-                      </td>
-                      {/* CPA */}
-                      <td className="px-3 text-right">
-                        <p className="text-[13px] text-text-primary">{formatCurrency(cpa, currency)}</p>
-                      </td>
-                      {/* CTR */}
-                      <td className="px-3 text-right">
-                        <p className="text-[13px] text-text-primary">{c.ctr.toFixed(2)}%</p>
-                      </td>
-                      {/* CPM */}
-                      <td className="px-3 text-right">
-                        <p className="text-[13px] text-text-primary">{formatCurrency(c.cpm, currency)}</p>
-                      </td>
-                      {/* Impressions */}
-                      <td className="px-3 text-right">
-                        <p className="text-[13px] text-text-primary">{formatNumber(c.impressions)}</p>
-                      </td>
-                      {/* Clicks */}
-                      <td className="px-3 text-right">
-                        <p className="text-[13px] text-text-primary">{formatNumber(c.clicks)}</p>
-                      </td>
-                      {/* Recommendation */}
-                      <td className="px-3 text-center">
-                        <span
-                          className="text-[11px] font-semibold inline-block whitespace-nowrap"
-                          style={{ background: rec.bg, color: rec.text, border: `1px solid ${rec.border}`, borderRadius: 20, padding: '3px 10px' }}
-                        >
-                          {rec.label}
-                        </span>
-                      </td>
-                      {/* Notes */}
-                      <td className="px-3 text-center" onClick={e => e.stopPropagation()}>
-                        <NotePopover
-                          campaignId={c.id}
-                          accountId={selectedAccountId!}
-                          note={notes[c.id] || ''}
-                          isSaving={noteSaving.has(c.id)}
-                          onSave={saveNote}
-                          onDelete={deleteNote}
-                        />
-                      </td>
-                      {/* Expand */}
+                      {activeColumns.map(col => renderCell(col.id))}
                       <td className="px-3 text-center text-text-muted">
                         {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                       </td>

@@ -368,13 +368,6 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 const isActive = effectiveStatus === 'ACTIVE';
                 const isToggling = togglingIds.has(c.id);
                 
-                const roasColorClass = c.roas >= 10
-                  ? 'text-success font-black brightness-125' 
-                  : c.roas >= roasTarget 
-                    ? 'text-success' 
-                    : c.roas >= roasTarget * 0.7 
-                      ? 'text-warning' 
-                      : 'text-destructive';
 
                 const profit = c.revenue - c.spend;
                 const cpa = c.purchases > 0 ? c.spend / c.purchases : 0;

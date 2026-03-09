@@ -180,7 +180,28 @@ export default function DashboardSidebar() {
               </div>
               <span className="text-[13px] font-medium text-foreground flex-1 text-left">Meta Ads</span>
               {isConnected && !isTokenExpired && (
-                <Circle className="w-2 h-2 fill-success text-success" />
+                <>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button className="p-0.5 text-muted-foreground hover:text-destructive transition-colors" title="Desconectar Meta">
+                        <Unplug className="w-3.5 h-3.5" />
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="bg-[#0E1420] border-[#1E2D4A]">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="text-[#F0F4FF]">Desconectar Meta?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-[#94A3B8]">
+                          Você precisará reconectar para continuar analisando campanhas.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-[#080B14] border-[#1E2D4A] text-[#94A3B8] hover:bg-[#1E2D4A]">Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDisconnectMeta} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Desconectar</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                  <Circle className="w-2 h-2 fill-success text-success" />
+                </>
               )}
               <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${metaExpanded ? 'rotate-90' : ''}`} />
             </CollapsibleTrigger>

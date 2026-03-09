@@ -240,7 +240,6 @@ export function useMetaData() {
   }, [callMetaApi]);
 
   const analyze = useCallback(async (overrideAccountId?: string) => {
-    console.log('[ANALYZE] chamado com accountId:', overrideAccountId, '| selectedAccountId:', selectedAccountId, '| isConnected:', isConnected, '| isTokenExpired:', isTokenExpired);
     const accountId = overrideAccountId || selectedAccountId;
     if (!accountId) {
       // No toast — multi-account flow handles this via activeAccountIds

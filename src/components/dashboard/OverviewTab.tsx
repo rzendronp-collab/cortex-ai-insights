@@ -220,20 +220,20 @@ export default function OverviewTab() {
         </div>
 
         {/* Funil de Conversão */}
-        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
-          <h3 className="text-xs font-semibold text-text-primary mb-4">Funil de Conversão</h3>
-          <div className="space-y-4 mt-4">
+        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up" style={{ minHeight: 180 }}>
+          <h3 className="text-xs font-semibold text-text-primary mb-3">Funil de Conversão</h3>
+          <div className="space-y-3">
             {funnelData.map((item, i) => {
               const maxVal = funnelData[0].value || 1;
               const width = Math.max((item.value / maxVal) * 100, 15);
               const rate = i > 0 ? ((item.value / (funnelData[i - 1].value || 1)) * 100).toFixed(1) : null;
               return (
                 <div key={item.name} className="animate-fade-up" style={{ animationDelay: `${i * 100}ms` }}>
-                  <div className="flex justify-between text-[11px] mb-1.5">
+                  <div className="flex justify-between text-[11px] mb-1">
                     <span className="text-text-secondary">{item.name}</span>
-                    <span className="text-text-primary font-semibold">{item.value.toLocaleString()}</span>
+                    <span className="text-[14px] text-text-primary font-bold">{item.value.toLocaleString()}</span>
                   </div>
-                  <div className="h-8 bg-bg-base rounded-lg overflow-hidden flex items-center justify-center relative">
+                  <div className="h-7 bg-bg-base rounded-lg overflow-hidden relative">
                     <div
                       className="h-full rounded-lg transition-all duration-500 absolute left-0 top-0"
                       style={{
@@ -242,7 +242,7 @@ export default function OverviewTab() {
                       }}
                     />
                   </div>
-                  {rate && <p className="text-[10px] mt-1 font-medium" style={{ color: item.color }}>{i === 1 ? 'CTR' : 'CVR'}: {rate}%</p>}
+                  {rate && <p className="text-[10px] mt-0.5 font-medium" style={{ color: item.color }}>{i === 1 ? 'CTR' : 'CVR'}: {rate}%</p>}
                 </div>
               );
             })}

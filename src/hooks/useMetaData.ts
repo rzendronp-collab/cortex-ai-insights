@@ -239,8 +239,9 @@ export function useMetaData() {
     }
   }, [callMetaApi]);
 
-  const analyze = useCallback(async () => {
-    if (!selectedAccountId) {
+  const analyze = useCallback(async (overrideAccountId?: string) => {
+    const accountId = overrideAccountId || selectedAccountId;
+    if (!accountId) {
       // No toast — multi-account flow handles this via activeAccountIds
       return;
     }

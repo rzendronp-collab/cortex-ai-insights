@@ -121,7 +121,7 @@ export default function OverviewTab() {
     name: c.name.length > 18 ? c.name.slice(0, 18) + '...' : c.name,
     fullName: c.name,
     roas: parseFloat(c.roas.toFixed(1)),
-    fill: c.roas >= roasTarget * 1.2 ? chartColors.success : c.roas >= roasTarget ? chartColors.primary : c.roas >= roasTarget * 0.7 ? chartColors.warning : chartColors.destructive,
+    fill: c.roas >= roasTarget * 1.3 ? '#10B981' : c.roas >= roasTarget * 0.7 ? '#F59E0B' : '#EF4444',
   }));
 
   const funnelData = [

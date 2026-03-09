@@ -1272,7 +1272,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     {/* EXPANDED CONTENT */}
                     {expanded && (
                       <tr className="bg-[#080B14] border-b border-[#1C2538]">
-                        <td colSpan={activeColumns.length + 1} className="p-0">
+                        <td colSpan={activeColumns.length + 3} className="p-0">
                           <div className="p-4 border-l-2 border-l-primary/50 animate-fade-up">
                             {aiLoading ? (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

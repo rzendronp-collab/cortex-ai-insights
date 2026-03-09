@@ -1,9 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useActionPlan, ActionItem } from '@/hooks/useActionPlan';
 import { useDashboard } from '@/context/DashboardContext';
-import { Loader2, Pause, Play, TrendingUp, TrendingDown, Check, X, Bot, ChevronRight, BarChart3 } from 'lucide-react';
+import { Loader2, Pause, Play, TrendingUp, TrendingDown, Check, X, Bot, ChevronRight, BarChart3, Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -68,11 +71,11 @@ export default function ActionPlanTab() {
   const { analysisData, currencySymbol } = useDashboard();
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [context, setContext] = useState({ margin: '', objective: '', niche: '', total_budget: '' });
+  const [showContext, setShowContext] = useState(false);
 
-  // Fetch history on mount
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
-  // Reset selection when plan changes
   useEffect(() => {
     if (plan?.acoes) {
       setSelectedIds(new Set(plan.acoes.map(a => a.campaign_id)));
@@ -110,7 +113,12 @@ export default function ActionPlanTab() {
 
   const handleGenerate = () => {
     if (campaigns.length === 0) return;
-    generatePlan(campaigns);
+    generatePlan(campaigns, {
+      margin: context.margin ? parseFloat(context.margin) : undefined,
+      objective: context.objective || undefined,
+      niche: context.niche || undefined,
+      total_budget: context.total_budget ? parseFloat(context.total_budget) : undefined,
+    });
   };
 
   const handleApply = () => {
@@ -178,6 +186,14 @@ export default function ActionPlanTab() {
                 )}
               </Button>
               <Button
+                variant="outline"
+                onClick={() => setShowContext(!showContext)}
+                className="h-10 px-4 text-[13px] border-[#1E2D4A] text-muted-foreground hover:text-foreground gap-2"
+              >
+                <Settings2 className="w-4 h-4" />
+                ⚙ Contexto
+              </Button>
+              <Button
                 onClick={handleApply}
                 disabled={!plan || selectedActions.length === 0 || isApplying}
                 variant="outline"
@@ -193,6 +209,63 @@ export default function ActionPlanTab() {
           </div>
         </div>
 
+        {/* CONTEXT PANEL */}
+        {showContext && (
+          <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-xl p-4 animate-fade-up">
+            <div className="mb-3">
+              <h3 className="text-sm font-semibold text-foreground">🎯 Contexto da Conta</h3>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Opcional — melhora a qualidade da análise</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-[1px]">Nicho / Produto</Label>
+                <Input
+                  value={context.niche}
+                  onChange={e => setContext(p => ({ ...p, niche: e.target.value }))}
+                  placeholder="ex: mármore, joias, moda..."
+                  className="h-9 text-[12px] bg-muted border-border rounded-lg"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-[1px]">Margem média (%)</Label>
+                <Input
+                  type="number"
+                  value={context.margin}
+                  onChange={e => setContext(p => ({ ...p, margin: e.target.value }))}
+                  placeholder="ex: 35"
+                  className="h-9 text-[12px] bg-muted border-border rounded-lg"
+                />
+                <p className="text-[9px] text-muted-foreground">(opcional — não sei)</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-[1px]">Objetivo</Label>
+                <Select value={context.objective} onValueChange={v => setContext(p => ({ ...p, objective: v }))}>
+                  <SelectTrigger className="h-9 text-[12px] bg-muted border-border rounded-lg">
+                    <SelectValue placeholder="Não sei / Deixar a IA decidir" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">Não sei / Deixar a IA decidir</SelectItem>
+                    <SelectItem value="scale">🚀 Escalar — quero mais volume</SelectItem>
+                    <SelectItem value="maintain">⚖ Manter — performance estável</SelectItem>
+                    <SelectItem value="reduce_costs">💰 Reduzir custos — melhorar ROAS</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-[1px]">Budget disponível</Label>
+                <Input
+                  type="number"
+                  value={context.total_budget}
+                  onChange={e => setContext(p => ({ ...p, total_budget: e.target.value }))}
+                  placeholder="ex: 500 (opcional)"
+                  className="h-9 text-[12px] bg-muted border-border rounded-lg"
+                />
+              </div>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-3">💡 Campos em branco serão analisados pela IA com base nos dados disponíveis</p>
+          </div>
+        )}
+
         {/* SIMULATION BANNER */}
         {plan && selectedActions.length > 0 && simulation.ganho !== 0 && (
           <div className="bg-[#3B82F6]/10 border border-[#3B82F6]/30 rounded-lg p-3 flex items-center gap-2">
@@ -203,6 +276,17 @@ export default function ActionPlanTab() {
               </span>{' '}
               em receita estimada
             </span>
+          </div>
+        )}
+
+        {/* CRITICAL ALERTS */}
+        {plan && plan.alertas_criticos && plan.alertas_criticos.length > 0 && (
+          <div className="space-y-2">
+            {plan.alertas_criticos.map((alerta, i) => (
+              <div key={i} className="bg-[#F59E0B]/10 border border-[#F59E0B]/30 rounded-lg px-4 py-2 text-[12px] text-[#F59E0B]">
+                ⚠ {alerta}
+              </div>
+            ))}
           </div>
         )}
 
@@ -229,16 +313,17 @@ export default function ActionPlanTab() {
                 return (
                   <div
                     key={action.campaign_id}
-                    className={`flex items-center gap-4 px-5 py-3 border-l-4 ${borderColor} transition-colors ${
+                    className={`flex items-start gap-4 px-5 py-3 border-l-4 ${borderColor} transition-colors ${
                       isSelected ? 'bg-primary/5' : ''
                     }`}
                   >
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={() => toggleSelect(action.campaign_id)}
+                      className="mt-1"
                     />
 
-                    <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded ${
+                    <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded mt-0.5 ${
                       action.tipo === 'pause' ? 'bg-red-500/10 text-red-400' :
                       action.tipo === 'resume' ? 'bg-blue-500/10 text-blue-400' :
                       action.tipo === 'increase_budget' ? 'bg-emerald-500/10 text-emerald-400' :
@@ -248,18 +333,29 @@ export default function ActionPlanTab() {
                       {ACTION_LABELS[action.tipo]}
                     </span>
 
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="text-[13px] font-medium text-foreground truncate max-w-[200px]">
-                          {action.campaign_name}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>{action.campaign_name}</TooltipContent>
-                    </Tooltip>
+                    <div className="flex-1 min-w-0">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-[13px] font-medium text-foreground truncate block max-w-[220px]">
+                            {action.campaign_name}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>{action.campaign_name}</TooltipContent>
+                      </Tooltip>
 
-                    <span className="text-[12px] text-muted-foreground flex-1 truncate">
-                      {action.motivo}
-                    </span>
+                      <span className="text-[12px] text-muted-foreground block truncate">
+                        {action.motivo}
+                      </span>
+
+                      <div className="flex gap-3 text-[10px] text-muted-foreground mt-0.5">
+                        {action.dias_ativo != null && <span>📅 {action.dias_ativo}d ativo</span>}
+                        {action.frequency != null && (
+                          <span className={action.frequency > 3.5 ? 'text-[#F59E0B]' : ''}>
+                            👁 freq. {action.frequency.toFixed(1)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
 
                     <div className="flex items-center gap-1 text-[12px] text-muted-foreground flex-shrink-0">
                       <span>{fmt(action.valor_atual)}</span>

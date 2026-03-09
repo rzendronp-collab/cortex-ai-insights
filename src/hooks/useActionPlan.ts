@@ -6,6 +6,13 @@ import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+export interface AccountContext {
+  margin?: number;
+  objective?: string;    // 'scale' | 'maintain' | 'reduce_costs' | ''
+  niche?: string;
+  total_budget?: number;
+}
+
 export interface ActionItem {
   campaign_id: string;
   campaign_name: string;
@@ -17,6 +24,8 @@ export interface ActionItem {
   impacto_estimado: string;
   roas_atual: number;
   roas_estimado: number;
+  dias_ativo?: number;
+  frequency?: number;
 }
 
 export interface ActionPlan {
@@ -26,6 +35,7 @@ export interface ActionPlan {
   roas_estimado: number;
   receita_atual: number;
   receita_estimada: number;
+  alertas_criticos?: string[];
   acoes: ActionItem[];
 }
 
@@ -68,7 +78,7 @@ export function useActionPlan() {
     if (data) setHistory(data as unknown as HistoryEntry[]);
   }, [user, selectedAccountId]);
 
-  const generatePlan = useCallback(async (campaigns: any[]) => {
+  const generatePlan = useCallback(async (campaigns: any[], context: AccountContext = {}) => {
     if (!user || !selectedAccountId) {
       toast.error('Selecione uma conta primeiro.');
       return null;
@@ -76,44 +86,110 @@ export function useActionPlan() {
 
     setIsGenerating(true);
     try {
-      const campaignsData = campaigns.map(c => ({
-        id: c.id,
-        name: c.name,
-        status: c.status,
-        spend: c.spend,
-        revenue: c.revenue,
-        roas: c.roas,
-        ctr: c.ctr,
-        cpc: c.cpc,
-        cpm: c.cpm,
-        impressions: c.impressions,
-        clicks: c.clicks,
-        conversions: c.conversions,
-        daily_budget: c.daily_budget,
-      }));
+      // Fetch extra data from Meta API
+      const extraData = await Promise.allSettled([
+        callMetaApi(`act_${selectedAccountId}/campaigns`, {
+          fields: 'id,name,created_time,objective,bid_strategy',
+          limit: '50',
+        }),
+        callMetaApi(`act_${selectedAccountId}/insights`, {
+          fields: 'campaign_id,frequency,reach',
+          level: 'campaign',
+          date_preset: 'last_7d',
+          limit: '50',
+        }),
+      ]);
 
-      const systemPrompt = `Você é especialista em Meta Ads. Analise e responda SOMENTE JSON válido sem markdown.
-Campanhas: ${JSON.stringify(campaignsData)}
+      const campDetails = extraData[0].status === 'fulfilled'
+        ? (extraData[0] as PromiseFulfilledResult<any>).value?.data || [] : [];
+      const insights = extraData[1].status === 'fulfilled'
+        ? (extraData[1] as PromiseFulfilledResult<any>).value?.data || [] : [];
+
+      const campaignsData = campaigns.map(c => {
+        const detail = campDetails.find((d: any) => d.id === c.id) || {};
+        const insight = insights.find((i: any) => i.campaign_id === c.id) || {};
+        const createdDaysAgo = detail.created_time
+          ? Math.floor((Date.now() - new Date(detail.created_time).getTime()) / 86400000)
+          : null;
+
+        return {
+          id: c.id,
+          name: c.name,
+          status: c.status,
+          spend: c.spend,
+          revenue: c.revenue,
+          roas: c.roas,
+          ctr: c.ctr,
+          cpc: c.cpc,
+          cpm: c.cpm,
+          impressions: c.impressions,
+          clicks: c.clicks,
+          purchases: c.purchases,
+          budget: analysisData?.budgetByCampaignId?.[c.id] || 0,
+          objective: detail.objective || 'unknown',
+          bid_strategy: detail.bid_strategy || 'unknown',
+          created_days_ago: createdDaysAgo,
+          frequency: parseFloat(insight.frequency) || null,
+          reach: parseInt(insight.reach) || null,
+        };
+      });
+
+      const objectiveLabels: Record<string, string> = {
+        scale: 'Escalar volume de vendas',
+        maintain: 'Manter performance estável',
+        reduce_costs: 'Reduzir custos e melhorar ROAS',
+        '': 'não informado',
+      };
+
+      const contextInfo = `
+CONTEXTO DO NEGÓCIO:
+- Nicho/Produto: ${context.niche || 'não informado'}
+- Margem média: ${context.margin != null ? context.margin + '%' : 'não informada'}
+- Objetivo: ${objectiveLabels[context.objective || ''] || 'não informado'}
+- Budget total disponível: ${context.total_budget ? currency + ' ' + context.total_budget : 'não informado'}
+
+REGRAS DE ANÁLISE:
+- Campanhas com menos de 3 dias: não pausar, aguardar aprendizado
+- Frequency > 3.5: público saturado, sugerir novo criativo ou público
+- Frequency > 5.0: pausar ou trocar criativo urgente
+- ROAS >= meta * 1.5: escalar budget 20-40%
+- ROAS < meta * 0.5 AND spend > 20 AND created_days_ago > 7: pausar
+- CPM > 40: público caro, sugerir otimização de segmentação
+- CTR < 1% AND spend > 15: criativo fraco
+${context.margin ? `- Margem ${context.margin}%: ROAS mínimo viável = ${(100 / context.margin).toFixed(1)}x` : ''}
+`;
+
+      const systemPrompt = `Você é especialista em Meta Ads com 10 anos de experiência em e-commerce. 
+Analise estas campanhas seguindo as regras e contexto fornecidos.
+Responda SOMENTE JSON válido sem markdown.
+
+${contextInfo}
 Meta ROAS: ${roasTarget}x | Moeda: ${currency}
+
+Campanhas: ${JSON.stringify(campaignsData)}
+
 Formato exato:
 {
-  "resumo": "diagnóstico em 2 frases",
+  "resumo": "diagnóstico completo em 3 frases mencionando os principais problemas e oportunidades",
   "score_conta": 0-100,
   "roas_atual": number,
   "roas_estimado": number,
   "receita_atual": number,
   "receita_estimada": number,
+  "alertas_criticos": ["string — alertas urgentes como saturação, campanhas jovens, etc"],
   "acoes": [{
     "campaign_id": "string",
     "campaign_name": "string",
     "tipo": "pause|resume|increase_budget|decrease_budget",
     "prioridade": 1|2|3,
-    "motivo": "1 frase",
+    "motivo": "1 frase com dados reais (ex: ROAS 1.2x após 12 dias, frequency 4.1)",
     "valor_atual": number,
     "valor_novo": number,
-    "impacto_estimado": "ex: +€120/semana",
+    "impacto_estimado": "string",
     "roas_atual": number,
-    "roas_estimado": number
+    "roas_estimado": number,
+    "dias_ativo": number,
+    "frequency": number
   }]
 }`;
 
@@ -128,14 +204,12 @@ Formato exato:
       if (error) throw error;
 
       const content = data?.content || '';
-      // Try to parse JSON from response (may have extra text)
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) throw new Error('Resposta da IA não contém JSON válido.');
 
       const parsed: ActionPlan = JSON.parse(jsonMatch[0]);
       setPlan(parsed);
 
-      // Save to action_plans
       await supabase.from('action_plans').insert({
         user_id: user.id,
         account_id: selectedAccountId,
@@ -155,7 +229,7 @@ Formato exato:
     } finally {
       setIsGenerating(false);
     }
-  }, [user, selectedAccountId, roasTarget, currency]);
+  }, [user, selectedAccountId, roasTarget, currency, callMetaApi, analysisData]);
 
   const applyAction = useCallback(async (action: ActionItem): Promise<boolean> => {
     if (!user || !selectedAccountId) return false;
@@ -186,7 +260,6 @@ Formato exato:
           break;
       }
 
-      // Log to action_history
       await supabase.from('action_history').insert({
         user_id: user.id,
         account_id: selectedAccountId,
@@ -200,7 +273,6 @@ Formato exato:
 
       return true;
     } catch (err: any) {
-      // Log failure
       await supabase.from('action_history').insert({
         user_id: user.id,
         account_id: selectedAccountId,
@@ -225,7 +297,6 @@ Formato exato:
       const success = await applyAction(actions[i]);
       if (success) successCount++;
       setAppliedCount(i + 1);
-      // Delay between actions to avoid rate limiting
       if (i < actions.length - 1) {
         await new Promise(r => setTimeout(r, 300));
       }

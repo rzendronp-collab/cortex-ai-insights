@@ -8,6 +8,11 @@ interface CachedAnalysis {
   period: string;
 }
 
+export interface DateRange {
+  from: string;
+  to: string;
+}
+
 interface DashboardContextType {
   selectedAccountId: string | null;
   setSelectedAccountId: (id: string | null) => void;
@@ -15,6 +20,8 @@ interface DashboardContextType {
   setSelectedAccountName: (name: string | null) => void;
   selectedPeriod: string;
   setSelectedPeriod: (p: string) => void;
+  dateRange: DateRange | null;
+  setDateRange: (range: DateRange | null) => void;
   activeTab: string;
   setActiveTab: (t: string) => void;
   analysisData: AnalysisData | null;
@@ -34,6 +41,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [selectedAccountId, setSelectedAccountIdRaw] = useState<string | null>(null);
   const [selectedAccountName, setSelectedAccountName] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriodRaw] = useState('7d');
+  const [dateRange, setDateRangeRaw] = useState<DateRange | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [analysisCache, setAnalysisCache] = useState<Record<string, CachedAnalysis>>({});
   const [accountCurrency, setAccountCurrency] = useState<string | null>(null);
@@ -72,6 +80,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const setSelectedPeriod = useCallback((p: string) => {
     setSelectedPeriodRaw(p);
+    setDateRangeRaw(null); // Clear custom range when selecting preset
+  }, []);
+
+  const setDateRange = useCallback((range: DateRange | null) => {
+    setDateRangeRaw(range);
+    if (range) setSelectedPeriodRaw('custom');
   }, []);
 
   const setSelectedAccountCurrency = useCallback((currency: string | null) => {
@@ -83,6 +97,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       selectedAccountId, setSelectedAccountId,
       selectedAccountName, setSelectedAccountName,
       selectedPeriod, setSelectedPeriod,
+      dateRange, setDateRange,
       activeTab, setActiveTab,
       analysisData, isFromCache, cacheTimestamp,
       setAnalysisForAccount, clearCurrentAnalysis,

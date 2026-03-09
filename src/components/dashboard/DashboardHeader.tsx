@@ -5,6 +5,7 @@ import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Play, Loader2, Clock, AlertTriangle, RefreshCw, Building2, ChevronDown, Circle, Menu } from 'lucide-react';
 import AlertsPanel from './AlertsPanel';
+import DateRangePicker from '@/components/ui/DateRangePicker';
 import { getRoasColor } from '@/lib/mockData';
 
 const periods = ['Hoje', '3d', '7d', '14d', '30d'];
@@ -30,6 +31,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
     selectedAccountId, setSelectedAccountId,
     selectedAccountName, setSelectedAccountName,
     setSelectedAccountCurrency,
+    dateRange, setDateRange,
     analysisData, isFromCache, cacheTimestamp, currencySymbol,
     activeTab,
   } = useDashboard();
@@ -84,7 +86,9 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
   }, {} as Record<string, typeof adAccounts>);
 
   const pageTitle = tabLabels[activeTab] || 'Dashboard';
-  const subtitle = `Meta Ads · ${selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`}`;
+  const isCustomActive = selectedPeriod === 'custom' && !!dateRange;
+  const periodLabel = isCustomActive ? `${dateRange!.from} → ${dateRange!.to}` : (selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`);
+  const subtitle = `Meta Ads · ${periodLabel}`;
 
   // Shared account dropdown JSX
   const accountDropdown = (
@@ -147,7 +151,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
           key={p}
           onClick={() => setSelectedPeriod(p)}
           className={`px-3 py-1 text-[11px] font-medium rounded-md transition-all ${
-            selectedPeriod === p
+            selectedPeriod === p && !isCustomActive
               ? 'bg-data-blue text-white'
               : 'text-text-secondary hover:text-text-primary'
           }`}
@@ -155,6 +159,12 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
           {p}
         </button>
       ))}
+      <DateRangePicker
+        isActive={isCustomActive}
+        dateRange={dateRange}
+        onApply={(range) => setDateRange(range)}
+        onClear={() => setDateRange(null)}
+      />
     </div>
   );
 

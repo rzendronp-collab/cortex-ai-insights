@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { LogOut, Settings, ChevronRight, Circle, Save, Loader2, LayoutDashboard, BarChart2, Zap, Calendar, Globe, Shield, MessageSquare, FileText, Unplug, X } from 'lucide-react';
+import SettingsDialog from './SettingsDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
@@ -260,6 +261,8 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
 
       {/* ─── RODAPÉ ─── */}
       <div className="border-t border-border-subtle">
+        {/* Settings Dialog */}
+        <SettingsDialog />
         {/* Config Collapsible */}
         <Collapsible open={configOpen} onOpenChange={setConfigOpen}>
           <CollapsibleTrigger className="flex items-center gap-2.5 w-full px-5 py-3 hover:bg-bg-card-hover transition-colors">

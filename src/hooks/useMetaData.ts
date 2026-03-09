@@ -570,7 +570,7 @@ export function useMetaData() {
     } finally {
       setLoading(false);
     }
-  }, [selectedAccountId, selectedPeriod, isConnected, isTokenExpired, callMetaApiWithRetry, user, setAnalysisForAccount, checkAndCreateAlerts]);
+  }, [selectedAccountId, selectedPeriod, dateRange, isConnected, isTokenExpired, callMetaApiWithRetry, user, setAnalysisForAccount, checkAndCreateAlerts]);
 
   return { loading, error, analyze, roasTarget: profile?.roas_target || 3.0 };
 }

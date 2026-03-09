@@ -130,7 +130,13 @@ export default function OverviewTab() {
 
   // Data loading
   if (!effectiveData) {
-    return <OverviewSkeleton />;
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <div className="text-[80px] leading-none mb-6 opacity-10 select-none">📊</div>
+        <h3 className="text-lg font-semibold text-text-primary mb-2">Carregando dados...</h3>
+        <p className="text-sm text-text-muted mb-6 max-w-xs">Aguarde enquanto buscamos os dados da conta selecionada.</p>
+      </div>
+    );
   }
 
   // Use effective data

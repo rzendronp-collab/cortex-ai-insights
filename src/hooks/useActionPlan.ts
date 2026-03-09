@@ -100,7 +100,7 @@ export function useActionPlan() {
         callMetaApi(`act_${selectedAccountId}/insights`, {
           fields: 'campaign_id,frequency,reach',
           level: 'campaign',
-          date_preset: 'last_7d',
+          date_preset: actionPlanPeriodMap[selectedPeriod] || 'last_7d',
           limit: '50',
         }),
       ]);

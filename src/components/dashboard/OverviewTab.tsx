@@ -475,3 +475,60 @@ export default function OverviewTab() {
     </div>
   );
 }
+
+/* ═══ SKELETON LOADING STATE ═══ */
+function OverviewSkeleton() {
+  return (
+    <div className="space-y-4 animate-fade-in">
+      {/* KPI skeletons */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className="bg-[#1C2538] border border-[#2A3850] rounded-xl py-5 px-6 animate-pulse"
+            style={{ animationDelay: `${i * 80}ms`, minHeight: 100 }}
+          >
+            <div className="h-2.5 w-16 bg-[#2A3850] rounded mb-3" />
+            <div className="h-7 w-24 bg-[#2A3850] rounded mb-2" />
+            <div className="h-2 w-20 bg-[#2A3850] rounded" />
+          </div>
+        ))}
+      </div>
+
+      {/* Chart skeletons row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className="bg-[#1C2538] border border-[#2A3850] rounded-xl p-5 animate-pulse"
+            style={{ animationDelay: `${(i + 6) * 80}ms`, minHeight: 260 }}
+          >
+            <div className="h-3 w-32 bg-[#2A3850] rounded mb-6" />
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, j) => (
+                <div key={j} className="flex items-center gap-3">
+                  <div className="h-3 bg-[#2A3850] rounded flex-1" style={{ maxWidth: `${60 - j * 8}%` }} />
+                  <div className="h-3 w-8 bg-[#2A3850] rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Large chart skeleton */}
+      <div className="bg-[#1C2538] border border-[#2A3850] rounded-xl p-5 animate-pulse" style={{ minHeight: 240 }}>
+        <div className="h-3 w-28 bg-[#2A3850] rounded mb-6" />
+        <div className="flex items-end gap-2 h-[180px] pb-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex-1 bg-[#2A3850] rounded-t"
+              style={{ height: `${30 + Math.sin(i * 0.8) * 40 + 30}%` }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

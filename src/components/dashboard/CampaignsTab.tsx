@@ -254,12 +254,17 @@ Responda SOMENTE com o JSON, sem markdown.`;
     }
   }, [budgetCache, budgetFetching, callMetaApi]);
 
+  // Loading skeleton state
+  if (selectedAccountId && !analysisData) {
+    return <CampaignsTableSkeleton />;
+  }
+
   if (analysisData && rawCampaigns.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Inbox className="w-12 h-12 text-muted-foreground mb-4" />
-        <h3 className="text-sm font-semibold text-foreground mb-1">Sem campanhas para este período</h3>
-        <p className="text-xs text-muted-foreground">Selecione um período maior ou verifique a conta.</p>
+      <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in">
+        <div className="text-[80px] leading-none mb-6 opacity-[0.15] select-none">🎯</div>
+        <h3 className="text-sm font-semibold text-foreground mb-1">Nenhuma campanha encontrada</h3>
+        <p className="text-xs text-muted-foreground">Tente outro período ou verifique os filtros</p>
       </div>
     );
   }

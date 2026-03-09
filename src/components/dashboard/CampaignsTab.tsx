@@ -266,6 +266,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
     }
   }, [budgetCache, budgetFetching, callMetaApi]);
 
+  // Reset page when filters change (must be before early returns)
+  React.useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, activeTodayFilter, roasFilter]);
+
   // Loading skeleton state
   if (selectedAccountId && !analysisData) {
     return <CampaignsTableSkeleton />;

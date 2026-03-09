@@ -173,8 +173,8 @@ export function useMetaData() {
     const acctPath = `act_${selectedAccountId}`;
 
     try {
-      // Check Supabase cache first
-      if (user) {
+      // Check Supabase cache first (skip in DEV so fixes can be validated immediately)
+      if (user && !import.meta.env.DEV) {
         const { data: cached } = await supabase
           .from('analysis_cache')
           .select('data, updated_at')

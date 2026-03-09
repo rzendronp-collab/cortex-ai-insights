@@ -328,15 +328,15 @@ Responda SOMENTE com o JSON, sem markdown.`;
       </div>
 
       {/* Table */}
-      <div className="bg-card border border-border rounded-lg overflow-x-auto">
+      <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
-            <tr className="border-b border-border bg-muted/50">
+            <tr className="border-b border-[#1E2D4A] bg-[#080B14]">
               {columns.map(col => (
                 <th
                   key={col.key}
                   onClick={() => handleSort(col.key as SortColumn)}
-                  className={`px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted/80 transition-colors select-none ${col.align === 'right' ? 'text-right' : 'text-left'}`}
+                  className={`px-3 py-2 text-[10px] font-semibold text-[#64748B] uppercase tracking-wider cursor-pointer hover:bg-[#111827] transition-colors select-none ${col.align === 'right' ? 'text-right' : 'text-left'}`}
                 >
                   <div className={`flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end' : 'justify-start'}`}>
                     {col.label}
@@ -401,7 +401,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     <tr 
                       key={c.id}
                       onClick={() => setExpandedId(expanded ? null : c.id)}
-                      className={`border-b border-border hover:bg-muted/30 cursor-pointer transition-colors ${!isActive ? 'bg-muted/20 opacity-60' : ''} ${expanded ? 'bg-muted/10' : ''}`}
+                      className={`border-b border-[#1E2D4A] bg-[#0E1420] hover:bg-[#111827] cursor-pointer transition-colors ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''}`}
                     >
                       <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
                         {isToggling ? (

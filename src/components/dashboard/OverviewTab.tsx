@@ -310,16 +310,16 @@ export default function OverviewTab() {
               <Tooltip contentStyle={chartTooltipStyle} />
             </PieChart>
           </ResponsiveContainer>
-          <div className="flex justify-center gap-4 mt-1">
+          <div className="flex justify-center gap-4 mt-2">
             {genderData.map(g => (
-              <span key={g.name} className="text-[10px] text-muted-foreground"><span className="font-semibold text-foreground">{g.value}%</span> {g.name}</span>
+              <span key={g.name} className="text-[12px] text-[#94A3B8]"><span className="font-semibold text-[#F0F4FF]">{g.value}%</span> {g.name}</span>
             ))}
           </div>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-4 animate-fade-up">
+        <div className="bg-card border border-border rounded-lg p-4 animate-fade-up" style={{ minHeight: 220 }}>
           <h3 className="text-xs font-semibold text-foreground mb-3">Faixa Etária</h3>
-          <div className="space-y-2.5 mt-2">
+          <div className="space-y-2.5 mt-2" style={{ minHeight: 180 }}>
             {ageData.map(a => (
               <div key={a.age} className="flex items-center gap-2">
                 <span className="text-[10px] text-muted-foreground w-10">{a.age}</span>
@@ -351,21 +351,32 @@ export default function OverviewTab() {
       </div>
 
       {/* Fix #2: Action plan — only campaigns with spend > 0 */}
-      <div className="bg-card border border-border rounded-lg p-4 animate-fade-up">
-        <h3 className="text-xs font-semibold text-foreground mb-3">🎯 Plano de Ação</h3>
+      <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 animate-fade-up">
+        <h3 className="text-xs font-semibold text-[#F0F4FF] mb-3">🎯 Plano de Ação</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-          {actions.map(a => (
-            <div key={a.id} className={`border rounded-lg p-3 ${a.recommendation.bg} border-l-[3px] ${a.recommendation.label.includes('Pausar') ? 'border-l-destructive' : a.recommendation.label.includes('Atenção') ? 'border-l-warning' : a.recommendation.label.includes('Otimizar') ? 'border-l-primary' : 'border-l-success'}`}>
-              <div className="flex items-center justify-between mb-1">
-                <span className={`text-[11px] font-bold ${a.recommendation.color}`}>{a.recommendation.label}</span>
-                <span className="text-[10px] text-muted-foreground">ROAS {a.roas.toFixed(1)}x</span>
+          {actions.map(a => {
+            const isPausar = a.recommendation.label.includes('Pausar');
+            const isEscalar = a.recommendation.label.includes('Escalar');
+            const isOtimizar = a.recommendation.label.includes('Otimizar');
+            const tagBg = isPausar ? 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/20'
+              : isEscalar ? 'bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/20'
+              : isOtimizar ? 'bg-[#3B82F6]/10 text-[#3B82F6] border border-[#3B82F6]/20'
+              : 'bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20';
+            const roasColor = isEscalar ? 'text-[#10B981]' : isPausar ? 'text-[#EF4444]' : isOtimizar ? 'text-[#3B82F6]' : 'text-[#F59E0B]';
+            const borderLeft = isPausar ? 'border-l-[#EF4444]' : isEscalar ? 'border-l-[#10B981]' : isOtimizar ? 'border-l-[#3B82F6]' : 'border-l-[#F59E0B]';
+            return (
+              <div key={a.id} className={`bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-3 border-l-[3px] ${borderLeft}`}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${tagBg}`}>{a.recommendation.label}</span>
+                  <span className={`text-[10px] font-bold ${roasColor}`}>ROAS {a.roas.toFixed(1)}x</span>
+                </div>
+                <p className="text-xs text-[#F0F4FF] font-semibold truncate">{a.name}</p>
+                <p className="text-[10px] text-[#64748B] mt-1">
+                  Gasto {currency} {a.spend.toFixed(0)} • {a.purchases} vendas • CTR {a.ctr.toFixed(1)}%
+                </p>
               </div>
-              <p className="text-xs text-foreground font-medium truncate">{a.name}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">
-                Gasto {currency} {a.spend.toFixed(0)} • {a.purchases} vendas • CTR {a.ctr.toFixed(1)}%
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

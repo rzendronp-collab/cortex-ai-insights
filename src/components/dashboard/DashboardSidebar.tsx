@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Brain, LogOut, Settings, BarChart3, ChevronDown, ChevronRight, Circle, Save, Loader2, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { Brain, LogOut, Settings, ChevronDown, ChevronRight, Circle, Save, Loader2, CheckCircle2, Eye, EyeOff, BarChart3, Target, Calendar, Cog, Globe, MessageCircle, FileText } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
 
 export default function DashboardSidebar() {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, Settings, ChevronRight, Circle, Save, Loader2, LayoutDashboard, BarChart2, Zap, Calendar, Globe, Shield, MessageSquare, FileText, Unplug, X } from 'lucide-react';
+import { LogOut, Settings, ChevronRight, ChevronDown, Circle, Save, Loader2, LayoutDashboard, BarChart2, Zap, Calendar, Globe, Shield, MessageSquare, FileText, Unplug, X, Bell, Search, CheckSquare, Square } from 'lucide-react';
 import SettingsDialog from './SettingsDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 
@@ -38,8 +39,9 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
   const { user, signOut } = useAuth();
   const { profile, updateProfile } = useProfile();
   const { connection, adAccounts, isConnected, isTokenExpired, connectMeta, disconnectMeta, connectionLoading } = useMetaConnection();
-  const { selectedAccountId, setSelectedAccountId, setSelectedAccountName, setSelectedAccountCurrency, analysisData, activeTab: currentTab, setActiveTab } = useDashboard();
+  const { selectedAccountId, setSelectedAccountId, setSelectedAccountName, setSelectedAccountCurrency, analysisData, activeTab: currentTab, setActiveTab, activeAccountIds, toggleActiveAccount, setActiveAccountIds, analysisCache } = useDashboard();
   const [configOpen, setConfigOpen] = useState(false);
+  const [accountsOpen, setAccountsOpen] = useState(true);
   const [saving, setSaving] = useState(false);
   const [connecting, setConnecting] = useState(false);
 
@@ -115,23 +117,56 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
 
   const initials = profile?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 
-  // Calculate current ROAS for selected account
-  const ad = analysisData;
-  const totalSpend = ad?.campaigns.reduce((s, c) => s + c.spend, 0) || 0;
-  const totalRevenue = ad?.campaigns.reduce((s, c) => s + c.revenue, 0) || 0;
-  const currentRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
-
-  // Navigation items
+  // Navigation items — Level 1
   const navItems = [
-    { id: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
+    { id: 'overview', label: 'Resumo', icon: LayoutDashboard },
     { id: 'campaigns', label: 'Campanhas', icon: BarChart2 },
-    { id: 'action-plan', label: '⚡ CORTEX', icon: Zap },
     { id: 'comparison', label: 'Comparação', icon: Calendar },
-    { id: 'consolidated', label: 'Consolidado', icon: Globe },
     { id: 'rules', label: 'Regras', icon: Shield },
-    { id: 'chat', label: 'Chat IA', icon: MessageSquare },
-    { id: 'report', label: 'Relatório', icon: FileText },
+    { id: 'consolidated', label: 'Relatórios', icon: FileText },
+    { id: 'report', label: 'Notificações', icon: Bell },
+    { id: 'action-plan', label: '⚡ CORTEX', icon: Zap },
+    { id: 'chat', label: 'Cortex Chat', icon: MessageSquare },
   ];
+
+  // Group accounts by BM
+  const accountsByBm = adAccounts.reduce((acc, a) => {
+    const bm = a.business_name || 'Contas Pessoais';
+    if (!acc[bm]) acc[bm] = [];
+    acc[bm].push(a);
+    return acc;
+  }, {} as Record<string, typeof adAccounts>);
+
+  // Get account ROAS status badge
+  const getAccountStatus = (accountId: string | null) => {
+    if (!accountId) return '⚪';
+    // Check all cache entries for this account
+    const roasTarget = profile?.roas_target || 3.0;
+    for (const key of Object.keys(analysisCache)) {
+      if (key.startsWith(`${accountId}__`)) {
+        const entry = analysisCache[key];
+        if (entry?.data?.campaigns) {
+          const totalSpend = entry.data.campaigns.reduce((s, c) => s + c.spend, 0);
+          const totalRevenue = entry.data.campaigns.reduce((s, c) => s + c.revenue, 0);
+          const roas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+          if (roas >= roasTarget) return '🟢';
+          return '🔴';
+        }
+      }
+    }
+    return '⚪';
+  };
+
+  const handleSelectAll = () => {
+    const allIds = adAccounts.map(a => a.account_id).filter(Boolean) as string[];
+    setActiveAccountIds(allIds);
+    localStorage.setItem('cortexads_active_accounts', JSON.stringify(allIds));
+  };
+
+  const handleDeselectAll = () => {
+    setActiveAccountIds([]);
+    localStorage.setItem('cortexads_active_accounts', JSON.stringify([]));
+  };
 
   return (
     <div className="w-[240px] h-screen bg-bg-sidebar border-r border-border-subtle flex flex-col fixed left-0 top-0 z-40">
@@ -142,7 +177,6 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
           <span className="font-bold text-text-primary text-[16px] tracking-tight">CortexAds</span>
           <span className="text-[10px] font-semibold text-data-blue">AI</span>
         </div>
-        {/* Close button for mobile */}
         {onCloseMobile && (
           <button onClick={onCloseMobile} className="p-1 text-text-muted hover:text-text-primary transition-colors md:hidden">
             <X className="w-5 h-5" />
@@ -180,7 +214,7 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
           </div>
         )}
 
-        {/* ─── MENU ─── */}
+        {/* ─── NAVIGATION ─── */}
         <div className="pt-2">
           <h3 className="text-[9px] font-semibold text-text-muted uppercase tracking-[1.5px] px-3 mb-2">Menu</h3>
           <div className="space-y-0.5">
@@ -209,8 +243,69 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
           <Separator className="bg-border-subtle" />
         </div>
 
+        {/* ─── LEVEL 2: BMs & ACCOUNTS SELECTOR ─── */}
+        {isConnected && !isTokenExpired && adAccounts.length > 0 && (
+          <Collapsible open={accountsOpen} onOpenChange={setAccountsOpen}>
+            <CollapsibleTrigger className="flex items-center gap-2 w-full px-3 py-2 hover:bg-bg-card-hover transition-colors rounded-lg">
+              <Globe className="w-4 h-4 text-text-muted" />
+              <span className="text-[11px] font-semibold text-text-primary flex-1 text-left">Contas de Anúncio</span>
+              <span className="text-[9px] bg-bg-card border border-border-default text-text-muted px-1.5 py-0.5 rounded-full font-medium">{adAccounts.length}</span>
+              <ChevronDown className={`w-3 h-3 text-text-muted transition-transform ${accountsOpen ? '' : '-rotate-90'}`} />
+            </CollapsibleTrigger>
+
+            <CollapsibleContent className="px-1 pb-2">
+              {/* Select/Deselect all */}
+              <div className="flex gap-1 px-2 py-1.5">
+                <button onClick={handleSelectAll} className="text-[9px] text-data-blue hover:underline font-medium">Selecionar todas</button>
+                <span className="text-[9px] text-text-muted">·</span>
+                <button onClick={handleDeselectAll} className="text-[9px] text-text-muted hover:text-text-primary font-medium">Desmarcar todas</button>
+              </div>
+
+              {Object.entries(accountsByBm).map(([bmName, accounts]) => (
+                <div key={bmName} className="mb-1">
+                  <p className="text-[9px] text-text-muted uppercase tracking-wider font-semibold px-2 pt-1.5 pb-0.5 flex items-center gap-1.5">
+                    {bmName !== 'Contas Pessoais' ? '▼' : '▼'} {bmName}
+                  </p>
+                  {accounts.map(account => {
+                    const isChecked = activeAccountIds.includes(account.account_id || '');
+                    const status = getAccountStatus(account.account_id);
+                    return (
+                      <div
+                        key={account.id}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-bg-card-hover transition-colors cursor-pointer group"
+                        onClick={() => {
+                          if (account.account_id) {
+                            toggleActiveAccount(account.account_id);
+                          }
+                        }}
+                      >
+                        <Checkbox
+                          checked={isChecked}
+                          onCheckedChange={() => {
+                            if (account.account_id) toggleActiveAccount(account.account_id);
+                          }}
+                          className="h-3.5 w-3.5"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[11px] text-text-primary font-medium truncate">
+                            {account.account_name || 'Sem nome'}
+                          </p>
+                          <p className="text-[9px] text-text-muted truncate">
+                            act_{account.account_id}
+                          </p>
+                        </div>
+                        <span className="text-[10px]">{status}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+
         {/* ─── CANAIS ─── */}
-        <div className="space-y-1">
+        <div className="space-y-1 mt-2">
           <h3 className="text-[9px] font-semibold text-text-muted uppercase tracking-[1.5px] px-3 mb-2">Canais</h3>
 
           {/* Meta Ads */}
@@ -261,13 +356,11 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
 
       {/* ─── RODAPÉ ─── */}
       <div className="border-t border-border-subtle">
-        {/* Settings Dialog */}
         <SettingsDialog />
-        {/* Config Collapsible */}
         <Collapsible open={configOpen} onOpenChange={setConfigOpen}>
           <CollapsibleTrigger className="flex items-center gap-2.5 w-full px-5 py-3 hover:bg-bg-card-hover transition-colors">
             <Settings className="w-4 h-4 text-text-muted" />
-            <span className="text-[13px] font-medium text-text-primary">Config</span>
+            <span className="text-[13px] font-medium text-text-primary">Configurações</span>
             <ChevronRight className={`w-3.5 h-3.5 ml-auto text-text-muted transition-transform ${configOpen ? 'rotate-90' : ''}`} />
           </CollapsibleTrigger>
 
@@ -283,10 +376,10 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                   className="h-8 text-[11px] bg-bg-base border-border-default rounded-lg"
                 />
                 {apiKeyError && (
-                  <p className="text-[9px] text-[#F87171] font-medium">{apiKeyError}</p>
+                  <p className="text-[9px] text-data-red font-medium">{apiKeyError}</p>
                 )}
                 {apiKeyValid && (
-                  <p className="text-[9px] text-[#34D399] font-medium">✓ Chave válida</p>
+                  <p className="text-[9px] text-data-green font-medium">✓ Chave válida</p>
                 )}
                 {!apiKeyError && !apiKeyValid && (
                   <p className="text-[9px] text-text-muted">Salva com segurança no servidor</p>

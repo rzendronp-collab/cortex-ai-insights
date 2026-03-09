@@ -3,7 +3,7 @@ import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Play, Loader2, Clock, AlertTriangle, RefreshCw, Building2, ChevronDown, Circle, Menu, X as XIcon, Calendar } from 'lucide-react';
+import { Loader2, Clock, AlertTriangle, RefreshCw, Building2, ChevronDown, Circle, Menu, X as XIcon, Calendar } from 'lucide-react';
 import AlertsPanel from './AlertsPanel';
 import DateRangePicker from '@/components/ui/DateRangePicker';
 import { getRoasColor } from '@/lib/mockData';
@@ -11,14 +11,14 @@ import { getRoasColor } from '@/lib/mockData';
 const periods = ['Hoje', '3d', '7d', '14d', '30d'];
 
 const tabLabels: Record<string, string> = {
-  overview: 'Visão Geral',
+  overview: 'Resumo',
   campaigns: 'Campanhas',
-  'action-plan': 'Otimizar',
+  'action-plan': '⚡ CORTEX',
   comparison: 'Comparação',
-  consolidated: 'Consolidado',
+  consolidated: 'Relatórios',
   rules: 'Regras',
-  chat: 'Chat IA',
-  report: 'Relatório',
+  chat: 'Cortex Chat',
+  report: 'Notificações',
 };
 
 interface DashboardHeaderProps {
@@ -103,7 +103,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
   const periodLabel = isCustomActive ? `${dateRange!.from} → ${dateRange!.to}` : (selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`);
   const subtitle = `Meta Ads · ${periodLabel}`;
 
-  // Shared account dropdown JSX
+  // Account dropdown JSX
   const accountDropdown = (
     <div className="relative" ref={dropdownRef}>
       <button
@@ -206,7 +206,6 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
       {/* Main header row */}
       <div className="h-[56px] flex items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-3">
-          {/* Hamburger for mobile */}
           {isMobile && onOpenSidebar && (
             <button onClick={onOpenSidebar} className="p-1 text-text-muted hover:text-text-primary transition-colors">
               <Menu className="w-5 h-5" />
@@ -263,15 +262,15 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
               disabled={loading || !selectedAccountId}
             >
               {loading ? (
-                <><Loader2 className="w-3.5 h-3.5 animate-spin" />Analisando...</>
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" />Atualizando...</>
               ) : (
-                <><Play className="w-3.5 h-3.5 fill-current" />Analisar</>
+                <><RefreshCw className="w-3.5 h-3.5" />Atualizar</>
               )}
             </button>
           </div>
         )}
 
-        {/* Mobile: only alerts + analyze button */}
+        {/* Mobile: only alerts + update button */}
         {isMobile && (
           <div className="flex items-center gap-2">
             <AlertsPanel />
@@ -283,7 +282,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
               {loading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <Play className="w-3.5 h-3.5 fill-current" />
+                <RefreshCw className="w-3.5 h-3.5" />
               )}
             </button>
           </div>
@@ -316,7 +315,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
           </>
         ) : (
           <span className="text-text-muted">
-            {selectedAccountId ? 'Clique em Analisar para carregar dados' : 'Selecione uma conta'}
+            {selectedAccountId ? 'Clique em Atualizar para carregar dados' : 'Selecione uma conta'}
           </span>
         )}
       </div>

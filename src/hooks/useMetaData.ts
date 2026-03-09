@@ -576,7 +576,7 @@ export function useMetaData() {
             .from('analysis_cache')
             .select('data')
             .eq('user_id', user.id)
-            .eq('account_id', selectedAccountId)
+            .eq('account_id', accountId)
             .eq('period', cachePeriodKey)
             .maybeSingle();
           if (fallback?.data && (fallback.data as any).budgetByCampaignId) {

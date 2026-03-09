@@ -40,7 +40,20 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
   const isMobile = useIsMobile();
 
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+  const [isStale, setIsStale] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const checkStale = useCallback(() => {
+    if (!ad?.lastUpdated) { setIsStale(false); return; }
+    const age = Date.now() - new Date(ad.lastUpdated).getTime();
+    setIsStale(age > 60 * 60 * 1000);
+  }, [ad?.lastUpdated]);
+
+  useEffect(() => {
+    checkStale();
+    const interval = setInterval(checkStale, 60_000);
+    return () => clearInterval(interval);
+  }, [checkStale]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {

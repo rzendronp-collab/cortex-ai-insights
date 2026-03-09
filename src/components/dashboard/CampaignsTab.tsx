@@ -1119,7 +1119,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       );
                     }
                     case 'spend':
-                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(c.spend, currency)}</p></td>;
+                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatCurrency(c.spend, currency)}</p></td>;
                     case 'budget': {
                       const rawBudget = analysisData?.budgetByCampaignId?.[c.id];
                       const bVal = rawBudget != null && rawBudget > 0 ? rawBudget : null;

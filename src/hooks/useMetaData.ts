@@ -241,7 +241,7 @@ export function useMetaData() {
 
   const analyze = useCallback(async () => {
     if (!selectedAccountId) {
-      toast.error('Selecione uma conta na sidebar primeiro.');
+      // No toast — multi-account flow handles this via activeAccountIds
       return;
     }
     if (!isConnected) {

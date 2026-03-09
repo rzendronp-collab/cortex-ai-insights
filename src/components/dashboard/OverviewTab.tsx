@@ -310,9 +310,9 @@ export default function OverviewTab() {
               <Tooltip contentStyle={chartTooltipStyle} />
             </PieChart>
           </ResponsiveContainer>
-          <div className="flex justify-center gap-4 mt-1">
+          <div className="flex justify-center gap-4 mt-2">
             {genderData.map(g => (
-              <span key={g.name} className="text-[10px] text-muted-foreground"><span className="font-semibold text-foreground">{g.value}%</span> {g.name}</span>
+              <span key={g.name} className="text-[12px] text-[#94A3B8]"><span className="font-semibold text-[#F0F4FF]">{g.value}%</span> {g.name}</span>
             ))}
           </div>
         </div>

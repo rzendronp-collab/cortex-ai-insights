@@ -9,6 +9,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 const ACTION_ICONS: Record<string, typeof Pause> = {
   pause: Pause,
@@ -66,7 +68,7 @@ function ScoreCircle({ score }: { score: number }) {
 export default function ActionPlanTab() {
   const {
     plan, isGenerating, isApplying, appliedCount,
-    history, generatePlan, applyAllActions, simulatePlan, fetchHistory,
+    history, generatePlan, applyAction, applyAllActions, simulatePlan, fetchHistory,
   } = useActionPlan();
   const { analysisData, currencySymbol } = useDashboard();
 
@@ -75,6 +77,11 @@ export default function ActionPlanTab() {
   const [showContext, setShowContext] = useState(false);
   const [showAllAlerts, setShowAllAlerts] = useState(false);
   const [historyFilter, setHistoryFilter] = useState('all');
+
+  // Per-action loading/result state
+  const [actionStates, setActionStates] = useState<Record<string, 'loading' | 'success' | 'error'>>({});
+  // Pause confirmation dialog
+  const [pauseConfirm, setPauseConfirm] = useState<ActionItem | null>(null);
 
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
@@ -138,8 +145,48 @@ export default function ActionPlanTab() {
     });
   };
 
+  const handleApplySingle = async (action: ActionItem) => {
+    // If it's a pause action, show confirmation first
+    if (action.tipo === 'pause') {
+      setPauseConfirm(action);
+      return;
+    }
+    await executeSingleAction(action);
+  };
+
+  const executeSingleAction = async (action: ActionItem) => {
+    setActionStates(prev => ({ ...prev, [action.campaign_id]: 'loading' }));
+    try {
+      const success = await applyAction(action);
+      if (success) {
+        setActionStates(prev => ({ ...prev, [action.campaign_id]: 'success' }));
+        toast.success('Ação aplicada com sucesso');
+        await fetchHistory();
+      } else {
+        setActionStates(prev => ({ ...prev, [action.campaign_id]: 'error' }));
+        toast.error('Erro ao aplicar ação');
+      }
+    } catch (err: any) {
+      setActionStates(prev => ({ ...prev, [action.campaign_id]: 'error' }));
+      toast.error(err?.message || 'Erro ao aplicar ação');
+    }
+    // Reset state after 2s
+    setTimeout(() => {
+      setActionStates(prev => {
+        const next = { ...prev };
+        delete next[action.campaign_id];
+        return next;
+      });
+    }, 2000);
+  };
+
   const handleApply = () => {
     if (selectedActions.length === 0) return;
+    // Check if any selected action is a pause
+    const hasPause = selectedActions.some(a => a.tipo === 'pause');
+    if (hasPause) {
+      // For bulk apply with pauses, just proceed (individual confirmation too cumbersome)
+    }
     applyAllActions(selectedActions);
   };
 
@@ -150,7 +197,6 @@ export default function ActionPlanTab() {
     return (
       <TooltipProvider>
         <div className="space-y-6">
-          {/* Context panel available even in empty state */}
           <div className="flex justify-end">
             <Button
               variant="outline"
@@ -197,7 +243,6 @@ export default function ActionPlanTab() {
             )}
           </div>
 
-          {/* History still visible */}
           <HistorySection
             history={history}
             filteredHistory={filteredHistory}
@@ -217,7 +262,6 @@ export default function ActionPlanTab() {
         {/* ═══ HEADER ═══ */}
         <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5">
           <div className="flex items-start gap-5">
-            {/* Col 1: Score */}
             <div className="flex flex-col items-center gap-1 flex-shrink-0">
               {plan ? (
                 <>
@@ -231,7 +275,6 @@ export default function ActionPlanTab() {
               )}
             </div>
 
-            {/* Col 2: Metrics */}
             <div className="flex-1 min-w-0 space-y-2.5 pt-1">
               {plan ? (
                 <>
@@ -259,7 +302,6 @@ export default function ActionPlanTab() {
               )}
             </div>
 
-            {/* Col 3: Buttons */}
             <div className="flex flex-col gap-2 flex-shrink-0">
               <Button
                 onClick={handleGenerate}
@@ -296,7 +338,6 @@ export default function ActionPlanTab() {
           </div>
         </div>
 
-        {/* ═══ CONTEXT PANEL ═══ */}
         {showContext && <ContextPanel context={context} setContext={setContext} />}
 
         {/* ═══ SIMULATION BANNER ═══ */}
@@ -344,7 +385,6 @@ export default function ActionPlanTab() {
         {/* ═══ ACTIONS LIST ═══ */}
         {plan && plan.acoes.length > 0 && (
           <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl overflow-hidden">
-            {/* Section title */}
             <div className="flex items-center gap-3 px-5 py-3 border-b border-[#2A3850]">
               <Checkbox
                 checked={selectedIds.size === plan.acoes.length}
@@ -362,13 +402,14 @@ export default function ActionPlanTab() {
                 const priority = PRIORITY_BADGES[action.prioridade] || PRIORITY_BADGES[3];
                 const isSelected = selectedIds.has(action.campaign_id);
                 const isPauseResume = action.tipo === 'pause' || action.tipo === 'resume';
+                const actionState = actionStates[action.campaign_id];
 
                 return (
                   <div
                     key={action.campaign_id}
                     className={`px-5 py-3 border-l-4 ${borderColor} transition-colors ${
                       isSelected ? 'bg-[#60A5FA]/5' : ''
-                    }`}
+                    } ${actionState === 'success' ? 'opacity-50' : ''}`}
                   >
                     {/* LINE 1 */}
                     <div className="flex items-center gap-3">
@@ -424,6 +465,31 @@ export default function ActionPlanTab() {
                       <span className={`text-[10px] px-2 py-0.5 rounded ${priority.color} flex-shrink-0`}>
                         {priority.emoji} P{action.prioridade}
                       </span>
+
+                      {/* Individual apply button */}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!!actionState}
+                        onClick={() => handleApplySingle(action)}
+                        className={`h-7 px-3 text-[10px] font-semibold ml-2 flex-shrink-0 ${
+                          actionState === 'success' 
+                            ? 'border-[#34D399]/30 text-[#34D399] bg-[#34D399]/10' 
+                            : actionState === 'error'
+                            ? 'border-destructive/30 text-destructive bg-destructive/10'
+                            : 'border-[#2A3850] text-text-muted hover:text-text-primary'
+                        }`}
+                      >
+                        {actionState === 'loading' ? (
+                          <><Loader2 className="w-3 h-3 animate-spin mr-1" />Aplicando...</>
+                        ) : actionState === 'success' ? (
+                          '✅ Aplicado'
+                        ) : actionState === 'error' ? (
+                          '❌ Erro'
+                        ) : (
+                          'Aplicar'
+                        )}
+                      </Button>
                     </div>
 
                     {/* LINE 2 */}
@@ -472,6 +538,35 @@ export default function ActionPlanTab() {
           weekActions={weekActions}
           fmt={fmt}
         />
+
+        {/* ═══ PAUSE CONFIRMATION DIALOG ═══ */}
+        <Dialog open={!!pauseConfirm} onOpenChange={(open) => !open && setPauseConfirm(null)}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-base">⏸️ Pausar campanha?</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Tem certeza que quer pausar '{pauseConfirm?.campaign_name}'? Isso vai interromper todos os anúncios.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex gap-2 sm:justify-end">
+              <Button variant="outline" size="sm" onClick={() => setPauseConfirm(null)}>
+                Cancelar
+              </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => {
+                  if (pauseConfirm) {
+                    executeSingleAction(pauseConfirm);
+                    setPauseConfirm(null);
+                  }
+                }}
+              >
+                Sim, pausar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </TooltipProvider>
   );

@@ -57,11 +57,17 @@ export function useMetaConnection() {
     ? new Date(connection.token_expires_at) < new Date()
     : false;
 
+  // Calculate days until token expiry
+  const daysUntilExpiry = connection?.token_expires_at
+    ? Math.ceil((new Date(connection.token_expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  const isTokenExpiringSoon = daysUntilExpiry !== null && daysUntilExpiry > 0 && daysUntilExpiry <= 7;
+
   const connectMeta = async () => {
     const { data, error } = await supabase.functions.invoke('meta-auth', {});
     if (error) throw error;
     if (data?.url) {
-      // Use window.open as fallback for iframe environments (Lovable preview)
       const newWindow = window.open(data.url, '_blank');
       if (!newWindow) {
         window.location.href = data.url;
@@ -76,7 +82,6 @@ export function useMetaConnection() {
       .delete()
       .eq('user_id', user.id);
     if (error) throw error;
-    // Also delete ad accounts
     await supabase.from('ad_accounts').delete().eq('user_id', user.id);
     queryClient.invalidateQueries({ queryKey: ['meta-connection'] });
     queryClient.invalidateQueries({ queryKey: ['ad-accounts'] });
@@ -101,6 +106,8 @@ export function useMetaConnection() {
     adAccounts: adAccounts || [],
     isConnected,
     isTokenExpired,
+    isTokenExpiringSoon,
+    daysUntilExpiry,
     connectionLoading,
     accountsLoading,
     connectMeta,

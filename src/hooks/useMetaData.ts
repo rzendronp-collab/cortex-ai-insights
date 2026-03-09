@@ -78,6 +78,8 @@ const periodMap: Record<string, string> = {
 };
 
 const CACHE_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
+const RATE_LIMIT_DELAY_MS = 60 * 1000; // 60 seconds
+const MAX_RETRIES = 3;
 
 function getPrevTimeRange(period: string): { since: string; until: string } {
   const today = new Date();
@@ -137,6 +139,12 @@ function processCampaign(campaign: any): ProcessedCampaign {
   };
 }
 
+function isRateLimitError(err: any): boolean {
+  const msg = String(err?.message || err?.error?.message || '');
+  const code = err?.error?.code || err?.code;
+  return code === 17 || code === 32 || msg.includes('rate limit') || msg.includes('too many calls');
+}
+
 export function useMetaData() {
   const { callMetaApi, isConnected, isTokenExpired } = useMetaConnection();
   const { selectedAccountId, selectedPeriod, setAnalysisForAccount } = useDashboard();
@@ -145,6 +153,20 @@ export function useMetaData() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { checkAndCreateAlerts } = useAlerts();
+
+  // Wrapper with rate-limit retry logic
+  const callMetaApiWithRetry = useCallback(async (path: string, params?: Record<string, string>, attempt = 1): Promise<any> => {
+    try {
+      return await callMetaApi(path, params);
+    } catch (err: any) {
+      if (isRateLimitError(err) && attempt < MAX_RETRIES) {
+        toast.info(`Limite da API atingido — aguardando 60s para tentar novamente (tentativa ${attempt}/${MAX_RETRIES})`);
+        await new Promise(r => setTimeout(r, RATE_LIMIT_DELAY_MS));
+        return callMetaApiWithRetry(path, params, attempt + 1);
+      }
+      throw err;
+    }
+  }, [callMetaApi]);
 
   const analyze = useCallback(async () => {
     if (!selectedAccountId) {
@@ -189,46 +211,46 @@ export function useMetaData() {
         }
       }
 
-      // Layer 2: Fresh fetch from Meta API
+      // Layer 2: Fresh fetch from Meta API (with retry)
       const period = periodMap[selectedPeriod] || 'last_7d';
       const acctPath = `act_${selectedAccountId}`;
       const { since, until } = getPrevTimeRange(selectedPeriod);
 
       const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes, adsetsRes] = await Promise.all([
-        callMetaApi(`${acctPath}/campaigns`, {
+        callMetaApiWithRetry(`${acctPath}/campaigns`, {
           fields: `id,name,status,daily_budget,lifetime_budget,insights.date_preset(${period}){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}`,
           limit: '50',
         }),
-        callMetaApi(`${acctPath}/insights`, {
+        callMetaApiWithRetry(`${acctPath}/insights`, {
           fields: 'campaign_id,campaign_name,spend,impressions,clicks,ctr,cpm,cpc,actions,action_values',
           level: 'campaign',
           time_range: JSON.stringify({ since, until }),
           limit: '50',
         }),
-        callMetaApi(`${acctPath}/insights`, {
+        callMetaApiWithRetry(`${acctPath}/insights`, {
           breakdowns: 'hourly_stats_aggregated_by_advertiser_time_zone',
           fields: 'spend,actions,impressions,clicks',
           date_preset: period,
           limit: '200',
         }),
-        callMetaApi(`${acctPath}/insights`, {
+        callMetaApiWithRetry(`${acctPath}/insights`, {
           breakdowns: 'publisher_platform',
           fields: 'spend,actions,impressions',
           date_preset: period,
         }),
-        callMetaApi(`${acctPath}/insights`, {
+        callMetaApiWithRetry(`${acctPath}/insights`, {
           time_increment: '1',
           fields: 'spend,impressions,clicks,ctr,cpm,actions,action_values',
           date_preset: period,
           limit: '90',
         }),
-        callMetaApi(`${acctPath}/insights`, {
+        callMetaApiWithRetry(`${acctPath}/insights`, {
           breakdowns: 'age,gender',
           fields: 'spend,impressions,clicks,actions,action_values',
           date_preset: period,
           limit: '100',
         }),
-        callMetaApi(`${acctPath}/adsets`, {
+        callMetaApiWithRetry(`${acctPath}/adsets`, {
           fields: 'id,name,campaign_id,daily_budget,lifetime_budget,status',
           filtering: JSON.stringify([{"field":"effective_status","operator":"IN","value":["ACTIVE","PAUSED"]}]),
           limit: '200',
@@ -325,10 +347,8 @@ export function useMetaData() {
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([age, spend]) => ({ age, percentage: Math.round((spend / totalDemoSpend) * 100) }));
 
-      // Build budgetByCampaignId: prefer campaign-level CBO budget, fallback to adset sum
+      // Build budgetByCampaignId
       const budgetByCampaignId: Record<string, number> = {};
-
-      // Step 1: Extract CBO budgets directly from campaigns
       const rawCampaigns = campaignsRes?.data || [];
       rawCampaigns.forEach((campaign: any) => {
         if (campaign.daily_budget) {
@@ -338,7 +358,6 @@ export function useMetaData() {
         }
       });
 
-      // Step 2: For campaigns without CBO, fallback to adset-level budgets
       const rawAdsets = adsetsRes?.data || [];
       rawAdsets.forEach((adset: any) => {
         if (adset.campaign_id && !budgetByCampaignId[adset.campaign_id]) {
@@ -401,7 +420,25 @@ export function useMetaData() {
       console.error('Analysis error:', err);
       const msg = err?.message || 'Erro ao analisar dados da Meta.';
       setError(msg);
-      if (msg.includes('expired') || msg.includes('expirou')) {
+
+      // If rate limit after all retries, try to use existing cache
+      if (isRateLimitError(err) && user) {
+        try {
+          const { data: fallback } = await supabase
+            .from('analysis_cache')
+            .select('data')
+            .eq('user_id', user.id)
+            .eq('account_id', selectedAccountId)
+            .eq('period', selectedPeriod)
+            .maybeSingle();
+          if (fallback?.data && (fallback.data as any).budgetByCampaignId) {
+            setAnalysisForAccount(selectedAccountId, selectedPeriod, fallback.data as unknown as AnalysisData);
+            toast.warning('Limite da API atingido — usando dados do cache.');
+            return;
+          }
+        } catch { /* no fallback */ }
+        toast.error('Limite da API Meta atingido. Tente novamente em alguns minutos.');
+      } else if (msg.includes('expired') || msg.includes('expirou')) {
         toast.error('Token Meta expirado. Reconecte sua conta.');
       } else {
         toast.error(msg);
@@ -409,7 +446,7 @@ export function useMetaData() {
     } finally {
       setLoading(false);
     }
-  }, [selectedAccountId, selectedPeriod, isConnected, isTokenExpired, callMetaApi, user, setAnalysisForAccount, checkAndCreateAlerts]);
+  }, [selectedAccountId, selectedPeriod, isConnected, isTokenExpired, callMetaApiWithRetry, user, setAnalysisForAccount, checkAndCreateAlerts]);
 
   return { loading, error, analyze, roasTarget: profile?.roas_target || 3.0 };
 }

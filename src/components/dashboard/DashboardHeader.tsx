@@ -28,13 +28,12 @@ export default function DashboardHeader() {
     analysisData, isFromCache, cacheTimestamp, currencySymbol,
     activeTab,
   } = useDashboard();
-  const { isTokenExpired, connectMeta, adAccounts } = useMetaConnection();
+  const { isTokenExpired, isTokenExpiringSoon, daysUntilExpiry, connectMeta, adAccounts } = useMetaConnection();
   const { analyze, loading, roasTarget } = useMetaData();
 
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -71,7 +70,6 @@ export default function DashboardHeader() {
     setAccountDropdownOpen(false);
   };
 
-  // Group accounts by BM
   const accountsByBm = adAccounts.reduce((acc, a) => {
     const bm = a.business_name || 'Sem Business Manager';
     if (!acc[bm]) acc[bm] = [];
@@ -86,16 +84,26 @@ export default function DashboardHeader() {
     <div className="sticky top-0 z-30 bg-bg-sidebar/90 backdrop-blur-xl border-b border-border-subtle">
       {/* Token expired banner */}
       {isTokenExpired && (
+        <div className="bg-destructive/10 border-b border-destructive/30 px-6 py-2 flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-destructive" />
+          <span className="text-[11px] text-destructive font-medium">❌ Conexão Meta expirada — Reconectar para continuar</span>
+          <button onClick={() => connectMeta()} className="text-[11px] text-destructive underline font-semibold ml-1">Reconectar →</button>
+        </div>
+      )}
+
+      {/* Token expiring soon banner */}
+      {!isTokenExpired && isTokenExpiringSoon && (
         <div className="bg-data-yellow/10 border-b border-data-yellow/30 px-6 py-2 flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-data-yellow" />
-          <span className="text-[11px] text-data-yellow font-medium">Sua conexão Meta expirou.</span>
-          <button onClick={() => connectMeta()} className="text-[11px] text-data-yellow underline font-semibold">Reconectar →</button>
+          <span className="text-[11px] text-data-yellow font-medium">
+            ⚠️ Sua conexão Meta expira em {daysUntilExpiry} dia{daysUntilExpiry !== 1 ? 's' : ''} — Reconectar agora
+          </span>
+          <button onClick={() => connectMeta()} className="text-[11px] text-data-yellow underline font-semibold ml-1">Reconectar →</button>
         </div>
       )}
 
       {/* Main header row */}
       <div className="h-[56px] flex items-center justify-between px-6">
-        {/* Left: Page title */}
         <div>
           <h1 className="text-[15px] font-semibold text-text-primary">{pageTitle}</h1>
           <p className="text-[11px] text-text-muted">
@@ -109,10 +117,8 @@ export default function DashboardHeader() {
           </p>
         </div>
 
-        {/* Right: Unified control bar */}
         <div className="flex items-center bg-bg-card border border-border-default rounded-[10px] p-[6px] gap-1">
-
-          {/* 1. Account dropdown */}
+          {/* Account dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
@@ -163,10 +169,9 @@ export default function DashboardHeader() {
             )}
           </div>
 
-          {/* Separator */}
           <div className="w-px h-5 bg-border-default" />
 
-          {/* 2. Period selector */}
+          {/* Period selector */}
           <div className="flex items-center gap-0.5">
             {periods.map((p) => (
               <button
@@ -183,16 +188,12 @@ export default function DashboardHeader() {
             ))}
           </div>
 
-          {/* Separator */}
           <div className="w-px h-5 bg-border-default" />
 
-          {/* 3. Alerts */}
           <AlertsPanel />
 
-          {/* Separator */}
           <div className="w-px h-5 bg-border-default" />
 
-          {/* 4. Analyze button */}
           <button
             className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold text-white rounded-lg gradient-blue transition-all hover:opacity-90 hover:-translate-y-px disabled:opacity-50 disabled:pointer-events-none"
             onClick={() => analyze()}

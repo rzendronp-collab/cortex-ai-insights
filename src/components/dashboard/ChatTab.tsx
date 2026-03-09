@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from '@/hooks/useProfile';
 import ReactMarkdown from 'react-markdown';
+import { toast } from 'sonner';
 
 interface Message {
   role: 'user' | 'assistant';

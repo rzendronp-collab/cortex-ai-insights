@@ -269,12 +269,16 @@ export default function CampaignsTab() {
   const hourlyData = analysisData?.hourlyData || [];
 
   const handleSort = (column: SortColumn) => {
+    let newDir: 'asc' | 'desc';
     if (sortColumn === column) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      newDir = sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
-      setSortColumn(column);
-      setSortDirection('desc');
+      newDir = 'desc';
     }
+    setSortColumn(column);
+    setSortDirection(newDir);
+    localStorage.setItem('cortexads_sort_column', column);
+    localStorage.setItem('cortexads_sort_direction', newDir);
   };
 
   const detectCountry = useCallback((name: string): string => {

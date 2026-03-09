@@ -336,7 +336,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 <th
                   key={col.key}
                   onClick={() => handleSort(col.key as SortColumn)}
-                  className={`px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted/80 transition-colors select-none ${col.align === 'right' ? 'text-right' : 'text-left'}`}
+                  className={`px-3 py-2 text-[10px] font-semibold text-[#64748B] uppercase tracking-wider cursor-pointer hover:bg-[#111827] transition-colors select-none ${col.align === 'right' ? 'text-right' : 'text-left'}`}
                 >
                   <div className={`flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end' : 'justify-start'}`}>
                     {col.label}

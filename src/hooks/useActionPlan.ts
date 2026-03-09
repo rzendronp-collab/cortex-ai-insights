@@ -274,13 +274,14 @@ Formato exato:
   /**
    * Apply a single action using real Meta API calls via useCampaignActions.
    */
-  const applyAction = useCallback(async (action: ActionItem): Promise<boolean> => {
+  const applyAction = useCallback(async (action: ActionItem, overrideValue?: number): Promise<boolean> => {
     if (!user || !selectedAccountId) return false;
 
     try {
       let oldValue = '';
       let newValue = '';
       let success = false;
+      const finalValue = overrideValue ?? action.valor_novo;
 
       switch (action.tipo) {
         case 'pause': {
@@ -299,9 +300,9 @@ Formato exato:
         }
         case 'increase_budget':
         case 'decrease_budget': {
-          success = await updateBudget(action.campaign_id, action.valor_novo) || false;
+          success = await updateBudget(action.campaign_id, finalValue) || false;
           oldValue = String(action.valor_atual);
-          newValue = String(action.valor_novo);
+          newValue = String(finalValue);
           break;
         }
       }

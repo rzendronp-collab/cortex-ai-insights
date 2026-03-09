@@ -301,7 +301,7 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Daily Evolution ─── */}
-      <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up" style={{ minHeight: 320 }}>
+      <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up" style={{ minHeight: 320 }}>
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h3 className="text-xs font-semibold text-text-primary">Evolução Diária</h3>
           <div className="flex gap-3 flex-wrap">
@@ -349,8 +349,8 @@ export default function OverviewTab() {
                   yAxisId={cfg.yAxisId}
                   stroke={cfg.color}
                   strokeWidth={2}
-                  dot={{ r: 4, fill: cfg.color, strokeWidth: 2, stroke: '#141928' }}
-                  activeDot={{ r: 6, fill: cfg.color, strokeWidth: 2, stroke: '#141928' }}
+                  dot={{ r: 4, fill: cfg.color, strokeWidth: 2, stroke: '#161D2E' }}
+                  activeDot={{ r: 6, fill: cfg.color, strokeWidth: 2, stroke: '#161D2E' }}
                 />
               );
             })}
@@ -359,14 +359,14 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Hourly ─── */}
-      <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+      <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
         <h3 className="text-xs font-semibold text-text-primary mb-4">Desempenho por Hora</h3>
         <HourlyBarChart data={hourlyData} currency={currency} />
       </div>
 
       {/* ─── Demographics ─── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
           <h3 className="text-xs font-semibold text-text-primary mb-4">Gênero</h3>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
@@ -383,7 +383,7 @@ export default function OverviewTab() {
           </div>
         </div>
 
-        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up" style={{ minHeight: 220 }}>
+        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up" style={{ minHeight: 220 }}>
           <h3 className="text-xs font-semibold text-text-primary mb-4">Faixa Etária</h3>
           <div className="space-y-2.5 mt-2" style={{ minHeight: 180 }}>
             {ageData.map(a => (
@@ -398,7 +398,7 @@ export default function OverviewTab() {
           </div>
         </div>
 
-        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
           <h3 className="text-xs font-semibold text-text-primary mb-4">Gasto vs Receita</h3>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
@@ -416,33 +416,31 @@ export default function OverviewTab() {
         </div>
       </div>
 
-      {/* ─── Action Plan Summary ─── */}
-      <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
-        <h3 className="text-xs font-semibold text-text-primary mb-3">🎯 Plano de Ação</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-          {actions.map(a => {
+      {/* ─── Action Plan Summary (top 3) ─── */}
+      <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-semibold text-text-primary">🎯 Plano de Ação</h3>
+          <button onClick={() => setActiveTab('action-plan')} className="text-[11px] text-data-blue hover:underline cursor-pointer font-medium">
+            Ver todas →
+          </button>
+        </div>
+        <div className="space-y-2">
+          {actions.slice(0, 3).map(a => {
             const isPausar = a.recommendation.label.includes('Pausar');
             const isEscalar = a.recommendation.label.includes('Escalar');
             const isOtimizar = a.recommendation.label.includes('Otimizar');
             const borderColor = isPausar ? DATA_RED : isEscalar ? DATA_GREEN : isOtimizar ? DATA_BLUE : DATA_YELLOW;
             const roasColor = isPausar ? 'text-data-red' : isEscalar ? 'text-data-green' : isOtimizar ? 'text-data-blue' : 'text-data-yellow';
             return (
-              <div key={a.id} className="bg-bg-base border border-border-default rounded-lg p-3" style={{ borderLeftWidth: 3, borderLeftColor: borderColor }}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${a.recommendation.bg} border`}>{a.recommendation.label}</span>
-                  <span className={`text-[10px] font-bold ${roasColor}`}>ROAS {a.roas.toFixed(1)}x</span>
-                </div>
-                <p className="text-xs text-text-primary font-semibold truncate">{a.name}</p>
-                <p className="text-[10px] text-text-muted mt-1">
-                  Gasto {currency} {a.spend.toFixed(0)} • {a.purchases} vendas • CTR {a.ctr.toFixed(1)}%
-                </p>
+              <div key={a.id} className="flex items-center gap-3 bg-bg-base border border-border-default rounded-lg px-3 py-2.5" style={{ borderLeftWidth: 3, borderLeftColor: borderColor, maxHeight: 60 }}>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${a.recommendation.bg} border whitespace-nowrap`}>{a.recommendation.label}</span>
+                <p className="text-[12px] text-text-primary font-semibold truncate flex-1">{a.name}</p>
+                <span className="text-[10px] text-text-muted whitespace-nowrap">{currency} {a.spend.toFixed(0)} • {a.purchases}v</span>
+                <span className={`text-[11px] font-bold ${roasColor} whitespace-nowrap`}>{a.roas.toFixed(1)}x</span>
               </div>
             );
            })}
          </div>
-         <button onClick={() => setActiveTab('action-plan')} className="text-xs text-data-blue hover:underline mt-3 cursor-pointer font-medium">
-           Ver Plano Completo ⚡ →
-         </button>
        </div>
     </div>
   );

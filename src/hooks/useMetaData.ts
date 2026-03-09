@@ -536,7 +536,7 @@ export function useMetaData() {
           const cachePayload = {
             user_id: user.id,
             account_id: selectedAccountId,
-            period: selectedPeriod,
+            period: cachePeriodKey,
             data: analysisResult as any,
             updated_at: now,
           };
@@ -545,7 +545,7 @@ export function useMetaData() {
             .select('id')
             .eq('user_id', user.id)
             .eq('account_id', selectedAccountId)
-            .eq('period', selectedPeriod)
+            .eq('period', cachePeriodKey)
             .maybeSingle();
           if (existing) {
             await supabase.from('analysis_cache').update(cachePayload).eq('id', existing.id);

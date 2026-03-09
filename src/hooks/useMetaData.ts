@@ -143,6 +143,34 @@ function getPrevTimeRange(period: string, dateRange?: { from: string; to: string
   return { since: fmt(since), until: fmt(until) };
 }
 
+// Feature 6: Cursor-based pagination helper
+async function fetchAllPages(
+  callFn: (path: string, params?: Record<string, string>) => Promise<any>,
+  path: string,
+  initialParams: Record<string, string>
+): Promise<any[]> {
+  let allData: any[] = [];
+  let params = { ...initialParams };
+  let hasNext = true;
+  let pageCount = 0;
+
+  while (hasNext && pageCount < 10) { // max 10 pages = 500 items
+    const res = await callFn(path, params);
+    const data = res?.data || [];
+    allData = [...allData, ...data];
+
+    const nextCursor = res?.paging?.cursors?.after;
+    if (nextCursor && data.length > 0 && res?.paging?.next) {
+      params = { ...initialParams, after: nextCursor };
+      pageCount++;
+    } else {
+      hasNext = false;
+    }
+  }
+
+  return allData;
+}
+
 function extractPurchases(actions: any[]): number {
   if (!actions) return 0;
   const found = actions.find((a: any) => a.action_type === 'purchase' || a.action_type === 'offsite_conversion.fb_pixel_purchase');
@@ -258,8 +286,9 @@ export function useMetaData() {
         return params;
       };
 
-      const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes, adsetsRes] = await Promise.all([
-        callMetaApiWithRetry(`${acctPath}/campaigns`, {
+      // Feature 6: Use fetchAllPages for campaigns and insights (cursor pagination)
+      const [campaignsAllData, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes, adsetsRes] = await Promise.all([
+        fetchAllPages(callMetaApiWithRetry, `${acctPath}/campaigns`, {
           fields: 'id,name,status,daily_budget,lifetime_budget',
           limit: '50',
         }),
@@ -295,26 +324,17 @@ export function useMetaData() {
         }),
       ]);
 
-      // Fetch campaign-level insights separately (works for both custom and non-custom)
-      let campaignInsightsRes: any;
-      if (isCustom) {
-        campaignInsightsRes = await callMetaApiWithRetry(`${acctPath}/insights`, {
-          fields: 'campaign_id,campaign_name,spend,impressions,clicks,ctr,cpm,cpc,actions,action_values',
-          level: 'campaign',
-          time_range: timeRangeParam!,
-          limit: '50',
-        });
-      } else {
-        campaignInsightsRes = await callMetaApiWithRetry(`${acctPath}/insights`, {
-          fields: 'campaign_id,campaign_name,spend,impressions,clicks,ctr,cpm,cpc,actions,action_values',
-          level: 'campaign',
-          date_preset: period,
-          limit: '50',
-        });
-      }
+      // Wrap paginated results back into { data: [...] } format for compatibility
+      const campaignsRes = { data: campaignsAllData };
+
+      // Fetch campaign-level insights with pagination
+      const campaignInsightsParams = isCustom
+        ? { fields: 'campaign_id,campaign_name,spend,impressions,clicks,ctr,cpm,cpc,actions,action_values', level: 'campaign', time_range: timeRangeParam!, limit: '50' }
+        : { fields: 'campaign_id,campaign_name,spend,impressions,clicks,ctr,cpm,cpc,actions,action_values', level: 'campaign', date_preset: period, limit: '50' };
+      const campaignInsightsAllData = await fetchAllPages(callMetaApiWithRetry, `${acctPath}/insights`, campaignInsightsParams);
 
       const insightsMap: Record<string, any> = {};
-      (campaignInsightsRes?.data || []).forEach((d: any) => {
+      campaignInsightsAllData.forEach((d: any) => {
         insightsMap[d.campaign_id] = d;
       });
 
@@ -410,7 +430,6 @@ export function useMetaData() {
       const ageAgg: Record<string, number> = {};
       const totalDemoSpend = rawDemo.reduce((s: number, d: any) => s + parseFloat(d.spend || '0'), 0) || 1;
 
-      // Rich demographic aggregation
       const genderRich: Record<string, { spend: number; purchases: number; revenue: number }> = {};
       const ageRich: Record<string, { spend: number; purchases: number; revenue: number }> = {};
       const demographics: DemographicRow[] = [];
@@ -493,8 +512,6 @@ export function useMetaData() {
           }
         }
       });
-
-      console.log('[BUDGET DEBUG]', budgetByCampaignId);
 
       const now = new Date().toISOString();
       const analysisResult: AnalysisData = {

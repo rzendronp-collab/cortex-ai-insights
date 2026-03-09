@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, ArrowUpDown, ArrowDown, ArrowUp, Pencil, Download, StickyNote, Columns3, GripVertical, ExternalLink, Check, X } from 'lucide-react';
+import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, ArrowUpDown, ArrowDown, ArrowUp, Pencil, Download, StickyNote, Columns3, GripVertical, ExternalLink, Check, X, Copy } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
@@ -212,11 +212,17 @@ export default function CampaignsTab() {
   const [lastClickedIdx, setLastClickedIdx] = useState<number | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
 
+  // Duplicate dialog state
+  const [duplicateDialog, setDuplicateDialog] = useState<{ id: string; name: string } | null>(null);
+  const [duplicateName, setDuplicateName] = useState('');
+  const [duplicateKeepActive, setDuplicateKeepActive] = useState(false);
+  const [duplicateLoading, setDuplicateLoading] = useState(false);
+
   const { analysisData, selectedAccountId, selectedPeriod, currencySymbol, setAnalysisForAccount } = useDashboard();
   const { profile } = useProfile();
   const { user } = useAuth();
   const { callMetaApi, isConnected } = useMetaConnection();
-  const { updateCampaignName, syncCacheStatus } = useCampaignActions();
+  const { updateCampaignName, syncCacheStatus, duplicateCampaign } = useCampaignActions();
   const { notes, saving: noteSaving, fetchNotes, saveNote, deleteNote } = useCampaignNotes(user?.id);
   const { activeColumns, orderedColumns, isVisible, toggleColumn, reorderColumns, resetToDefault } = useColumnPreferences();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
@@ -354,17 +360,28 @@ export default function CampaignsTab() {
     setTogglingIds(prev => new Set(prev).add(campaignId));
     try {
       await callMetaApi(campaignId, { status: newStatus, _method: 'POST' });
-      setLocalStatuses(prev => ({ ...prev, [campaignId]: newStatus }));
+
+      // Feature 5: Wait 1.5s then verify real status from Meta
+      await new Promise(r => setTimeout(r, 1500));
+      let confirmedStatus = newStatus;
+      try {
+        const verifyRes = await callMetaApi(campaignId, { fields: 'status' });
+        if (verifyRes?.status && verifyRes.status !== newStatus) {
+          toast.warning('⚠ Meta API retornou status diferente — a sincronizar...');
+          confirmedStatus = verifyRes.status;
+        }
+      } catch { /* verification failed, use expected status */ }
+
+      setLocalStatuses(prev => ({ ...prev, [campaignId]: confirmedStatus }));
 
       // Sync global analysis cache so status persists across tab switches
       if (analysisData && selectedAccountId) {
         const updatedCampaigns = (analysisData.campaigns || []).map(c =>
-          c.id === campaignId ? { ...c, status: newStatus } : c
+          c.id === campaignId ? { ...c, status: confirmedStatus } : c
         );
         const updatedData = { ...analysisData, campaigns: updatedCampaigns };
         setAnalysisForAccount(selectedAccountId, selectedPeriod, updatedData);
 
-        // Also update Supabase analysis_cache so it persists across reloads
         supabase
           .from('analysis_cache')
           .update({ data: updatedData as any, updated_at: new Date().toISOString() })
@@ -375,7 +392,7 @@ export default function CampaignsTab() {
           });
       }
 
-      toast.success(newStatus === 'ACTIVE' ? 'Campanha ativada ✓' : 'Campanha pausada ✓');
+      toast.success(confirmedStatus === 'ACTIVE' ? 'Campanha ativada ✓' : 'Campanha pausada ✓');
     } catch (err: any) {
       toast.error(err?.message || 'Erro ao alterar status da campanha.');
     } finally {
@@ -1238,9 +1255,14 @@ Responda SOMENTE com o JSON, sem markdown.`;
                         />
                       </td>
                       {activeColumns.map(col => renderCell(col.id))}
-                      {/* Actions: expand + open in meta */}
+                      {/* Actions: expand + duplicate + open in meta */}
                       <td className="px-2" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-1">
+                          <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                            <button onClick={() => { setDuplicateName(`Cópia de ${localNames[c.id] || c.name}`); setDuplicateKeepActive(false); setDuplicateDialog({ id: c.id, name: localNames[c.id] || c.name }); }} className="p-1 text-muted-foreground hover:text-primary transition-colors">
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </TooltipTrigger><TooltipContent><p className="text-xs">Duplicar campanha</p></TooltipContent></Tooltip></TooltipProvider>
                           <TooltipProvider><Tooltip><TooltipTrigger asChild>
                             <button onClick={() => openInMeta(c.id)} className="p-1 text-muted-foreground hover:text-primary transition-colors">
                               <ExternalLink className="w-3.5 h-3.5" />
@@ -1697,6 +1719,61 @@ Responda SOMENTE com o JSON, sem markdown.`;
               }}
             >
               {budgetLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Duplicate Campaign Dialog */}
+      <Dialog open={!!duplicateDialog} onOpenChange={(open) => { if (!open) setDuplicateDialog(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base">📋 Duplicar Campanha</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Criar uma cópia de <strong>{duplicateDialog?.name}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                Nome da nova campanha
+              </label>
+              <Input
+                type="text"
+                value={duplicateName}
+                onChange={(e) => setDuplicateName(e.target.value)}
+                className="text-sm"
+                autoFocus
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="keep-active"
+                checked={duplicateKeepActive}
+                onCheckedChange={(v) => setDuplicateKeepActive(!!v)}
+                className="h-4 w-4"
+              />
+              <label htmlFor="keep-active" className="text-xs text-muted-foreground cursor-pointer select-none">
+                Manter status ativo (default: criar pausada)
+              </label>
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2 sm:justify-end">
+            <Button variant="outline" size="sm" onClick={() => setDuplicateDialog(null)} disabled={duplicateLoading}>
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              disabled={duplicateLoading || !duplicateName.trim()}
+              onClick={async () => {
+                if (!duplicateDialog || !duplicateName.trim()) return;
+                setDuplicateLoading(true);
+                const success = await duplicateCampaign(duplicateDialog.id, duplicateDialog.name, duplicateName.trim(), duplicateKeepActive);
+                setDuplicateLoading(false);
+                if (success) setDuplicateDialog(null);
+              }}
+            >
+              {duplicateLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Duplicar'}
             </Button>
           </DialogFooter>
         </DialogContent>

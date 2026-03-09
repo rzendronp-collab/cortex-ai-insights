@@ -37,6 +37,21 @@ export function useCampaignActions() {
     });
   }, [analysisData, selectedAccountId, selectedPeriod, setAnalysisForAccount]);
 
+  // Feature 5: Verify status after toggle via GET
+  const verifyStatus = useCallback(async (campaignId: string, expectedStatus: string): Promise<string> => {
+    try {
+      const res = await callMetaApi(campaignId, { fields: 'status' });
+      const realStatus = res?.status;
+      if (realStatus && realStatus !== expectedStatus) {
+        toast.warning('⚠ Meta API retornou status diferente — a sincronizar...');
+        return realStatus;
+      }
+      return expectedStatus;
+    } catch {
+      return expectedStatus;
+    }
+  }, [callMetaApi]);
+
   const toggleCampaignStatus = useCallback(async (campaignId: string, currentStatus: string) => {
     if (!isConnected || !selectedAccountId) {
       toast.error('Conecte sua conta Meta primeiro.');
@@ -48,9 +63,14 @@ export function useCampaignActions() {
       console.log(`[TOGGLE] Sending POST to ${campaignId}: status=${newStatus}`);
       const result = await callMetaApi(campaignId, { status: newStatus, _method: 'POST' });
       console.log(`[TOGGLE] Response:`, result);
+
+      // Feature 5: Verify real status after 1.5s
+      await new Promise(r => setTimeout(r, 1500));
+      const confirmedStatus = await verifyStatus(campaignId, newStatus);
+
       await invalidateCache();
       clearCurrentAnalysis();
-      return newStatus;
+      return confirmedStatus;
     } catch (err: any) {
       console.error(`[TOGGLE] Error:`, err);
       toast.error(err?.message || 'Erro ao alterar status da campanha.');
@@ -58,14 +78,12 @@ export function useCampaignActions() {
     } finally {
       setLoading(false);
     }
-  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, invalidateCache]);
+  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, invalidateCache, verifyStatus]);
 
   /**
    * Detect whether a campaign uses CBO or ABO budgeting.
-   * Returns the target entity ID and budget type.
    */
   const detectBudgetType = useCallback(async (campaignId: string): Promise<BudgetInfo> => {
-    // Step 1: Check campaign-level budget (CBO)
     const campRes = await callMetaApi(campaignId, {
       fields: 'daily_budget,lifetime_budget,budget_rebalance_flag',
     });
@@ -79,7 +97,6 @@ export function useCampaignActions() {
       };
     }
 
-    // Step 2: No campaign budget → ABO, get first adset
     const adsetsRes = await callMetaApi(`${campaignId}/adsets`, {
       fields: 'id,daily_budget',
       limit: '1',
@@ -93,7 +110,6 @@ export function useCampaignActions() {
       };
     }
 
-    // Fallback: treat as CBO
     return { isCBO: true, targetId: campaignId, currentBudget: 0 };
   }, [callMetaApi]);
 
@@ -105,8 +121,6 @@ export function useCampaignActions() {
     setLoading(true);
     try {
       const budgetCents = String(Math.round(newDailyBudget * 100));
-
-      // Auto-detect CBO vs ABO
       const budgetInfo = await detectBudgetType(campaignId);
       console.log(`[BUDGET] Detected ${budgetInfo.isCBO ? 'CBO' : 'ABO'} for campaign ${campaignId}, target: ${budgetInfo.targetId}`);
 
@@ -145,5 +159,40 @@ export function useCampaignActions() {
     }
   }, [isConnected, selectedAccountId, callMetaApi, syncCacheStatus, invalidateCache]);
 
-  return { loading, toggleCampaignStatus, updateBudget, updateCampaignName, syncCacheStatus, detectBudgetType };
+  // Feature 4: Duplicate campaign
+  const duplicateCampaign = useCallback(async (campaignId: string, campaignName: string, newName: string, keepActive: boolean) => {
+    if (!isConnected || !selectedAccountId) {
+      toast.error('Conecte sua conta Meta primeiro.');
+      return false;
+    }
+    setLoading(true);
+    try {
+      // Get the original campaign's objective
+      const campRes = await callMetaApi(campaignId, { fields: 'objective,special_ad_categories' });
+      const objective = campRes?.objective || 'OUTCOME_SALES';
+      const specialAdCategories = campRes?.special_ad_categories || [];
+
+      // Create new campaign with same objective
+      const acctPath = `act_${selectedAccountId}`;
+      await callMetaApi(acctPath + '/campaigns', {
+        name: newName,
+        status: keepActive ? 'ACTIVE' : 'PAUSED',
+        objective,
+        special_ad_categories: JSON.stringify(specialAdCategories),
+        _method: 'POST',
+      });
+
+      await invalidateCache();
+      clearCurrentAnalysis();
+      toast.success('Campanha duplicada! Aceda ao Meta Ads Manager para configurar adsets.');
+      return true;
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao duplicar campanha.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, invalidateCache]);
+
+  return { loading, toggleCampaignStatus, updateBudget, updateCampaignName, syncCacheStatus, detectBudgetType, duplicateCampaign };
 }

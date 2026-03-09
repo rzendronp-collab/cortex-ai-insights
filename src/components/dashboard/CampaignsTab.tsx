@@ -1191,17 +1191,17 @@ Responda SOMENTE com o JSON, sem markdown.`;
                         </td>
                       );
                     case 'sales':
-                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{c.purchases}</p></td>;
+                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : c.purchases}</p></td>;
                     case 'cpa':
-                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(cpa, currency)}</p></td>;
+                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatCurrency(cpa, currency)}</p></td>;
                     case 'ctr':
-                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{c.ctr.toFixed(2)}%</p></td>;
+                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : `${c.ctr.toFixed(2)}%`}</p></td>;
                     case 'cpm':
-                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(c.cpm, currency)}</p></td>;
+                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatCurrency(c.cpm, currency)}</p></td>;
                     case 'impressions':
-                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatNumber(c.impressions)}</p></td>;
+                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatNumber(c.impressions)}</p></td>;
                     case 'clicks':
-                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatNumber(c.clicks)}</p></td>;
+                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatNumber(c.clicks)}</p></td>;
                     case 'notes':
                       return (
                         <td key={colId} className="px-3 text-center" onClick={e => e.stopPropagation()}>

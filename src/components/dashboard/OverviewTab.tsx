@@ -160,20 +160,32 @@ export default function OverviewTab() {
     { name: 'Vendas', value: totalSales, color: DATA_GREEN },
   ];
 
-  const actions = actionPlanCampaigns.map(c => {
-    const roas = c.roas;
-    const rec = roas >= roasTarget * 1.5
-      ? { label: '🚀 Escalar', color: 'text-data-green', bg: 'bg-data-green/10 border-data-green/20' }
-      : roas >= roasTarget
-        ? { label: '🔧 Otimizar', color: 'text-data-blue', bg: 'bg-data-blue/10 border-data-blue/20' }
-        : roas > 0
-          ? { label: '⚠ Atenção', color: 'text-data-yellow', bg: 'bg-data-yellow/10 border-data-yellow/20' }
-          : { label: '⏸ Pausar', color: 'text-data-red', bg: 'bg-data-red/10 border-data-red/20' };
-    return { ...c, recommendation: rec, purchases: 'purchases' in c ? c.purchases : (c as any).sales };
-  }).sort((a, b) => {
-    const order: Record<string, number> = { '⏸ Pausar': 0, '⚠ Atenção': 1, '🔧 Otimizar': 2, '🚀 Escalar': 3 };
-    return (order[a.recommendation.label] ?? 4) - (order[b.recommendation.label] ?? 4);
-  });
+  const actions = (() => {
+    // Active campaigns with spend > 0 get normal recommendations
+    const withSpend = actionPlanCampaigns.map(c => {
+      const roas = c.roas;
+      const rec = roas >= roasTarget * 1.5
+        ? { label: '🚀 Escalar', color: 'text-data-green', bg: 'bg-data-green/10 border-data-green/20' }
+        : roas >= roasTarget
+          ? { label: '🔧 Otimizar', color: 'text-data-blue', bg: 'bg-data-blue/10 border-data-blue/20' }
+          : roas > 0
+            ? { label: '⚠ Atenção', color: 'text-data-yellow', bg: 'bg-data-yellow/10 border-data-yellow/20' }
+            : { label: '⏸ Pausar', color: 'text-data-red', bg: 'bg-data-red/10 border-data-red/20' };
+      return { ...c, recommendation: rec, purchases: 'purchases' in c ? c.purchases : (c as any).sales };
+    });
+    // Active campaigns with zero spend get a "no spend" warning
+    const zeroSpendActive = campaigns
+      .filter(c => c.spend === 0 && normalizeStatus((c as any).status ?? (c as any).effective_status) === 'ACTIVE')
+      .map(c => ({
+        ...c,
+        recommendation: { label: '👻 Sem gasto', color: 'text-slate-400', bg: 'bg-slate-800/50 border-slate-600/30' },
+        purchases: 0,
+      }));
+    return [...withSpend, ...zeroSpendActive].sort((a, b) => {
+      const order: Record<string, number> = { '👻 Sem gasto': 0, '⏸ Pausar': 1, '⚠ Atenção': 2, '🔧 Otimizar': 3, '🚀 Escalar': 4 };
+      return (order[a.recommendation.label] ?? 5) - (order[b.recommendation.label] ?? 5);
+    });
+  })();
 
   const activeMetrics = visibleMetrics.size > 0 ? Array.from(visibleMetrics) : Object.keys(dailyMetricConfig);
 

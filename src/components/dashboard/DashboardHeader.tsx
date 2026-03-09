@@ -31,6 +31,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
     selectedAccountId, setSelectedAccountId,
     selectedAccountName, setSelectedAccountName,
     setSelectedAccountCurrency,
+    dateRange, setDateRange,
     analysisData, isFromCache, cacheTimestamp, currencySymbol,
     activeTab,
   } = useDashboard();

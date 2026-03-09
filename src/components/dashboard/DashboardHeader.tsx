@@ -44,10 +44,10 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const checkStale = useCallback(() => {
-    if (!ad?.lastUpdated) { setIsStale(false); return; }
-    const age = Date.now() - new Date(ad.lastUpdated).getTime();
+    if (!analysisData?.lastUpdated) { setIsStale(false); return; }
+    const age = Date.now() - new Date(analysisData.lastUpdated).getTime();
     setIsStale(age > 60 * 60 * 1000);
-  }, [ad?.lastUpdated]);
+  }, [analysisData?.lastUpdated]);
 
   useEffect(() => {
     checkStale();

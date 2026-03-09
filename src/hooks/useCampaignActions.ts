@@ -193,7 +193,8 @@ export function useCampaignActions() {
 
       await invalidateCache();
       clearCurrentAnalysis();
-      toast.success('Campanha duplicada! Aceda ao Meta Ads Manager para configurar adsets.');
+      triggerReanalyze();
+      toast.success('✅ Campanha duplicada! A sincronizar dados em 2s...');
       return true;
     } catch (err: any) {
       toast.error(err?.message || 'Erro ao duplicar campanha.');

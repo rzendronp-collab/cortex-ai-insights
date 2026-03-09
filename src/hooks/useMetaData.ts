@@ -284,11 +284,8 @@ export function useMetaData() {
       };
 
       const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes, adsetsRes] = await Promise.all([
-        callMetaApiWithRetry(`${acctPath}/campaigns`, isCustom ? {
-          fields: `id,name,status,daily_budget,lifetime_budget`,
-          limit: '50',
-        } : {
-          fields: `id,name,status,daily_budget,lifetime_budget,insights.date_preset(${period}){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}`,
+        callMetaApiWithRetry(`${acctPath}/campaigns`, {
+          fields: 'id,name,status,daily_budget,lifetime_budget',
           limit: '50',
         }),
         callMetaApiWithRetry(`${acctPath}/insights`, {

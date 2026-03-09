@@ -205,7 +205,43 @@ export function useMetaData() {
       ]);
 
       const campaigns: ProcessedCampaign[] = (campaignsRes?.data || []).map(processCampaign);
-      const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map(processCampaign);
+      const campaignsDouble: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map(processCampaign);
+
+      // Compute previous period by subtracting current from double-window
+      // prev = double - current (for each metric)
+      const campaignsPrev: ProcessedCampaign[] = campaigns.map(curr => {
+        const double = campaignsDouble.find(d => d.id === curr.id);
+        if (!double) {
+          // No double-window data, return zeros
+          return { ...curr, spend: 0, impressions: 0, clicks: 0, ctr: 0, cpm: 0, cpc: 0, purchases: 0, revenue: 0, roas: 0, cpv: 0 };
+        }
+        const prevSpend = Math.max(0, double.spend - curr.spend);
+        const prevImpressions = Math.max(0, double.impressions - curr.impressions);
+        const prevClicks = Math.max(0, double.clicks - curr.clicks);
+        const prevPurchases = Math.max(0, double.purchases - curr.purchases);
+        const prevRevenue = Math.max(0, double.revenue - curr.revenue);
+        const prevRoas = prevSpend > 0 ? prevRevenue / prevSpend : 0;
+        const prevCtr = prevImpressions > 0 ? (prevClicks / prevImpressions) * 100 : 0;
+        const prevCpm = prevImpressions > 0 ? (prevSpend / prevImpressions) * 1000 : 0;
+        const prevCpc = prevClicks > 0 ? prevSpend / prevClicks : 0;
+        const prevCpv = prevPurchases > 0 ? prevSpend / prevPurchases : 0;
+
+        return {
+          id: curr.id,
+          name: curr.name,
+          status: curr.status,
+          spend: prevSpend,
+          impressions: prevImpressions,
+          clicks: prevClicks,
+          ctr: prevCtr,
+          cpm: prevCpm,
+          cpc: prevCpc,
+          purchases: prevPurchases,
+          revenue: prevRevenue,
+          roas: prevRoas,
+          cpv: prevCpv,
+        };
+      });
 
       const dailyData: DailyData[] = (dailyRes?.data || []).map((d: any) => {
         const spend = parseFloat(d.spend || '0');

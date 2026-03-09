@@ -193,6 +193,16 @@ export default function CampaignsTab() {
   const { profile } = useProfile();
   const { callMetaApi, isConnected } = useMetaConnection();
   const { notes, saving: noteSaving, fetchNotes, saveNote, deleteNote } = useCampaignNotes();
+  const { activeColumns, orderedColumns, isVisible, toggleColumn, reorderColumns, resetToDefault } = useColumnPreferences();
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = orderedColumns.findIndex(c => c.id === active.id);
+      const newIndex = orderedColumns.findIndex(c => c.id === over.id);
+      reorderColumns(oldIndex, newIndex);
+    }
+  }, [orderedColumns, reorderColumns]);
   const roasTarget = profile?.roas_target || 3.0;
   const currency = currencySymbol;
 

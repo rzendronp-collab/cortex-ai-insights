@@ -29,7 +29,24 @@ function buildReportPrompt(ctx: {
   const prevRevenue = prevActive.reduce((s: number, c: any) => s + c.revenue, 0);
   const prevSales = prevActive.reduce((s: number, c: any) => s + c.purchases, 0);
 
-  const peakHours = [...hourlyData].sort((a: any, b: any) => b.spend - a.spend).filter((h: any) => h.spend > 0).slice(0, 5).map((h: any) => h.hour);
+  const peakHours = [...hourlyData]
+    .sort((a: any, b: any) => b.spend - a.spend)
+    .filter((h: any) => h.spend > 0)
+    .slice(0, 5)
+    .map((h: any) => h.hour);
+
+  const topHourlySpendLines = [...hourlyData]
+    .sort((a: any, b: any) => b.spend - a.spend)
+    .filter((h: any) => h.spend > 0)
+    .slice(0, 8)
+    .map((h: any) => {
+      const raw = String(h.hour ?? '').trim();
+      const hourLabel = raw
+        ? `${raw.replace(':00', '').replace(/h$/i, '')}h`
+        : 'N/A';
+      return `${hourLabel}: ${currency}${Number(h.spend || 0).toFixed(0)} gastos`;
+    })
+    .join('\n');
 
   const campLines = active
     .sort((a: any, b: any) => b.spend - a.spend)
@@ -50,7 +67,11 @@ META ROAS: ${roasTarget}x | MOEDA: ${currency}
 TOTAIS:
 Gasto: ${currency}${totalSpend.toFixed(2)} | Receita: ${currency}${totalRevenue.toFixed(2)} | ROAS: ${avgRoas.toFixed(2)}x | Vendas: ${totalSales}
 ${prevSpend > 0 ? `Anterior: Gasto ${currency}${prevSpend.toFixed(2)} | Receita ${currency}${prevRevenue.toFixed(2)} | ROAS ${(prevSpend > 0 ? prevRevenue / prevSpend : 0).toFixed(2)}x | Vendas ${prevSales}` : ''}
-Horários pico: ${peakHours.join(', ') || 'N/A'}
+
+DADOS HORÁRIOS (TOP INVESTIMENTO):
+${topHourlySpendLines || 'N/A'}
+
+Horários pico (por gasto): ${peakHours.join(', ') || 'N/A'}
 
 CAMPANHAS (${active.length}):
 ${campLines}

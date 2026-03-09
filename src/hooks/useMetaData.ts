@@ -184,10 +184,10 @@ export function useMetaData() {
 
     const days = periodDaysMap[selectedPeriod] ?? 7;
     const currentRange = getCurrentPeriodTimeRange(days);
-    const previousRange = getPreviousPeriodTimeRange(days);
+    const prevTimeRange = getPrevTimeRange(selectedPeriod);
+    const { since, until } = prevTimeRange;
     const currentTimeRange = JSON.stringify(currentRange);
-    const previousTimeRange = JSON.stringify(previousRange);
-    const acctPath = `act_${selectedAccountId}`;
+    const previousTimeRange = JSON.stringify(prevTimeRange);
 
     try {
       // Check Supabase cache first (skip in DEV so fixes can be validated immediately)

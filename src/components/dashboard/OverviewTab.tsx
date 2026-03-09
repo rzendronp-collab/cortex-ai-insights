@@ -339,7 +339,7 @@ export default function OverviewTab() {
                 <Cell fill={chartColors.destructive} />
                 <Cell fill={chartColors.success} />
               </Pie>
-              <Tooltip contentStyle={{ background: 'hsl(228,20%,7%)', border: '1px solid hsl(224,30%,16%)', borderRadius: 8, fontSize: 11 }} />
+              <Tooltip contentStyle={chartTooltipStyle} />
             </PieChart>
           </ResponsiveContainer>
           <div className="flex justify-center gap-4 mt-1">

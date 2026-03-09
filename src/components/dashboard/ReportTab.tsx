@@ -81,7 +81,7 @@ ${dailyLines}
 
 ESTRUTURA OBRIGATÓRIA DO RELATÓRIO:
 1. **🎯 DIAGNÓSTICO EXECUTIVO** — Resumo de 3-4 frases com os números reais. O que vai bem, o que vai mal.
-2. **⚡ TOP 5 AÇÕES PRÓXIMAS 24H** — Ações numeradas com valores exatos (ex: "Aumentar budget de R$60 para R$150")
+2. **⚡ TOP 5 AÇÕES PRÓXIMAS 24H** — Ações numeradas com valores exatos (ex: "Aumentar budget de ${currency}60 para ${currency}150")
 3. **💰 REDISTRIBUIÇÃO DE BUDGET** — Tabela com budget atual → recomendado para cada campanha, com % de mudança
 4. **🎨 3 COPIES PRONTOS** — 3 copies de anúncio com emoji, urgência, social proof ou benefício
 5. **🎯 PÚBLICOS PARA TESTAR** — 4 sugestões de público baseadas nos dados

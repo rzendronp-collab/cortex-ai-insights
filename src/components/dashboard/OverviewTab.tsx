@@ -12,13 +12,17 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const chartColors = {
-  primary: 'hsl(216, 91%, 64%)',
-  secondary: 'hsl(250, 90%, 71%)',
-  success: 'hsl(152, 72%, 44%)',
-  warning: 'hsl(34, 87%, 53%)',
-  destructive: 'hsl(349, 83%, 62%)',
-  muted: 'hsl(218, 25%, 38%)',
+  primary: '#3B82F6',
+  secondary: '#8B5CF6',
+  success: '#10B981',
+  warning: '#F59E0B',
+  destructive: '#EF4444',
+  muted: '#64748B',
 };
+
+const chartGrid = 'rgba(30,45,74,0.8)';
+const chartAxisTick = '#64748B';
+const chartTooltipStyle = { background: '#0E1420', border: '1px solid #1E2D4A', borderRadius: 8, fontSize: 11, color: '#F0F4FF' };
 
 const dailyMetricConfig: Record<string, { label: string; color: string; type: 'line' | 'bar'; yAxisId: 'left' | 'right' }> = {
   roas: { label: 'ROAS', color: chartColors.primary, type: 'line', yAxisId: 'right' },
@@ -160,7 +164,7 @@ export default function OverviewTab() {
     if (!active || !payload?.length) return null;
     const data = payload[0].payload;
     return (
-      <div className="bg-popover border border-border rounded-lg px-3 py-2 shadow-lg">
+      <div style={chartTooltipStyle} className="rounded-lg px-3 py-2 shadow-lg">
         <p className="text-[11px] text-foreground font-medium mb-0.5">{data.fullName}</p>
         <p className="text-[11px] text-muted-foreground">ROAS: <span className="text-foreground font-semibold">{data.roas}x</span></p>
       </div>
@@ -168,7 +172,7 @@ export default function OverviewTab() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <KPICard label="ROAS" value={`${avgRoas.toFixed(1)}x`} subtitle="Retorno sobre investimento" delta={calcDelta(avgRoas, prevRoas)} valueClassName={getRoasColor(avgRoas, roasTarget)} isHero />
@@ -186,9 +190,9 @@ export default function OverviewTab() {
           <h3 className="text-xs font-semibold text-foreground mb-3">ROAS por Campanha <span className="text-muted-foreground font-normal">(top 10)</span></h3>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={roasCampaignData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(224,30%,16%)" />
-              <XAxis type="number" tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: 'hsl(218,25%,38%)' }} width={90} />
+              <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
+              <XAxis type="number" tick={{ fontSize: 10, fill: chartAxisTick }} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: chartAxisTick }} width={90} />
               <Tooltip content={<RoasTooltip />} />
               <ReferenceLine x={roasTarget} stroke={chartColors.muted} strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 9, fill: chartColors.muted }} />
               <Bar dataKey="roas" radius={[0, 4, 4, 0]}>
@@ -270,11 +274,11 @@ export default function OverviewTab() {
                 </linearGradient>
               ))}
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(224,30%,16%)" />
-            <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
-            <YAxis yAxisId="left" tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
-            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
-            <Tooltip contentStyle={{ background: 'hsl(228,20%,7%)', border: '1px solid hsl(224,30%,16%)', borderRadius: 8, fontSize: 11 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
+            <XAxis dataKey="date" tick={{ fontSize: 10, fill: chartAxisTick }} />
+            <YAxis yAxisId="left" tick={{ fontSize: 10, fill: chartAxisTick }} />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: chartAxisTick }} />
+            <Tooltip contentStyle={chartTooltipStyle} />
             {activeMetrics.map(key => {
               const cfg = dailyMetricConfig[key];
               if (!cfg) return null;
@@ -302,7 +306,7 @@ export default function OverviewTab() {
               <Pie data={genderData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={0}>
                 {genderData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
               </Pie>
-              <Tooltip contentStyle={{ background: 'hsl(228,20%,7%)', border: '1px solid hsl(224,30%,16%)', borderRadius: 8, fontSize: 11 }} />
+              <Tooltip contentStyle={chartTooltipStyle} />
             </PieChart>
           </ResponsiveContainer>
           <div className="flex justify-center gap-4 mt-1">
@@ -335,7 +339,7 @@ export default function OverviewTab() {
                 <Cell fill={chartColors.destructive} />
                 <Cell fill={chartColors.success} />
               </Pie>
-              <Tooltip contentStyle={{ background: 'hsl(228,20%,7%)', border: '1px solid hsl(224,30%,16%)', borderRadius: 8, fontSize: 11 }} />
+              <Tooltip contentStyle={chartTooltipStyle} />
             </PieChart>
           </ResponsiveContainer>
           <div className="flex justify-center gap-4 mt-1">

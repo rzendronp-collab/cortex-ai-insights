@@ -5,9 +5,12 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { ArrowUp, ArrowDown, Inbox } from 'lucide-react';
 
 const chartColors = {
-  primary: 'hsl(216, 91%, 64%)',
-  secondary: 'hsl(250, 90%, 71%)',
+  primary: '#3B82F6',
+  secondary: '#8B5CF6',
 };
+const chartGrid = 'rgba(30,45,74,0.8)';
+const chartAxisTick = '#64748B';
+const chartTooltipStyle = { background: '#0E1420', border: '1px solid #1E2D4A', borderRadius: 8, fontSize: 11, color: '#F0F4FF' };
 
 export default function ComparisonTab() {
   const { analysisData, currencySymbol } = useDashboard();
@@ -89,11 +92,11 @@ export default function ComparisonTab() {
           <h3 className="text-xs font-semibold text-foreground mb-3">ROAS: Atual vs Anterior</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={comparisonData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(224,30%,16%)" />
-              <XAxis dataKey="name" tick={{ fontSize: 9, fill: 'hsl(218,25%,38%)' }} />
-              <YAxis tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
-              <Tooltip contentStyle={{ background: 'hsl(228,20%,7%)', border: '1px solid hsl(224,30%,16%)', borderRadius: 8, fontSize: 11 }} />
-              <Legend wrapperStyle={{ fontSize: 10 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
+              <XAxis dataKey="name" tick={{ fontSize: 9, fill: chartAxisTick }} />
+              <YAxis tick={{ fontSize: 10, fill: chartAxisTick }} />
+              <Tooltip contentStyle={chartTooltipStyle} />
+              <Legend wrapperStyle={{ fontSize: 10, color: chartAxisTick }} />
               <Bar dataKey="ROAS Atual" fill={chartColors.primary} radius={[3, 3, 0, 0]} />
               <Bar dataKey="ROAS Anterior" fill={chartColors.secondary} radius={[3, 3, 0, 0]} opacity={0.5} />
             </BarChart>
@@ -103,11 +106,11 @@ export default function ComparisonTab() {
           <h3 className="text-xs font-semibold text-foreground mb-3">Gasto: Atual vs Anterior</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={comparisonData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(224,30%,16%)" />
-              <XAxis dataKey="name" tick={{ fontSize: 9, fill: 'hsl(218,25%,38%)' }} />
-              <YAxis tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
-              <Tooltip contentStyle={{ background: 'hsl(228,20%,7%)', border: '1px solid hsl(224,30%,16%)', borderRadius: 8, fontSize: 11 }} />
-              <Legend wrapperStyle={{ fontSize: 10 }} />
+              <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
+              <XAxis dataKey="name" tick={{ fontSize: 9, fill: chartAxisTick }} />
+              <YAxis tick={{ fontSize: 10, fill: chartAxisTick }} />
+              <Tooltip contentStyle={chartTooltipStyle} />
+              <Legend wrapperStyle={{ fontSize: 10, color: chartAxisTick }} />
               <Bar dataKey="Gasto Atual" fill={chartColors.primary} radius={[3, 3, 0, 0]} />
               <Bar dataKey="Gasto Anterior" fill={chartColors.secondary} radius={[3, 3, 0, 0]} opacity={0.5} />
             </BarChart>

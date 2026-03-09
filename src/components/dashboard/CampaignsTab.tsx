@@ -187,7 +187,7 @@ export default function CampaignsTab() {
     try {
       const prev = prevMap[campaign.id];
       const hourlyCtx = topHours.length > 0 ? `\nHorários com mais gasto: ${topHours.join(', ')}` : '';
-      const prompt = `Analise esta campanha Meta Ads e responda em JSON com as chaves: diagnostico (2-3 frases com números reais), acao_principal (1 ação com valor exato, ex: "Aumentar budget de R$X para R$Y (+Z%)"), budget_por_hora (string com distribuição, ex: "00h-08h: 10% | 08h-12h: 25% | 12h-18h: 40% | 18h-24h: 25%"), previsao_roas_7d (número estimado), budget_recomendado (valor em ${currency}).
+      const prompt = `Analise esta campanha Meta Ads e responda em JSON com as chaves: diagnostico (2-3 frases com números reais), acao_principal (1 ação com valor exato, ex: "Aumentar budget de ${currency}X para ${currency}Y (+Z%)"), budget_por_hora (string com distribuição, ex: "00h-08h: 10% | 08h-12h: 25% | 12h-18h: 40% | 18h-24h: 25%"), previsao_roas_7d (número estimado), budget_recomendado (valor em ${currency}).
 
 Dados da campanha:
 - Nome: ${campaign.name}

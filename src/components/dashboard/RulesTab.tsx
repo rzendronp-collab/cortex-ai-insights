@@ -10,9 +10,9 @@ interface Rule { metric: string; condition: string; value: string; action: strin
 const suggestedRules = [
   { metric: 'ROAS', condition: '<', value: '2', action: 'Sugerir Pausa', label: 'ROAS < 2x' },
   { metric: 'CTR', condition: '<', value: '1', action: 'Alertar', label: 'CTR < 1%' },
-  { metric: 'CPV', condition: '>', value: '50', action: 'Alertar', label: 'CPV > R$50' },
-  { metric: 'Gasto', condition: '>', value: '100', action: 'Alertar', label: 'Gasto > R$100' },
-  { metric: 'CPM', condition: '>', value: '35', action: 'Alertar', label: 'CPM > R$35' },
+  { metric: 'CPV', condition: '>', value: '50', action: 'Alertar', label: 'CPV > 50' },
+  { metric: 'Gasto', condition: '>', value: '100', action: 'Alertar', label: 'Gasto > 100' },
+  { metric: 'CPM', condition: '>', value: '35', action: 'Alertar', label: 'CPM > 35' },
   { metric: 'ROAS', condition: '>=', value: '4', action: 'Sugerir Escala', label: 'ROAS ≥ 4x' },
 ];
 

@@ -56,7 +56,7 @@ function DashboardContent() {
       {isMobile ? (
         <div
           className={`fixed inset-y-0 left-0 z-50 transition-transform duration-250 ease-out ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-[240px]'
+            sidebarOpen ? 'translate-x-0' : '-translate-x-[220px]'
           }`}
         >
           <DashboardSidebar onCloseMobile={() => setSidebarOpen(false)} />
@@ -65,7 +65,7 @@ function DashboardContent() {
         <DashboardSidebar />
       )}
 
-      <div className={isMobile ? 'ml-0' : 'ml-[240px]'}>
+      <div className={isMobile ? 'ml-0' : 'ml-[220px]'}>
         <DashboardHeader onOpenSidebar={() => setSidebarOpen(true)} />
         {isTokenExpired && (
           <div className="mx-4 md:mx-6 mt-4 bg-warning/10 border border-warning/30 rounded-lg px-4 py-3 flex items-center gap-3">

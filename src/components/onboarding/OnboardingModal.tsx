@@ -201,9 +201,9 @@ export default function OnboardingModal() {
             <CheckCircle2 className="w-16 h-16 text-[#10B981] animate-bounce" />
             <div>
               <h2 className="text-xl font-bold text-[#F0F4FF]">Tudo configurado!</h2>
-              <p className="text-[#94A3B8] mt-1 text-sm">
-                Selecione uma conta na sidebar e clique em Analisar ▶
-              </p>
+               <p className="text-[#94A3B8] mt-1 text-sm">
+                 Ative as contas na sidebar e clique em Atualizar
+               </p>
             </div>
             <PrimaryButton onClick={handleFinish} disabled={saving}>
               Ir para o Dashboard <ChevronRight className="w-4 h-4" />

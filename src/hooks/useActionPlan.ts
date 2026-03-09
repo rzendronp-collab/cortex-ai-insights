@@ -3,13 +3,14 @@ import { useMetaConnection } from './useMetaConnection';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from './useProfile';
 import { useAuth } from './useAuth';
+import { useCampaignActions } from './useCampaignActions';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logError } from '@/lib/errorLogger';
 
 export interface AccountContext {
   margin?: number;
-  objective?: string;    // 'scale' | 'maintain' | 'reduce_costs' | ''
+  objective?: string;
   niche?: string;
   total_budget?: number;
 }
@@ -60,6 +61,7 @@ export function useActionPlan() {
   const { selectedAccountId, selectedPeriod, analysisData, currencySymbol } = useDashboard();
   const { profile } = useProfile();
   const { user } = useAuth();
+  const { toggleCampaignStatus, updateBudget } = useCampaignActions();
 
   const [plan, setPlan] = useState<ActionPlan | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -90,7 +92,6 @@ export function useActionPlan() {
 
     setIsGenerating(true);
     try {
-      // Fetch extra data from Meta API
       const extraData = await Promise.allSettled([
         callMetaApi(`act_${selectedAccountId}/campaigns`, {
           fields: 'id,name,created_time,objective,bid_strategy',
@@ -270,35 +271,59 @@ Formato exato:
     }
   }, [user, selectedAccountId, selectedPeriod, roasTarget, currency, callMetaApi, analysisData]);
 
+  /**
+   * Apply a single action using real Meta API calls via useCampaignActions.
+   */
   const applyAction = useCallback(async (action: ActionItem): Promise<boolean> => {
     if (!user || !selectedAccountId) return false;
 
     try {
       let oldValue = '';
       let newValue = '';
+      let success = false;
 
       switch (action.tipo) {
-        case 'pause':
-          await callMetaApi(action.campaign_id, { status: 'PAUSED', _method: 'POST' });
+        case 'pause': {
+          const result = await toggleCampaignStatus(action.campaign_id, 'ACTIVE');
+          success = result === 'PAUSED';
           oldValue = 'ACTIVE';
           newValue = 'PAUSED';
           break;
-        case 'resume':
-          await callMetaApi(action.campaign_id, { status: 'ACTIVE', _method: 'POST' });
+        }
+        case 'resume': {
+          const result = await toggleCampaignStatus(action.campaign_id, 'PAUSED');
+          success = result === 'ACTIVE';
           oldValue = 'PAUSED';
           newValue = 'ACTIVE';
           break;
+        }
         case 'increase_budget':
-        case 'decrease_budget':
-          await callMetaApi(action.campaign_id, {
-            daily_budget: String(Math.round(action.valor_novo * 100)),
-            _method: 'POST',
-          });
+        case 'decrease_budget': {
+          success = await updateBudget(action.campaign_id, action.valor_novo) || false;
           oldValue = String(action.valor_atual);
           newValue = String(action.valor_novo);
           break;
+        }
       }
 
+      if (!success) {
+        // Log failure
+        await supabase.from('action_history').insert({
+          user_id: user.id,
+          account_id: selectedAccountId,
+          campaign_id: action.campaign_id,
+          campaign_name: action.campaign_name,
+          action_type: action.tipo,
+          old_value: oldValue,
+          new_value: newValue,
+          success: false,
+          error_message: 'Meta API call failed',
+        });
+        toast.error(`❌ Erro ao aplicar ação: ${action.campaign_name}`);
+        return false;
+      }
+
+      // Log success
       await supabase.from('action_history').insert({
         user_id: user.id,
         account_id: selectedAccountId,
@@ -310,6 +335,7 @@ Formato exato:
         success: true,
       });
 
+      toast.success(`✅ Ação aplicada no Meta Ads: ${action.campaign_name}`);
       return true;
     } catch (err: any) {
       await supabase.from('action_history').insert({
@@ -323,9 +349,10 @@ Formato exato:
         success: false,
         error_message: err?.message || 'Erro desconhecido',
       });
+      toast.error(`❌ Erro: ${err?.message || 'Erro desconhecido'}`);
       return false;
     }
-  }, [user, selectedAccountId, callMetaApi]);
+  }, [user, selectedAccountId, toggleCampaignStatus, updateBudget]);
 
   const applyAllActions = useCallback(async (actions: ActionItem[]) => {
     setIsApplying(true);

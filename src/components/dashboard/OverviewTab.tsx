@@ -77,8 +77,15 @@ export default function OverviewTab() {
   const genderData = analysisData?.genderData || (!isConnected ? mockGenderData : []);
   const ageData = analysisData?.ageData || (!isConnected ? mockAgeData : []);
 
-  // Only campaigns with real spend for aggregations
-  const activeCampaigns = campaigns.filter(c => c.spend > 0 && c.status === 'ACTIVE');
+  const normalizeStatus = (s: unknown) => String(s ?? '').trim().toUpperCase();
+
+  // Only campaigns with real spend for aggregations (include paused if they had spend in the period)
+  const activeCampaigns = campaigns.filter(c => c.spend > 0);
+
+  // Plano de Ação: considerar SOMENTE campanhas realmente ativas
+  const actionPlanCampaigns = campaigns.filter(c =>
+    c.spend > 0 && normalizeStatus((c as any).status ?? (c as any).effective_status) === 'ACTIVE'
+  );
 
   const totalSpend = activeCampaigns.reduce((s, c) => s + c.spend, 0);
   const totalRevenue = activeCampaigns.reduce((s, c) => s + c.revenue, 0);
@@ -118,8 +125,8 @@ export default function OverviewTab() {
     { name: 'Vendas', value: totalSales },
   ];
 
-  // Fix #2: Only campaigns with spend > 0 in action plan
-  const actions = activeCampaigns.map(c => {
+  // Plano de Ação: somente campanhas ACTIVE (ignora PAUSED)
+  const actions = actionPlanCampaigns.map(c => {
     const roas = c.roas;
     const rec = roas >= roasTarget * 1.5
       ? { label: '🚀 Escalar', color: 'text-success', bg: 'bg-success/10 border-success/20' }

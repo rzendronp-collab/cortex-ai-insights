@@ -537,7 +537,7 @@ export function useMetaData() {
         try {
           const cachePayload = {
             user_id: user.id,
-            account_id: selectedAccountId,
+            account_id: accountId,
             period: cachePeriodKey,
             data: analysisResult as any,
             updated_at: now,

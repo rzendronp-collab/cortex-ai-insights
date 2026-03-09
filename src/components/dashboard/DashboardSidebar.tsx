@@ -205,107 +205,34 @@ export default function DashboardSidebar() {
           <h3 className="text-[9px] font-semibold text-text-muted uppercase tracking-[1.5px] px-3 mb-2">Canais</h3>
 
           {/* Meta Ads */}
-          <Collapsible open={metaExpanded} onOpenChange={setMetaExpanded}>
-            <CollapsibleTrigger className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg hover:bg-bg-card-hover transition-colors">
-              <div className="w-[6px] h-[6px] rounded-full bg-[#1877F2] flex-shrink-0" />
-              <span className="text-[13px] font-medium text-text-primary flex-1 text-left">Meta Ads</span>
-              {isConnected && !isTokenExpired && (
-                <>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <button className="p-0.5 text-text-muted hover:text-data-red transition-colors" title="Desconectar Meta">
-                        <Unplug className="w-3.5 h-3.5" />
-                      </button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="bg-bg-card border-border-default">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className="text-text-primary">Desconectar Meta?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-text-secondary">
-                          Você precisará reconectar para continuar analisando campanhas.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel className="bg-bg-base border-border-default text-text-secondary hover:bg-bg-card-hover">Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDisconnectMeta} className="bg-data-red text-white hover:opacity-90">Desconectar</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  <Circle className="w-[6px] h-[6px] fill-data-green text-data-green" />
-                </>
-              )}
-              <ChevronRight className={`w-3.5 h-3.5 text-text-muted transition-transform ${metaExpanded ? 'rotate-90' : ''}`} />
-            </CollapsibleTrigger>
-
-            <CollapsibleContent className="mt-1">
-              {isConnected && !isTokenExpired && (
-                <>
-                  {adAccounts.length > 0 && (
-                    <button
-                      onClick={() => setShowInactive(!showInactive)}
-                      className="flex items-center gap-1.5 text-[10px] text-text-muted hover:text-text-primary transition-colors w-full px-4 mb-2"
-                    >
-                      {showInactive ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                      {showInactive ? 'Ocultar inativas' : `Mostrar inativas (${adAccounts.filter(a => !a.is_active).length})`}
+          <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg">
+            <div className="w-[6px] h-[6px] rounded-full bg-[#1877F2] flex-shrink-0" />
+            <span className="text-[13px] font-medium text-text-primary flex-1">Meta Ads</span>
+            {isConnected && !isTokenExpired && (
+              <>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button className="p-0.5 text-text-muted hover:text-data-red transition-colors" title="Desconectar Meta">
+                      <Unplug className="w-3.5 h-3.5" />
                     </button>
-                  )}
-
-                  <ScrollArea className="max-h-[calc(100vh-520px)]">
-                    <div className="space-y-1 px-1">
-                      {Object.entries(accountsByBusiness).map(([bizName, accounts]) => (
-                        <div key={bizName} className="space-y-0.5">
-                          <button
-                            onClick={() => toggleBm(bizName)}
-                            className="flex items-center gap-1.5 w-full text-[10px] text-text-muted hover:text-text-primary px-2 py-1"
-                          >
-                            {isBmExpanded(bizName) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                            <span className="font-medium">{bizName}</span>
-                            <span className="text-text-muted/60">({accounts.length})</span>
-                          </button>
-                          {isBmExpanded(bizName) && (
-                            <div className="space-y-0.5 ml-2">
-                              {accounts.map(account => {
-                                const isSelected = selectedAccountId === account.account_id;
-                                return (
-                                  <div
-                                    key={account.id}
-                                    onClick={() => handleSelectAccount(account.account_id, account.account_name, account.currency)}
-                                    className={`flex items-center gap-2 rounded-lg px-2.5 py-2 cursor-pointer transition-all ${
-                                      isSelected
-                                        ? 'bg-data-blue/10 border-l-2 border-l-data-blue'
-                                        : 'hover:bg-bg-card-hover border-l-2 border-l-transparent'
-                                    }`}
-                                    title={account.account_name || `act_${account.account_id}`}
-                                  >
-                                    <Circle className={`w-1.5 h-1.5 flex-shrink-0 ${account.is_active ? 'fill-data-green text-data-green' : 'fill-text-muted text-text-muted'}`} />
-                                    <span className={`text-[11px] truncate flex-1 ${isSelected ? 'text-data-blue font-medium' : 'text-text-secondary'}`}>
-                                      {account.account_name || `act_${account.account_id}`}
-                                    </span>
-                                    {isSelected && currentRoas > 0 && (
-                                      <span className={`text-[10px] font-bold flex-shrink-0 px-1.5 py-0.5 rounded ${
-                                        currentRoas >= 3 ? 'text-data-green bg-data-green/10' : currentRoas >= 2 ? 'text-data-yellow bg-data-yellow/10' : 'text-data-red bg-data-red/10'
-                                      }`}>
-                                        {currentRoas.toFixed(1)}x
-                                      </span>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-
-                      {filteredAccounts.length === 0 && adAccounts.length > 0 && (
-                        <p className="text-[10px] text-text-muted text-center py-3">
-                          Nenhuma conta ativa
-                        </p>
-                      )}
-                    </div>
-                  </ScrollArea>
-                </>
-              )}
-            </CollapsibleContent>
-          </Collapsible>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="bg-bg-card border-border-default">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-text-primary">Desconectar Meta?</AlertDialogTitle>
+                      <AlertDialogDescription className="text-text-secondary">
+                        Você precisará reconectar para continuar analisando campanhas.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="bg-bg-base border-border-default text-text-secondary hover:bg-bg-card-hover">Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDisconnectMeta} className="bg-data-red text-white hover:opacity-90">Desconectar</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                <Circle className="w-[6px] h-[6px] fill-data-green text-data-green" />
+              </>
+            )}
+          </div>
 
           {/* Google Ads - Coming Soon */}
           <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg opacity-40">

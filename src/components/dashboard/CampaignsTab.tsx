@@ -328,10 +328,10 @@ Responda SOMENTE com o JSON, sem markdown.`;
       </div>
 
       {/* Table */}
-      <div className="bg-card border border-border rounded-lg overflow-x-auto">
+      <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
-            <tr className="border-b border-border bg-muted/50">
+            <tr className="border-b border-[#1E2D4A] bg-[#080B14]">
               {columns.map(col => (
                 <th
                   key={col.key}

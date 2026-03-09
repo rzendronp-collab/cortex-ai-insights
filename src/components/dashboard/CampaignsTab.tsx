@@ -156,6 +156,7 @@ function NotePopover({ campaignId, accountId, note, isSaving, onSave, onDelete }
 
 export default function CampaignsTab() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [adsetExpandedId, setAdsetExpandedId] = useState<string | null>(null);
   
   // Filters
   const [searchQuery, setSearchQuery] = useState('');

@@ -613,15 +613,46 @@ Responda SOMENTE com o JSON, sem markdown.`;
           </div>
         </div>
 
-        {/* Export CSV */}
-        <button
-          onClick={exportCsv}
-          disabled={sortedCampaigns.length === 0}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-border-default rounded-md text-text-secondary hover:text-text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none shrink-0"
-        >
-          <Download className="w-3.5 h-3.5" />
-          CSV
-        </button>
+        {/* Export CSV + Columns */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-border-default rounded-md text-text-secondary hover:text-text-primary transition-colors">
+                <Columns3 className="w-3.5 h-3.5" />
+                Colunas
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="end" className="w-56 p-2 bg-bg-card border-border-default">
+              <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider px-2 mb-1">Colunas visíveis</p>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <SortableContext items={orderedColumns.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                  {orderedColumns.map(col => (
+                    <SortableColumnItem
+                      key={col.id}
+                      id={col.id}
+                      label={col.label}
+                      checked={isVisible(col.id)}
+                      onToggle={() => toggleColumn(col.id)}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+              <div className="border-t border-border-default mt-1 pt-1 px-2">
+                <button onClick={resetToDefault} className="text-[11px] text-text-muted hover:text-text-primary transition-colors w-full text-left py-1">
+                  Resetar padrão
+                </button>
+              </div>
+            </PopoverContent>
+          </Popover>
+          <button
+            onClick={exportCsv}
+            disabled={sortedCampaigns.length === 0}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-border-default rounded-md text-text-secondary hover:text-text-primary transition-colors disabled:opacity-40 disabled:pointer-events-none"
+          >
+            <Download className="w-3.5 h-3.5" />
+            CSV
+          </button>
+        </div>
       </div>
 
       {/* Mobile Card View */}

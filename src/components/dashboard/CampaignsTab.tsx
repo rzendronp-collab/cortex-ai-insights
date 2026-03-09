@@ -407,8 +407,8 @@ Responda SOMENTE com o JSON, sem markdown.`;
                   <React.Fragment key={c.id}>
                     <tr 
                       onClick={() => setExpandedId(expanded ? null : c.id)}
-                      className={`border-b border-[#1C2538] bg-[#0E1420] cursor-pointer transition-colors duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''}`}
-                      style={{ height: 52 }}
+                      className={`border-b border-[#1C2538] bg-[#0E1420] cursor-pointer transition-colors duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''} animate-fade-in opacity-0 [animation-fill-mode:forwards]`}
+                      style={{ height: 52, animationDelay: `${rowIndex * 30}ms` }}
                       onMouseEnter={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(96,165,250,0.04)'; }}
                       onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = ''; }}
                     >

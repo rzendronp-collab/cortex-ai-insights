@@ -216,7 +216,7 @@ export default function CampaignsTab() {
   const { profile } = useProfile();
   const { user } = useAuth();
   const { callMetaApi, isConnected } = useMetaConnection();
-  const { updateCampaignName, syncCacheStatus } = useCampaignActions();
+  const { updateCampaignName, syncCacheStatus, duplicateCampaign } = useCampaignActions();
   const { notes, saving: noteSaving, fetchNotes, saveNote, deleteNote } = useCampaignNotes(user?.id);
   const { activeColumns, orderedColumns, isVisible, toggleColumn, reorderColumns, resetToDefault } = useColumnPreferences();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));

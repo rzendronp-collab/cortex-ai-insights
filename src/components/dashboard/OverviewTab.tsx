@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useProfile } from '@/hooks/useProfile';
 import KPICard from './KPICard';
-import { mockCampaigns, mockDailyData, mockHourlyData, mockGenderData, mockAgeData, mockPlatformData, getRoasColor, formatCurrency, formatNumber } from '@/lib/mockData';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, ReferenceLine, Line, ComposedChart, Legend } from 'recharts';
 import { HourlyBarChart } from './HourlyBarChart';
-import { Inbox, Zap, Loader2 } from 'lucide-react';
+import { mockCampaigns, mockDailyData, mockHourlyData, mockGenderData, mockAgeData, mockPlatformData, getRoasColor, formatCurrency, formatNumber } from '@/lib/mockData';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, ReferenceLine, Line, ComposedChart, Legend, LineChart } from 'recharts';
+import { Inbox, Zap, Loader2, RefreshCw, ArrowUpDown, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // ─── Chart theme constants ───
 const CHART_GRID = '#1A2235';
@@ -43,10 +44,19 @@ const dailyMetricConfig: Record<string, { label: string; color: string; type: 'l
   cpm: { label: 'CPM', color: DATA_RED, type: 'line', yAxisId: 'right' },
 };
 
+const ACCOUNT_COLORS = [DATA_BLUE, DATA_GREEN, DATA_PURPLE, DATA_YELLOW, DATA_RED, '#F472B6', '#38BDF8', '#A3E635'];
+
 export default function OverviewTab() {
   const [visibleMetrics, setVisibleMetrics] = useState<Set<string>>(new Set(['roas', 'spend']));
-  const { analysisData, isStale, selectedAccountId, currencySymbol, setActiveTab, analyzeRef } = useDashboard();
-  const { isConnected, connectMeta } = useMetaConnection();
+  const [chartMetric, setChartMetric] = useState<'roas' | 'spend' | 'revenue' | 'sales'>('roas');
+  const [sortCol, setSortCol] = useState<string>('roas');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const {
+    analysisData, isStale, selectedAccountId, currencySymbol, setActiveTab, analyzeRef,
+    activeAccountIds, consolidatedData, analysisCache, selectedPeriod, dateRange,
+    setSelectedAccountId, setSelectedAccountName, setSelectedAccountCurrency,
+  } = useDashboard();
+  const { isConnected, connectMeta, adAccounts } = useMetaConnection();
   const { analyze, loading } = useMetaData();
   const { profile } = useProfile();
   const roasTarget = profile?.roas_target || 3.0;
@@ -61,6 +71,45 @@ export default function OverviewTab() {
     });
   };
 
+  // Build per-account summaries for the accounts table
+  const accountSummaries = useMemo(() => {
+    return activeAccountIds.map(id => {
+      const key = dateRange
+        ? `${id}__custom_${dateRange.from}_${dateRange.to}`
+        : `${id}__${selectedPeriod}`;
+      const cached = analysisCache[key];
+      const account = adAccounts.find(a => a.account_id === id);
+      const data = cached?.data;
+      if (!data) {
+        return {
+          id,
+          name: account?.account_name || `act_${id}`,
+          roas: 0, spend: 0, revenue: 0, sales: 0, ctr: 0,
+          hasData: false,
+        };
+      }
+      const campaigns = data.campaigns.filter(c => c.spend > 0);
+      const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
+      const totalRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
+      const totalSales = campaigns.reduce((s, c) => s + c.purchases, 0);
+      const avgCtr = campaigns.length > 0 ? campaigns.reduce((s, c) => s + c.ctr, 0) / campaigns.length : 0;
+      return {
+        id,
+        name: account?.account_name || `act_${id}`,
+        roas: totalSpend > 0 ? totalRevenue / totalSpend : 0,
+        spend: totalSpend,
+        revenue: totalRevenue,
+        sales: totalSales,
+        ctr: avgCtr,
+        hasData: true,
+      };
+    });
+  }, [activeAccountIds, analysisCache, selectedPeriod, dateRange, adAccounts]);
+
+  // Use consolidated data or single-account data
+  const effectiveData = consolidatedData || analysisData;
+  const hasMultiAccount = activeAccountIds.length > 1 && consolidatedData;
+
   // Stale data warning
   const staleWarning = isStale && selectedAccountId ? (
     <div className="mb-3 flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-sm text-amber-400">
@@ -69,19 +118,19 @@ export default function OverviewTab() {
     </div>
   ) : null;
 
-  // No account selected empty state
-  if (!selectedAccountId) {
+  // No active accounts and no selected account
+  if (activeAccountIds.length === 0 && !selectedAccountId) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
         <div className="text-[80px] leading-none mb-6 opacity-[0.15] select-none">📊</div>
-        <h3 className="text-lg font-semibold text-text-primary mb-2">Selecione uma conta</h3>
+        <h3 className="text-lg font-semibold text-text-primary mb-2">Selecione contas na sidebar</h3>
         <p className="text-sm text-text-muted mb-6 max-w-xs">
-          Escolha uma conta no header para ver os dados
+          Ative as contas de anúncio na sidebar para ver o resumo consolidado
         </p>
         {!isConnected && (
           <Button
             onClick={() => connectMeta()}
-            className="h-11 px-8 text-sm bg-gradient-to-r from-[#3B82F6] to-[#2563EB] text-white hover:opacity-90 rounded-lg gap-2 font-semibold"
+            className="h-11 px-8 text-sm bg-gradient-to-r from-[hsl(var(--data-blue))] to-[#2563EB] text-white hover:opacity-90 rounded-lg gap-2 font-semibold"
           >
             Conectar Meta
           </Button>
@@ -90,41 +139,41 @@ export default function OverviewTab() {
     );
   }
 
-  // Account selected but loading/no data
-  if (selectedAccountId && !analysisData && isConnected) {
+  // Has accounts but no data yet
+  if (!effectiveData && isConnected) {
     if (loading) {
       return <OverviewSkeleton />;
     }
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
         <div className="w-20 h-20 rounded-2xl bg-data-blue/10 flex items-center justify-center mb-6">
-          <Zap className="w-10 h-10 text-data-blue" />
+          <RefreshCw className="w-10 h-10 text-data-blue" />
         </div>
-        <h3 className="text-base font-semibold text-text-primary mb-2">Pronto para analisar</h3>
-        <p className="text-sm text-text-secondary mb-6 max-w-xs">Selecione um período e clique em Analisar para carregar os dados desta conta.</p>
+        <h3 className="text-base font-semibold text-text-primary mb-2">Pronto para atualizar</h3>
+        <p className="text-sm text-text-secondary mb-6 max-w-xs">Selecione um período e clique em Atualizar para carregar os dados.</p>
         <Button
           onClick={() => analyze()}
           disabled={loading}
           className="h-11 px-8 text-sm gradient-blue text-white gap-2"
         >
-          {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Analisando...</> : <><Zap className="w-4 h-4" />Analisar Agora</>}
+          {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Atualizando...</> : <><RefreshCw className="w-4 h-4" />Atualizar</>}
         </Button>
       </div>
     );
   }
 
-  // Use real or mock data (mock only when not connected)
-  const campaigns = analysisData?.campaigns || (!isConnected ? mockCampaigns.map(c => ({
+  // Use effective data
+  const campaigns = effectiveData?.campaigns || (!isConnected ? mockCampaigns.map(c => ({
     ...c, purchases: c.sales, cpv: c.spend / c.sales,
   })) : []);
-  const campaignsPrev = analysisData?.campaignsPrev || [];
-  const dailyData = analysisData?.dailyData || (!isConnected ? mockDailyData : []);
-  const hourlyData = analysisData?.hourlyData || (!isConnected ? mockHourlyData : []);
-  const platformData = analysisData?.platformData || (!isConnected ? mockPlatformData : []);
-  const genderData = analysisData?.genderData || (!isConnected ? mockGenderData : []);
-  const ageData = analysisData?.ageData || (!isConnected ? mockAgeData : []);
-  const demoByGender = analysisData?.demoByGender || [];
-  const demoByAge = analysisData?.demoByAge || [];
+  const campaignsPrev = effectiveData?.campaignsPrev || [];
+  const dailyData = effectiveData?.dailyData || (!isConnected ? mockDailyData : []);
+  const hourlyData = effectiveData?.hourlyData || (!isConnected ? mockHourlyData : []);
+  const platformData = effectiveData?.platformData || (!isConnected ? mockPlatformData : []);
+  const genderData = effectiveData?.genderData || (!isConnected ? mockGenderData : []);
+  const ageData = effectiveData?.ageData || (!isConnected ? mockAgeData : []);
+  const demoByGender = effectiveData?.demoByGender || [];
+  const demoByAge = effectiveData?.demoByAge || [];
 
   const normalizeStatus = (s: unknown) => String(s ?? '').trim().toUpperCase();
 
@@ -150,9 +199,12 @@ export default function OverviewTab() {
 
   const calcDelta = (curr: number, prev: number): number | undefined => {
     if (!prev || prev === 0) return undefined;
-    const d = Math.round(((curr - prev) / Math.abs(prev)) * 100);
-    return d;
+    return Math.round(((curr - prev) / Math.abs(prev)) * 100);
   };
+
+  // ROAS semaphore
+  const roasSemaphore = avgRoas >= roasTarget ? '🟢' : avgRoas >= roasTarget * 0.7 ? '🟡' : '🔴';
+  const roasValueClass = avgRoas >= roasTarget ? 'text-data-green' : 'text-data-red';
 
   const top10Campaigns = [...activeCampaigns].sort((a, b) => b.spend - a.spend).slice(0, 10);
   const roasCampaignData = top10Campaigns.map(c => ({
@@ -169,7 +221,6 @@ export default function OverviewTab() {
   ];
 
   const actions = (() => {
-    // Active campaigns with spend > 0 get normal recommendations
     const withSpend = actionPlanCampaigns.map(c => {
       const roas = c.roas;
       const rec = roas >= roasTarget * 1.5
@@ -181,7 +232,6 @@ export default function OverviewTab() {
             : { label: '⏸ Pausar', color: 'text-data-red', bg: 'bg-data-red/10 border-data-red/20' };
       return { ...c, recommendation: rec, purchases: 'purchases' in c ? c.purchases : (c as any).sales };
     });
-    // Active campaigns with zero spend get a "no spend" warning
     const zeroSpendActive = campaigns
       .filter(c => c.spend === 0 && normalizeStatus((c as any).status ?? (c as any).effective_status) === 'ACTIVE')
       .map(c => ({
@@ -197,7 +247,7 @@ export default function OverviewTab() {
 
   const activeMetrics = visibleMetrics.size > 0 ? Array.from(visibleMetrics) : Object.keys(dailyMetricConfig);
 
-  if (analysisData && campaigns.length === 0) {
+  if (effectiveData && campaigns.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <Inbox className="w-12 h-12 text-text-muted mb-4" />
@@ -207,7 +257,6 @@ export default function OverviewTab() {
     );
   }
 
-  // Custom ROAS tooltip
   const RoasTooltip = ({ active, payload }: any) => {
     if (!active || !payload?.length) return null;
     const data = payload[0].payload;
@@ -219,27 +268,129 @@ export default function OverviewTab() {
     );
   };
 
-  // Determine ROAS hero color class
-  const roasValueClass = avgRoas >= roasTarget ? 'text-data-green' : 'text-data-red';
+  // Sorted account summaries
+  const sortedAccounts = [...accountSummaries].sort((a, b) => {
+    const aVal = (a as any)[sortCol] ?? 0;
+    const bVal = (b as any)[sortCol] ?? 0;
+    return sortDir === 'desc' ? bVal - aVal : aVal - bVal;
+  });
+
+  const handleSort = (col: string) => {
+    if (sortCol === col) {
+      setSortDir(prev => prev === 'desc' ? 'asc' : 'desc');
+    } else {
+      setSortCol(col);
+      setSortDir('desc');
+    }
+  };
+
+  const SortIcon = ({ col }: { col: string }) => {
+    if (sortCol !== col) return <ArrowUpDown className="w-3 h-3 text-text-muted" />;
+    return sortDir === 'desc' ? <ChevronDown className="w-3 h-3 text-data-blue" /> : <ChevronUp className="w-3 h-3 text-data-blue" />;
+  };
+
+  const handleAccountClick = (accountId: string) => {
+    const account = adAccounts.find(a => a.account_id === accountId);
+    if (account) {
+      setSelectedAccountId(account.account_id);
+      setSelectedAccountName(account.account_name);
+      setSelectedAccountCurrency(account.currency || null);
+      setActiveTab('campaigns');
+    }
+  };
 
   return (
     <div className="space-y-4">
       {staleWarning}
+
       {/* ─── KPIs ─── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: "ROAS", value: `${avgRoas.toFixed(1)}x`, subtitle: "Retorno sobre investimento", delta: calcDelta(avgRoas, prevRoas), valueClassName: roasValueClass, isHero: true },
-          { label: "Investido", value: formatCurrency(totalSpend, currency), subtitle: "Período selecionado", delta: calcDelta(totalSpend, prevSpend) },
-          { label: "Receita", value: formatCurrency(totalRevenue, currency), subtitle: "Total gerado", delta: calcDelta(totalRevenue, prevRevenue), valueClassName: "text-data-green" },
-          { label: "Vendas", value: totalSales.toString(), subtitle: "Conversões", delta: calcDelta(totalSales, prevSales) },
+          { label: `ROAS Médio ${roasSemaphore}`, value: `${avgRoas.toFixed(1)}x`, subtitle: "Retorno sobre investimento", delta: calcDelta(avgRoas, prevRoas), valueClassName: roasValueClass, isHero: true },
+          { label: "Gasto Total", value: formatCurrency(totalSpend, currency), subtitle: "Período selecionado", delta: calcDelta(totalSpend, prevSpend) },
+          { label: "Receita Total", value: formatCurrency(totalRevenue, currency), subtitle: "Total gerado", delta: calcDelta(totalRevenue, prevRevenue), valueClassName: "text-data-green" },
+          { label: "Vendas Total", value: totalSales.toString(), subtitle: "Conversões", delta: calcDelta(totalSales, prevSales) },
           { label: "CTR Médio", value: `${avgCtr.toFixed(1)}%`, subtitle: "Taxa de cliques", delta: calcDelta(avgCtr, prevCtr) },
-          { label: "Custo/Venda", value: `${currency} ${costPerSale.toFixed(2)}`, subtitle: "CPV médio", delta: calcDelta(costPerSale, prevCpv), valueClassName: "text-data-yellow" },
+          { label: "CPV Médio", value: `${currency} ${costPerSale.toFixed(2)}`, subtitle: "Custo por venda", delta: calcDelta(costPerSale, prevCpv), valueClassName: "text-data-yellow" },
         ].map((kpi, i) => (
           <div key={kpi.label} style={{ animationDelay: `${i * 50}ms` }} className="animate-fade-in opacity-0 [animation-fill-mode:forwards]">
             <KPICard {...kpi} />
           </div>
         ))}
       </div>
+
+      {/* ─── Accounts Table (multi-account) ─── */}
+      {accountSummaries.length > 0 && (
+        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
+          <h3 className="text-xs font-semibold text-text-primary mb-4">
+            📊 Contas Ativas
+            <span className="text-text-muted font-normal ml-2">({accountSummaries.filter(a => a.hasData).length} com dados)</span>
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-[#2A3850]">
+                  <th className="text-left py-2 text-text-muted font-semibold">Conta</th>
+                  {[
+                    { key: 'roas', label: 'ROAS' },
+                    { key: 'spend', label: 'Gasto' },
+                    { key: 'revenue', label: 'Receita' },
+                    { key: 'sales', label: 'Vendas' },
+                    { key: 'ctr', label: 'CTR' },
+                  ].map(col => (
+                    <th
+                      key={col.key}
+                      onClick={() => handleSort(col.key)}
+                      className="text-right py-2 text-text-muted font-semibold cursor-pointer hover:text-text-primary transition-colors"
+                    >
+                      <span className="inline-flex items-center gap-1">
+                        {col.label}
+                        <SortIcon col={col.key} />
+                      </span>
+                    </th>
+                  ))}
+                  <th className="text-right py-2 text-text-muted font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedAccounts.map(a => {
+                  const isAbove = a.roas >= roasTarget;
+                  const bgClass = a.hasData
+                    ? isAbove
+                      ? 'bg-data-green/[0.04] hover:bg-data-green/[0.08]'
+                      : 'bg-data-red/[0.04] hover:bg-data-red/[0.08]'
+                    : 'hover:bg-bg-card-hover';
+                  return (
+                    <tr
+                      key={a.id}
+                      onClick={() => handleAccountClick(a.id)}
+                      className={`border-b border-[#2A3850]/50 cursor-pointer transition-colors ${bgClass}`}
+                    >
+                      <td className="py-2.5 text-text-primary font-medium truncate max-w-[200px]">{a.name}</td>
+                      <td className={`py-2.5 text-right font-bold ${a.hasData ? getRoasColor(a.roas, roasTarget) : 'text-text-muted'}`}>
+                        {a.hasData ? `${a.roas.toFixed(1)}x` : '—'}
+                      </td>
+                      <td className="py-2.5 text-right text-text-primary">{a.hasData ? formatCurrency(a.spend, currency) : '—'}</td>
+                      <td className="py-2.5 text-right text-data-green">{a.hasData ? formatCurrency(a.revenue, currency) : '—'}</td>
+                      <td className="py-2.5 text-right text-text-primary">{a.hasData ? a.sales : '—'}</td>
+                      <td className="py-2.5 text-right text-text-primary">{a.hasData ? `${a.ctr.toFixed(1)}%` : '—'}</td>
+                      <td className="py-2.5 text-right">
+                        {a.hasData ? (
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${isAbove ? 'bg-data-green/10 text-data-green' : 'bg-data-red/10 text-data-red'}`}>
+                            {isAbove ? '🟢 Acima' : '🔴 Abaixo'}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-text-muted">⚪ Sem dados</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* ─── Charts Row 1 ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
@@ -532,7 +683,7 @@ export default function OverviewTab() {
         )}
       </div>
 
-      {/* ─── Gasto vs Receita ─── */}
+      {/* ─── Gasto vs Receita Pie ─── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
           <h3 className="text-xs font-semibold text-text-primary mb-4">Gasto vs Receita</h3>
@@ -586,7 +737,6 @@ export default function OverviewTab() {
 function OverviewSkeleton() {
   return (
     <div className="space-y-4 animate-fade-in">
-      {/* KPI skeletons */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
@@ -601,7 +751,6 @@ function OverviewSkeleton() {
         ))}
       </div>
 
-      {/* Chart skeletons row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <div
@@ -622,7 +771,6 @@ function OverviewSkeleton() {
         ))}
       </div>
 
-      {/* Large chart skeleton */}
       <div className="bg-[#1C2538] border border-[#2A3850] rounded-xl p-5 animate-pulse" style={{ minHeight: 240 }}>
         <div className="h-3 w-28 bg-[#2A3850] rounded mb-6" />
         <div className="flex items-end gap-2 h-[180px] pb-4">

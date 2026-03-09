@@ -500,7 +500,7 @@ export default function CampaignsTab() {
     window.open(`https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${acctId}&selected_campaign_ids=${campaignId}`, '_blank');
   }, [selectedAccountId]);
 
-
+  const generateAiAnalysis = useCallback(async (campaign: ProcessedCampaign) => {
     setAiLoadingIds(prev => new Set(prev).add(campaign.id));
     try {
       const prev = prevMap[campaign.id];

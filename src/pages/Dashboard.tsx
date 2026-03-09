@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { DashboardProvider, useDashboard } from '@/context/DashboardContext';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -8,9 +9,32 @@ import RulesTab from '@/components/dashboard/RulesTab';
 import ConsolidatedTab from '@/components/dashboard/ConsolidatedTab';
 import ChatTab from '@/components/dashboard/ChatTab';
 import ReportTab from '@/components/dashboard/ReportTab';
+import OnboardingModal from '@/components/dashboard/OnboardingModal';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useMetaConnection } from '@/hooks/useMetaConnection';
 
 function DashboardContent() {
   const { activeTab } = useDashboard();
+  const { user } = useAuth();
+  const { connectMeta } = useMetaConnection();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('profiles')
+      .select('onboarding_completed')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (data && !data.onboarding_completed) {
+          setShowOnboarding(true);
+        }
+        setOnboardingChecked(true);
+      });
+  }, [user]);
 
   const renderTab = () => {
     switch (activeTab) {

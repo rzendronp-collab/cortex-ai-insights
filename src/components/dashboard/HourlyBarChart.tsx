@@ -137,9 +137,9 @@ export function HourlyBarChart({ data, emptyMessage, currency = '€' }: HourlyB
 
       {/* Legend */}
       <div className="flex items-center justify-center gap-4 pt-1">
-        <span className="flex items-center gap-1 text-[9px] text-text-muted">🔥 Pico</span>
-        <span className="flex items-center gap-1 text-[9px] text-text-muted">💰 Alta performance</span>
-        <span className="flex items-center gap-1 text-[9px] text-text-muted">❄️ Menor atividade</span>
+        <span className="flex items-center gap-1 text-[9px] text-muted-foreground">🔥 Pico de gasto</span>
+        <span className="flex items-center gap-1 text-[9px] text-muted-foreground">💰 Com vendas</span>
+        <span className="flex items-center gap-1 text-[9px] text-muted-foreground">❄️ Baixo investimento</span>
       </div>
     </div>
   );

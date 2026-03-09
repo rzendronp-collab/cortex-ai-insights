@@ -12,7 +12,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Validate JWT
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -37,7 +36,6 @@ Deno.serve(async (req) => {
 
     const userId = user.id;
 
-    // Parse request
     const { path, params, method: reqMethod } = await req.json();
     if (!path) {
       return new Response(JSON.stringify({ error: "path is required" }), {
@@ -46,7 +44,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get access token from meta_connections
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -68,7 +65,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check token expiry
     if (connection.token_expires_at) {
       const expiresAt = new Date(connection.token_expires_at);
       if (expiresAt < new Date()) {
@@ -83,37 +79,40 @@ Deno.serve(async (req) => {
     }
 
     const graphMethod = (reqMethod || 'GET').toUpperCase();
-    console.log(`[meta-proxy] method=${graphMethod} path=${path} params=`, JSON.stringify(params || {}));
+    const systemToken = Deno.env.get('META_SYSTEM_TOKEN');
+
+    console.log(`[meta-proxy] method=${graphMethod} path=${path} systemToken=${systemToken ? 'present' : 'missing'}`);
+
     let graphRes: Response;
 
     if (graphMethod === 'POST') {
-      // POST: send params as x-www-form-urlencoded body with access_token
+      // POST: use System Token for writes (full access, never expires)
+      const writeToken = systemToken || connection.access_token;
       const graphUrl = `https://graph.facebook.com/v19.0/${path}`;
       const formData = new URLSearchParams();
       const p = params || {};
       for (const [key, value] of Object.entries(p)) {
         formData.append(key, String(value));
       }
-      formData.append('access_token', connection.access_token);
-      console.log(`[meta-proxy] POST ${graphUrl} body=${formData.toString().replace(/access_token=[^&]+/, 'access_token=***')}`);
+      formData.append('access_token', writeToken);
+      console.log(`[meta-proxy] POST ${graphUrl} using ${systemToken ? 'SYSTEM_TOKEN' : 'user_token'}`);
       graphRes = await fetch(graphUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formData.toString(),
       });
     } else {
-      // GET: send params as query string
+      // GET: use user OAuth token for reads
       const p = params || {};
       const parts: string[] = [];
       for (const [key, value] of Object.entries(p)) {
         parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
       }
-      parts.push(`access_token=${encodeURIComponent(connection.access_token)}`);
+      parts.append(`access_token=${encodeURIComponent(connection.access_token)}`);
       const graphUrl = `https://graph.facebook.com/v19.0/${path}?${parts.join('&')}`;
       graphRes = await fetch(graphUrl);
     }
 
-    // Call Meta Graph API
     const graphData = await graphRes.json();
     console.log(`[meta-proxy] Graph response status=${graphRes.status}`, JSON.stringify(graphData).substring(0, 500));
 

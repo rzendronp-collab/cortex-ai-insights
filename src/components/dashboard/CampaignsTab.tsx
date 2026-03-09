@@ -563,7 +563,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                 </div>
 
                                 {/* BLOCO 2 — ANÁLISE IA */}
-                                <div className="bg-card border border-border rounded-lg p-4">
+                                <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4">
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
                                       <Sparkles className="w-3.5 h-3.5 text-secondary" />

@@ -166,7 +166,7 @@ export function useCampaignActions() {
     } finally {
       setLoading(false);
     }
-  }, [isConnected, selectedAccountId, callMetaApi, syncCacheStatus, invalidateCache]);
+  }, [isConnected, selectedAccountId, callMetaApi, syncCacheStatus, invalidateCache, triggerReanalyze]);
 
   // Feature 4: Duplicate campaign
   const duplicateCampaign = useCallback(async (campaignId: string, campaignName: string, newName: string, keepActive: boolean) => {

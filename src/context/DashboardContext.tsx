@@ -66,6 +66,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setActiveAccountIds(prev => {
       const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
       localStorage.setItem('cortexads_active_accounts', JSON.stringify(next));
+      // Auto-sync selectedAccountId to first active account
+      if (next.length > 0) {
+        setSelectedAccountIdRaw(next[0]);
+      } else {
+        setSelectedAccountIdRaw(null);
+      }
       return next;
     });
   }, []);

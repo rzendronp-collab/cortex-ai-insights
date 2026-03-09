@@ -28,16 +28,25 @@ interface DashboardHeaderProps {
 export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps) {
   const {
     selectedPeriod, setSelectedPeriod,
-    selectedAccountId,
+    selectedAccountId, setSelectedAccountId,
     dateRange, setDateRange,
     analysisData, isFromCache, cacheTimestamp, currencySymbol,
-    activeTab,
+    activeTab, activeAccountIds,
   } = useDashboard();
   const { isTokenExpired, isTokenExpiringSoon, daysUntilExpiry, connectMeta, adAccounts } = useMetaConnection();
   const { analyze, loading, roasTarget } = useMetaData();
   const isMobile = useIsMobile();
 
   const [isStale, setIsStale] = useState(false);
+
+  const handleAtualizar = useCallback(() => {
+    if (!selectedAccountId && activeAccountIds.length > 0) {
+      setSelectedAccountId(activeAccountIds[0]);
+      setTimeout(() => analyze(), 100);
+    } else {
+      analyze();
+    }
+  }, [selectedAccountId, activeAccountIds, setSelectedAccountId, analyze]);
 
   const checkStale = useCallback(() => {
     if (!analysisData?.lastUpdated) { setIsStale(false); return; }
@@ -167,7 +176,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
             <div className="w-px h-5 bg-border-default" />
             {isStale && (
               <button
-                onClick={() => analyze()}
+                onClick={handleAtualizar}
                 className="bg-data-yellow/10 border border-data-yellow/30 text-data-yellow text-[10px] px-2 py-0.5 rounded-full hover:bg-data-yellow/20 transition-colors"
               >
                 ⚠ Dados desatualizados
@@ -175,8 +184,8 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
             )}
             <button
               className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold text-white rounded-lg gradient-blue transition-all hover:opacity-90 hover:-translate-y-px disabled:opacity-50 disabled:pointer-events-none"
-              onClick={() => analyze()}
-              disabled={loading || !selectedAccountId}
+              onClick={handleAtualizar}
+              disabled={loading || (activeAccountIds.length === 0 && !selectedAccountId)}
             >
               {loading ? (
                 <><Loader2 className="w-3.5 h-3.5 animate-spin" />Atualizando...</>
@@ -193,8 +202,8 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
             <AlertsPanel />
             <button
               className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold text-white rounded-lg gradient-blue transition-all disabled:opacity-50 disabled:pointer-events-none"
-              onClick={() => analyze()}
-              disabled={loading || !selectedAccountId}
+              onClick={handleAtualizar}
+              disabled={loading || (activeAccountIds.length === 0 && !selectedAccountId)}
             >
               {loading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

@@ -47,7 +47,7 @@ function Sparkline({ data, color = 'hsl(var(--primary))' }: { data: number[]; co
 }
 
 
-type SortColumn = 'status' | 'name' | 'spend' | 'revenue' | 'profit' | 'roas' | 'purchases' | 'cpa' | 'ctr' | 'cpm' | 'impressions' | 'clicks';
+type SortColumn = 'status' | 'name' | 'spend' | 'budget' | 'revenue' | 'profit' | 'roas' | 'purchases' | 'cpa' | 'ctr' | 'cpm' | 'impressions' | 'clicks';
 
 export default function CampaignsTab() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -73,6 +73,10 @@ export default function CampaignsTab() {
   const [budgetDialog, setBudgetDialog] = useState<{ id: string; name: string; currentSpend: number } | null>(null);
   const [budgetValue, setBudgetValue] = useState('');
   const [budgetLoading, setBudgetLoading] = useState(false);
+  
+  // Budget cache: campaignId -> daily budget in display currency (already /100)
+  const [budgetCache, setBudgetCache] = useState<Record<string, number | null>>({});
+  const [budgetFetching, setBudgetFetching] = useState<Set<string>>(new Set());
 
   const { analysisData, selectedAccountId } = useDashboard();
   const { profile } = useProfile();
@@ -124,6 +128,7 @@ export default function CampaignsTab() {
         case 'status': valA = effStatusA === 'ACTIVE' ? 1 : 0; valB = effStatusB === 'ACTIVE' ? 1 : 0; break;
         case 'name': valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); break;
         case 'spend': valA = a.spend; valB = b.spend; break;
+        case 'budget': valA = budgetCache[a.id] ?? 0; valB = budgetCache[b.id] ?? 0; break;
         case 'revenue': valA = a.revenue; valB = b.revenue; break;
         case 'profit': valA = a.revenue - a.spend; valB = b.revenue - b.spend; break;
         case 'roas': valA = a.roas; valB = b.roas; break;
@@ -226,6 +231,29 @@ Responda SOMENTE com o JSON, sem markdown.`;
     }
   }, [prevMap, roasTarget, currency, topHours]);
 
+  const fetchBudget = useCallback(async (campaignId: string) => {
+    if (budgetCache[campaignId] !== undefined || budgetFetching.has(campaignId)) return;
+    setBudgetFetching(prev => new Set(prev).add(campaignId));
+    try {
+      const res = await callMetaApi(`${campaignId}/adsets`, {
+        fields: 'id,daily_budget,lifetime_budget',
+      });
+      const adsets = res?.data || [];
+      const withBudget = adsets.find((a: any) => a.daily_budget);
+      if (withBudget) {
+        setBudgetCache(prev => ({ ...prev, [campaignId]: parseInt(withBudget.daily_budget, 10) / 100 }));
+      } else {
+        const campRes = await callMetaApi(campaignId, { fields: 'daily_budget,lifetime_budget' });
+        const db = campRes?.daily_budget;
+        setBudgetCache(prev => ({ ...prev, [campaignId]: db ? parseInt(db, 10) / 100 : null }));
+      }
+    } catch {
+      setBudgetCache(prev => ({ ...prev, [campaignId]: null }));
+    } finally {
+      setBudgetFetching(prev => { const n = new Set(prev); n.delete(campaignId); return n; });
+    }
+  }, [budgetCache, budgetFetching, callMetaApi]);
+
   if (analysisData && rawCampaigns.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -247,6 +275,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
     { key: 'status', label: 'Status', align: 'left' },
     { key: 'name', label: 'Campanha', align: 'left' },
     { key: 'spend', label: 'Gastos', align: 'right' },
+    { key: 'budget', label: 'Orçamento', align: 'right' },
     { key: 'revenue', label: 'Faturamento', align: 'right' },
     { key: 'profit', label: 'Lucro', align: 'right' },
     { key: 'roas', label: 'ROAS', align: 'right' },
@@ -321,7 +350,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
           <tbody>
             {sortedCampaigns.length === 0 ? (
               <tr>
-                <td colSpan={13} className="text-center py-8 text-xs text-muted-foreground">
+                <td colSpan={14} className="text-center py-8 text-xs text-muted-foreground">
                   Nenhuma campanha encontrada com os filtros atuais.
                 </td>
               </tr>
@@ -405,17 +434,36 @@ Responda SOMENTE com o JSON, sem markdown.`;
                           </Tooltip>
                         </TooltipProvider>
                       </td>
-                      <td className="px-3 py-3 text-right group/spend" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1">
-                          <p className="text-xs text-foreground">{formatCurrency(c.spend, currency)}</p>
-                          <Pencil
-                            className="w-3 h-3 text-muted-foreground/0 group-hover/spend:text-muted-foreground cursor-pointer hover:text-primary transition-all"
-                            onClick={() => {
-                              setBudgetDialog({ id: c.id, name: c.name, currentSpend: c.spend });
-                              setBudgetValue('');
-                            }}
-                          />
-                        </div>
+                      <td className="px-3 py-3 text-right">
+                        <p className="text-xs text-foreground">{formatCurrency(c.spend, currency)}</p>
+                      </td>
+                      <td className="px-3 py-3 text-right" onClick={e => e.stopPropagation()}>
+                        {(() => {
+                          // Lazy fetch budget
+                          if (budgetCache[c.id] === undefined && !budgetFetching.has(c.id)) {
+                            fetchBudget(c.id);
+                          }
+                          const bVal = budgetCache[c.id];
+                          const isFetching = budgetFetching.has(c.id);
+                          return (
+                            <div className="flex items-center justify-end gap-1 group/budget">
+                              {isFetching ? (
+                                <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                              ) : bVal != null ? (
+                                <p className="text-xs text-foreground">{formatCurrency(bVal, currency)}</p>
+                              ) : (
+                                <p className="text-xs text-muted-foreground">—</p>
+                              )}
+                              <Pencil
+                                className="w-3 h-3 text-muted-foreground/0 group-hover/budget:text-muted-foreground cursor-pointer hover:text-primary transition-all"
+                                onClick={() => {
+                                  setBudgetDialog({ id: c.id, name: c.name, currentSpend: bVal || 0 });
+                                  setBudgetValue('');
+                                }}
+                              />
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-3 py-3 text-right">
                         <p className="text-xs text-foreground">{formatCurrency(c.revenue, currency)}</p>
@@ -454,7 +502,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     {/* EXPANDED CONTENT */}
                     {expanded && (
                       <tr className="bg-muted/5 border-b border-border">
-                        <td colSpan={13} className="p-0">
+                        <td colSpan={14} className="p-0">
                           <div className="p-4 border-l-2 border-l-primary/50 animate-fade-up">
                             {aiLoading ? (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

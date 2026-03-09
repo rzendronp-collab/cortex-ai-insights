@@ -571,7 +571,10 @@ Responda SOMENTE com o JSON, sem markdown.`;
   }, [budgetCache, budgetFetching, callMetaApi]);
 
   // Reset page when filters change (must be before early returns)
-  React.useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, activeTodayFilter, roasFilter]);
+  React.useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, activeTodayFilter, roasFilter, countryFilter]);
+
+  // Reset country filter when account changes
+  React.useEffect(() => { setCountryFilter('all'); }, [selectedAccountId]);
 
   // Pagination logic (must be before early returns for hooks)
   const totalPages = Math.ceil(sortedCampaigns.length / PAGE_SIZE);

@@ -2,37 +2,50 @@ import { Flame, Snowflake } from 'lucide-react';
 
 interface HourlyBarChartProps {
   data: Array<{ hour: string; spend: number; [key: string]: any }>;
+  emptyMessage?: string;
 }
 
 /**
  * Parse any hour format to a number 0-23.
- * Supports: "14-15", "14:00", "14h", "14", etc.
+ * Supports Meta API format: "14-15", "14:00", "14h", "14", etc.
  */
 function parseHourToNumber(hour: string): number {
-  // "14-15" → take first part
-  const cleaned = String(hour).split('-')[0].split(':')[0].replace(/[^0-9]/g, '');
-  return parseInt(cleaned, 10) || 0;
+  const str = String(hour || '');
+  // "14-15" → take first part "14"
+  // "14:00" → take first part "14"  
+  // "14h" → remove non-digits
+  const cleaned = str.split('-')[0].split(':')[0].replace(/[^0-9]/g, '');
+  const num = parseInt(cleaned, 10);
+  return isNaN(num) ? -1 : num;
 }
 
-export function HourlyBarChart({ data }: HourlyBarChartProps) {
+export function HourlyBarChart({ data, emptyMessage }: HourlyBarChartProps) {
   // Build a map from hour number → spend
   const hourMap = new Map<number, number>();
-  data.forEach(d => {
-    const h = parseHourToNumber(d.hour);
-    hourMap.set(h, (hourMap.get(h) || 0) + (d.spend || 0));
-  });
+  
+  if (data && data.length > 0) {
+    data.forEach(d => {
+      const h = parseHourToNumber(d.hour);
+      if (h >= 0 && h <= 23) {
+        hourMap.set(h, (hourMap.get(h) || 0) + (d.spend || 0));
+      }
+    });
+  }
 
   const hasAnyData = Array.from(hourMap.values()).some(v => v > 0);
 
-  if (!hasAnyData && data.length === 0) {
+  // Show empty state message
+  if (!hasAnyData) {
     return (
       <div className="h-[150px] flex items-center justify-center">
-        <p className="text-[11px] text-muted-foreground">Dados horários não disponíveis para este período</p>
+        <p className="text-[11px] text-muted-foreground text-center px-4">
+          {emptyMessage || 'Dados horários não disponíveis para este período'}
+        </p>
       </div>
     );
   }
 
-  // Ensure all 24 hours
+  // Build full 24-hour array
   const fullHourlyData = Array.from({ length: 24 }, (_, i) => ({
     hour: i,
     spend: hourMap.get(i) || 0,
@@ -44,11 +57,11 @@ export function HourlyBarChart({ data }: HourlyBarChartProps) {
   const minSpend = posSpends.length > 0 ? Math.min(...posSpends) : 0;
   const threshold60 = maxSpend * 0.6;
 
-  const getBarStyle = (spend: number) => {
+  const getBarStyle = (spend: number, isMax: boolean, isMin: boolean) => {
     if (spend <= 0) {
       return { color: 'bg-muted/40', heightPx: 6, emoji: null };
     }
-    if (spend >= maxSpend && maxSpend > 0) {
+    if (isMax) {
       return {
         color: 'bg-success brightness-125',
         heightPx: null,
@@ -58,7 +71,7 @@ export function HourlyBarChart({ data }: HourlyBarChartProps) {
     if (spend >= threshold60) {
       return { color: 'bg-success', heightPx: null, emoji: null };
     }
-    if (spend <= minSpend && minSpend > 0) {
+    if (isMin) {
       return {
         color: 'bg-destructive',
         heightPx: null,
@@ -71,7 +84,9 @@ export function HourlyBarChart({ data }: HourlyBarChartProps) {
   return (
     <div className="w-full h-[150px] flex items-end justify-between gap-[2px] pt-4">
       {fullHourlyData.map((item) => {
-        const style = getBarStyle(item.spend);
+        const isMax = item.spend === maxSpend && item.spend > 0;
+        const isMin = item.spend === minSpend && item.spend > 0 && item.spend < maxSpend;
+        const style = getBarStyle(item.spend, isMax, isMin);
         const pct = item.spend > 0 ? (item.spend / maxSpend) * 100 : 0;
         const height = style.heightPx !== null ? `${style.heightPx}px` : `${Math.max(pct, 4)}%`;
 

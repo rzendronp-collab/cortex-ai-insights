@@ -563,13 +563,10 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                     <Clock className="w-3.5 h-3.5 text-success" />
                                     <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Performance por Hora</h4>
                                   </div>
-                                  {hourlyData.length > 0 ? (
-                                    <HourlyBarChart data={hourlyData} />
-                                  ) : (
-                                    <p className="text-[11px] text-muted-foreground text-center py-6">
-                                      Dados horários não disponíveis.
-                                    </p>
-                                  )}
+                                  <HourlyBarChart 
+                                    data={hourlyData} 
+                                    emptyMessage="Performance por hora disponível na aba Visão Geral (dados agregados da conta)"
+                                  />
                                 </div>
 
                                 {/* BLOCO 4 — EVOLUÇÃO DIÁRIA */}

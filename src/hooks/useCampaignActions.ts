@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
 import { useMetaConnection } from './useMetaConnection';
 import { useDashboard } from '@/context/DashboardContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 
 export interface BudgetInfo {

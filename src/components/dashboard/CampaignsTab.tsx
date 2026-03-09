@@ -438,8 +438,6 @@ export default function CampaignsTab() {
     }
   }, [editingNameValue, callMetaApi, syncCacheStatus]);
 
-  // ═══ BULK SELECT (moved after paginatedCampaigns declaration) ═══
-  // handleSelectRow and handleSelectAll are defined below paginatedCampaigns
 
   const executeBulkAction = useCallback(async (action: 'ACTIVE' | 'PAUSED') => {
     const ids = Array.from(selectedIds);

@@ -232,6 +232,20 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
             {accountDropdown}
             <div className="w-px h-5 bg-border-default" />
             {periodSelector}
+            {isCustomActive && dateRange && (
+              <>
+                <div className="w-px h-5 bg-border-default" />
+                <div className="flex items-center gap-1 bg-data-blue/10 border border-data-blue/30 rounded-full px-2.5 py-0.5">
+                  <Calendar className="w-3 h-3 text-data-blue" />
+                  <span className="text-[10px] text-data-blue font-medium whitespace-nowrap">
+                    📅 {dateRange.from.split('-').reverse().slice(0, 2).join('/')} → {dateRange.to.split('-').reverse().slice(0, 2).join('/')}
+                  </span>
+                  <button onClick={() => setDateRange(null)} className="text-data-blue hover:text-white transition-colors ml-0.5">
+                    <XIcon className="w-3 h-3" />
+                  </button>
+                </div>
+              </>
+            )}
             <div className="w-px h-5 bg-border-default" />
             <AlertsPanel />
             <div className="w-px h-5 bg-border-default" />

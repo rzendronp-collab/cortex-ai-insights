@@ -747,20 +747,24 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 }
                 setBudgetLoading(true);
                 try {
-                  // Fetch adsets
+                  // Fetch adsets to check if ABO or CBO
                   const adSetsRes = await callMetaApi(`${budgetDialog.id}/adsets`, {
                     fields: 'id,name,daily_budget,lifetime_budget',
                   });
                   const adsets = adSetsRes?.data || [];
                   const budgetCents = String(Math.round(newBudget * 100));
 
-                  if (adsets.length > 0) {
+                  // ABO: adsets have their own daily_budget
+                  const aboAdsets = adsets.filter((a: any) => a.daily_budget || a.lifetime_budget);
+
+                  if (aboAdsets.length > 0) {
                     await Promise.all(
-                      adsets.map((adset: any) =>
+                      aboAdsets.map((adset: any) =>
                         callMetaApi(adset.id, { daily_budget: budgetCents, _method: 'POST' })
                       )
                     );
                   } else {
+                    // CBO: update campaign budget directly
                     await callMetaApi(budgetDialog.id, { daily_budget: budgetCents, _method: 'POST' });
                   }
                   toast.success('Budget atualizado ✓');

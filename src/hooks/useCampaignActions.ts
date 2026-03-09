@@ -40,15 +40,17 @@ export function useCampaignActions() {
       const adsets = adSetsRes?.data || [];
       const budgetCents = String(Math.round(newDailyBudget * 100));
 
-      if (adsets.length > 0) {
-        // ABO: update each adset
+      // ABO: adsets have their own daily_budget
+      const aboAdsets = adsets.filter((a: any) => a.daily_budget || a.lifetime_budget);
+
+      if (aboAdsets.length > 0) {
         await Promise.all(
-          adsets.map((adset: any) =>
+          aboAdsets.map((adset: any) =>
             callMetaApi(adset.id, { daily_budget: budgetCents, _method: 'POST' })
           )
         );
       } else {
-        // CBO: update campaign directly
+        // CBO: update campaign budget directly
         await callMetaApi(campaignId, { daily_budget: budgetCents, _method: 'POST' });
       }
 

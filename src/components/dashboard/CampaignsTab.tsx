@@ -509,7 +509,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
         {sortedCampaigns.length === 0 ? (
           <p className="text-center py-8 text-xs text-muted-foreground">Nenhuma campanha encontrada com os filtros atuais.</p>
         ) : (
-          sortedCampaigns.map((c, idx) => {
+          paginatedCampaigns.map((c, idx) => {
             const effectiveStatus = localStatuses[c.id] || c.status;
             const isActive = effectiveStatus === 'ACTIVE';
             const isToggling = togglingIds.has(c.id);

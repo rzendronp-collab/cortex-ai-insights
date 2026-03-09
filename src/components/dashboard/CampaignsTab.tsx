@@ -489,6 +489,7 @@ export default function CampaignsTab() {
     if (!newName) { setEditingNameId(null); return; }
     setSavingNameId(campaignId);
     setEditingNameId(null);
+    setEditingCampaignId(campaignId);
     try {
       await callMetaApi(campaignId, { name: newName, _method: 'POST' });
       setLocalNames(prev => ({ ...prev, [campaignId]: newName }));

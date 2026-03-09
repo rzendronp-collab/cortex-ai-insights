@@ -57,6 +57,32 @@ export interface AgeData {
   percentage: number;
 }
 
+export interface DemographicRow {
+  age: string;
+  gender: string;
+  spend: number;
+  purchases: number;
+  revenue: number;
+  roas: number;
+}
+
+export interface DemoGenderAgg {
+  name: string;
+  spend: number;
+  purchases: number;
+  revenue: number;
+  roas: number;
+  fill: string;
+}
+
+export interface DemoAgeAgg {
+  age: string;
+  spend: number;
+  purchases: number;
+  revenue: number;
+  roas: number;
+}
+
 export interface AnalysisData {
   campaigns: ProcessedCampaign[];
   campaignsPrev: ProcessedCampaign[];
@@ -65,6 +91,9 @@ export interface AnalysisData {
   platformData: PlatformData[];
   genderData: GenderData[];
   ageData: AgeData[];
+  demographics?: DemographicRow[];
+  demoByGender?: DemoGenderAgg[];
+  demoByAge?: DemoAgeAgg[];
   budgetByCampaignId: Record<string, number>;
   lastUpdated: string;
 }
@@ -326,17 +355,39 @@ export function useMetaData() {
       const genderAgg: Record<string, number> = {};
       const ageAgg: Record<string, number> = {};
       const totalDemoSpend = rawDemo.reduce((s: number, d: any) => s + parseFloat(d.spend || '0'), 0) || 1;
+
+      // Rich demographic aggregation
+      const genderRich: Record<string, { spend: number; purchases: number; revenue: number }> = {};
+      const ageRich: Record<string, { spend: number; purchases: number; revenue: number }> = {};
+      const demographics: DemographicRow[] = [];
+
       rawDemo.forEach((d: any) => {
         const spend = parseFloat(d.spend || '0');
-        const gender = d.gender === 'male' ? 'Masculino' : d.gender === 'female' ? 'Feminino' : 'Outro';
+        const purchases = extractPurchases(d.actions);
+        const revenue = extractRevenue(d.action_values);
+        const gender = d.gender === 'male' ? 'Masculino' : d.gender === 'female' ? 'Feminino' : 'Indefinido';
+        const age = d.age || 'unknown';
+
         genderAgg[gender] = (genderAgg[gender] || 0) + spend;
-        ageAgg[d.age] = (ageAgg[d.age] || 0) + spend;
+        ageAgg[age] = (ageAgg[age] || 0) + spend;
+
+        if (!genderRich[gender]) genderRich[gender] = { spend: 0, purchases: 0, revenue: 0 };
+        genderRich[gender].spend += spend;
+        genderRich[gender].purchases += purchases;
+        genderRich[gender].revenue += revenue;
+
+        if (!ageRich[age]) ageRich[age] = { spend: 0, purchases: 0, revenue: 0 };
+        ageRich[age].spend += spend;
+        ageRich[age].purchases += purchases;
+        ageRich[age].revenue += revenue;
+
+        demographics.push({ age, gender, spend, purchases, revenue, roas: spend > 0 ? revenue / spend : 0 });
       });
 
       const genderColors: Record<string, string> = {
-        Feminino: 'hsl(216, 91%, 64%)',
-        Masculino: 'hsl(250, 90%, 71%)',
-        Outro: 'hsl(218, 25%, 38%)',
+        Masculino: 'hsl(216, 91%, 64%)',
+        Feminino: 'hsl(250, 90%, 71%)',
+        Indefinido: 'hsl(218, 25%, 38%)',
       };
       const genderData: GenderData[] = Object.entries(genderAgg).map(([name, spend]) => ({
         name,
@@ -346,6 +397,23 @@ export function useMetaData() {
       const ageData: AgeData[] = Object.entries(ageAgg)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([age, spend]) => ({ age, percentage: Math.round((spend / totalDemoSpend) * 100) }));
+
+      const demoByGender: DemoGenderAgg[] = Object.entries(genderRich).map(([name, v]) => ({
+        name,
+        spend: v.spend,
+        purchases: v.purchases,
+        revenue: v.revenue,
+        roas: v.spend > 0 ? v.revenue / v.spend : 0,
+        fill: genderColors[name] || 'hsl(218, 25%, 38%)',
+      })).sort((a, b) => b.spend - a.spend);
+
+      const demoByAge: DemoAgeAgg[] = Object.entries(ageRich).map(([age, v]) => ({
+        age,
+        spend: v.spend,
+        purchases: v.purchases,
+        revenue: v.revenue,
+        roas: v.spend > 0 ? v.revenue / v.spend : 0,
+      })).sort((a, b) => b.spend - a.spend);
 
       // Build budgetByCampaignId
       const budgetByCampaignId: Record<string, number> = {};
@@ -379,6 +447,9 @@ export function useMetaData() {
         platformData,
         genderData,
         ageData,
+        demographics,
+        demoByGender,
+        demoByAge,
         budgetByCampaignId,
         lastUpdated: now,
       };

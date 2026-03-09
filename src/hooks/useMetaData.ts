@@ -92,20 +92,21 @@ function formatYmd(date: Date) {
   return `${y}-${m}-${d}`;
 }
 
-function getMetaRanges(selectedPeriod: string, now = new Date()) {
-  const days = periodDaysMap[selectedPeriod] ?? 7;
-
+function getCurrentPeriodTimeRange(days: number, now = new Date()) {
   // Meta time_range uses day granularity; use local-day boundaries for predictable windows
-  const currentUntilDate = startOfLocalDay(now);
-  const currentSinceDate = addDays(currentUntilDate, -(days - 1));
+  const untilDate = startOfLocalDay(now);
+  const sinceDate = addDays(untilDate, -(days - 1));
+  return { since: formatYmd(sinceDate), until: formatYmd(untilDate) };
+}
+
+function getPreviousPeriodTimeRange(days: number, now = new Date()) {
+  const current = getCurrentPeriodTimeRange(days, now);
+  const currentSinceDate = new Date(current.since);
 
   const previousUntilDate = addDays(currentSinceDate, -1);
   const previousSinceDate = addDays(previousUntilDate, -(days - 1));
 
-  return {
-    current: { since: formatYmd(currentSinceDate), until: formatYmd(currentUntilDate) },
-    previous: { since: formatYmd(previousSinceDate), until: formatYmd(previousUntilDate) },
-  };
+  return { since: formatYmd(previousSinceDate), until: formatYmd(previousUntilDate) };
 }
 
 function extractPurchases(actions: any[]): number {
@@ -167,7 +168,9 @@ export function useMetaData() {
     setLoading(true);
     setError(null);
 
-    const { current: currentRange, previous: previousRange } = getMetaRanges(selectedPeriod);
+    const days = periodDaysMap[selectedPeriod] ?? 7;
+    const currentRange = getCurrentPeriodTimeRange(days);
+    const previousRange = getPreviousPeriodTimeRange(days);
     const currentTimeRange = JSON.stringify(currentRange);
     const previousTimeRange = JSON.stringify(previousRange);
     const acctPath = `act_${selectedAccountId}`;
@@ -197,17 +200,13 @@ export function useMetaData() {
       // Parallel API calls
       const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes] = await Promise.all([
         callMetaApi(`${acctPath}/campaigns`, {
-          fields:
-            'id,name,status,insights.time_range(' +
-            currentTimeRange +
-            '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
+          fields: 'id,name,status,insights{spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
+          time_range: currentTimeRange,
           limit: '50',
         }),
         callMetaApi(`${acctPath}/campaigns`, {
-          fields:
-            'id,name,status,insights.time_range(' +
-            previousTimeRange +
-            '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
+          fields: 'id,name,status,insights{spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
+          time_range: previousTimeRange,
           limit: '50',
         }),
         callMetaApi(`${acctPath}/insights`, {
@@ -237,32 +236,6 @@ export function useMetaData() {
 
       const campaigns: ProcessedCampaign[] = (campaignsRes?.data || []).map(processCampaign);
       const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map(processCampaign);
-
-      if (import.meta.env.DEV) {
-        const currSpend = campaigns.reduce((s, c) => s + c.spend, 0);
-        const currRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
-        const currRoas = currSpend > 0 ? currRevenue / currSpend : 0;
-
-        const prevSpend = campaignsPrev.reduce((s, c) => s + c.spend, 0);
-        const prevRevenue = campaignsPrev.reduce((s, c) => s + c.revenue, 0);
-        const prevRoas = prevSpend > 0 ? prevRevenue / prevSpend : 0;
-
-        const delta = prevRoas > 0 ? ((currRoas - prevRoas) / prevRoas) * 100 : null;
-
-        console.log('[useMetaData] ROAS current/prev/delta', {
-          accountId: selectedAccountId,
-          period: selectedPeriod,
-          currRoas,
-          prevRoas,
-          delta,
-          currSpend,
-          prevSpend,
-          currRevenue,
-          prevRevenue,
-          currentRange,
-          previousRange,
-        });
-      }
 
       const dailyData: DailyData[] = (dailyRes?.data || []).map((d: any) => {
         const spend = parseFloat(d.spend || '0');

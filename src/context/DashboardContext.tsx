@@ -31,6 +31,7 @@ interface DashboardContextType {
   clearCurrentAnalysis: () => void;
   currencySymbol: string;
   setSelectedAccountCurrency: (currency: string | null) => void;
+  analyzeRef: MutableRefObject<(() => void) | null>;
 }
 
 const DashboardContext = createContext<DashboardContextType | null>(null);

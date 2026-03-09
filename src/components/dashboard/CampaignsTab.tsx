@@ -440,7 +440,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       <td className="px-3 py-3 text-right" onClick={e => e.stopPropagation()}>
                         {(() => {
                           const rawBudget = analysisData?.budgetByCampaignId?.[c.id];
-                          const bVal = rawBudget ? rawBudget / 100 : null;
+                          const bVal = rawBudget != null && rawBudget > 0 ? rawBudget : null;
                           return (
                             <div className="flex items-center justify-end gap-1 group/budget">
                               {bVal != null ? (

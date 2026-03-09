@@ -198,7 +198,7 @@ export default function DashboardSidebar() {
                                 return (
                                   <div
                                     key={account.id}
-                                    onClick={() => handleSelectAccount(account.account_id, account.account_name)}
+                                    onClick={() => handleSelectAccount(account.account_id, account.account_name, account.currency)}
                                     className={`flex items-center gap-2 rounded-md px-2 py-1.5 cursor-pointer transition-all ${
                                       isSelected
                                         ? 'bg-accent/60 border-l-2 border-l-accent-foreground'

@@ -167,8 +167,9 @@ export function useMetaData() {
     setLoading(true);
     setError(null);
 
-    const period = periodMap[selectedPeriod] || 'last_7d';
-    const doublePeriod = doublePeriodMap[selectedPeriod] || 'last_14d';
+    const { current: currentRange, previous: previousRange } = getMetaRanges(selectedPeriod);
+    const currentTimeRange = JSON.stringify(currentRange);
+    const previousTimeRange = JSON.stringify(previousRange);
     const acctPath = `act_${selectedAccountId}`;
 
     try {

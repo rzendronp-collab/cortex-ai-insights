@@ -441,10 +441,13 @@ Responda SOMENTE com o JSON, sem markdown.`;
                         {(() => {
                           const bVal = budgetCache[c.id];
                           const isFetching = budgetFetching.has(c.id);
+                          const notLoaded = bVal === undefined && !isFetching;
                           return (
                             <div className="flex items-center justify-end gap-1 group/budget">
                               {isFetching ? (
                                 <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                              ) : notLoaded ? (
+                                <p className="text-xs text-muted-foreground">—</p>
                               ) : bVal != null ? (
                                 <p className="text-xs text-foreground">{formatCurrency(bVal, currency)}</p>
                               ) : (
@@ -452,8 +455,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
                               )}
                               <Pencil
                                 className="w-3 h-3 text-muted-foreground/0 group-hover/budget:text-muted-foreground cursor-pointer hover:text-primary transition-all"
-                                onClick={() => {
-                                  setBudgetDialog({ id: c.id, name: c.name, currentSpend: bVal || 0 });
+                                onClick={async () => {
+                                  if (notLoaded) await fetchBudget(c.id);
+                                  setBudgetDialog({ id: c.id, name: c.name, currentSpend: budgetCache[c.id] || 0 });
                                   setBudgetValue('');
                                 }}
                               />

@@ -503,6 +503,7 @@ export default function CampaignsTab() {
       toast.error(err?.message || 'Erro ao atualizar nome.');
     } finally {
       setSavingNameId(null);
+      setEditingCampaignId(null);
     }
   }, [editingNameValue, callMetaApi, syncCacheStatus]);
 

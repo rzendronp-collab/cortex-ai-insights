@@ -262,6 +262,7 @@ Formato exato:
       return parsed;
     } catch (err: any) {
       console.error('generatePlan error:', err);
+      logError(err, 'useActionPlan.generatePlan');
       toast.error(err?.message || 'Erro ao gerar plano de ação.');
       return null;
     } finally {

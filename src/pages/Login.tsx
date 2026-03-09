@@ -14,6 +14,8 @@ export default function Login() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => { document.title = 'Login — CortexAds AI'; }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');

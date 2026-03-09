@@ -21,6 +21,8 @@ function DashboardContent() {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  useEffect(() => { document.title = 'Dashboard — CortexAds AI'; }, []);
+
   const renderTab = () => {
     switch (activeTab) {
       case 'overview': return <OverviewTab />;

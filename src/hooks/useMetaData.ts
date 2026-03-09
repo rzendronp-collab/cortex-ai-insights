@@ -144,6 +144,7 @@ export function useMetaData() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { checkAndCreateAlerts } = useAlerts();
 
   const analyze = useCallback(async () => {
     if (!selectedAccountId) {

@@ -530,7 +530,7 @@ export function useMetaData() {
         lastUpdated: now,
       };
 
-      setAnalysisForAccount(selectedAccountId, selectedPeriod, analysisResult);
+      setAnalysisForAccount(accountId, cachePeriodKey, analysisResult);
 
       // Save to Supabase persistent cache
       if (user) {

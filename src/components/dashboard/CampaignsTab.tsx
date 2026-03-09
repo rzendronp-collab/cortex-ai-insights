@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
+import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, ArrowUpDown, ArrowDown, ArrowUp, Pencil } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
@@ -69,6 +69,11 @@ export default function CampaignsTab() {
   // Confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{ id: string; name: string; currentStatus: string } | null>(null);
   
+  // Budget dialog state
+  const [budgetDialog, setBudgetDialog] = useState<{ id: string; name: string; currentSpend: number } | null>(null);
+  const [budgetValue, setBudgetValue] = useState('');
+  const [budgetLoading, setBudgetLoading] = useState(false);
+
   const { analysisData, selectedAccountId } = useDashboard();
   const { profile } = useProfile();
   const { callMetaApi, isConnected } = useMetaConnection();
@@ -400,8 +405,17 @@ Responda SOMENTE com o JSON, sem markdown.`;
                           </Tooltip>
                         </TooltipProvider>
                       </td>
-                      <td className="px-3 py-3 text-right">
-                        <p className="text-xs text-foreground">{formatCurrency(c.spend, currency)}</p>
+                      <td className="px-3 py-3 text-right group/spend" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1">
+                          <p className="text-xs text-foreground">{formatCurrency(c.spend, currency)}</p>
+                          <Pencil
+                            className="w-3 h-3 text-muted-foreground/0 group-hover/spend:text-muted-foreground cursor-pointer hover:text-primary transition-all"
+                            onClick={() => {
+                              setBudgetDialog({ id: c.id, name: c.name, currentSpend: c.spend });
+                              setBudgetValue('');
+                            }}
+                          />
+                        </div>
                       </td>
                       <td className="px-3 py-3 text-right">
                         <p className="text-xs text-foreground">{formatCurrency(c.revenue, currency)}</p>
@@ -688,6 +702,77 @@ Responda SOMENTE com o JSON, sem markdown.`;
               }}
             >
               Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Budget Dialog */}
+      <Dialog open={!!budgetDialog} onOpenChange={(open) => { if (!open) setBudgetDialog(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base">💰 Ajustar Budget</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {budgetDialog?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="text-xs font-medium text-muted-foreground mb-2 block">
+              Novo budget diário ({currency})
+            </label>
+            <Input
+              type="number"
+              step="0.01"
+              min="1"
+              placeholder={budgetDialog?.currentSpend?.toFixed(2) || '0.00'}
+              value={budgetValue}
+              onChange={(e) => setBudgetValue(e.target.value)}
+              className="text-sm"
+              autoFocus
+            />
+          </div>
+          <DialogFooter className="flex gap-2 sm:justify-end">
+            <Button variant="outline" size="sm" onClick={() => setBudgetDialog(null)} disabled={budgetLoading}>
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              disabled={budgetLoading || !budgetValue || parseFloat(budgetValue) <= 0}
+              onClick={async () => {
+                if (!budgetDialog || !budgetValue) return;
+                const newBudget = parseFloat(budgetValue);
+                if (isNaN(newBudget) || newBudget <= 0) {
+                  toast.error('Informe um valor válido.');
+                  return;
+                }
+                setBudgetLoading(true);
+                try {
+                  // Fetch adsets
+                  const adSetsRes = await callMetaApi(`${budgetDialog.id}/adsets`, {
+                    fields: 'id,name,daily_budget,lifetime_budget',
+                  });
+                  const adsets = adSetsRes?.data || [];
+                  const budgetCents = String(Math.round(newBudget * 100));
+
+                  if (adsets.length > 0) {
+                    await Promise.all(
+                      adsets.map((adset: any) =>
+                        callMetaApi(adset.id, { daily_budget: budgetCents, _method: 'POST' })
+                      )
+                    );
+                  } else {
+                    await callMetaApi(budgetDialog.id, { daily_budget: budgetCents, _method: 'POST' });
+                  }
+                  toast.success('Budget atualizado ✓');
+                  setBudgetDialog(null);
+                } catch (err: any) {
+                  toast.error(err?.message || 'Erro ao atualizar budget.');
+                } finally {
+                  setBudgetLoading(false);
+                }
+              }}
+            >
+              {budgetLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar'}
             </Button>
           </DialogFooter>
         </DialogContent>

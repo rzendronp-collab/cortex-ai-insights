@@ -150,7 +150,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
           key={p}
           onClick={() => setSelectedPeriod(p)}
           className={`px-3 py-1 text-[11px] font-medium rounded-md transition-all ${
-            selectedPeriod === p
+            selectedPeriod === p && !isCustomActive
               ? 'bg-data-blue text-white'
               : 'text-text-secondary hover:text-text-primary'
           }`}
@@ -158,6 +158,12 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
           {p}
         </button>
       ))}
+      <DateRangePicker
+        isActive={isCustomActive}
+        dateRange={dateRange}
+        onApply={(range) => setDateRange(range)}
+        onClear={() => setDateRange(null)}
+      />
     </div>
   );
 

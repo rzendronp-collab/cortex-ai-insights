@@ -261,6 +261,8 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
 
       {/* ─── RODAPÉ ─── */}
       <div className="border-t border-border-subtle">
+        {/* Settings Dialog */}
+        <SettingsDialog />
         {/* Config Collapsible */}
         <Collapsible open={configOpen} onOpenChange={setConfigOpen}>
           <CollapsibleTrigger className="flex items-center gap-2.5 w-full px-5 py-3 hover:bg-bg-card-hover transition-colors">

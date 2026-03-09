@@ -284,11 +284,8 @@ export function useMetaData() {
       };
 
       const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes, adsetsRes] = await Promise.all([
-        callMetaApiWithRetry(`${acctPath}/campaigns`, isCustom ? {
-          fields: `id,name,status,daily_budget,lifetime_budget`,
-          limit: '50',
-        } : {
-          fields: `id,name,status,daily_budget,lifetime_budget,insights.date_preset(${period}){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}`,
+        callMetaApiWithRetry(`${acctPath}/campaigns`, {
+          fields: 'id,name,status,daily_budget,lifetime_budget',
           limit: '50',
         }),
         callMetaApiWithRetry(`${acctPath}/insights`, {
@@ -323,43 +320,50 @@ export function useMetaData() {
         }),
       ]);
 
-      // For custom date range, we need a separate insights call at campaign level
-      let campaignsProcessed: ProcessedCampaign[];
+      // Fetch campaign-level insights separately (works for both custom and non-custom)
+      let campaignInsightsRes: any;
       if (isCustom) {
-        const campaignInsightsRes = await callMetaApiWithRetry(`${acctPath}/insights`, {
+        campaignInsightsRes = await callMetaApiWithRetry(`${acctPath}/insights`, {
           fields: 'campaign_id,campaign_name,spend,impressions,clicks,ctr,cpm,cpc,actions,action_values',
           level: 'campaign',
           time_range: timeRangeParam!,
           limit: '50',
         });
-        const insightsMap: Record<string, any> = {};
-        (campaignInsightsRes?.data || []).forEach((d: any) => {
-          insightsMap[d.campaign_id] = d;
-        });
-        campaignsProcessed = (campaignsRes?.data || []).map((c: any) => {
-          const ins = insightsMap[c.id] || {};
-          const spend = parseFloat(ins.spend || '0');
-          const purchases = extractPurchases(ins.actions);
-          const revenue = extractRevenue(ins.action_values);
-          return {
-            id: c.id,
-            name: c.name,
-            status: c.status,
-            spend,
-            impressions: parseInt(ins.impressions || '0', 10),
-            clicks: parseInt(ins.clicks || '0', 10),
-            ctr: parseFloat(ins.ctr || '0'),
-            cpm: parseFloat(ins.cpm || '0'),
-            cpc: parseFloat(ins.cpc || '0'),
-            purchases,
-            revenue,
-            roas: spend > 0 ? revenue / spend : 0,
-            cpv: purchases > 0 ? spend / purchases : 0,
-          };
-        });
       } else {
-        campaignsProcessed = (campaignsRes?.data || []).map(processCampaign);
+        campaignInsightsRes = await callMetaApiWithRetry(`${acctPath}/insights`, {
+          fields: 'campaign_id,campaign_name,spend,impressions,clicks,ctr,cpm,cpc,actions,action_values',
+          level: 'campaign',
+          date_preset: period,
+          limit: '50',
+        });
       }
+
+      const insightsMap: Record<string, any> = {};
+      (campaignInsightsRes?.data || []).forEach((d: any) => {
+        insightsMap[d.campaign_id] = d;
+      });
+
+      const campaignsProcessed: ProcessedCampaign[] = (campaignsRes?.data || []).map((c: any) => {
+        const ins = insightsMap[c.id] || {};
+        const spend = parseFloat(ins.spend || '0');
+        const purchases = extractPurchases(ins.actions);
+        const revenue = extractRevenue(ins.action_values);
+        return {
+          id: c.id,
+          name: c.name,
+          status: c.status,
+          spend,
+          impressions: parseInt(ins.impressions || '0', 10),
+          clicks: parseInt(ins.clicks || '0', 10),
+          ctr: parseFloat(ins.ctr || '0'),
+          cpm: parseFloat(ins.cpm || '0'),
+          cpc: parseFloat(ins.cpc || '0'),
+          purchases,
+          revenue,
+          roas: spend > 0 ? revenue / spend : 0,
+          cpv: purchases > 0 ? spend / purchases : 0,
+        };
+      });
 
       const campaigns = campaignsProcessed;
       const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map((d: any) => {

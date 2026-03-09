@@ -161,8 +161,9 @@ export function useMetaData() {
 
     const period = periodMap[selectedPeriod] || 'last_7d';
     const acctPath = `act_${selectedAccountId}`;
+    const { since, until } = getPrevTimeRange(selectedPeriod);
 
-    console.log('[DELTA DEBUG] prevTimeRange:', getPrevTimeRange(selectedPeriod), 'selectedPeriod:', selectedPeriod);
+    console.log('[DELTA DEBUG] prevTimeRange:', { since, until }, 'selectedPeriod:', selectedPeriod);
 
     try {
       // Cache temporarily disabled to force fresh API calls
@@ -191,9 +192,10 @@ export function useMetaData() {
           fields: `id,name,status,insights.date_preset(${period}){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}`,
           limit: '50',
         }),
-        callMetaApi(`${acctPath}/campaigns`, {
-          fields: `id,name,status,insights{spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}`,
-          time_range: JSON.stringify(getPrevTimeRange(selectedPeriod)),
+        callMetaApi(`${acctPath}/insights`, {
+          fields: 'campaign_id,campaign_name,spend,impressions,clicks,ctr,cpm,cpc,actions,action_values',
+          level: 'campaign',
+          time_range: JSON.stringify({ since, until }),
           limit: '50',
         }),
         callMetaApi(`${acctPath}/insights`, {
@@ -222,8 +224,27 @@ export function useMetaData() {
       ]);
 
       const campaigns: ProcessedCampaign[] = (campaignsRes?.data || []).map(processCampaign);
-      const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map(processCampaign);
       console.log('[PREV RAW]', campaignsPrevRes?.data?.[0]);
+      const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map((d: any) => {
+        const spend = parseFloat(d.spend || '0');
+        const purchases = extractPurchases(d.actions);
+        const revenue = extractRevenue(d.action_values);
+        return {
+          id: d.campaign_id,
+          name: d.campaign_name,
+          status: 'ACTIVE',
+          spend,
+          impressions: parseInt(d.impressions || '0', 10),
+          clicks: parseInt(d.clicks || '0', 10),
+          ctr: parseFloat(d.ctr || '0'),
+          cpm: parseFloat(d.cpm || '0'),
+          cpc: parseFloat(d.cpc || '0'),
+          purchases,
+          revenue,
+          roas: spend > 0 ? revenue / spend : 0,
+          cpv: purchases > 0 ? spend / purchases : 0,
+        };
+      });
 
       const prevTotalSpend = campaignsPrev.reduce((s, c) => s + c.spend, 0);
       const currTotalSpend = campaigns.reduce((s, c) => s + c.spend, 0);

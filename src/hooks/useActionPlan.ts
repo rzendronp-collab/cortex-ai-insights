@@ -56,6 +56,14 @@ export interface HistoryEntry {
   error_message: string | null;
 }
 
+const actionPlanPeriodMap: Record<string, string> = {
+  'Hoje': 'today',
+  '3d': 'last_3d',
+  '7d': 'last_7d',
+  '14d': 'last_14d',
+  '30d': 'last_30d',
+};
+
 export function useActionPlan() {
   const { callMetaApi } = useMetaConnection();
   const { selectedAccountId, selectedPeriod, analysisData, currencySymbol, analyzeRef } = useDashboard();

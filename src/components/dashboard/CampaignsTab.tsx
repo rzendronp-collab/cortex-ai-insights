@@ -128,7 +128,7 @@ export default function CampaignsTab() {
         case 'status': valA = effStatusA === 'ACTIVE' ? 1 : 0; valB = effStatusB === 'ACTIVE' ? 1 : 0; break;
         case 'name': valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); break;
         case 'spend': valA = a.spend; valB = b.spend; break;
-        case 'budget': valA = budgetCache[a.id] ?? 0; valB = budgetCache[b.id] ?? 0; break;
+        case 'budget': valA = (analysisData?.budgetByCampaignId?.[a.id] ?? 0); valB = (analysisData?.budgetByCampaignId?.[b.id] ?? 0); break;
         case 'revenue': valA = a.revenue; valB = b.revenue; break;
         case 'profit': valA = a.revenue - a.spend; valB = b.revenue - b.spend; break;
         case 'roas': valA = a.roas; valB = b.roas; break;

@@ -1,24 +1,14 @@
 import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
-import { BarChart3, Target, Calendar, Settings, Globe, MessageSquare, FileText, Zap, Loader2, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Zap, Loader2, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getRoasColor } from '@/lib/mockData';
 
 const periods = ['Hoje', '3d', '7d', '14d', '30d'];
 
-const tabs = [
-  { id: 'overview', label: 'Visão Geral', icon: BarChart3 },
-  { id: 'campaigns', label: 'Campanhas', icon: Target },
-  { id: 'comparison', label: 'Comparação', icon: Calendar },
-  { id: 'rules', label: 'Regras', icon: Settings },
-  { id: 'consolidated', label: 'Consolidado', icon: Globe },
-  { id: 'chat', label: 'Chat IA', icon: MessageSquare },
-  { id: 'report', label: 'Relatório', icon: FileText },
-];
-
 export default function DashboardHeader() {
-  const { selectedPeriod, setSelectedPeriod, activeTab, setActiveTab, selectedAccountId, selectedAccountName, analysisData, isFromCache, cacheTimestamp } = useDashboard();
+  const { selectedPeriod, setSelectedPeriod, selectedAccountId, selectedAccountName, analysisData, isFromCache, cacheTimestamp } = useDashboard();
   const { isTokenExpired, connectMeta } = useMetaConnection();
   const { analyze, loading, roasTarget } = useMetaData();
 
@@ -119,23 +109,6 @@ export default function DashboardHeader() {
             {selectedAccountId ? 'Clique em Analisar para carregar os dados desta conta' : 'Selecione uma conta na sidebar'}
           </span>
         )}
-      </div>
-
-      <div className="flex items-center gap-1 px-5 py-1 overflow-x-auto hide-scrollbar">
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-[11px] font-medium rounded-md transition-all whitespace-nowrap ${
-              activeTab === tab.id
-                ? 'text-primary bg-primary/10'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-          >
-            <tab.icon className="w-3.5 h-3.5" />
-            {tab.label}
-          </button>
-        ))}
       </div>
     </div>
   );

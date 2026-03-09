@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Brain, LogOut, Settings, ChevronDown, ChevronRight, Circle, Save, Loader2, CheckCircle2, Eye, EyeOff, BarChart3, Target, Calendar, Cog, Globe, MessageCircle, FileText } from 'lucide-react';
+import { Brain, LogOut, Settings, ChevronDown, ChevronRight, Circle, Save, Loader2, CheckCircle2, Eye, EyeOff, BarChart3, Target, Calendar, Cog, Globe, MessageCircle, FileText, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
@@ -10,15 +10,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
 
 export default function DashboardSidebar() {
   const { user, signOut } = useAuth();
   const { profile, updateProfile } = useProfile();
   const { connection, adAccounts, isConnected, isTokenExpired, connectMeta, connectionLoading } = useMetaConnection();
-  const { selectedAccountId, setSelectedAccountId, setSelectedAccountName, activeTab: currentTab, setActiveTab } = useDashboard();
+  const { selectedAccountId, setSelectedAccountId, setSelectedAccountName, selectedAccountName, selectedPeriod, analysisData, activeTab: currentTab, setActiveTab } = useDashboard();
   const [metaExpanded, setMetaExpanded] = useState(true);
-  const [bmExpanded, setBmExpanded] = useState<Record<string, boolean>>({});
   const [configOpen, setConfigOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -70,19 +71,14 @@ export default function DashboardSidebar() {
 
   const initials = profile?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 
-  // Filter and group accounts
+  // Filter accounts
   const filteredAccounts = showInactive ? adAccounts : adAccounts.filter(a => a.is_active !== false);
-  const accountsByBusiness = filteredAccounts.reduce((acc, account) => {
-    const bizName = account.business_name || 'Sem Business Manager';
-    if (!acc[bizName]) acc[bizName] = [];
-    acc[bizName].push(account);
-    return acc;
-  }, {} as Record<string, typeof adAccounts>);
 
-  const toggleBm = (bizName: string) => {
-    setBmExpanded(prev => ({ ...prev, [bizName]: !prev[bizName] }));
-  };
-  const isBmExpanded = (bizName: string) => bmExpanded[bizName] !== false; // default expanded
+  // Calculate current ROAS for selected account
+  const ad = analysisData;
+  const totalSpend = ad?.campaigns.reduce((s, c) => s + c.spend, 0) || 0;
+  const totalRevenue = ad?.campaigns.reduce((s, c) => s + c.revenue, 0) || 0;
+  const currentRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
 
   // Navigation items
   const navItems = [
@@ -111,162 +107,145 @@ export default function DashboardSidebar() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-4">
-        {/* CANAIS Section */}
-        <div className="space-y-2">
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        {/* ZONA 1: CANAIS */}
+        <div className="space-y-1.5">
           <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Canais</h3>
           
           {/* Meta Ads - Expandable */}
           <Collapsible open={metaExpanded} onOpenChange={setMetaExpanded}>
             <CollapsibleTrigger className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors">
-              <div className="flex items-center gap-2 flex-1">
-                <div className="w-5 h-5 rounded bg-[#1877F2] flex items-center justify-center">
-                  <span className="text-white text-[10px] font-bold">f</span>
-                </div>
-                <span className="text-xs font-medium text-foreground">Meta Ads</span>
+              <div className="w-5 h-5 rounded bg-[#1877F2] flex items-center justify-center">
+                <span className="text-white text-[10px] font-bold">f</span>
               </div>
+              <span className="text-xs font-medium text-foreground flex-1 text-left">Meta Ads</span>
+              {isConnected && !isTokenExpired && (
+                <Circle className="w-2 h-2 fill-success text-success" />
+              )}
               <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${metaExpanded ? 'rotate-90' : ''}`} />
             </CollapsibleTrigger>
             
-            <CollapsibleContent className="mt-1 space-y-2 ml-2">
-              {/* Meta Status */}
-              <div className="bg-muted/50 rounded-lg border border-border p-2.5">
-                {isConnected && !isTokenExpired ? (
-                  <>
-                    <div className="flex items-center gap-2 mb-1">
-                      <CheckCircle2 className="w-3 h-3 text-success" />
-                      <span className="text-[10px] text-foreground font-medium">Conectado</span>
-                    </div>
-                    <p className="text-[9px] text-muted-foreground ml-5">
-                      {connection?.meta_user_name || 'Usuário Meta'}
-                    </p>
-                  </>
-                ) : isTokenExpired ? (
-                  <>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Circle className="w-2 h-2 fill-warning text-warning animate-pulse-dot" />
-                      <span className="text-[10px] text-foreground/80">Token expirado</span>
-                    </div>
-                    <Button onClick={handleConnectMeta} disabled={connecting} size="sm" className="w-full h-7 text-[10px] gradient-primary text-primary-foreground">
-                      {connecting ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : 'Reconectar'}
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Circle className="w-2 h-2 fill-destructive text-destructive animate-pulse-dot" />
-                      <span className="text-[10px] text-foreground/80">Desconectado</span>
-                    </div>
-                    <Button onClick={handleConnectMeta} disabled={connecting} size="sm" className="w-full h-7 text-[10px] gradient-primary text-primary-foreground">
-                      {connecting ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : 'Conectar'}
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              {/* Show/hide inactive toggle */}
-              {isConnected && adAccounts.length > 0 && (
-                <button
-                  onClick={() => setShowInactive(!showInactive)}
-                  className="flex items-center gap-1.5 text-[9px] text-muted-foreground hover:text-foreground transition-colors w-full px-1"
-                >
-                  {showInactive ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                  {showInactive ? 'Ocultar inativas' : 'Mostrar inativas'}
-                </button>
-              )}
-
-              {/* Real Ad Accounts */}
-              {isConnected && filteredAccounts.length > 0 && (
-                Object.entries(accountsByBusiness).map(([bizName, accounts]) => (
-                  <div key={bizName} className="space-y-1">
-                    <button
-                      onClick={() => toggleBm(bizName)}
-                      className="flex items-center gap-1.5 w-full text-[10px] text-muted-foreground hover:text-foreground px-1"
-                    >
-                      {isBmExpanded(bizName) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                      {bizName} ({accounts.length})
-                    </button>
-                    {isBmExpanded(bizName) && (
-                      <div className="space-y-1 ml-2">
-                        {accounts.map(account => (
-                          <div
-                            key={account.id}
-                            onClick={() => handleSelectAccount(account.account_id, account.account_name)}
-                            className={`rounded-md p-2 cursor-pointer transition-all ${
-                              selectedAccountId === account.account_id
-                                ? 'bg-primary/15 border border-primary/40 shadow-sm'
-                                : 'bg-muted/30 border border-transparent hover:border-border'
-                            }`}
-                          >
-                            <p className="text-[10px] font-medium text-foreground truncate">{account.account_name || `act_${account.account_id}`}</p>
-                            <div className="flex items-center justify-between mt-0.5">
-                              <span className="text-[9px] text-muted-foreground">{account.currency}</span>
-                              <span className={`text-[9px] font-medium ${account.is_active ? 'text-success' : 'text-destructive'}`}>
-                                {account.is_active ? 'Ativa' : 'Inativa'}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
+            <CollapsibleContent className="mt-1 ml-2">
+              {/* Connection status when not connected */}
+              {(!isConnected || isTokenExpired) && (
+                <div className="bg-muted/50 rounded-lg border border-border p-2.5 mb-2">
+                  {isTokenExpired ? (
+                    <>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Circle className="w-2 h-2 fill-warning text-warning animate-pulse" />
+                        <span className="text-[10px] text-foreground/80">Token expirado</span>
                       </div>
-                    )}
-                  </div>
-                ))
-              )}
-
-              {/* No accounts message */}
-              {isConnected && filteredAccounts.length === 0 && adAccounts.length > 0 && (
-                <p className="text-[9px] text-muted-foreground text-center py-3 px-1">
-                  Todas as contas estão inativas. Clique em "Mostrar inativas" acima.
-                </p>
-              )}
-
-              {/* Demo fallback when not connected */}
-              {!isConnected && (
-                <div className="space-y-1">
-                  <button
-                    onClick={() => toggleBm('demo')}
-                    className="flex items-center gap-1.5 w-full text-[10px] text-muted-foreground hover:text-foreground px-1"
-                  >
-                    {isBmExpanded('demo') ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                    Demo Business
-                  </button>
-                  {isBmExpanded('demo') && (
-                    <div className="ml-2">
-                      <div className="bg-primary/5 border border-primary/20 rounded-md p-2 cursor-pointer">
-                        <p className="text-[10px] font-medium text-foreground">Loja Demo</p>
-                        <div className="flex items-center justify-between mt-0.5">
-                          <span className="text-[9px] text-success font-bold">ROAS 3.5x</span>
-                          <span className="text-[9px] text-muted-foreground">R$ 3.5k</span>
-                        </div>
+                      <Button onClick={handleConnectMeta} disabled={connecting} size="sm" className="w-full h-7 text-[10px] gradient-primary text-primary-foreground">
+                        {connecting ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : 'Reconectar'}
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Circle className="w-2 h-2 fill-destructive text-destructive" />
+                        <span className="text-[10px] text-foreground/80">Desconectado</span>
                       </div>
-                    </div>
+                      <Button onClick={handleConnectMeta} disabled={connecting} size="sm" className="w-full h-7 text-[10px] gradient-primary text-primary-foreground">
+                        {connecting ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : 'Conectar'}
+                      </Button>
+                    </>
                   )}
                 </div>
+              )}
+
+              {/* Account list with scroll */}
+              {isConnected && !isTokenExpired && (
+                <>
+                  {/* Show/hide inactive toggle */}
+                  {adAccounts.length > 0 && (
+                    <button
+                      onClick={() => setShowInactive(!showInactive)}
+                      className="flex items-center gap-1.5 text-[9px] text-muted-foreground hover:text-foreground transition-colors w-full px-1 mb-1.5"
+                    >
+                      {showInactive ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                      {showInactive ? 'Ocultar inativas' : `Mostrar inativas (${adAccounts.filter(a => !a.is_active).length})`}
+                    </button>
+                  )}
+
+                  <ScrollArea className="max-h-[140px]">
+                    <div className="space-y-1 pr-2">
+                      {filteredAccounts.map(account => (
+                        <div
+                          key={account.id}
+                          onClick={() => handleSelectAccount(account.account_id, account.account_name)}
+                          className={`flex items-center gap-2 rounded-md px-2 py-1.5 cursor-pointer transition-all ${
+                            selectedAccountId === account.account_id
+                              ? 'bg-accent text-accent-foreground'
+                              : 'hover:bg-muted/50 text-foreground'
+                          }`}
+                        >
+                          <Circle className={`w-1.5 h-1.5 flex-shrink-0 ${account.is_active ? 'fill-success text-success' : 'fill-muted-foreground text-muted-foreground'}`} />
+                          <span className="text-[10px] truncate flex-1">{account.account_name || `act_${account.account_id}`}</span>
+                        </div>
+                      ))}
+                      
+                      {filteredAccounts.length === 0 && adAccounts.length > 0 && (
+                        <p className="text-[9px] text-muted-foreground text-center py-2">
+                          Nenhuma conta ativa
+                        </p>
+                      )}
+                    </div>
+                  </ScrollArea>
+                </>
               )}
             </CollapsibleContent>
           </Collapsible>
 
-          {/* Google Ads - Disabled */}
-          <div className="flex items-center gap-2 px-2 py-1.5 rounded-md opacity-50 cursor-not-allowed">
+          {/* Google Ads - Coming Soon */}
+          <div className="flex items-center gap-2 px-2 py-1.5 rounded-md opacity-50">
             <div className="w-5 h-5 rounded bg-[#4285F4] flex items-center justify-center">
               <span className="text-white text-[10px] font-bold">G</span>
             </div>
-            <span className="text-xs font-medium text-muted-foreground">Google Ads</span>
-            <span className="ml-auto text-[9px] text-muted-foreground">Em breve</span>
+            <span className="text-xs text-muted-foreground flex-1">Google Ads</span>
+            <span className="text-[8px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded">Em breve</span>
           </div>
 
-          {/* TikTok Ads - Disabled */}
-          <div className="flex items-center gap-2 px-2 py-1.5 rounded-md opacity-50 cursor-not-allowed">
-            <div className="w-5 h-5 rounded bg-black flex items-center justify-center">
-              <span className="text-white text-[10px] font-bold">TT</span>
+          {/* TikTok Ads - Coming Soon */}
+          <div className="flex items-center gap-2 px-2 py-1.5 rounded-md opacity-50">
+            <div className="w-5 h-5 rounded bg-foreground flex items-center justify-center">
+              <span className="text-background text-[10px] font-bold">T</span>
             </div>
-            <span className="text-xs font-medium text-muted-foreground">TikTok Ads</span>
-            <span className="ml-auto text-[9px] text-muted-foreground">Em breve</span>
+            <span className="text-xs text-muted-foreground flex-1">TikTok Ads</span>
+            <span className="text-[8px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded">Em breve</span>
           </div>
         </div>
 
-        {/* NAVEGAÇÃO Section */}
-        <div className="space-y-2">
+        {/* ZONA 2: CONTA ATIVA */}
+        {selectedAccountId && (
+          <>
+            <Separator />
+            <div className="space-y-1.5">
+              <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Conta Ativa</h3>
+              <div className="bg-accent/50 border border-accent rounded-lg p-2.5">
+                <p className="text-[11px] font-medium text-foreground truncate">{selectedAccountName || `act_${selectedAccountId}`}</p>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-[10px] text-muted-foreground">{selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`}</span>
+                  {currentRoas > 0 && (
+                    <span className={`text-[10px] font-bold ${currentRoas >= 3 ? 'text-success' : currentRoas >= 2 ? 'text-warning' : 'text-destructive'}`}>
+                      ROAS {currentRoas.toFixed(1)}x
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => { setSelectedAccountId(null); setSelectedAccountName(null); }}
+                  className="flex items-center gap-1 text-[9px] text-muted-foreground hover:text-foreground mt-2 transition-colors"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                  Trocar conta
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ZONA 3: NAVEGAÇÃO */}
+        <Separator />
+        <div className="space-y-1.5">
           <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Navegação</h3>
           <div className="space-y-0.5">
             {navItems.map(item => (
@@ -275,7 +254,7 @@ export default function DashboardSidebar() {
                 onClick={() => setActiveTab(item.id)}
                 className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-md transition-all ${
                   currentTab === item.id
-                    ? 'bg-primary/15 text-primary font-medium'
+                    ? 'bg-accent text-accent-foreground font-medium'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 }`}
               >
@@ -287,7 +266,7 @@ export default function DashboardSidebar() {
         </div>
       </div>
 
-      {/* CONFIGURAÇÕES Section - Footer */}
+      {/* RODAPÉ: CONFIGURAÇÕES + USUÁRIO */}
       <div className="border-t border-border">
         <Collapsible open={configOpen} onOpenChange={setConfigOpen}>
           <CollapsibleTrigger className="flex items-center gap-2 w-full px-4 py-3 hover:bg-muted/50 transition-colors">

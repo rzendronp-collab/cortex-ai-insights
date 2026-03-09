@@ -190,9 +190,9 @@ export default function OverviewTab() {
           <h3 className="text-xs font-semibold text-foreground mb-3">ROAS por Campanha <span className="text-muted-foreground font-normal">(top 10)</span></h3>
           <ResponsiveContainer width="100%" height={320}>
             <BarChart data={roasCampaignData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(224,30%,16%)" />
-              <XAxis type="number" tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: 'hsl(218,25%,38%)' }} width={90} />
+              <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
+              <XAxis type="number" tick={{ fontSize: 10, fill: chartAxisTick }} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: chartAxisTick }} width={90} />
               <Tooltip content={<RoasTooltip />} />
               <ReferenceLine x={roasTarget} stroke={chartColors.muted} strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 9, fill: chartColors.muted }} />
               <Bar dataKey="roas" radius={[0, 4, 4, 0]}>

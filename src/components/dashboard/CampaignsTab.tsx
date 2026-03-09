@@ -217,7 +217,6 @@ export default function CampaignsTab() {
   const [duplicateName, setDuplicateName] = useState('');
   const [duplicateKeepActive, setDuplicateKeepActive] = useState(false);
   const [duplicateLoading, setDuplicateLoading] = useState(false);
-  const [bulkLoading, setBulkLoading] = useState(false);
 
   const { analysisData, selectedAccountId, selectedPeriod, currencySymbol, setAnalysisForAccount } = useDashboard();
   const { profile } = useProfile();

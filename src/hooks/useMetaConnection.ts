@@ -75,8 +75,9 @@ export function useMetaConnection() {
   };
 
   const callMetaApi = async (path: string, params?: Record<string, string>) => {
+    const { _method, ...restParams } = params || {} as any;
     const { data, error } = await supabase.functions.invoke('meta-proxy', {
-      body: { path, params },
+      body: { path, params: restParams, method: _method || 'GET' },
     });
     if (error) throw error;
     return data;

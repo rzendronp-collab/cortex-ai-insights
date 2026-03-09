@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -64,6 +65,9 @@ export default function CampaignsTab() {
   const [aiLoadingIds, setAiLoadingIds] = useState<Set<string>>(new Set());
   const [aiResults, setAiResults] = useState<Record<string, any>>({});
   const [localStatuses, setLocalStatuses] = useState<Record<string, string>>({});
+  
+  // Confirmation dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{ id: string; name: string; currentStatus: string } | null>(null);
   
   const { analysisData, selectedAccountId } = useDashboard();
   const { profile } = useProfile();
@@ -373,12 +377,12 @@ Responda SOMENTE com o JSON, sem markdown.`;
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <div 
-                                  className={`w-2.5 h-2.5 rounded-full mx-auto cursor-pointer ${isActive ? 'bg-success shadow-[0_0_8px_hsl(var(--success))]' : 'bg-muted-foreground/40'}`}
-                                  onClick={() => toggleCampaignStatus(c.id, effectiveStatus)}
+                                  className={`w-2.5 h-2.5 rounded-full mx-auto cursor-pointer transition-all hover:scale-150 ${isActive ? 'bg-success shadow-[0_0_8px_hsl(var(--success))]' : 'bg-muted-foreground/40'}`}
+                                  onClick={() => setConfirmDialog({ id: c.id, name: c.name, currentStatus: effectiveStatus })}
                                 />
                               </TooltipTrigger>
                               <TooltipContent side="right">
-                                <p className="text-xs">{isActive ? 'Ativo' : 'Pausado'}</p>
+                                <p className="text-xs">Clique para {isActive ? 'pausar' : 'ativar'}</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
@@ -647,6 +651,47 @@ Responda SOMENTE com o JSON, sem markdown.`;
           </tbody>
         </table>
       </div>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={!!confirmDialog} onOpenChange={(open) => !open && setConfirmDialog(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base">
+              {confirmDialog?.currentStatus === 'ACTIVE' ? '⏸️ Pausar campanha?' : '▶️ Ativar campanha?'}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              {confirmDialog?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2 sm:justify-end">
+            <Button variant="outline" size="sm" onClick={() => setConfirmDialog(null)}>
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              variant={confirmDialog?.currentStatus === 'ACTIVE' ? 'destructive' : 'default'}
+              onClick={async () => {
+                if (!confirmDialog) return;
+                const { id, currentStatus } = confirmDialog;
+                setConfirmDialog(null);
+                setTogglingIds(prev => new Set(prev).add(id));
+                try {
+                  await callMetaApi(id, { status: currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE', _method: 'POST' });
+                  const newStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+                  setLocalStatuses(prev => ({ ...prev, [id]: newStatus }));
+                  toast.success(newStatus === 'ACTIVE' ? 'Campanha ativada ✓' : 'Campanha pausada ✓');
+                } catch (err: any) {
+                  toast.error(err?.message || 'Erro ao alterar status.');
+                } finally {
+                  setTogglingIds(prev => { const n = new Set(prev); n.delete(id); return n; });
+                }
+              }}
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

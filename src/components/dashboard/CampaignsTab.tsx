@@ -1179,7 +1179,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     case 'roas':
                       return (
                         <td key={colId} className="px-3 text-right">
-                          {(() => {
+                          {c.spend === 0 ? (
+                            <span className="text-[13px] text-text-muted">—</span>
+                          ) : (() => {
                             let badgeBg: string, badgeText: string, badgeBorder: string;
                             if (c.roas >= roasTarget) { badgeBg = 'rgba(52,211,153,0.12)'; badgeText = '#34D399'; badgeBorder = 'rgba(52,211,153,0.25)'; }
                             else if (c.roas >= roasTarget * 0.7) { badgeBg = 'rgba(251,191,36,0.12)'; badgeText = '#FBBF24'; badgeBorder = 'rgba(251,191,36,0.25)'; }

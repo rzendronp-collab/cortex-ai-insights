@@ -127,6 +127,7 @@ export default function DashboardSidebar() {
     { id: 'consolidated', label: 'Consolidado', icon: Globe },
     { id: 'chat', label: 'Chat IA', icon: MessageCircle },
     { id: 'report', label: 'Relatório', icon: FileText },
+    { id: 'action-plan', label: '⚡ Otimizar', icon: Zap },
   ];
 
   return (

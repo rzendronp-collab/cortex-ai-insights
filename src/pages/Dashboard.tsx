@@ -23,6 +23,7 @@ function DashboardContent() {
       case 'consolidated': return <ConsolidatedTab />;
       case 'chat': return <ChatTab />;
       case 'report': return <ReportTab />;
+      case 'action-plan': return <ActionPlanTab />;
       default: return <OverviewTab />;
     }
   };

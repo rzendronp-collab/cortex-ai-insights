@@ -229,6 +229,9 @@ export function useMetaData() {
     setError(null);
 
     try {
+      // Build a unique cache period key (includes date range for custom)
+      const cachePeriodKey = dateRange ? `custom_${dateRange.from}_${dateRange.to}` : selectedPeriod;
+
       // Layer 1: Try Supabase persistent cache
       if (user) {
         try {
@@ -237,7 +240,7 @@ export function useMetaData() {
             .select('data, updated_at')
             .eq('user_id', user.id)
             .eq('account_id', selectedAccountId)
-            .eq('period', selectedPeriod)
+            .eq('period', cachePeriodKey)
             .maybeSingle();
 
           if (cached?.data && cached.updated_at && (cached.data as any).budgetByCampaignId) {

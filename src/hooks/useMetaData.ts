@@ -67,22 +67,46 @@ export interface AnalysisData {
   lastUpdated: string;
 }
 
-const periodMap: Record<string, string> = {
-  'Hoje': 'today',
-  '3d': 'last_3d',
-  '7d': 'last_7d',
-  '14d': 'last_14d',
-  '30d': 'last_30d',
+const periodDaysMap: Record<string, number> = {
+  'Hoje': 1,
+  '3d': 3,
+  '7d': 7,
+  '14d': 14,
+  '30d': 30,
 };
 
-// For delta comparison, we fetch a "double window" and subtract current period to get previous-only
-const doublePeriodMap: Record<string, string> = {
-  'Hoje': 'last_3d',       // Will subtract today to get yesterday+day-before
-  '3d': 'last_7d',         // Subtract 3d to get previous 4 days
-  '7d': 'last_14d',        // Subtract 7d to get previous 7 days
-  '14d': 'last_30d',       // Subtract 14d to get previous ~16 days
-  '30d': 'last_90d',       // Subtract 30d to get previous 60 days
-};
+function addDays(date: Date, days: number) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function startOfLocalDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function formatYmd(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function getMetaRanges(selectedPeriod: string, now = new Date()) {
+  const days = periodDaysMap[selectedPeriod] ?? 7;
+
+  // Meta time_range uses day granularity; use local-day boundaries for predictable windows
+  const currentUntilDate = startOfLocalDay(now);
+  const currentSinceDate = addDays(currentUntilDate, -(days - 1));
+
+  const previousUntilDate = addDays(currentSinceDate, -1);
+  const previousSinceDate = addDays(previousUntilDate, -(days - 1));
+
+  return {
+    current: { since: formatYmd(currentSinceDate), until: formatYmd(currentUntilDate) },
+    previous: { since: formatYmd(previousSinceDate), until: formatYmd(previousUntilDate) },
+  };
+}
 
 function extractPurchases(actions: any[]): number {
   if (!actions) return 0;
@@ -143,13 +167,14 @@ export function useMetaData() {
     setLoading(true);
     setError(null);
 
-    const period = periodMap[selectedPeriod] || 'last_7d';
-    const doublePeriod = doublePeriodMap[selectedPeriod] || 'last_14d';
+    const { current: currentRange, previous: previousRange } = getMetaRanges(selectedPeriod);
+    const currentTimeRange = JSON.stringify(currentRange);
+    const previousTimeRange = JSON.stringify(previousRange);
     const acctPath = `act_${selectedAccountId}`;
 
     try {
-      // Check Supabase cache first
-      if (user) {
+      // Check Supabase cache first (skip in DEV so fixes can be validated immediately)
+      if (user && !import.meta.env.DEV) {
         const { data: cached } = await supabase
           .from('analysis_cache')
           .select('data, updated_at')
@@ -172,76 +197,72 @@ export function useMetaData() {
       // Parallel API calls
       const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes] = await Promise.all([
         callMetaApi(`${acctPath}/campaigns`, {
-          fields: 'id,name,status,insights.date_preset(' + period + '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
+          fields:
+            'id,name,status,insights.time_range(' +
+            currentTimeRange +
+            '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
           limit: '50',
         }),
-      callMetaApi(`${acctPath}/campaigns`, {
-        fields: 'id,name,status,insights.date_preset(' + doublePeriod + '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
-        limit: '50',
-      }),
+        callMetaApi(`${acctPath}/campaigns`, {
+          fields:
+            'id,name,status,insights.time_range(' +
+            previousTimeRange +
+            '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
+          limit: '50',
+        }),
         callMetaApi(`${acctPath}/insights`, {
           breakdowns: 'hourly_stats_aggregated_by_advertiser_time_zone',
           fields: 'spend,actions,impressions,clicks',
-          date_preset: period,
+          time_range: currentTimeRange,
           limit: '200',
         }),
         callMetaApi(`${acctPath}/insights`, {
           breakdowns: 'publisher_platform',
           fields: 'spend,actions,impressions',
-          date_preset: period,
+          time_range: currentTimeRange,
         }),
         callMetaApi(`${acctPath}/insights`, {
           time_increment: '1',
           fields: 'spend,impressions,clicks,ctr,cpm,actions,action_values',
-          date_preset: period,
+          time_range: currentTimeRange,
           limit: '90',
         }),
         callMetaApi(`${acctPath}/insights`, {
           breakdowns: 'age,gender',
           fields: 'spend,impressions,clicks,actions,action_values',
-          date_preset: period,
+          time_range: currentTimeRange,
           limit: '100',
         }),
       ]);
 
       const campaigns: ProcessedCampaign[] = (campaignsRes?.data || []).map(processCampaign);
-      const campaignsDouble: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map(processCampaign);
+      const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map(processCampaign);
 
-      // Compute previous period by subtracting current from double-window
-      // prev = double - current (for each metric)
-      const campaignsPrev: ProcessedCampaign[] = campaigns.map(curr => {
-        const double = campaignsDouble.find(d => d.id === curr.id);
-        if (!double) {
-          // No double-window data, return zeros
-          return { ...curr, spend: 0, impressions: 0, clicks: 0, ctr: 0, cpm: 0, cpc: 0, purchases: 0, revenue: 0, roas: 0, cpv: 0 };
-        }
-        const prevSpend = Math.max(0, double.spend - curr.spend);
-        const prevImpressions = Math.max(0, double.impressions - curr.impressions);
-        const prevClicks = Math.max(0, double.clicks - curr.clicks);
-        const prevPurchases = Math.max(0, double.purchases - curr.purchases);
-        const prevRevenue = Math.max(0, double.revenue - curr.revenue);
+      if (import.meta.env.DEV) {
+        const currSpend = campaigns.reduce((s, c) => s + c.spend, 0);
+        const currRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
+        const currRoas = currSpend > 0 ? currRevenue / currSpend : 0;
+
+        const prevSpend = campaignsPrev.reduce((s, c) => s + c.spend, 0);
+        const prevRevenue = campaignsPrev.reduce((s, c) => s + c.revenue, 0);
         const prevRoas = prevSpend > 0 ? prevRevenue / prevSpend : 0;
-        const prevCtr = prevImpressions > 0 ? (prevClicks / prevImpressions) * 100 : 0;
-        const prevCpm = prevImpressions > 0 ? (prevSpend / prevImpressions) * 1000 : 0;
-        const prevCpc = prevClicks > 0 ? prevSpend / prevClicks : 0;
-        const prevCpv = prevPurchases > 0 ? prevSpend / prevPurchases : 0;
 
-        return {
-          id: curr.id,
-          name: curr.name,
-          status: curr.status,
-          spend: prevSpend,
-          impressions: prevImpressions,
-          clicks: prevClicks,
-          ctr: prevCtr,
-          cpm: prevCpm,
-          cpc: prevCpc,
-          purchases: prevPurchases,
-          revenue: prevRevenue,
-          roas: prevRoas,
-          cpv: prevCpv,
-        };
-      });
+        const delta = prevRoas > 0 ? ((currRoas - prevRoas) / prevRoas) * 100 : null;
+
+        console.log('[useMetaData] ROAS current/prev/delta', {
+          accountId: selectedAccountId,
+          period: selectedPeriod,
+          currRoas,
+          prevRoas,
+          delta,
+          currSpend,
+          prevSpend,
+          currRevenue,
+          prevRevenue,
+          currentRange,
+          previousRange,
+        });
+      }
 
       const dailyData: DailyData[] = (dailyRes?.data || []).map((d: any) => {
         const spend = parseFloat(d.spend || '0');

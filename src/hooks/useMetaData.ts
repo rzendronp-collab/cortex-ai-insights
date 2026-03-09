@@ -473,17 +473,21 @@ export function useMetaData() {
       const budgetByCampaignId: Record<string, number> = {};
       const rawCampaigns = campaignsRes?.data || [];
       rawCampaigns.forEach((campaign: any) => {
-        if (campaign.daily_budget) {
-          budgetByCampaignId[campaign.id] = parseInt(campaign.daily_budget, 10) / 100;
-        } else if (campaign.lifetime_budget) {
-          budgetByCampaignId[campaign.id] = parseInt(campaign.lifetime_budget, 10) / 100;
+        const dailyBudget = parseInt(campaign.daily_budget || '0', 10);
+        const lifetimeBudget = parseInt(campaign.lifetime_budget || '0', 10);
+        if (dailyBudget > 0) {
+          budgetByCampaignId[campaign.id] = dailyBudget / 100;
+        } else if (lifetimeBudget > 0) {
+          budgetByCampaignId[campaign.id] = lifetimeBudget / 100;
         }
       });
 
       const rawAdsets = adsetsRes?.data || [];
       rawAdsets.forEach((adset: any) => {
         if (adset.campaign_id && !budgetByCampaignId[adset.campaign_id]) {
-          const budget = parseFloat(adset.daily_budget || adset.lifetime_budget || '0') / 100;
+          const dailyAdset = parseFloat(adset.daily_budget || '0');
+          const lifetimeAdset = parseFloat(adset.lifetime_budget || '0');
+          const budget = (dailyAdset > 0 ? dailyAdset : lifetimeAdset) / 100;
           if (budget > 0) {
             budgetByCampaignId[adset.campaign_id] = (budgetByCampaignId[adset.campaign_id] || 0) + budget;
           }

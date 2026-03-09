@@ -632,6 +632,8 @@ Responda SOMENTE com o JSON, sem markdown.`;
   };
 
   const getRecommendation = (campaign: ProcessedCampaign) => {
+    // Campaigns with zero spend show a neutral "no data" badge
+    if (campaign.spend === 0) return { label: 'Sem dados', bg: 'rgba(100,116,139,0.12)', text: '#94A3B8', border: 'rgba(100,116,139,0.25)' };
     if (campaign.roas >= roasTarget * 1.3) return { label: 'Escalar', bg: 'rgba(52,211,153,0.1)', text: '#34D399', border: 'rgba(52,211,153,0.25)' };
     if (campaign.roas < roasTarget * 0.5 && campaign.spend > 10) return { label: 'Pausar', bg: 'rgba(248,113,113,0.1)', text: '#F87171', border: 'rgba(248,113,113,0.25)' };
     return { label: 'Otimizar', bg: 'rgba(96,165,250,0.1)', text: '#60A5FA', border: 'rgba(96,165,250,0.25)' };
@@ -1117,7 +1119,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       );
                     }
                     case 'spend':
-                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(c.spend, currency)}</p></td>;
+                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatCurrency(c.spend, currency)}</p></td>;
                     case 'budget': {
                       const rawBudget = analysisData?.budgetByCampaignId?.[c.id];
                       const bVal = rawBudget != null && rawBudget > 0 ? rawBudget : null;
@@ -1147,7 +1149,13 @@ Responda SOMENTE com o JSON, sem markdown.`;
                               {isSavingBgt ? (
                                 <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
                               ) : null}
-                              {bVal != null ? <p className="text-[13px] text-text-primary">{formatCurrency(bVal, currency)}</p> : <p className="text-[13px] text-text-muted">—</p>}
+                              {bVal != null ? (
+                                <p className="text-[13px] text-text-primary">{formatCurrency(bVal, currency)}</p>
+                              ) : (
+                                <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                                  <p className="text-[13px] text-text-muted cursor-help">CBO</p>
+                                </TooltipTrigger><TooltipContent><p className="text-xs">Orçamento gerido ao nível da campanha</p></TooltipContent></Tooltip></TooltipProvider>
+                              )}
                               <Pencil className="w-3 h-3 shrink-0 text-muted-foreground/0 group-hover/budget:text-muted-foreground cursor-pointer hover:text-primary transition-all" onClick={() => startBudgetEdit(c.id, bVal)} />
                             </div>
                           )}
@@ -1155,19 +1163,25 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       );
                     }
                     case 'revenue':
-                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(c.revenue, currency)}</p></td>;
+                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatCurrency(c.revenue, currency)}</p></td>;
                     case 'profit':
                       return (
                         <td key={colId} className="px-3 text-right">
-                          <span className={`text-[13px] font-medium inline-flex items-center gap-0.5 ${profit >= 0 ? 'text-[#34D399]' : 'text-[#F87171]'}`}>
-                            {profit >= 0 ? '↑' : '↓'}{profit > 0 ? '+' : ''}{formatCurrency(profit, currency)}
-                          </span>
+                          {c.spend === 0 ? (
+                            <span className="text-[13px] text-text-muted">—</span>
+                          ) : (
+                            <span className={`text-[13px] font-medium inline-flex items-center gap-0.5 ${profit >= 0 ? 'text-[#34D399]' : 'text-[#F87171]'}`}>
+                              {profit >= 0 ? '↑' : '↓'}{profit > 0 ? '+' : ''}{formatCurrency(profit, currency)}
+                            </span>
+                          )}
                         </td>
                       );
                     case 'roas':
                       return (
                         <td key={colId} className="px-3 text-right">
-                          {(() => {
+                          {c.spend === 0 ? (
+                            <span className="text-[13px] text-text-muted">—</span>
+                          ) : (() => {
                             let badgeBg: string, badgeText: string, badgeBorder: string;
                             if (c.roas >= roasTarget) { badgeBg = 'rgba(52,211,153,0.12)'; badgeText = '#34D399'; badgeBorder = 'rgba(52,211,153,0.25)'; }
                             else if (c.roas >= roasTarget * 0.7) { badgeBg = 'rgba(251,191,36,0.12)'; badgeText = '#FBBF24'; badgeBorder = 'rgba(251,191,36,0.25)'; }
@@ -1177,17 +1191,17 @@ Responda SOMENTE com o JSON, sem markdown.`;
                         </td>
                       );
                     case 'sales':
-                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{c.purchases}</p></td>;
+                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : c.purchases}</p></td>;
                     case 'cpa':
-                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(cpa, currency)}</p></td>;
+                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatCurrency(cpa, currency)}</p></td>;
                     case 'ctr':
-                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{c.ctr.toFixed(2)}%</p></td>;
+                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : `${c.ctr.toFixed(2)}%`}</p></td>;
                     case 'cpm':
-                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(c.cpm, currency)}</p></td>;
+                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatCurrency(c.cpm, currency)}</p></td>;
                     case 'impressions':
-                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatNumber(c.impressions)}</p></td>;
+                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatNumber(c.impressions)}</p></td>;
                     case 'clicks':
-                      return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatNumber(c.clicks)}</p></td>;
+                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatNumber(c.clicks)}</p></td>;
                     case 'notes':
                       return (
                         <td key={colId} className="px-3 text-center" onClick={e => e.stopPropagation()}>

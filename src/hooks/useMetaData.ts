@@ -175,10 +175,10 @@ export function useMetaData() {
           fields: 'id,name,status,insights.date_preset(' + period + '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
           limit: '50',
         }),
-        callMetaApi(`${acctPath}/campaigns`, {
-          fields: 'id,name,status,insights.date_preset(' + prevPeriod + '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
-          limit: '50',
-        }),
+      callMetaApi(`${acctPath}/campaigns`, {
+        fields: 'id,name,status,insights.date_preset(' + doublePeriod + '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
+        limit: '50',
+      }),
         callMetaApi(`${acctPath}/insights`, {
           breakdowns: 'hourly_stats_aggregated_by_advertiser_time_zone',
           fields: 'spend,actions,impressions,clicks',

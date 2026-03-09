@@ -83,6 +83,7 @@ Deno.serve(async (req) => {
     }
 
     const graphMethod = (reqMethod || 'GET').toUpperCase();
+    console.log(`[meta-proxy] method=${graphMethod} path=${path} params=`, JSON.stringify(params || {}));
     let graphRes: Response;
 
     if (graphMethod === 'POST') {
@@ -94,6 +95,7 @@ Deno.serve(async (req) => {
         body.set(key, String(value));
       }
       body.set('access_token', connection.access_token);
+      console.log(`[meta-proxy] POST ${graphUrl} body=${body.toString().replace(/access_token=[^&]+/, 'access_token=***')}`);
       graphRes = await fetch(graphUrl, { method: 'POST', body });
     } else {
       // GET: send params as query string

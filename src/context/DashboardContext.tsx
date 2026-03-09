@@ -58,7 +58,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [analysisCache, setAnalysisCache] = useState<Record<string, CachedAnalysis>>({});
   const [accountCurrency, setAccountCurrency] = useState<string | null>(null);
-  const analyzeRef = useRef<(() => void) | null>(null);
+  const analyzeRef = useRef<((overrideAccountId?: string) => void) | null>(null);
 
   // Multi-account active list
   const [activeAccountIds, setActiveAccountIds] = useState<string[]>(() => {

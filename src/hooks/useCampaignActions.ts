@@ -3,6 +3,12 @@ import { useMetaConnection } from './useMetaConnection';
 import { useDashboard } from '@/context/DashboardContext';
 import { toast } from 'sonner';
 
+export interface BudgetInfo {
+  isCBO: boolean;
+  targetId: string; // campaignId for CBO, adsetId for ABO
+  currentBudget: number; // in currency units (not cents)
+}
+
 export function useCampaignActions() {
   const { callMetaApi, isConnected } = useMetaConnection();
   const { selectedAccountId, selectedPeriod, analysisData, setAnalysisForAccount, clearCurrentAnalysis } = useDashboard();
@@ -41,6 +47,43 @@ export function useCampaignActions() {
     }
   }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis]);
 
+  /**
+   * Detect whether a campaign uses CBO or ABO budgeting.
+   * Returns the target entity ID and budget type.
+   */
+  const detectBudgetType = useCallback(async (campaignId: string): Promise<BudgetInfo> => {
+    // Step 1: Check campaign-level budget (CBO)
+    const campRes = await callMetaApi(campaignId, {
+      fields: 'daily_budget,lifetime_budget,budget_rebalance_flag',
+    });
+
+    const campaignDailyBudget = campRes?.daily_budget;
+    if (campaignDailyBudget) {
+      return {
+        isCBO: true,
+        targetId: campaignId,
+        currentBudget: parseInt(campaignDailyBudget, 10) / 100,
+      };
+    }
+
+    // Step 2: No campaign budget → ABO, get first adset
+    const adsetsRes = await callMetaApi(`${campaignId}/adsets`, {
+      fields: 'id,daily_budget',
+      limit: '1',
+    });
+    const adsets = adsetsRes?.data || [];
+    if (adsets.length > 0 && adsets[0].daily_budget) {
+      return {
+        isCBO: false,
+        targetId: adsets[0].id,
+        currentBudget: parseInt(adsets[0].daily_budget, 10) / 100,
+      };
+    }
+
+    // Fallback: treat as CBO
+    return { isCBO: true, targetId: campaignId, currentBudget: 0 };
+  }, [callMetaApi]);
+
   const updateBudget = useCallback(async (campaignId: string, newDailyBudget: number) => {
     if (!isConnected || !selectedAccountId) {
       toast.error('Conecte sua conta Meta primeiro.');
@@ -49,33 +92,15 @@ export function useCampaignActions() {
     setLoading(true);
     try {
       const budgetCents = String(Math.round(newDailyBudget * 100));
-      const acctPath = `act_${selectedAccountId}`;
 
-      const adSetsRes = await callMetaApi(`${acctPath}/adsets`, {
-        fields: 'id,name,daily_budget,lifetime_budget,bid_amount,status',
-        filtering: JSON.stringify([{
-          field: 'campaign.id',
-          operator: 'EQUAL',
-          value: campaignId,
-        }]),
-      });
-      const adsets = adSetsRes?.data || [];
-      const aboAdsets = adsets.filter((a: any) => a.daily_budget);
+      // Auto-detect CBO vs ABO
+      const budgetInfo = await detectBudgetType(campaignId);
+      console.log(`[BUDGET] Detected ${budgetInfo.isCBO ? 'CBO' : 'ABO'} for campaign ${campaignId}, target: ${budgetInfo.targetId}`);
 
-      if (aboAdsets.length > 0) {
-        const activeAdsets = aboAdsets.filter((a: any) => a.status === 'ACTIVE');
-        const targets = activeAdsets.length > 0 ? activeAdsets : aboAdsets;
-        await Promise.all(
-          targets.map((adset: any) =>
-            callMetaApi(adset.id, { daily_budget: budgetCents, _method: 'POST' })
-          )
-        );
-      } else {
-        await callMetaApi(campaignId, { daily_budget: budgetCents, _method: 'POST' });
-      }
+      await callMetaApi(budgetInfo.targetId, { daily_budget: budgetCents, _method: 'POST' });
 
       clearCurrentAnalysis();
-      toast.success('✅ Orçamento atualizado');
+      toast.success(`✅ Orçamento atualizado (${budgetInfo.isCBO ? 'CBO' : 'ABO'})`);
       return true;
     } catch (err: any) {
       const msg = err?.message || 'Erro ao atualizar budget.';
@@ -84,7 +109,7 @@ export function useCampaignActions() {
     } finally {
       setLoading(false);
     }
-  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis]);
+  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, detectBudgetType]);
 
   const updateCampaignName = useCallback(async (campaignId: string, newName: string) => {
     if (!isConnected || !selectedAccountId) {
@@ -105,5 +130,5 @@ export function useCampaignActions() {
     }
   }, [isConnected, selectedAccountId, callMetaApi, syncCacheStatus]);
 
-  return { loading, toggleCampaignStatus, updateBudget, updateCampaignName, syncCacheStatus };
+  return { loading, toggleCampaignStatus, updateBudget, updateCampaignName, syncCacheStatus, detectBudgetType };
 }

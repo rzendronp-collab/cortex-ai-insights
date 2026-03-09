@@ -204,12 +204,18 @@ export default function OverviewTab() {
     <div className="space-y-4">
       {/* ─── KPIs ─── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <KPICard label="ROAS" value={`${avgRoas.toFixed(1)}x`} subtitle="Retorno sobre investimento" delta={calcDelta(avgRoas, prevRoas)} valueClassName={roasValueClass} isHero />
-        <KPICard label="Investido" value={formatCurrency(totalSpend, currency)} subtitle="Período selecionado" delta={calcDelta(totalSpend, prevSpend)} />
-        <KPICard label="Receita" value={formatCurrency(totalRevenue, currency)} subtitle="Total gerado" delta={calcDelta(totalRevenue, prevRevenue)} valueClassName="text-data-green" />
-        <KPICard label="Vendas" value={totalSales.toString()} subtitle="Conversões" delta={calcDelta(totalSales, prevSales)} />
-        <KPICard label="CTR Médio" value={`${avgCtr.toFixed(1)}%`} subtitle="Taxa de cliques" delta={calcDelta(avgCtr, prevCtr)} />
-        <KPICard label="Custo/Venda" value={`${currency} ${costPerSale.toFixed(2)}`} subtitle="CPV médio" delta={calcDelta(costPerSale, prevCpv)} valueClassName="text-data-yellow" />
+        {[
+          { label: "ROAS", value: `${avgRoas.toFixed(1)}x`, subtitle: "Retorno sobre investimento", delta: calcDelta(avgRoas, prevRoas), valueClassName: roasValueClass, isHero: true },
+          { label: "Investido", value: formatCurrency(totalSpend, currency), subtitle: "Período selecionado", delta: calcDelta(totalSpend, prevSpend) },
+          { label: "Receita", value: formatCurrency(totalRevenue, currency), subtitle: "Total gerado", delta: calcDelta(totalRevenue, prevRevenue), valueClassName: "text-data-green" },
+          { label: "Vendas", value: totalSales.toString(), subtitle: "Conversões", delta: calcDelta(totalSales, prevSales) },
+          { label: "CTR Médio", value: `${avgCtr.toFixed(1)}%`, subtitle: "Taxa de cliques", delta: calcDelta(avgCtr, prevCtr) },
+          { label: "Custo/Venda", value: `${currency} ${costPerSale.toFixed(2)}`, subtitle: "CPV médio", delta: calcDelta(costPerSale, prevCpv), valueClassName: "text-data-yellow" },
+        ].map((kpi, i) => (
+          <div key={kpi.label} style={{ animationDelay: `${i * 50}ms` }} className="animate-fade-in opacity-0 [animation-fill-mode:forwards]">
+            <KPICard {...kpi} />
+          </div>
+        ))}
       </div>
 
       {/* ─── Charts Row 1 ─── */}

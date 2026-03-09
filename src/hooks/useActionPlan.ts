@@ -266,7 +266,7 @@ Formato exato:
     } finally {
       setIsGenerating(false);
     }
-  }, [user, selectedAccountId, roasTarget, currency, callMetaApi, analysisData]);
+  }, [user, selectedAccountId, selectedPeriod, roasTarget, currency, callMetaApi, analysisData]);
 
   const applyAction = useCallback(async (action: ActionItem): Promise<boolean> => {
     if (!user || !selectedAccountId) return false;

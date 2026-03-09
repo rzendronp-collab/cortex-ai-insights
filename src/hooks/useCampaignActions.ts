@@ -48,6 +48,7 @@ export function useCampaignActions() {
       console.log(`[TOGGLE] Sending POST to ${campaignId}: status=${newStatus}`);
       const result = await callMetaApi(campaignId, { status: newStatus, _method: 'POST' });
       console.log(`[TOGGLE] Response:`, result);
+      await invalidateCache();
       clearCurrentAnalysis();
       return newStatus;
     } catch (err: any) {

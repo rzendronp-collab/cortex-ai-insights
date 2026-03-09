@@ -339,8 +339,98 @@ Responda SOMENTE com o JSON, sem markdown.`;
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg overflow-x-auto">
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-3">
+        {sortedCampaigns.length === 0 ? (
+          <p className="text-center py-8 text-xs text-muted-foreground">Nenhuma campanha encontrada com os filtros atuais.</p>
+        ) : (
+          sortedCampaigns.map((c, idx) => {
+            const effectiveStatus = localStatuses[c.id] || c.status;
+            const isActive = effectiveStatus === 'ACTIVE';
+            const isToggling = togglingIds.has(c.id);
+            const profit = c.revenue - c.spend;
+            const cpa = c.purchases > 0 ? c.spend / c.purchases : 0;
+            const rec = getRecommendation(c);
+
+            let badgeBg: string, badgeText: string, badgeBorder: string;
+            if (c.roas >= roasTarget) {
+              badgeBg = 'rgba(52,211,153,0.12)'; badgeText = '#34D399'; badgeBorder = 'rgba(52,211,153,0.25)';
+            } else if (c.roas >= roasTarget * 0.7) {
+              badgeBg = 'rgba(251,191,36,0.12)'; badgeText = '#FBBF24'; badgeBorder = 'rgba(251,191,36,0.25)';
+            } else {
+              badgeBg = 'rgba(248,113,113,0.12)'; badgeText = '#F87171'; badgeBorder = 'rgba(248,113,113,0.25)';
+            }
+
+            return (
+              <div
+                key={c.id}
+                className={`bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 animate-fade-in opacity-0 [animation-fill-mode:forwards] ${!isActive ? 'opacity-60' : ''}`}
+                style={{ animationDelay: `${idx * 30}ms` }}
+              >
+                {/* Header: name + toggle */}
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-semibold text-text-primary truncate">{c.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span
+                        className="text-[12px] font-bold inline-block"
+                        style={{ background: badgeBg, color: badgeText, border: `1px solid ${badgeBorder}`, borderRadius: 6, padding: '2px 8px' }}
+                      >
+                        {c.roas.toFixed(2)}x
+                      </span>
+                      <span
+                        className="text-[10px] font-semibold inline-block whitespace-nowrap"
+                        style={{ background: rec.bg, color: rec.text, border: `1px solid ${rec.border}`, borderRadius: 20, padding: '2px 8px' }}
+                      >
+                        {rec.label}
+                      </span>
+                    </div>
+                  </div>
+                  <div onClick={e => e.stopPropagation()}>
+                    {isToggling ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDialog({ id: c.id, name: c.name, currentStatus: effectiveStatus })}
+                        className="relative inline-flex items-center cursor-pointer"
+                        style={{ width: 36, height: 20, borderRadius: 10 }}
+                      >
+                        <span
+                          className="block w-full h-full rounded-[10px] transition-colors duration-200 ease-in-out"
+                          style={{ backgroundColor: isActive ? '#10B981' : '#374151' }}
+                        />
+                        <span
+                          className="absolute block w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"
+                          style={{ top: 2, left: isActive ? 18 : 2 }}
+                        />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Metrics row */}
+                <div className="grid grid-cols-3 gap-3 text-center">
+                  <div>
+                    <p className="text-[10px] text-text-muted">Gasto</p>
+                    <p className="text-[12px] font-semibold text-text-primary">{formatCurrency(c.spend, currency)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-text-muted">Receita</p>
+                    <p className="text-[12px] font-semibold text-data-green">{formatCurrency(c.revenue, currency)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-text-muted">Vendas</p>
+                    <p className="text-[12px] font-semibold text-text-primary">{c.purchases}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden md:block bg-[#0E1420] border border-[#1E2D4A] rounded-lg overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr className="border-b border-[#1C2538] bg-[#0D1121] sticky top-0 z-10">

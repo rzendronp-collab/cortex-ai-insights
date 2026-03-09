@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { DashboardProvider, useDashboard } from '@/context/DashboardContext';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -11,11 +12,14 @@ import ReportTab from '@/components/dashboard/ReportTab';
 import ActionPlanTab from '@/components/dashboard/ActionPlanTab';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
-import { AlertTriangle } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { AlertTriangle, Menu, X } from 'lucide-react';
 
 function DashboardContent() {
   const { activeTab } = useDashboard();
   const { isTokenExpired, connectMeta } = useMetaConnection();
+  const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const renderTab = () => {
     switch (activeTab) {
@@ -34,17 +38,38 @@ function DashboardContent() {
   return (
     <div className="min-h-screen bg-background">
       <OnboardingModal />
-      <DashboardSidebar />
-      <div className="ml-[240px]">
-        <DashboardHeader />
+
+      {/* Mobile sidebar overlay */}
+      {isMobile && sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-250"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      {isMobile ? (
+        <div
+          className={`fixed inset-y-0 left-0 z-50 transition-transform duration-250 ease-out ${
+            sidebarOpen ? 'translate-x-0' : '-translate-x-[240px]'
+          }`}
+        >
+          <DashboardSidebar onCloseMobile={() => setSidebarOpen(false)} />
+        </div>
+      ) : (
+        <DashboardSidebar />
+      )}
+
+      <div className={isMobile ? 'ml-0' : 'ml-[240px]'}>
+        <DashboardHeader onOpenSidebar={() => setSidebarOpen(true)} />
         {isTokenExpired && (
-          <div className="mx-6 mt-4 bg-warning/10 border border-warning/30 rounded-lg px-4 py-3 flex items-center gap-3">
+          <div className="mx-4 md:mx-6 mt-4 bg-warning/10 border border-warning/30 rounded-lg px-4 py-3 flex items-center gap-3">
             <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
             <span className="text-xs text-warning font-medium">⚠ Token Meta expirado. Reconecte para continuar.</span>
             <button onClick={() => connectMeta()} className="text-xs text-warning underline font-semibold ml-auto">Reconectar →</button>
           </div>
         )}
-        <main className="p-6">
+        <main className="p-4 md:p-6">
           {renderTab()}
         </main>
       </div>

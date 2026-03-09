@@ -550,6 +550,39 @@ Responda SOMENTE com o JSON, sem markdown.`;
   // Reset page when filters change (must be before early returns)
   React.useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, activeTodayFilter, roasFilter]);
 
+  // Pagination logic (must be before early returns for hooks)
+  const totalPages = Math.ceil(sortedCampaigns.length / PAGE_SIZE);
+  const paginatedCampaigns = sortedCampaigns.length > PAGE_SIZE
+    ? sortedCampaigns.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+    : sortedCampaigns;
+
+  const handleSelectRow = useCallback((campaignId: string, idx: number, shiftKey: boolean) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (shiftKey && lastClickedIdx !== null) {
+        const start = Math.min(lastClickedIdx, idx);
+        const end = Math.max(lastClickedIdx, idx);
+        for (let i = start; i <= end; i++) {
+          if (paginatedCampaigns[i]) next.add(paginatedCampaigns[i].id);
+        }
+      } else {
+        if (next.has(campaignId)) next.delete(campaignId);
+        else next.add(campaignId);
+      }
+      return next;
+    });
+    setLastClickedIdx(idx);
+  }, [lastClickedIdx, paginatedCampaigns]);
+
+  const handleSelectAll = useCallback(() => {
+    setSelectedIds(prev => {
+      const allOnPage = paginatedCampaigns.map(c => c.id);
+      const allSelected = allOnPage.every(id => prev.has(id));
+      if (allSelected) return new Set();
+      return new Set(allOnPage);
+    });
+  }, [paginatedCampaigns]);
+
   // Loading skeleton state
   if (selectedAccountId && !analysisData) {
     return <CampaignsTableSkeleton />;

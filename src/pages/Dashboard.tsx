@@ -8,6 +8,7 @@ import RulesTab from '@/components/dashboard/RulesTab';
 import ConsolidatedTab from '@/components/dashboard/ConsolidatedTab';
 import ChatTab from '@/components/dashboard/ChatTab';
 import ReportTab from '@/components/dashboard/ReportTab';
+import ActionPlanTab from '@/components/dashboard/ActionPlanTab';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 
 function DashboardContent() {

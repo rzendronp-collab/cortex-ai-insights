@@ -1161,9 +1161,34 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       onMouseEnter={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(96,165,250,0.04)'; }}
                       onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = ''; }}
                     >
+                      {/* Checkbox */}
+                      <td className="px-2" onClick={e => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedIds.has(c.id)}
+                          onCheckedChange={() => handleSelectRow(c.id, rowIndex, false)}
+                          onClick={(e: React.MouseEvent) => {
+                            e.stopPropagation();
+                            if (e.shiftKey) {
+                              e.preventDefault();
+                              handleSelectRow(c.id, rowIndex, true);
+                            }
+                          }}
+                          className="h-3.5 w-3.5"
+                        />
+                      </td>
                       {activeColumns.map(col => renderCell(col.id))}
-                      <td className="px-3 text-center text-text-muted">
-                        {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      {/* Actions: expand + open in meta */}
+                      <td className="px-2" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-1">
+                          <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                            <button onClick={() => openInMeta(c.id)} className="p-1 text-muted-foreground hover:text-primary transition-colors">
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </button>
+                          </TooltipTrigger><TooltipContent><p className="text-xs">Abrir no Meta</p></TooltipContent></Tooltip></TooltipProvider>
+                          <button onClick={() => setExpandedId(expanded ? null : c.id)} className="p-1 text-muted-foreground hover:text-foreground transition-colors">
+                            {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                          </button>
+                        </div>
                       </td>
                     </tr>
 

@@ -97,7 +97,7 @@ export default function DashboardHeader() {
           <>
             <span className={`font-bold ${getRoasColor(avgRoas, roasTarget)}`}>
               ROAS {avgRoas.toFixed(1)}x
-              {delta !== 0 && <span className="opacity-70 ml-1">{delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(0)}%</span>}
+              {delta !== null && delta !== 0 && <span className="opacity-70 ml-1">{delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(0)}%</span>}
             </span>
             <span className="text-muted-foreground">|</span>
             <span className="text-foreground">Gasto: <span className="font-semibold">R$ {(totalSpend / 1000).toFixed(1)}k</span></span>

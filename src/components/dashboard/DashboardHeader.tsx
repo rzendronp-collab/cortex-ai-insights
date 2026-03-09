@@ -28,10 +28,10 @@ interface DashboardHeaderProps {
 export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps) {
   const {
     selectedPeriod, setSelectedPeriod,
-    selectedAccountId,
+    selectedAccountId, setSelectedAccountId,
     dateRange, setDateRange,
     analysisData, isFromCache, cacheTimestamp, currencySymbol,
-    activeTab,
+    activeTab, activeAccountIds,
   } = useDashboard();
   const { isTokenExpired, isTokenExpiringSoon, daysUntilExpiry, connectMeta, adAccounts } = useMetaConnection();
   const { analyze, loading, roasTarget } = useMetaData();

@@ -58,7 +58,7 @@ export interface HistoryEntry {
 
 export function useActionPlan() {
   const { callMetaApi } = useMetaConnection();
-  const { selectedAccountId, selectedPeriod, analysisData, currencySymbol } = useDashboard();
+  const { selectedAccountId, selectedPeriod, analysisData, currencySymbol, analyzeRef } = useDashboard();
   const { profile } = useProfile();
   const { user } = useAuth();
   const { toggleCampaignStatus, updateBudget } = useCampaignActions();

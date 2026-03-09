@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bot, Loader2, Zap, RefreshCw, FileText } from 'lucide-react';
+import { Bot, Loader2, Zap, RefreshCw, FileText, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboard } from '@/context/DashboardContext';
@@ -7,6 +7,7 @@ import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
+import { generatePDF } from '@/lib/generatePDF';
 
 function buildReportPrompt(ctx: {
   campaigns: any[];
@@ -92,12 +93,13 @@ Fale como consultor sênior. Sem enrolação. Números reais sempre.`;
 }
 
 export default function ReportTab() {
-  const { analysisData, selectedAccountName, currencySymbol } = useDashboard();
+  const { analysisData, selectedAccountName, currencySymbol, selectedPeriod } = useDashboard();
   const { profile } = useProfile();
   const roasTarget = profile?.roas_target || 3.0;
   const currency = currencySymbol;
   const [report, setReport] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const generateReport = async () => {
     if (!analysisData) {
@@ -164,19 +166,51 @@ export default function ReportTab() {
             </p>
           </div>
         </div>
-        <Button
-          onClick={generateReport}
-          disabled={loading}
-          className="h-9 px-4 text-xs bg-gradient-to-r from-[#3B82F6] to-[#2563EB] text-white hover:opacity-90 rounded-lg font-semibold gap-2"
-        >
-          {loading ? (
-            <><Loader2 className="w-3.5 h-3.5 animate-spin" />Gerando...</>
-          ) : report ? (
-            <><RefreshCw className="w-3.5 h-3.5" />Regenerar</>
-          ) : (
-            <><Zap className="w-3.5 h-3.5" />Gerar Relatório</>
+        <div className="flex items-center gap-2">
+          {report && (
+            <Button
+              onClick={async () => {
+                setExporting(true);
+                try {
+                  generatePDF({
+                    accountName: selectedAccountName || 'Conta',
+                    period: selectedPeriod || '7d',
+                    analysisData: analysisData!,
+                    aiReport: report,
+                    currency,
+                    roasTarget,
+                  });
+                  toast.success('PDF exportado com sucesso!');
+                } catch {
+                  toast.error('Erro ao gerar PDF');
+                }
+                setExporting(false);
+              }}
+              disabled={exporting}
+              variant="outline"
+              className="h-9 px-4 text-xs border-data-blue text-data-blue hover:bg-data-blue hover:text-white rounded-lg font-semibold gap-2"
+            >
+              {exporting ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" />Gerando...</>
+              ) : (
+                <><Download className="w-3.5 h-3.5" />Exportar PDF</>
+              )}
+            </Button>
           )}
-        </Button>
+          <Button
+            onClick={generateReport}
+            disabled={loading}
+            className="h-9 px-4 text-xs bg-gradient-to-r from-[#3B82F6] to-[#2563EB] text-white hover:opacity-90 rounded-lg font-semibold gap-2"
+          >
+            {loading ? (
+              <><Loader2 className="w-3.5 h-3.5 animate-spin" />Gerando...</>
+            ) : report ? (
+              <><RefreshCw className="w-3.5 h-3.5" />Regenerar</>
+            ) : (
+              <><Zap className="w-3.5 h-3.5" />Gerar Relatório</>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Content */}

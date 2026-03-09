@@ -115,6 +115,8 @@ export default function OverviewTab() {
   const platformData = analysisData?.platformData || (!isConnected ? mockPlatformData : []);
   const genderData = analysisData?.genderData || (!isConnected ? mockGenderData : []);
   const ageData = analysisData?.ageData || (!isConnected ? mockAgeData : []);
+  const demoByGender = analysisData?.demoByGender || [];
+  const demoByAge = analysisData?.demoByAge || [];
 
   const normalizeStatus = (s: unknown) => String(s ?? '').trim().toUpperCase();
 

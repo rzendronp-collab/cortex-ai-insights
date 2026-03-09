@@ -4,6 +4,7 @@ import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useCampaignNotes } from '@/hooks/useCampaignNotes';
+import { useAuth } from '@/hooks/useAuth';
 import { useColumnPreferences, ALL_COLUMNS } from '@/hooks/useColumnPreferences';
 import { useAdsets, ProcessedAdset } from '@/hooks/useAdsets';
 import { useCampaignActions } from '@/hooks/useCampaignActions';

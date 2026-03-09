@@ -193,9 +193,27 @@ export default function CampaignsTab() {
   const [budgetCache, setBudgetCache] = useState<Record<string, number | null>>({});
   const [budgetFetching, setBudgetFetching] = useState<Set<string>>(new Set());
 
+  // Inline editing state
+  const [editingBudgetId, setEditingBudgetId] = useState<string | null>(null);
+  const [editingBudgetValue, setEditingBudgetValue] = useState('');
+  const [savingBudgetId, setSavingBudgetId] = useState<string | null>(null);
+  const [budgetFeedback, setBudgetFeedback] = useState<Record<string, 'success' | 'error'>>({});
+
+  const [editingNameId, setEditingNameId] = useState<string | null>(null);
+  const [editingNameValue, setEditingNameValue] = useState('');
+  const [savingNameId, setSavingNameId] = useState<string | null>(null);
+  const [nameFeedback, setNameFeedback] = useState<Record<string, 'success' | 'error'>>({});
+  const [localNames, setLocalNames] = useState<Record<string, string>>({});
+
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [lastClickedIdx, setLastClickedIdx] = useState<number | null>(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
+
   const { analysisData, selectedAccountId, selectedPeriod, currencySymbol, setAnalysisForAccount } = useDashboard();
   const { profile } = useProfile();
   const { callMetaApi, isConnected } = useMetaConnection();
+  const { updateCampaignName, syncCacheStatus } = useCampaignActions();
   const { notes, saving: noteSaving, fetchNotes, saveNote, deleteNote } = useCampaignNotes();
   const { activeColumns, orderedColumns, isVisible, toggleColumn, reorderColumns, resetToDefault } = useColumnPreferences();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));

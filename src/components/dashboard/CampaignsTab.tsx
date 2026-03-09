@@ -230,6 +230,29 @@ Responda SOMENTE com o JSON, sem markdown.`;
     }
   }, [prevMap, roasTarget, currency, topHours]);
 
+  const fetchBudget = useCallback(async (campaignId: string) => {
+    if (budgetCache[campaignId] !== undefined || budgetFetching.has(campaignId)) return;
+    setBudgetFetching(prev => new Set(prev).add(campaignId));
+    try {
+      const res = await callMetaApi(`${campaignId}/adsets`, {
+        fields: 'id,daily_budget,lifetime_budget',
+      });
+      const adsets = res?.data || [];
+      const withBudget = adsets.find((a: any) => a.daily_budget);
+      if (withBudget) {
+        setBudgetCache(prev => ({ ...prev, [campaignId]: parseInt(withBudget.daily_budget, 10) / 100 }));
+      } else {
+        const campRes = await callMetaApi(campaignId, { fields: 'daily_budget,lifetime_budget' });
+        const db = campRes?.daily_budget;
+        setBudgetCache(prev => ({ ...prev, [campaignId]: db ? parseInt(db, 10) / 100 : null }));
+      }
+    } catch {
+      setBudgetCache(prev => ({ ...prev, [campaignId]: null }));
+    } finally {
+      setBudgetFetching(prev => { const n = new Set(prev); n.delete(campaignId); return n; });
+    }
+  }, [budgetCache, budgetFetching, callMetaApi]);
+
   if (analysisData && rawCampaigns.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -262,31 +285,6 @@ Responda SOMENTE com o JSON, sem markdown.`;
     { key: 'impressions', label: 'Impr.', align: 'right' },
     { key: 'clicks', label: 'Cliques', align: 'right' },
   ] as const;
-
-  const fetchBudget = useCallback(async (campaignId: string) => {
-    if (budgetCache[campaignId] !== undefined || budgetFetching.has(campaignId)) return;
-    setBudgetFetching(prev => new Set(prev).add(campaignId));
-    try {
-      const res = await callMetaApi(`${campaignId}/adsets`, {
-        fields: 'id,daily_budget,lifetime_budget',
-      });
-      const adsets = res?.data || [];
-      // Check adset-level budget first (ABO)
-      const withBudget = adsets.find((a: any) => a.daily_budget);
-      if (withBudget) {
-        setBudgetCache(prev => ({ ...prev, [campaignId]: parseInt(withBudget.daily_budget, 10) / 100 }));
-      } else {
-        // Try campaign-level budget (CBO)
-        const campRes = await callMetaApi(campaignId, { fields: 'daily_budget,lifetime_budget' });
-        const db = campRes?.daily_budget;
-        setBudgetCache(prev => ({ ...prev, [campaignId]: db ? parseInt(db, 10) / 100 : null }));
-      }
-    } catch {
-      setBudgetCache(prev => ({ ...prev, [campaignId]: null }));
-    } finally {
-      setBudgetFetching(prev => { const n = new Set(prev); n.delete(campaignId); return n; });
-    }
-  }, [budgetCache, budgetFetching, callMetaApi]);
 
   return (
     <div className="space-y-4">

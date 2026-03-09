@@ -95,7 +95,7 @@ export default function ReportTab() {
   const { analysisData, selectedAccountName } = useDashboard();
   const { profile } = useProfile();
   const roasTarget = profile?.roas_target || 3.0;
-  const currency = profile?.currency || 'R$';
+  const currency = currencySymbol;
   const [report, setReport] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 

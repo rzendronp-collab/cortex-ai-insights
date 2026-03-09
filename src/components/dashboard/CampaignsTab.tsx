@@ -82,7 +82,7 @@ export default function CampaignsTab() {
   const { profile } = useProfile();
   const { callMetaApi, isConnected } = useMetaConnection();
   const roasTarget = profile?.roas_target || 3.0;
-  const currency = profile?.currency || 'R$';
+  const currency = currencySymbol;
 
   const rawCampaigns: ProcessedCampaign[] = analysisData?.campaigns || [];
   const prevCampaigns = analysisData?.campaignsPrev || [];

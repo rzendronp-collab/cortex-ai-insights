@@ -12,7 +12,7 @@ const chartColors = {
 export default function ComparisonTab() {
   const { analysisData } = useDashboard();
   const { profile } = useProfile();
-  const currency = profile?.currency || 'R$';
+  const currency = currencySymbol;
 
   const campaigns = analysisData?.campaigns || mockCampaigns.map(c => ({
     ...c, purchases: c.sales, cpv: c.spend / c.sales,

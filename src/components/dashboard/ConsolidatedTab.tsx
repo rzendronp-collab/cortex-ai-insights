@@ -10,7 +10,7 @@ export default function ConsolidatedTab() {
   const { adAccounts } = useMetaConnection();
   const { profile } = useProfile();
   const roasTarget = profile?.roas_target || 3.0;
-  const currency = profile?.currency || 'R$';
+  const currency = currencySymbol;
 
   // If we have real data, show for current account
   const campaigns = analysisData?.campaigns || [];

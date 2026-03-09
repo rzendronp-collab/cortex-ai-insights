@@ -73,6 +73,10 @@ export default function CampaignsTab() {
   const [budgetDialog, setBudgetDialog] = useState<{ id: string; name: string; currentSpend: number } | null>(null);
   const [budgetValue, setBudgetValue] = useState('');
   const [budgetLoading, setBudgetLoading] = useState(false);
+  
+  // Budget cache: campaignId -> daily budget in display currency (already /100)
+  const [budgetCache, setBudgetCache] = useState<Record<string, number | null>>({});
+  const [budgetFetching, setBudgetFetching] = useState<Set<string>>(new Set());
 
   const { analysisData, selectedAccountId } = useDashboard();
   const { profile } = useProfile();

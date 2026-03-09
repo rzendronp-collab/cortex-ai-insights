@@ -311,13 +311,25 @@ export default function CampaignsTab() {
     try {
       await callMetaApi(campaignId, { status: newStatus, _method: 'POST' });
       setLocalStatuses(prev => ({ ...prev, [campaignId]: newStatus }));
+
+      // Sync global analysis cache so status persists across tab switches
+      if (analysisData && selectedAccountId) {
+        const updatedCampaigns = (analysisData.campaigns || []).map(c =>
+          c.id === campaignId ? { ...c, status: newStatus } : c
+        );
+        setAnalysisForAccount(selectedAccountId, selectedPeriod, {
+          ...analysisData,
+          campaigns: updatedCampaigns,
+        });
+      }
+
       toast.success(newStatus === 'ACTIVE' ? 'Campanha ativada ✓' : 'Campanha pausada ✓');
     } catch (err: any) {
       toast.error(err?.message || 'Erro ao alterar status da campanha.');
     } finally {
       setTogglingIds(prev => { const n = new Set(prev); n.delete(campaignId); return n; });
     }
-  }, [callMetaApi]);
+  }, [callMetaApi, analysisData, selectedAccountId, selectedPeriod, setAnalysisForAccount]);
 
   const handleToggleClick = useCallback((id: string, name: string, currentStatus: string) => {
     const skipConfirm = localStorage.getItem('cortexads_toggle_confirmed') === 'true';

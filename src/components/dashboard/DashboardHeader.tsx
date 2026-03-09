@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Loader2, Clock, AlertTriangle, RefreshCw, Building2, ChevronDown, Circle, Menu, X as XIcon, Calendar } from 'lucide-react';
+import { Loader2, Clock, AlertTriangle, RefreshCw, Menu, X as XIcon, Calendar } from 'lucide-react';
 import AlertsPanel from './AlertsPanel';
 import DateRangePicker from '@/components/ui/DateRangePicker';
 import { getRoasColor } from '@/lib/mockData';
@@ -28,9 +28,7 @@ interface DashboardHeaderProps {
 export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps) {
   const {
     selectedPeriod, setSelectedPeriod,
-    selectedAccountId, setSelectedAccountId,
-    selectedAccountName, setSelectedAccountName,
-    setSelectedAccountCurrency,
+    selectedAccountId,
     dateRange, setDateRange,
     analysisData, isFromCache, cacheTimestamp, currencySymbol,
     activeTab,
@@ -39,9 +37,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
   const { analyze, loading, roasTarget } = useMetaData();
   const isMobile = useIsMobile();
 
-  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   const [isStale, setIsStale] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const checkStale = useCallback(() => {
     if (!analysisData?.lastUpdated) { setIsStale(false); return; }
@@ -54,16 +50,6 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
     const interval = setInterval(checkStale, 60_000);
     return () => clearInterval(interval);
   }, [checkStale]);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setAccountDropdownOpen(false);
-      }
-    };
-    if (accountDropdownOpen) document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [accountDropdownOpen]);
 
   const ad = analysisData;
   const totalSpend = ad?.campaigns.reduce((s, c) => s + c.spend, 0) || 0;
@@ -84,77 +70,10 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
   const lastTime = ad?.lastUpdated ? new Date(ad.lastUpdated).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
   const cacheTime = cacheTimestamp ? new Date(cacheTimestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
 
-  const handleSelectAccount = (account: typeof adAccounts[0]) => {
-    setSelectedAccountId(account.account_id);
-    setSelectedAccountName(account.account_name);
-    setSelectedAccountCurrency(account.currency || null);
-    setAccountDropdownOpen(false);
-  };
-
-  const accountsByBm = adAccounts.reduce((acc, a) => {
-    const bm = a.business_name || 'Sem Business Manager';
-    if (!acc[bm]) acc[bm] = [];
-    acc[bm].push(a);
-    return acc;
-  }, {} as Record<string, typeof adAccounts>);
-
   const pageTitle = tabLabels[activeTab] || 'Dashboard';
   const isCustomActive = selectedPeriod === 'custom' && !!dateRange;
   const periodLabel = isCustomActive ? `${dateRange!.from} → ${dateRange!.to}` : (selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`);
   const subtitle = `Meta Ads · ${periodLabel}`;
-
-  // Account dropdown JSX
-  const accountDropdown = (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-md text-[12px] font-medium hover:bg-bg-card-hover transition-colors"
-      >
-        <Building2 className="w-3.5 h-3.5 text-text-muted" />
-        <span className="text-text-primary max-w-[140px] truncate">
-          {selectedAccountName || (selectedAccountId ? `act_${selectedAccountId}` : 'Selecionar conta')}
-        </span>
-        <ChevronDown className={`w-3 h-3 text-text-muted transition-transform ${accountDropdownOpen ? 'rotate-180' : ''}`} />
-      </button>
-
-      {accountDropdownOpen && (
-        <div className="absolute top-full right-0 mt-2 w-[280px] bg-bg-card border border-border-default rounded-lg shadow-xl overflow-hidden z-50">
-          <div className="max-h-[280px] overflow-y-auto py-1">
-            {Object.entries(accountsByBm).map(([bmName, accounts], groupIdx) => (
-              <div key={bmName}>
-                {groupIdx > 0 && <div className="mx-3 my-1 h-px bg-border-subtle" />}
-                <p className="text-[10px] text-text-muted uppercase tracking-wider font-semibold px-3 pt-2 pb-1">{bmName}</p>
-                {accounts.map(account => {
-                  const isActive = selectedAccountId === account.account_id;
-                  return (
-                    <button
-                      key={account.id}
-                      onClick={() => handleSelectAccount(account)}
-                      className={`flex flex-col w-full px-3 py-2.5 text-left transition-colors ${
-                        isActive
-                          ? 'bg-[hsl(217_40%_18%)] border-l-2 border-l-data-blue'
-                          : 'hover:bg-bg-card-hover border-l-2 border-l-transparent'
-                      }`}
-                    >
-                      <span className={`text-[13px] font-semibold truncate ${isActive ? 'text-data-blue' : 'text-text-primary'}`}>
-                        {account.account_name || `act_${account.account_id}`}
-                      </span>
-                      <span className="text-[11px] text-text-muted truncate">
-                        {account.business_name || 'Conta Pessoal'}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
-            {adAccounts.length === 0 && (
-              <p className="text-[11px] text-text-muted text-center py-4">Nenhuma conta encontrada</p>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
 
   // Period selector JSX
   const periodSelector = (
@@ -228,8 +147,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
         {/* Desktop: full control bar */}
         {!isMobile && (
           <div className="flex items-center bg-bg-card border border-border-default rounded-[10px] p-[6px] gap-1">
-            {accountDropdown}
-            <div className="w-px h-5 bg-border-default" />
+            {periodSelector}
             {periodSelector}
             {isCustomActive && dateRange && (
               <>
@@ -292,8 +210,6 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
       {/* Mobile: second row with account + period */}
       {isMobile && (
         <div className="flex items-center gap-2 px-4 py-2 border-t border-border-subtle overflow-x-auto">
-          {accountDropdown}
-          <div className="w-px h-5 bg-border-default shrink-0" />
           {periodSelector}
         </div>
       )}

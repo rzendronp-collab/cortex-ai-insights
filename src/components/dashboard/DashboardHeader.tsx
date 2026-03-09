@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Loader2, Clock, AlertTriangle, RefreshCw, Building2, ChevronDown, Circle, Menu, X as XIcon, Calendar } from 'lucide-react';
+import { Loader2, Clock, AlertTriangle, RefreshCw, Menu, X as XIcon, Calendar } from 'lucide-react';
 import AlertsPanel from './AlertsPanel';
 import DateRangePicker from '@/components/ui/DateRangePicker';
 import { getRoasColor } from '@/lib/mockData';

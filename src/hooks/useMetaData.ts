@@ -79,30 +79,23 @@ function toDateStr(d: Date): string {
   return d.toLocaleDateString('en-CA'); // YYYY-MM-DD
 }
 
-function getPrevTimeRange(selectedPeriod: string): { since: string; until: string } {
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-
-  const d = (n: number) => {
-    const x = new Date(now);
-    x.setDate(x.getDate() - n);
-    return x;
+function getPrevTimeRange(period: string): { since: string; until: string } {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const periodDays: Record<string, number> = {
+    'Hoje': 1, '3d': 3, '7d': 7, '14d': 14, '30d': 30
   };
-
-  switch (selectedPeriod) {
-    case 'Hoje':
-      return { since: toDateStr(d(1)), until: toDateStr(d(1)) };
-    case '3d':
-      return { since: toDateStr(d(6)), until: toDateStr(d(4)) };
-    case '7d':
-      return { since: toDateStr(d(14)), until: toDateStr(d(8)) };
-    case '14d':
-      return { since: toDateStr(d(28)), until: toDateStr(d(15)) };
-    case '30d':
-      return { since: toDateStr(d(60)), until: toDateStr(d(31)) };
-    default:
-      return { since: toDateStr(d(14)), until: toDateStr(d(8)) };
-  }
+  const days = periodDays[period] || 7;
+  
+  const until = new Date(today);
+  until.setDate(until.getDate() - days);
+  
+  const since = new Date(until);
+  since.setDate(since.getDate() - days);
+  
+  const fmt = (d: Date) => d.toISOString().split('T')[0];
+  return { since: fmt(since), until: fmt(until) };
 }
 
 function extractPurchases(actions: any[]): number {

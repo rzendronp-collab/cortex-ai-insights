@@ -58,7 +58,7 @@ export interface HistoryEntry {
 
 export function useActionPlan() {
   const { callMetaApi } = useMetaConnection();
-  const { selectedAccountId, selectedPeriod, analysisData, currencySymbol } = useDashboard();
+  const { selectedAccountId, selectedPeriod, analysisData, currencySymbol, analyzeRef } = useDashboard();
   const { profile } = useProfile();
   const { user } = useAuth();
   const { toggleCampaignStatus, updateBudget } = useCampaignActions();
@@ -274,13 +274,14 @@ Formato exato:
   /**
    * Apply a single action using real Meta API calls via useCampaignActions.
    */
-  const applyAction = useCallback(async (action: ActionItem): Promise<boolean> => {
+  const applyAction = useCallback(async (action: ActionItem, overrideValue?: number): Promise<boolean> => {
     if (!user || !selectedAccountId) return false;
 
     try {
       let oldValue = '';
       let newValue = '';
       let success = false;
+      const finalValue = overrideValue ?? action.valor_novo;
 
       switch (action.tipo) {
         case 'pause': {
@@ -299,9 +300,9 @@ Formato exato:
         }
         case 'increase_budget':
         case 'decrease_budget': {
-          success = await updateBudget(action.campaign_id, action.valor_novo) || false;
+          success = await updateBudget(action.campaign_id, finalValue) || false;
           oldValue = String(action.valor_atual);
-          newValue = String(action.valor_novo);
+          newValue = String(finalValue);
           break;
         }
       }
@@ -371,7 +372,9 @@ Formato exato:
     setIsApplying(false);
     await fetchHistory();
     toast.success(`${successCount}/${actions.length} ações aplicadas com sucesso!`);
-  }, [applyAction, fetchHistory]);
+    // Re-analyze after 2.5s
+    setTimeout(() => analyzeRef?.current?.(), 2500);
+  }, [applyAction, fetchHistory, analyzeRef]);
 
   const simulatePlan = useCallback((acoes: ActionItem[]) => {
     if (acoes.length === 0) return { receita_atual: 0, receita_estimada: 0, ganho: 0, ganho_pct: 0 };

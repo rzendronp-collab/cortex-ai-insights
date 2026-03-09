@@ -9,7 +9,7 @@ interface KPICardProps {
   isHero?: boolean;
 }
 
-export default function KPICard({ label, value, subtitle, delta, valueClassName = 'text-foreground', isHero }: KPICardProps) {
+export default function KPICard({ label, value, subtitle, delta, valueClassName = 'text-[#F0F4FF]', isHero }: KPICardProps) {
   return (
     <div className={`rounded-xl p-4 transition-all duration-200 animate-fade-up hover:-translate-y-0.5 ${
       isHero 

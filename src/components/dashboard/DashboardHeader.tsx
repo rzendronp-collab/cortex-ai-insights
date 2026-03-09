@@ -8,7 +8,7 @@ import { getRoasColor } from '@/lib/mockData';
 const periods = ['Hoje', '3d', '7d', '14d', '30d'];
 
 export default function DashboardHeader() {
-  const { selectedPeriod, setSelectedPeriod, selectedAccountId, selectedAccountName, analysisData, isFromCache, cacheTimestamp } = useDashboard();
+  const { selectedPeriod, setSelectedPeriod, selectedAccountId, selectedAccountName, analysisData, isFromCache, cacheTimestamp, currencySymbol } = useDashboard();
   const { isTokenExpired, connectMeta } = useMetaConnection();
   const { analyze, loading, roasTarget } = useMetaData();
 

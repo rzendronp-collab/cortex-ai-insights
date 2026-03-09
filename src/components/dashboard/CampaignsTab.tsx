@@ -368,7 +368,139 @@ export default function CampaignsTab() {
     }
   }, [executeToggle]);
 
-  const generateAiAnalysis = useCallback(async (campaign: ProcessedCampaign) => {
+  // ═══ INLINE BUDGET EDIT ═══
+  const startBudgetEdit = useCallback((campaignId: string, currentBudget: number | null) => {
+    setEditingBudgetId(campaignId);
+    setEditingBudgetValue(currentBudget ? currentBudget.toFixed(2) : '');
+  }, []);
+
+  const saveBudgetInline = useCallback(async (campaignId: string) => {
+    const val = parseFloat(editingBudgetValue);
+    if (isNaN(val) || val <= 0) { setEditingBudgetId(null); return; }
+    setSavingBudgetId(campaignId);
+    setEditingBudgetId(null);
+    try {
+      const budgetCents = String(Math.round(val * 100));
+      // Check ABO vs CBO
+      const adSetsRes = await callMetaApi(`${campaignId}/adsets`, { fields: 'id,daily_budget,status' });
+      const adsetList = adSetsRes?.data || [];
+      const aboAdsets = adsetList.filter((a: any) => a.daily_budget);
+      if (aboAdsets.length > 0) {
+        const activeAdsets = aboAdsets.filter((a: any) => a.status === 'ACTIVE');
+        const targets = activeAdsets.length > 0 ? activeAdsets : aboAdsets;
+        await Promise.all(targets.map((a: any) => callMetaApi(a.id, { daily_budget: budgetCents, _method: 'POST' })));
+      } else {
+        await callMetaApi(campaignId, { daily_budget: budgetCents, _method: 'POST' });
+      }
+      // Update local budget cache
+      setBudgetCache(prev => ({ ...prev, [campaignId]: val }));
+      // Update global cache
+      if (analysisData && selectedAccountId) {
+        const updatedBudgets = { ...analysisData.budgetByCampaignId, [campaignId]: val };
+        setAnalysisForAccount(selectedAccountId, selectedPeriod, { ...analysisData, budgetByCampaignId: updatedBudgets });
+      }
+      setBudgetFeedback(prev => ({ ...prev, [campaignId]: 'success' }));
+      setTimeout(() => setBudgetFeedback(prev => { const n = { ...prev }; delete n[campaignId]; return n; }), 1500);
+      toast.success('Orçamento atualizado ✓');
+    } catch (err: any) {
+      setBudgetFeedback(prev => ({ ...prev, [campaignId]: 'error' }));
+      setTimeout(() => setBudgetFeedback(prev => { const n = { ...prev }; delete n[campaignId]; return n; }), 2000);
+      toast.error(err?.message || 'Erro ao atualizar budget.');
+    } finally {
+      setSavingBudgetId(null);
+    }
+  }, [editingBudgetValue, callMetaApi, analysisData, selectedAccountId, selectedPeriod, setAnalysisForAccount]);
+
+  // ═══ INLINE NAME EDIT ═══
+  const startNameEdit = useCallback((campaignId: string, currentName: string) => {
+    setEditingNameId(campaignId);
+    setEditingNameValue(currentName);
+  }, []);
+
+  const saveNameInline = useCallback(async (campaignId: string) => {
+    const newName = editingNameValue.trim();
+    if (!newName) { setEditingNameId(null); return; }
+    setSavingNameId(campaignId);
+    setEditingNameId(null);
+    try {
+      await callMetaApi(campaignId, { name: newName, _method: 'POST' });
+      setLocalNames(prev => ({ ...prev, [campaignId]: newName }));
+      syncCacheStatus(campaignId, { name: newName });
+      setNameFeedback(prev => ({ ...prev, [campaignId]: 'success' }));
+      setTimeout(() => setNameFeedback(prev => { const n = { ...prev }; delete n[campaignId]; return n; }), 1500);
+      toast.success('Nome atualizado ✓');
+    } catch (err: any) {
+      setNameFeedback(prev => ({ ...prev, [campaignId]: 'error' }));
+      setTimeout(() => setNameFeedback(prev => { const n = { ...prev }; delete n[campaignId]; return n; }), 2000);
+      toast.error(err?.message || 'Erro ao atualizar nome.');
+    } finally {
+      setSavingNameId(null);
+    }
+  }, [editingNameValue, callMetaApi, syncCacheStatus]);
+
+  // ═══ BULK ACTIONS ═══
+  const handleSelectRow = useCallback((campaignId: string, idx: number, shiftKey: boolean) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (shiftKey && lastClickedIdx !== null) {
+        const start = Math.min(lastClickedIdx, idx);
+        const end = Math.max(lastClickedIdx, idx);
+        for (let i = start; i <= end; i++) {
+          if (paginatedCampaigns[i]) next.add(paginatedCampaigns[i].id);
+        }
+      } else {
+        if (next.has(campaignId)) next.delete(campaignId);
+        else next.add(campaignId);
+      }
+      return next;
+    });
+    setLastClickedIdx(idx);
+  }, [lastClickedIdx, paginatedCampaigns]);
+
+  const handleSelectAll = useCallback(() => {
+    setSelectedIds(prev => {
+      const allOnPage = paginatedCampaigns.map(c => c.id);
+      const allSelected = allOnPage.every(id => prev.has(id));
+      if (allSelected) return new Set();
+      return new Set(allOnPage);
+    });
+  }, [paginatedCampaigns]);
+
+  const executeBulkAction = useCallback(async (action: 'ACTIVE' | 'PAUSED') => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setBulkLoading(true);
+    let successCount = 0;
+    for (const id of ids) {
+      try {
+        await callMetaApi(id, { status: action, _method: 'POST' });
+        setLocalStatuses(prev => ({ ...prev, [id]: action }));
+        successCount++;
+      } catch (err: any) {
+        console.warn(`[BULK] Failed for ${id}:`, err?.message);
+      }
+      // Small delay to avoid Meta rate limit
+      await new Promise(r => setTimeout(r, 300));
+    }
+    // Sync global cache
+    if (analysisData && selectedAccountId) {
+      const updatedCampaigns = (analysisData.campaigns || []).map(c =>
+        selectedIds.has(c.id) ? { ...c, status: action } : c
+      );
+      setAnalysisForAccount(selectedAccountId, selectedPeriod, { ...analysisData, campaigns: updatedCampaigns });
+    }
+    setSelectedIds(new Set());
+    setBulkLoading(false);
+    toast.success(`${successCount}/${ids.length} campanhas ${action === 'ACTIVE' ? 'ativadas' : 'pausadas'} ✓`);
+  }, [selectedIds, callMetaApi, analysisData, selectedAccountId, selectedPeriod, setAnalysisForAccount]);
+
+  // Open in Meta Ads Manager
+  const openInMeta = useCallback((campaignId: string) => {
+    const acctId = selectedAccountId || '';
+    window.open(`https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${acctId}&selected_campaign_ids=${campaignId}`, '_blank');
+  }, [selectedAccountId]);
+
+
     setAiLoadingIds(prev => new Set(prev).add(campaign.id));
     try {
       const prev = prevMap[campaign.id];

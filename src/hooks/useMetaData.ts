@@ -580,7 +580,7 @@ export function useMetaData() {
             .eq('period', cachePeriodKey)
             .maybeSingle();
           if (fallback?.data && (fallback.data as any).budgetByCampaignId) {
-            setAnalysisForAccount(selectedAccountId, selectedPeriod, fallback.data as unknown as AnalysisData);
+            setAnalysisForAccount(accountId, cachePeriodKey, fallback.data as unknown as AnalysisData);
             toast.warning('Limite da API atingido — usando dados do cache.');
             return;
           }

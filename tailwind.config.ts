@@ -14,9 +14,34 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["Inter", "sans-serif"],
+        sans: ["'Plus Jakarta Sans'", "sans-serif"],
       },
       colors: {
+        /* New design system tokens */
+        "bg-base": "hsl(var(--bg-base))",
+        "bg-card": "hsl(var(--bg-card))",
+        "bg-card-hover": "hsl(var(--bg-card-hover))",
+        "bg-sidebar": "hsl(var(--bg-sidebar))",
+
+        "border-default": "hsl(var(--border-default))",
+        "border-subtle": "hsl(var(--border-subtle))",
+        "border-focus": "hsl(var(--border-focus))",
+
+        "text-primary": "hsl(var(--text-primary))",
+        "text-secondary": "hsl(var(--text-secondary))",
+        "text-muted": "hsl(var(--text-muted))",
+
+        "data-blue": "hsl(var(--data-blue))",
+        "data-green": "hsl(var(--data-green))",
+        "data-red": "hsl(var(--data-red))",
+        "data-yellow": "hsl(var(--data-yellow))",
+        "data-purple": "hsl(var(--data-purple))",
+
+        "chart-grid": "hsl(var(--chart-grid))",
+        "chart-tooltip-bg": "hsl(var(--chart-tooltip-bg))",
+        "chart-tooltip-border": "hsl(var(--chart-tooltip-border))",
+
+        /* Shadcn semantic tokens */
         border: "hsl(var(--border))",
         "border-hover": "hsl(var(--border-hover))",
         input: "hsl(var(--input))",
@@ -63,7 +88,7 @@ export default {
           secondary: "hsl(var(--card-secondary))",
           hover: "hsl(var(--card-hover))",
         },
-        "text-secondary": "hsl(var(--text-secondary))",
+        "text-secondary-legacy": "hsl(var(--text-secondary-legacy))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

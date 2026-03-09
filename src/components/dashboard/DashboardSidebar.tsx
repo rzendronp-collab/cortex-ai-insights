@@ -270,8 +270,8 @@ export default function DashboardSidebar() {
               </button>
             ))}
           </div>
+        </div>
       </div>
-
       {/* RODAPÉ: CONFIGURAÇÕES + USUÁRIO */}
       <div className="border-t border-border">
         <Collapsible open={configOpen} onOpenChange={setConfigOpen}>

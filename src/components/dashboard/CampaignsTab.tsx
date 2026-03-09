@@ -383,11 +383,19 @@ Responda SOMENTE com o JSON, sem markdown.`;
                         {isToggling ? (
                           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />
                         ) : (
-                          <div 
-                            className={`w-2.5 h-2.5 rounded-full mx-auto cursor-pointer ${isActive ? 'bg-success shadow-[0_0_8px_hsl(var(--success))]' : 'bg-muted-foreground/30'}`}
-                            title={isActive ? 'Ativa (Clique para pausar)' : 'Pausada (Clique para ativar)'}
-                            onClick={() => toggleCampaignStatus(c.id, effectiveStatus)}
-                          />
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div 
+                                  className={`w-2.5 h-2.5 rounded-full mx-auto cursor-pointer ${isActive ? 'bg-success shadow-[0_0_8px_hsl(var(--success))]' : 'bg-muted-foreground/40'}`}
+                                  onClick={() => toggleCampaignStatus(c.id, effectiveStatus)}
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent side="right">
+                                <p className="text-xs">{isActive ? 'Ativo' : 'Pausado'}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                       </td>
                       <td className="px-3 py-3">

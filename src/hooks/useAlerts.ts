@@ -101,6 +101,9 @@ export function useAlerts() {
 
     if (newAlerts.length > 0) {
       await supabase.from('alerts').insert(newAlerts);
+      for (const a of newAlerts) {
+        notify('⚠️ CortexAds — Alerta', a.message);
+      }
       await fetchAlerts();
     }
   }, [user, roasTarget, isTokenExpired, fetchAlerts]);

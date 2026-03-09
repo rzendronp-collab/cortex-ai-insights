@@ -21,8 +21,10 @@ function DashboardContent() {
   const { isTokenExpired, connectMeta } = useMetaConnection();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { requestPermission } = useNotifications();
 
   useEffect(() => { document.title = 'Dashboard — CortexAds AI'; }, []);
+  useEffect(() => { requestPermission(); }, []);
 
   const renderTab = () => {
     switch (activeTab) {

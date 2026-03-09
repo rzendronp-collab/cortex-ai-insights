@@ -1723,7 +1723,61 @@ Responda SOMENTE com o JSON, sem markdown.`;
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+
+      {/* Duplicate Campaign Dialog */}
+      <Dialog open={!!duplicateDialog} onOpenChange={(open) => { if (!open) setDuplicateDialog(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base">📋 Duplicar Campanha</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Criar uma cópia de <strong>{duplicateDialog?.name}</strong>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-2 block">
+                Nome da nova campanha
+              </label>
+              <Input
+                type="text"
+                value={duplicateName}
+                onChange={(e) => setDuplicateName(e.target.value)}
+                className="text-sm"
+                autoFocus
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="keep-active"
+                checked={duplicateKeepActive}
+                onCheckedChange={(v) => setDuplicateKeepActive(!!v)}
+                className="h-4 w-4"
+              />
+              <label htmlFor="keep-active" className="text-xs text-muted-foreground cursor-pointer select-none">
+                Manter status ativo (default: criar pausada)
+              </label>
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2 sm:justify-end">
+            <Button variant="outline" size="sm" onClick={() => setDuplicateDialog(null)} disabled={duplicateLoading}>
+              Cancelar
+            </Button>
+            <Button
+              size="sm"
+              disabled={duplicateLoading || !duplicateName.trim()}
+              onClick={async () => {
+                if (!duplicateDialog || !duplicateName.trim()) return;
+                setDuplicateLoading(true);
+                const success = await duplicateCampaign(duplicateDialog.id, duplicateDialog.name, duplicateName.trim(), duplicateKeepActive);
+                setDuplicateLoading(false);
+                if (success) setDuplicateDialog(null);
+              }}
+            >
+              {duplicateLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Duplicar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
   );
 }
 

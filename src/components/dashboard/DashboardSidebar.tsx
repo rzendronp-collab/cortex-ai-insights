@@ -72,8 +72,19 @@ export default function DashboardSidebar() {
 
   const initials = profile?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 
-  // Filter accounts
+  // Filter and group accounts by Business Manager
   const filteredAccounts = showInactive ? adAccounts : adAccounts.filter(a => a.is_active !== false);
+  const accountsByBusiness = filteredAccounts.reduce((acc, account) => {
+    const bizName = account.business_name || 'Sem Business Manager';
+    if (!acc[bizName]) acc[bizName] = [];
+    acc[bizName].push(account);
+    return acc;
+  }, {} as Record<string, typeof adAccounts>);
+
+  const toggleBm = (bizName: string) => {
+    setBmExpanded(prev => ({ ...prev, [bizName]: !prev[bizName] }));
+  };
+  const isBmExpanded = (bizName: string) => bmExpanded[bizName] !== false;
 
   // Calculate current ROAS for selected account
   const ad = analysisData;

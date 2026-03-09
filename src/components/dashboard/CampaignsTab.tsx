@@ -1,11 +1,12 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, ArrowUpDown, ArrowDown, ArrowUp, Pencil, Download, StickyNote, Columns3, GripVertical } from 'lucide-react';
+import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, ArrowUpDown, ArrowDown, ArrowUp, Pencil, Download, StickyNote, Columns3, GripVertical, ExternalLink, Check, X } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useCampaignNotes } from '@/hooks/useCampaignNotes';
 import { useColumnPreferences, ALL_COLUMNS } from '@/hooks/useColumnPreferences';
 import { useAdsets, ProcessedAdset } from '@/hooks/useAdsets';
+import { useCampaignActions } from '@/hooks/useCampaignActions';
 import { getRoasColor, formatCurrency, formatNumber } from '@/lib/mockData';
 import { ProcessedCampaign } from '@/hooks/useMetaData';
 import { Switch } from '@/components/ui/switch';
@@ -192,9 +193,27 @@ export default function CampaignsTab() {
   const [budgetCache, setBudgetCache] = useState<Record<string, number | null>>({});
   const [budgetFetching, setBudgetFetching] = useState<Set<string>>(new Set());
 
+  // Inline editing state
+  const [editingBudgetId, setEditingBudgetId] = useState<string | null>(null);
+  const [editingBudgetValue, setEditingBudgetValue] = useState('');
+  const [savingBudgetId, setSavingBudgetId] = useState<string | null>(null);
+  const [budgetFeedback, setBudgetFeedback] = useState<Record<string, 'success' | 'error'>>({});
+
+  const [editingNameId, setEditingNameId] = useState<string | null>(null);
+  const [editingNameValue, setEditingNameValue] = useState('');
+  const [savingNameId, setSavingNameId] = useState<string | null>(null);
+  const [nameFeedback, setNameFeedback] = useState<Record<string, 'success' | 'error'>>({});
+  const [localNames, setLocalNames] = useState<Record<string, string>>({});
+
+  // Bulk selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [lastClickedIdx, setLastClickedIdx] = useState<number | null>(null);
+  const [bulkLoading, setBulkLoading] = useState(false);
+
   const { analysisData, selectedAccountId, selectedPeriod, currencySymbol, setAnalysisForAccount } = useDashboard();
   const { profile } = useProfile();
   const { callMetaApi, isConnected } = useMetaConnection();
+  const { updateCampaignName, syncCacheStatus } = useCampaignActions();
   const { notes, saving: noteSaving, fetchNotes, saveNote, deleteNote } = useCampaignNotes();
   const { activeColumns, orderedColumns, isVisible, toggleColumn, reorderColumns, resetToDefault } = useColumnPreferences();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
@@ -349,6 +368,111 @@ export default function CampaignsTab() {
     }
   }, [executeToggle]);
 
+  // ═══ INLINE BUDGET EDIT ═══
+  const startBudgetEdit = useCallback((campaignId: string, currentBudget: number | null) => {
+    setEditingBudgetId(campaignId);
+    setEditingBudgetValue(currentBudget ? currentBudget.toFixed(2) : '');
+  }, []);
+
+  const saveBudgetInline = useCallback(async (campaignId: string) => {
+    const val = parseFloat(editingBudgetValue);
+    if (isNaN(val) || val <= 0) { setEditingBudgetId(null); return; }
+    setSavingBudgetId(campaignId);
+    setEditingBudgetId(null);
+    try {
+      const budgetCents = String(Math.round(val * 100));
+      // Check ABO vs CBO
+      const adSetsRes = await callMetaApi(`${campaignId}/adsets`, { fields: 'id,daily_budget,status' });
+      const adsetList = adSetsRes?.data || [];
+      const aboAdsets = adsetList.filter((a: any) => a.daily_budget);
+      if (aboAdsets.length > 0) {
+        const activeAdsets = aboAdsets.filter((a: any) => a.status === 'ACTIVE');
+        const targets = activeAdsets.length > 0 ? activeAdsets : aboAdsets;
+        await Promise.all(targets.map((a: any) => callMetaApi(a.id, { daily_budget: budgetCents, _method: 'POST' })));
+      } else {
+        await callMetaApi(campaignId, { daily_budget: budgetCents, _method: 'POST' });
+      }
+      // Update local budget cache
+      setBudgetCache(prev => ({ ...prev, [campaignId]: val }));
+      // Update global cache
+      if (analysisData && selectedAccountId) {
+        const updatedBudgets = { ...analysisData.budgetByCampaignId, [campaignId]: val };
+        setAnalysisForAccount(selectedAccountId, selectedPeriod, { ...analysisData, budgetByCampaignId: updatedBudgets });
+      }
+      setBudgetFeedback(prev => ({ ...prev, [campaignId]: 'success' }));
+      setTimeout(() => setBudgetFeedback(prev => { const n = { ...prev }; delete n[campaignId]; return n; }), 1500);
+      toast.success('Orçamento atualizado ✓');
+    } catch (err: any) {
+      setBudgetFeedback(prev => ({ ...prev, [campaignId]: 'error' }));
+      setTimeout(() => setBudgetFeedback(prev => { const n = { ...prev }; delete n[campaignId]; return n; }), 2000);
+      toast.error(err?.message || 'Erro ao atualizar budget.');
+    } finally {
+      setSavingBudgetId(null);
+    }
+  }, [editingBudgetValue, callMetaApi, analysisData, selectedAccountId, selectedPeriod, setAnalysisForAccount]);
+
+  // ═══ INLINE NAME EDIT ═══
+  const startNameEdit = useCallback((campaignId: string, currentName: string) => {
+    setEditingNameId(campaignId);
+    setEditingNameValue(currentName);
+  }, []);
+
+  const saveNameInline = useCallback(async (campaignId: string) => {
+    const newName = editingNameValue.trim();
+    if (!newName) { setEditingNameId(null); return; }
+    setSavingNameId(campaignId);
+    setEditingNameId(null);
+    try {
+      await callMetaApi(campaignId, { name: newName, _method: 'POST' });
+      setLocalNames(prev => ({ ...prev, [campaignId]: newName }));
+      syncCacheStatus(campaignId, { name: newName });
+      setNameFeedback(prev => ({ ...prev, [campaignId]: 'success' }));
+      setTimeout(() => setNameFeedback(prev => { const n = { ...prev }; delete n[campaignId]; return n; }), 1500);
+      toast.success('Nome atualizado ✓');
+    } catch (err: any) {
+      setNameFeedback(prev => ({ ...prev, [campaignId]: 'error' }));
+      setTimeout(() => setNameFeedback(prev => { const n = { ...prev }; delete n[campaignId]; return n; }), 2000);
+      toast.error(err?.message || 'Erro ao atualizar nome.');
+    } finally {
+      setSavingNameId(null);
+    }
+  }, [editingNameValue, callMetaApi, syncCacheStatus]);
+
+
+  const executeBulkAction = useCallback(async (action: 'ACTIVE' | 'PAUSED') => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setBulkLoading(true);
+    let successCount = 0;
+    for (const id of ids) {
+      try {
+        await callMetaApi(id, { status: action, _method: 'POST' });
+        setLocalStatuses(prev => ({ ...prev, [id]: action }));
+        successCount++;
+      } catch (err: any) {
+        console.warn(`[BULK] Failed for ${id}:`, err?.message);
+      }
+      // Small delay to avoid Meta rate limit
+      await new Promise(r => setTimeout(r, 300));
+    }
+    // Sync global cache
+    if (analysisData && selectedAccountId) {
+      const updatedCampaigns = (analysisData.campaigns || []).map(c =>
+        selectedIds.has(c.id) ? { ...c, status: action } : c
+      );
+      setAnalysisForAccount(selectedAccountId, selectedPeriod, { ...analysisData, campaigns: updatedCampaigns });
+    }
+    setSelectedIds(new Set());
+    setBulkLoading(false);
+    toast.success(`${successCount}/${ids.length} campanhas ${action === 'ACTIVE' ? 'ativadas' : 'pausadas'} ✓`);
+  }, [selectedIds, callMetaApi, analysisData, selectedAccountId, selectedPeriod, setAnalysisForAccount]);
+
+  // Open in Meta Ads Manager
+  const openInMeta = useCallback((campaignId: string) => {
+    const acctId = selectedAccountId || '';
+    window.open(`https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${acctId}&selected_campaign_ids=${campaignId}`, '_blank');
+  }, [selectedAccountId]);
+
   const generateAiAnalysis = useCallback(async (campaign: ProcessedCampaign) => {
     setAiLoadingIds(prev => new Set(prev).add(campaign.id));
     try {
@@ -424,6 +548,39 @@ Responda SOMENTE com o JSON, sem markdown.`;
   // Reset page when filters change (must be before early returns)
   React.useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, activeTodayFilter, roasFilter]);
 
+  // Pagination logic (must be before early returns for hooks)
+  const totalPages = Math.ceil(sortedCampaigns.length / PAGE_SIZE);
+  const paginatedCampaigns = sortedCampaigns.length > PAGE_SIZE
+    ? sortedCampaigns.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+    : sortedCampaigns;
+
+  const handleSelectRow = useCallback((campaignId: string, idx: number, shiftKey: boolean) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (shiftKey && lastClickedIdx !== null) {
+        const start = Math.min(lastClickedIdx, idx);
+        const end = Math.max(lastClickedIdx, idx);
+        for (let i = start; i <= end; i++) {
+          if (paginatedCampaigns[i]) next.add(paginatedCampaigns[i].id);
+        }
+      } else {
+        if (next.has(campaignId)) next.delete(campaignId);
+        else next.add(campaignId);
+      }
+      return next;
+    });
+    setLastClickedIdx(idx);
+  }, [lastClickedIdx, paginatedCampaigns]);
+
+  const handleSelectAll = useCallback(() => {
+    setSelectedIds(prev => {
+      const allOnPage = paginatedCampaigns.map(c => c.id);
+      const allSelected = allOnPage.every(id => prev.has(id));
+      if (allSelected) return new Set();
+      return new Set(allOnPage);
+    });
+  }, [paginatedCampaigns]);
+
   // Loading skeleton state
   if (selectedAccountId && !analysisData) {
     return <CampaignsTableSkeleton />;
@@ -463,11 +620,6 @@ Responda SOMENTE com o JSON, sem markdown.`;
   };
   // default align = right for metrics
 
-  // Pagination logic
-  const totalPages = Math.ceil(sortedCampaigns.length / PAGE_SIZE);
-  const paginatedCampaigns = sortedCampaigns.length > PAGE_SIZE
-    ? sortedCampaigns.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
-    : sortedCampaigns;
 
 
   const handlePageChange = (page: number) => {
@@ -780,6 +932,14 @@ Responda SOMENTE com o JSON, sem markdown.`;
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr className="border-b border-[#1C2538] bg-[#0D1121] sticky top-0 z-10">
+              {/* Checkbox column */}
+              <th className="px-2 py-2.5 w-8" onClick={e => e.stopPropagation()}>
+                <Checkbox
+                  checked={paginatedCampaigns.length > 0 && paginatedCampaigns.every(c => selectedIds.has(c.id))}
+                  onCheckedChange={() => handleSelectAll()}
+                  className="h-3.5 w-3.5"
+                />
+              </th>
               {activeColumns.map(col => {
                 const align = colAlign[col.id] || 'right';
                 const sortKey = colSortKey[col.id];
@@ -796,13 +956,13 @@ Responda SOMENTE com o JSON, sem markdown.`;
                   </th>
                 );
               })}
-              <th className="px-3 py-2.5 w-8"></th>
+              <th className="px-3 py-2.5 w-16"></th>
             </tr>
           </thead>
           <tbody>
             {sortedCampaigns.length === 0 ? (
               <tr>
-                <td colSpan={activeColumns.length + 1} className="text-center py-8 text-xs text-muted-foreground">
+                <td colSpan={activeColumns.length + 3} className="text-center py-8 text-xs text-muted-foreground">
                   Nenhuma campanha encontrada com os filtros atuais.
                 </td>
               </tr>
@@ -872,31 +1032,79 @@ Responda SOMENTE com o JSON, sem markdown.`;
                           </div>
                         </td>
                       );
-                    case 'campaign':
+                    case 'campaign': {
+                      const displayName = localNames[c.id] || c.name;
+                      const isEditingName = editingNameId === c.id;
+                      const isSavingName = savingNameId === c.id;
+                      const nFeedback = nameFeedback[c.id];
+                      const feedbackBorder = nFeedback === 'success' ? 'border-[#34D399]' : nFeedback === 'error' ? 'border-[#F87171]' : '';
                       return (
-                        <td key={colId} className="px-3">
-                          <TooltipProvider><Tooltip><TooltipTrigger asChild>
-                            <p className="text-[13px] font-semibold text-text-primary truncate max-w-[200px] cursor-default">{c.name}</p>
-                          </TooltipTrigger><TooltipContent><p className="text-xs max-w-xs">{c.name}</p></TooltipContent></Tooltip></TooltipProvider>
+                        <td key={colId} className="px-3" onClick={e => e.stopPropagation()}>
+                          {isEditingName ? (
+                            <input
+                              autoFocus
+                              type="text"
+                              value={editingNameValue}
+                              onChange={e => setEditingNameValue(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') saveNameInline(c.id);
+                                if (e.key === 'Escape') setEditingNameId(null);
+                              }}
+                              onBlur={() => saveNameInline(c.id)}
+                              className="w-full text-[13px] font-semibold bg-transparent border border-primary/40 rounded px-1.5 py-0.5 text-text-primary outline-none focus:ring-1 focus:ring-primary"
+                            />
+                          ) : (
+                            <div className={`flex items-center gap-1 group/name ${feedbackBorder ? `border ${feedbackBorder} rounded px-1` : ''}`}>
+                              {isSavingName ? (
+                                <Loader2 className="w-3 h-3 animate-spin text-muted-foreground mr-1" />
+                              ) : null}
+                              <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                                <p className="text-[13px] font-semibold text-text-primary truncate max-w-[200px] cursor-default">{displayName}</p>
+                              </TooltipTrigger><TooltipContent><p className="text-xs max-w-xs">{displayName}</p></TooltipContent></Tooltip></TooltipProvider>
+                              <Pencil className="w-3 h-3 shrink-0 text-muted-foreground/0 group-hover/name:text-muted-foreground cursor-pointer hover:text-primary transition-all" onClick={() => startNameEdit(c.id, displayName)} />
+                            </div>
+                          )}
                         </td>
                       );
+                    }
                     case 'spend':
                       return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(c.spend, currency)}</p></td>;
-                    case 'budget':
+                    case 'budget': {
+                      const rawBudget = analysisData?.budgetByCampaignId?.[c.id];
+                      const bVal = rawBudget != null && rawBudget > 0 ? rawBudget : null;
+                      const isEditingBgt = editingBudgetId === c.id;
+                      const isSavingBgt = savingBudgetId === c.id;
+                      const bFeedback = budgetFeedback[c.id];
+                      const feedbackBorderB = bFeedback === 'success' ? 'border-[#34D399]' : bFeedback === 'error' ? 'border-[#F87171]' : '';
                       return (
                         <td key={colId} className="px-3 text-right" onClick={e => e.stopPropagation()}>
-                          {(() => {
-                            const rawBudget = analysisData?.budgetByCampaignId?.[c.id];
-                            const bVal = rawBudget != null && rawBudget > 0 ? rawBudget : null;
-                            return (
-                              <div className="flex items-center justify-end gap-1 group/budget">
-                                {bVal != null ? <p className="text-[13px] text-text-primary">{formatCurrency(bVal, currency)}</p> : <p className="text-[13px] text-text-muted">—</p>}
-                                <Pencil className="w-3 h-3 text-muted-foreground/0 group-hover/budget:text-muted-foreground cursor-pointer hover:text-primary transition-all" onClick={() => { setBudgetDialog({ id: c.id, name: c.name, currentSpend: bVal || 0 }); setBudgetValue(''); }} />
-                              </div>
-                            );
-                          })()}
+                          {isEditingBgt ? (
+                            <input
+                              autoFocus
+                              type="number"
+                              step="0.01"
+                              min="1"
+                              value={editingBudgetValue}
+                              onChange={e => setEditingBudgetValue(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') saveBudgetInline(c.id);
+                                if (e.key === 'Escape') setEditingBudgetId(null);
+                              }}
+                              onBlur={() => saveBudgetInline(c.id)}
+                              className="w-24 text-[13px] text-right bg-transparent border border-primary/40 rounded px-1.5 py-0.5 text-text-primary outline-none focus:ring-1 focus:ring-primary"
+                            />
+                          ) : (
+                            <div className={`flex items-center justify-end gap-1 group/budget ${feedbackBorderB ? `border ${feedbackBorderB} rounded px-1` : ''}`}>
+                              {isSavingBgt ? (
+                                <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                              ) : null}
+                              {bVal != null ? <p className="text-[13px] text-text-primary">{formatCurrency(bVal, currency)}</p> : <p className="text-[13px] text-text-muted">—</p>}
+                              <Pencil className="w-3 h-3 shrink-0 text-muted-foreground/0 group-hover/budget:text-muted-foreground cursor-pointer hover:text-primary transition-all" onClick={() => startBudgetEdit(c.id, bVal)} />
+                            </div>
+                          )}
                         </td>
                       );
+                    }
                     case 'revenue':
                       return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(c.revenue, currency)}</p></td>;
                     case 'profit':
@@ -951,9 +1159,34 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       onMouseEnter={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(96,165,250,0.04)'; }}
                       onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = ''; }}
                     >
+                      {/* Checkbox */}
+                      <td className="px-2" onClick={e => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedIds.has(c.id)}
+                          onCheckedChange={() => handleSelectRow(c.id, rowIndex, false)}
+                          onClick={(e: React.MouseEvent) => {
+                            e.stopPropagation();
+                            if (e.shiftKey) {
+                              e.preventDefault();
+                              handleSelectRow(c.id, rowIndex, true);
+                            }
+                          }}
+                          className="h-3.5 w-3.5"
+                        />
+                      </td>
                       {activeColumns.map(col => renderCell(col.id))}
-                      <td className="px-3 text-center text-text-muted">
-                        {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      {/* Actions: expand + open in meta */}
+                      <td className="px-2" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-1">
+                          <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                            <button onClick={() => openInMeta(c.id)} className="p-1 text-muted-foreground hover:text-primary transition-colors">
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </button>
+                          </TooltipTrigger><TooltipContent><p className="text-xs">Abrir no Meta</p></TooltipContent></Tooltip></TooltipProvider>
+                          <button onClick={() => setExpandedId(expanded ? null : c.id)} className="p-1 text-muted-foreground hover:text-foreground transition-colors">
+                            {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                          </button>
+                        </div>
                       </td>
                     </tr>
 
@@ -963,7 +1196,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       const isAdsetLoading = adsetsLoading.has(c.id);
                       return (
                         <tr className="bg-[#090D18] border-b border-[#1C2538]">
-                          <td colSpan={activeColumns.length + 1} className="p-0">
+                          <td colSpan={activeColumns.length + 3} className="p-0">
                             <div className="pl-10 pr-4 py-3 border-l-2 border-l-data-blue/40 animate-fade-up">
                               <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider mb-2">Conjuntos de Anúncios</p>
                               {isAdsetLoading ? (
@@ -1037,7 +1270,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     {/* EXPANDED CONTENT */}
                     {expanded && (
                       <tr className="bg-[#080B14] border-b border-[#1C2538]">
-                        <td colSpan={activeColumns.length + 1} className="p-0">
+                        <td colSpan={activeColumns.length + 3} className="p-0">
                           <div className="p-4 border-l-2 border-l-primary/50 animate-fade-up">
                             {aiLoading ? (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1249,6 +1482,42 @@ Responda SOMENTE com o JSON, sem markdown.`;
         </table>
         <PaginationBar />
       </div>
+
+      {/* Bulk Actions Floating Bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1C2538] border border-[#2D3F5E] rounded-xl shadow-2xl px-5 py-3 flex items-center gap-4 animate-fade-up">
+          <span className="text-xs font-semibold text-text-primary">{selectedIds.size} campanha{selectedIds.size > 1 ? 's' : ''} selecionada{selectedIds.size > 1 ? 's' : ''}</span>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={bulkLoading}
+              onClick={() => executeBulkAction('ACTIVE')}
+              className="h-7 text-[11px] gap-1 border-[#34D399]/30 text-[#34D399] hover:bg-[#34D399]/10"
+            >
+              {bulkLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : '▶'} Ativar
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={bulkLoading}
+              onClick={() => executeBulkAction('PAUSED')}
+              className="h-7 text-[11px] gap-1 border-[#FBBF24]/30 text-[#FBBF24] hover:bg-[#FBBF24]/10"
+            >
+              {bulkLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : '⏸'} Pausar
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={bulkLoading}
+              onClick={() => setSelectedIds(new Set())}
+              className="h-7 text-[11px] text-muted-foreground hover:text-foreground"
+            >
+              ✕ Limpar
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Dialog */}
       <Dialog open={!!confirmDialog} onOpenChange={(open) => !open && setConfirmDialog(null)}>

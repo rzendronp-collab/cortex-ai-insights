@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useMetaConnection } from './useMetaConnection';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from './useProfile';
@@ -598,6 +598,30 @@ export function useMetaData() {
       setLoading(false);
     }
   }, [selectedAccountId, selectedPeriod, dateRange, isConnected, isTokenExpired, callMetaApiWithRetry, user, setAnalysisForAccount, checkAndCreateAlerts]);
+
+  // Auto-refresh interval
+  const autoRefreshInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (autoRefreshInterval.current) {
+      clearInterval(autoRefreshInterval.current);
+      autoRefreshInterval.current = null;
+    }
+
+    if (!selectedAccountId || !isConnected) return;
+
+    const stored = localStorage.getItem('cortexads_autorefresh_interval');
+    const minutes = stored ? parseInt(stored, 10) : 30;
+    if (!minutes || isNaN(minutes)) return;
+
+    autoRefreshInterval.current = setInterval(() => {
+      analyze();
+    }, minutes * 60 * 1000);
+
+    return () => {
+      if (autoRefreshInterval.current) clearInterval(autoRefreshInterval.current);
+    };
+  }, [selectedAccountId, isConnected, analyze]);
 
   return { loading, error, analyze, roasTarget: profile?.roas_target || 3.0 };
 }

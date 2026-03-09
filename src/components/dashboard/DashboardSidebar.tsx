@@ -84,6 +84,17 @@ export default function DashboardSidebar() {
   };
   const isBmExpanded = (bizName: string) => bmExpanded[bizName] !== false; // default expanded
 
+  // Navigation items
+  const navItems = [
+    { id: 'overview', label: 'Visão Geral', icon: BarChart3 },
+    { id: 'campaigns', label: 'Campanhas', icon: Target },
+    { id: 'comparison', label: 'Comparação', icon: Calendar },
+    { id: 'rules', label: 'Regras', icon: Cog },
+    { id: 'consolidated', label: 'Consolidado', icon: Globe },
+    { id: 'chat', label: 'Chat IA', icon: MessageCircle },
+    { id: 'report', label: 'Relatório', icon: FileText },
+  ];
+
   return (
     <div className="w-56 h-screen bg-sidebar border-r border-border flex flex-col fixed left-0 top-0 z-40">
       {/* Logo */}

@@ -228,8 +228,8 @@ export function useMetaData() {
         }),
         callMetaApi(`${acctPath}/adsets`, {
           fields: 'id,name,campaign_id,daily_budget,lifetime_budget,status',
+          filtering: JSON.stringify([{"field":"effective_status","operator":"IN","value":["ACTIVE","PAUSED"]}]),
           limit: '200',
-          date_preset: period,
         }),
       ]);
 

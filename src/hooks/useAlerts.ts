@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
 import { useMetaConnection } from './useMetaConnection';
+import { useDashboard } from '@/context/DashboardContext';
 import { ProcessedCampaign } from './useMetaData';
 import { useNotifications } from './useNotifications';
 

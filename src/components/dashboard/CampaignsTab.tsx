@@ -215,7 +215,12 @@ export default function CampaignsTab() {
     if (selectedAccountId) fetchNotes(selectedAccountId);
   }, [selectedAccountId, fetchNotes]);
 
-  const rawCampaigns: ProcessedCampaign[] = analysisData?.campaigns || [];
+  // Merge localStatuses into campaigns so status persists across remounts
+  const rawCampaigns: ProcessedCampaign[] = useMemo(() => {
+    const base = analysisData?.campaigns || [];
+    if (Object.keys(localStatuses).length === 0) return base;
+    return base.map(c => localStatuses[c.id] ? { ...c, status: localStatuses[c.id] } : c);
+  }, [analysisData?.campaigns, localStatuses]);
   const prevCampaigns = analysisData?.campaignsPrev || [];
   const prevMap = useMemo(() => {
     const map: Record<string, ProcessedCampaign> = {};

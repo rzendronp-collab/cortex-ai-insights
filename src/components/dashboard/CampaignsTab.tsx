@@ -181,6 +181,7 @@ export default function CampaignsTab() {
   
   // Confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{ id: string; name: string; currentStatus: string } | null>(null);
+  const [dontAskAgain, setDontAskAgain] = useState(false);
   
   // Budget dialog state
   const [budgetDialog, setBudgetDialog] = useState<{ id: string; name: string; currentSpend: number } | null>(null);
@@ -299,11 +300,7 @@ export default function CampaignsTab() {
     return hourlySorted.filter(h => h.spend > 0).slice(0, 3).map(h => h.hour);
   }, [hourlySorted]);
 
-  const toggleCampaignStatus = useCallback(async (campaignId: string, currentStatus: string) => {
-    if (!isConnected || !selectedAccountId) {
-      toast.error('Conecte sua conta Meta primeiro.');
-      return;
-    }
+  const executeToggle = useCallback(async (campaignId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
     setTogglingIds(prev => new Set(prev).add(campaignId));
     try {
@@ -315,7 +312,17 @@ export default function CampaignsTab() {
     } finally {
       setTogglingIds(prev => { const n = new Set(prev); n.delete(campaignId); return n; });
     }
-  }, [isConnected, selectedAccountId, callMetaApi]);
+  }, [callMetaApi]);
+
+  const handleToggleClick = useCallback((id: string, name: string, currentStatus: string) => {
+    const skipConfirm = localStorage.getItem('cortexads_toggle_confirmed') === 'true';
+    if (skipConfirm) {
+      executeToggle(id, currentStatus);
+    } else {
+      setDontAskAgain(false);
+      setConfirmDialog({ id, name, currentStatus });
+    }
+  }, [executeToggle]);
 
   const generateAiAnalysis = useCallback(async (campaign: ProcessedCampaign) => {
     setAiLoadingIds(prev => new Set(prev).add(campaign.id));
@@ -704,7 +711,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                     ) : (
                       <button
-                        onClick={() => setConfirmDialog({ id: c.id, name: c.name, currentStatus: effectiveStatus })}
+                        onClick={() => handleToggleClick(c.id, c.name, effectiveStatus)}
                         className="relative inline-flex items-center cursor-pointer"
                         style={{ width: 36, height: 20, borderRadius: 10 }}
                       >
@@ -829,7 +836,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                             ) : (
                               <button
-                                onClick={() => setConfirmDialog({ id: c.id, name: c.name, currentStatus: effectiveStatus })}
+                                onClick={() => handleToggleClick(c.id, c.name, effectiveStatus)}
                                 className="relative inline-flex items-center cursor-pointer"
                                 style={{ width: 36, height: 20, borderRadius: 10 }}
                               >
@@ -1222,13 +1229,24 @@ Responda SOMENTE com o JSON, sem markdown.`;
       <Dialog open={!!confirmDialog} onOpenChange={(open) => !open && setConfirmDialog(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-base">
-              {confirmDialog?.currentStatus === 'ACTIVE' ? '⏸️ Pausar campanha?' : '▶️ Ativar campanha?'}
-            </DialogTitle>
+            <DialogTitle className="text-base">Tem certeza?</DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
-              {confirmDialog?.name}
+              Você está prestes a alterar o status de uma campanha diretamente no Meta Ads.
+              <br /><br />
+              <strong>{confirmDialog?.name}</strong> → {confirmDialog?.currentStatus === 'ACTIVE' ? 'Pausar' : 'Ativar'}
             </DialogDescription>
           </DialogHeader>
+          <div className="flex items-center gap-2 py-2">
+            <Checkbox
+              id="dont-ask-toggle"
+              checked={dontAskAgain}
+              onCheckedChange={(v) => setDontAskAgain(!!v)}
+              className="h-4 w-4"
+            />
+            <label htmlFor="dont-ask-toggle" className="text-xs text-muted-foreground cursor-pointer select-none">
+              Não mostrar novamente
+            </label>
+          </div>
           <DialogFooter className="flex gap-2 sm:justify-end">
             <Button variant="outline" size="sm" onClick={() => setConfirmDialog(null)}>
               Cancelar
@@ -1236,21 +1254,14 @@ Responda SOMENTE com o JSON, sem markdown.`;
             <Button
               size="sm"
               variant={confirmDialog?.currentStatus === 'ACTIVE' ? 'destructive' : 'default'}
-              onClick={async () => {
+              onClick={() => {
                 if (!confirmDialog) return;
+                if (dontAskAgain) {
+                  localStorage.setItem('cortexads_toggle_confirmed', 'true');
+                }
                 const { id, currentStatus } = confirmDialog;
                 setConfirmDialog(null);
-                setTogglingIds(prev => new Set(prev).add(id));
-                try {
-                  await callMetaApi(id, { status: currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE', _method: 'POST' });
-                  const newStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
-                  setLocalStatuses(prev => ({ ...prev, [id]: newStatus }));
-                  toast.success(newStatus === 'ACTIVE' ? 'Campanha ativada ✓' : 'Campanha pausada ✓');
-                } catch (err: any) {
-                  toast.error(err?.message || 'Erro ao alterar status.');
-                } finally {
-                  setTogglingIds(prev => { const n = new Set(prev); n.delete(id); return n; });
-                }
+                executeToggle(id, currentStatus);
               }}
             >
               Confirmar

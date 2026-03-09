@@ -81,6 +81,15 @@ export default function DashboardSidebar() {
     }
   };
 
+  const handleDisconnectMeta = async () => {
+    try {
+      await disconnectMeta();
+      toast.success('Conta Meta desconectada');
+    } catch {
+      toast.error('Erro ao desconectar Meta');
+    }
+  };
+
   const handleSelectAccount = (accountId: string | null, accountName: string | null, accountCurrency?: string | null) => {
     setSelectedAccountId(accountId);
     setSelectedAccountName(accountName);

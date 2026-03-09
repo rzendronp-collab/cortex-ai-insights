@@ -417,7 +417,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                         <p className="text-xs text-foreground">{formatCurrency(c.revenue, currency)}</p>
                       </td>
                       <td className="px-3 py-3 text-right">
-                        <p className={`text-xs font-medium ${profit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        <p className={`text-xs font-medium px-2 py-1 rounded ${profit >= 0 ? 'text-success bg-success/10' : 'text-destructive bg-destructive/10'}`}>
                           {profit > 0 ? '+' : ''}{formatCurrency(profit, currency)}
                         </p>
                       </td>

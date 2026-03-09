@@ -212,6 +212,13 @@ export default function CampaignsTab() {
   const [lastClickedIdx, setLastClickedIdx] = useState<number | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
 
+  // Duplicate dialog state
+  const [duplicateDialog, setDuplicateDialog] = useState<{ id: string; name: string } | null>(null);
+  const [duplicateName, setDuplicateName] = useState('');
+  const [duplicateKeepActive, setDuplicateKeepActive] = useState(false);
+  const [duplicateLoading, setDuplicateLoading] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
+
   const { analysisData, selectedAccountId, selectedPeriod, currencySymbol, setAnalysisForAccount } = useDashboard();
   const { profile } = useProfile();
   const { user } = useAuth();

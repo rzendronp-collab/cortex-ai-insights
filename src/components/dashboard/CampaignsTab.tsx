@@ -501,7 +501,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                             {aiLoading ? (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {[0,1,2,3].map(i => (
-                                  <div key={i} className="bg-card border border-border rounded-lg p-4 space-y-3">
+                                  <div key={i} className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 space-y-3">
                                     <Skeleton className="h-3 w-32" />
                                     <Skeleton className="h-4 w-full" />
                                     <Skeleton className="h-4 w-3/4" />

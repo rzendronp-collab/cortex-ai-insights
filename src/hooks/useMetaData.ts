@@ -176,7 +176,7 @@ function isRateLimitError(err: any): boolean {
 
 export function useMetaData() {
   const { callMetaApi, isConnected, isTokenExpired } = useMetaConnection();
-  const { selectedAccountId, selectedPeriod, setAnalysisForAccount } = useDashboard();
+  const { selectedAccountId, selectedPeriod, dateRange, setAnalysisForAccount } = useDashboard();
   const { profile } = useProfile();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);

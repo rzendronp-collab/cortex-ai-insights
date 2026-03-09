@@ -301,6 +301,39 @@ export type Database = {
           },
         ]
       }
+      error_logs: {
+        Row: {
+          context: string | null
+          created_at: string | null
+          id: string
+          message: string | null
+          stack: string | null
+          url: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          stack?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          stack?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       meta_connections: {
         Row: {
           access_token: string | null

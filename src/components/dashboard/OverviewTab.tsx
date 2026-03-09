@@ -250,7 +250,7 @@ export default function OverviewTab() {
         </div>
 
         {/* Origem tráfego */}
-        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
           <h3 className="text-xs font-semibold text-text-primary mb-4">Origem do Tráfego</h3>
           <div className="space-y-3 mt-2">
             {platformData.map((p, i) => {

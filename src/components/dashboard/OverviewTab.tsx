@@ -396,40 +396,123 @@ export default function OverviewTab() {
         <HourlyBarChart data={hourlyData} currency={currency} />
       </div>
 
-      {/* ─── Demographics ─── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
-          <h3 className="text-xs font-semibold text-text-primary mb-4">Gênero</h3>
-          <ResponsiveContainer width="100%" height={160}>
-            <PieChart>
-              <Pie data={genderData} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={0}>
-                {genderData.map((entry, i) => <Cell key={i} fill={entry.fill} />)}
-              </Pie>
-              <Tooltip contentStyle={chartTooltipStyle} />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="flex justify-center gap-4 mt-2">
-            {genderData.map(g => (
-              <span key={g.name} className="text-[12px] text-text-secondary"><span className="font-semibold text-text-primary">{g.value}%</span> {g.name}</span>
-            ))}
+      {/* ─── Demographics Section ─── */}
+      <div>
+        <h3 className="text-sm font-semibold text-text-primary mb-3">👥 Demográficos</h3>
+        {demoByGender.length === 0 && demoByAge.length === 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
+              <p className="text-xs text-muted-foreground text-center">Dados demográficos não disponíveis para esta conta</p>
+            </div>
+            <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
+              <p className="text-xs text-muted-foreground text-center">Dados demográficos não disponíveis para esta conta</p>
+            </div>
           </div>
-        </div>
-
-        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up" style={{ minHeight: 220 }}>
-          <h3 className="text-xs font-semibold text-text-primary mb-4">Faixa Etária</h3>
-          <div className="space-y-2.5 mt-2" style={{ minHeight: 180 }}>
-            {ageData.map(a => (
-              <div key={a.age} className="flex items-center gap-2">
-                <span className="text-[10px] text-text-muted w-10">{a.age}</span>
-                <div className="flex-1 h-3 bg-bg-base rounded-full overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${a.percentage}%`, background: `linear-gradient(90deg, ${DATA_BLUE}, ${DATA_PURPLE})` }} />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* CARD 1 — Por Gênero */}
+            <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
+              <h4 className="text-xs font-semibold text-text-primary mb-4">Por Gênero</h4>
+              <div className="flex items-center gap-4">
+                <div className="flex-shrink-0" style={{ width: 140, height: 140 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={demoByGender.map(g => ({ name: g.name, value: g.spend, fill: g.fill }))}
+                        cx="50%" cy="50%" innerRadius={35} outerRadius={60}
+                        dataKey="value" strokeWidth={0}
+                      >
+                        {demoByGender.map((g, i) => <Cell key={i} fill={g.fill} />)}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={chartTooltipStyle}
+                        formatter={(value: number) => formatCurrency(value, currency)}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-                <span className="text-[10px] text-text-primary font-semibold w-7 text-right">{a.percentage}%</span>
+                <div className="flex flex-col gap-1.5">
+                  {demoByGender.map(g => (
+                    <div key={g.name} className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: g.fill }} />
+                      <span className="text-[11px] text-text-secondary">{g.name}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
+              {/* Gender table */}
+              <div className="mt-4 border-t border-[#2A3850] pt-3">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-[10px] text-text-muted uppercase">
+                      <th className="text-left py-1 font-semibold">Gênero</th>
+                      <th className="text-right py-1 font-semibold">Gasto</th>
+                      <th className="text-right py-1 font-semibold">Vendas</th>
+                      <th className="text-right py-1 font-semibold">ROAS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {demoByGender.map(g => (
+                      <tr key={g.name} className="border-t border-[#2A3850]/50">
+                        <td className="py-1.5 text-text-primary font-medium flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: g.fill }} />
+                          {g.name}
+                        </td>
+                        <td className="py-1.5 text-right text-text-primary">{formatCurrency(g.spend, currency)}</td>
+                        <td className="py-1.5 text-right text-text-primary">{g.purchases}</td>
+                        <td className="py-1.5 text-right">
+                          <span className={`font-bold ${g.roas >= roasTarget ? 'text-data-green' : g.roas >= roasTarget * 0.7 ? 'text-data-yellow' : 'text-data-red'}`}>
+                            {g.roas.toFixed(2)}x
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
+            {/* CARD 2 — Por Faixa Etária */}
+            <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
+              <h4 className="text-xs font-semibold text-text-primary mb-4">Por Faixa Etária</h4>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={demoByAge} layout="vertical" margin={{ top: 0, right: 5, left: 5, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 9, fill: CHART_AXIS }} tickFormatter={(v) => formatCurrency(v, currency)} />
+                  <YAxis type="category" dataKey="age" tick={{ fontSize: 10, fill: '#94A3B8' }} width={45} />
+                  <Tooltip
+                    contentStyle={chartTooltipStyle}
+                    formatter={(value: number, name: string) => [formatCurrency(value, currency), 'Gasto']}
+                    labelFormatter={(label) => `Faixa: ${label}`}
+                    content={({ active, payload, label }) => {
+                      if (!active || !payload?.length) return null;
+                      const d = payload[0].payload;
+                      return (
+                        <div style={chartTooltipStyle} className="rounded-lg shadow-xl">
+                          <p className="text-[11px] font-medium text-text-primary mb-1">Faixa: {d.age}</p>
+                          <p className="text-[10px] text-text-secondary">Gasto: <span className="text-text-primary font-semibold">{formatCurrency(d.spend, currency)}</span></p>
+                          <p className="text-[10px] text-text-secondary">ROAS: <span className={`font-bold ${d.roas >= roasTarget ? 'text-data-green' : 'text-data-red'}`}>{d.roas.toFixed(2)}x</span></p>
+                          <p className="text-[10px] text-text-secondary">Vendas: <span className="text-text-primary font-semibold">{d.purchases}</span></p>
+                        </div>
+                      );
+                    }}
+                  />
+                  <defs>
+                    <linearGradient id="ageGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor={DATA_BLUE} />
+                      <stop offset="100%" stopColor={DATA_PURPLE} />
+                    </linearGradient>
+                  </defs>
+                  <Bar dataKey="spend" fill="url(#ageGradient)" radius={[0, 4, 4, 0]} barSize={14} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ─── Gasto vs Receita ─── */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
           <h3 className="text-xs font-semibold text-text-primary mb-4">Gasto vs Receita</h3>
           <ResponsiveContainer width="100%" height={160}>

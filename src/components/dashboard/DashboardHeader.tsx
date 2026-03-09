@@ -210,8 +210,6 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
       {/* Mobile: second row with account + period */}
       {isMobile && (
         <div className="flex items-center gap-2 px-4 py-2 border-t border-border-subtle overflow-x-auto">
-          {accountDropdown}
-          <div className="w-px h-5 bg-border-default shrink-0" />
           {periodSelector}
         </div>
       )}

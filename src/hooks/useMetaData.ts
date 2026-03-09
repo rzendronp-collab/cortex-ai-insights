@@ -233,6 +233,7 @@ export function useMetaData() {
 
       const campaigns: ProcessedCampaign[] = (campaignsRes?.data || []).map(processCampaign);
       const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map(processCampaign);
+      console.log('[PREV RAW]', campaignsPrevRes?.data?.[0]);
 
       const prevTotalSpend = campaignsPrev.reduce((s, c) => s + c.spend, 0);
       const currTotalSpend = campaigns.reduce((s, c) => s + c.spend, 0);

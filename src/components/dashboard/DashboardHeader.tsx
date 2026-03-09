@@ -1,17 +1,49 @@
+import { useState, useRef, useEffect } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
-import { Zap, Loader2, Clock, AlertTriangle, RefreshCw, Bell } from 'lucide-react';
+import { Play, Loader2, Clock, AlertTriangle, RefreshCw, Building2, ChevronDown, Circle } from 'lucide-react';
 import AlertsPanel from './AlertsPanel';
-import { Button } from '@/components/ui/button';
 import { getRoasColor } from '@/lib/mockData';
 
 const periods = ['Hoje', '3d', '7d', '14d', '30d'];
 
+const tabLabels: Record<string, string> = {
+  overview: 'Visão Geral',
+  campaigns: 'Campanhas',
+  'action-plan': 'Otimizar',
+  comparison: 'Comparação',
+  consolidated: 'Consolidado',
+  rules: 'Regras',
+  chat: 'Chat IA',
+  report: 'Relatório',
+};
+
 export default function DashboardHeader() {
-  const { selectedPeriod, setSelectedPeriod, selectedAccountId, selectedAccountName, analysisData, isFromCache, cacheTimestamp, currencySymbol } = useDashboard();
-  const { isTokenExpired, connectMeta } = useMetaConnection();
+  const {
+    selectedPeriod, setSelectedPeriod,
+    selectedAccountId, setSelectedAccountId,
+    selectedAccountName, setSelectedAccountName,
+    setSelectedAccountCurrency,
+    analysisData, isFromCache, cacheTimestamp, currencySymbol,
+    activeTab,
+  } = useDashboard();
+  const { isTokenExpired, connectMeta, adAccounts } = useMetaConnection();
   const { analyze, loading, roasTarget } = useMetaData();
+
+  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setAccountDropdownOpen(false);
+      }
+    };
+    if (accountDropdownOpen) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [accountDropdownOpen]);
 
   const ad = analysisData;
   const totalSpend = ad?.campaigns.reduce((s, c) => s + c.spend, 0) || 0;
@@ -29,11 +61,26 @@ export default function DashboardHeader() {
       })()
     : null;
 
-  const accountTitle = selectedAccountName || (selectedAccountId ? `act_${selectedAccountId}` : 'Selecione uma conta');
-  const accountSubtitle = selectedAccountId ? `act_${selectedAccountId}` : '';
-
   const lastTime = ad?.lastUpdated ? new Date(ad.lastUpdated).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
   const cacheTime = cacheTimestamp ? new Date(cacheTimestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
+
+  const handleSelectAccount = (account: typeof adAccounts[0]) => {
+    setSelectedAccountId(account.account_id);
+    setSelectedAccountName(account.account_name);
+    setSelectedAccountCurrency(account.currency || null);
+    setAccountDropdownOpen(false);
+  };
+
+  // Group accounts by BM
+  const accountsByBm = adAccounts.reduce((acc, a) => {
+    const bm = a.business_name || 'Sem Business Manager';
+    if (!acc[bm]) acc[bm] = [];
+    acc[bm].push(a);
+    return acc;
+  }, {} as Record<string, typeof adAccounts>);
+
+  const pageTitle = tabLabels[activeTab] || 'Dashboard';
+  const subtitle = `Meta Ads · ${selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`}`;
 
   return (
     <div className="sticky top-0 z-30 bg-bg-sidebar/90 backdrop-blur-xl border-b border-border-subtle">
@@ -46,14 +93,13 @@ export default function DashboardHeader() {
         </div>
       )}
 
-      {/* Main header row — 56px */}
+      {/* Main header row */}
       <div className="h-[56px] flex items-center justify-between px-6">
-        {/* Left: Account selector */}
+        {/* Left: Page title */}
         <div>
-          <h1 className="text-sm font-semibold text-text-primary">{accountTitle}</h1>
-          <p className="text-[11px] text-text-secondary">
-            {accountSubtitle && `${accountSubtitle} • `}
-            {selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`}
+          <h1 className="text-[15px] font-semibold text-text-primary">{pageTitle}</h1>
+          <p className="text-[11px] text-text-muted">
+            {subtitle}
             {lastTime && <span className="ml-2"><Clock className="w-3 h-3 inline" /> {lastTime}</span>}
             {isFromCache && cacheTime && (
               <span className="ml-2 text-data-blue">
@@ -63,17 +109,70 @@ export default function DashboardHeader() {
           </p>
         </div>
 
-        {/* Right: Period + Alerts + Analyze */}
-        <div className="flex items-center gap-4">
-          {/* Period selector */}
-          <div className="flex bg-bg-card rounded-lg p-0.5 border border-border-subtle">
+        {/* Right: Unified control bar */}
+        <div className="flex items-center bg-bg-card border border-border-default rounded-[10px] p-[6px] gap-1">
+
+          {/* 1. Account dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-md text-[12px] font-medium hover:bg-bg-card-hover transition-colors"
+            >
+              <Building2 className="w-3.5 h-3.5 text-text-muted" />
+              <span className="text-text-primary max-w-[140px] truncate">
+                {selectedAccountName || (selectedAccountId ? `act_${selectedAccountId}` : 'Selecionar conta')}
+              </span>
+              <ChevronDown className={`w-3 h-3 text-text-muted transition-transform ${accountDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {accountDropdownOpen && (
+              <div className="absolute top-full right-0 mt-2 w-[280px] bg-bg-card border border-border-default rounded-lg shadow-xl overflow-hidden z-50">
+                <div className="max-h-[280px] overflow-y-auto p-1.5">
+                  {Object.entries(accountsByBm).map(([bmName, accounts]) => (
+                    <div key={bmName}>
+                      <p className="text-[9px] text-text-muted uppercase tracking-[1px] font-semibold px-3 py-1.5 mt-1">{bmName}</p>
+                      {accounts.map(account => {
+                        const isActive = selectedAccountId === account.account_id;
+                        return (
+                          <button
+                            key={account.id}
+                            onClick={() => handleSelectAccount(account)}
+                            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md text-left transition-colors ${
+                              isActive
+                                ? 'bg-[hsl(217_40%_18%)] text-data-blue'
+                                : 'text-text-primary hover:bg-bg-card-hover'
+                            }`}
+                          >
+                            <Circle className={`w-1.5 h-1.5 flex-shrink-0 ${account.is_active ? 'fill-data-green text-data-green' : 'fill-text-muted text-text-muted'}`} />
+                            <span className="text-[12px] truncate flex-1 font-medium">
+                              {account.account_name || `act_${account.account_id}`}
+                            </span>
+                            {isActive && <span className="text-[9px] text-data-blue font-semibold">✓</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ))}
+                  {adAccounts.length === 0 && (
+                    <p className="text-[11px] text-text-muted text-center py-4">Nenhuma conta encontrada</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Separator */}
+          <div className="w-px h-5 bg-border-default" />
+
+          {/* 2. Period selector */}
+          <div className="flex items-center gap-0.5">
             {periods.map((p) => (
               <button
                 key={p}
                 onClick={() => setSelectedPeriod(p)}
-                className={`px-3 py-1.5 text-[11px] font-medium rounded-md transition-all ${
+                className={`px-3 py-1 text-[11px] font-medium rounded-md transition-all ${
                   selectedPeriod === p
-                    ? 'bg-data-blue text-white shadow-sm'
+                    ? 'bg-data-blue text-white'
                     : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
@@ -82,22 +181,27 @@ export default function DashboardHeader() {
             ))}
           </div>
 
-          {/* Alerts */}
+          {/* Separator */}
+          <div className="w-px h-5 bg-border-default" />
+
+          {/* 3. Alerts */}
           <AlertsPanel />
 
-          {/* Analyze button */}
-          <Button
-            size="sm"
-            className="h-9 px-5 text-[13px] font-semibold gradient-blue text-white gap-1.5 rounded-lg hover:opacity-90 transition-all"
+          {/* Separator */}
+          <div className="w-px h-5 bg-border-default" />
+
+          {/* 4. Analyze button */}
+          <button
+            className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold text-white rounded-lg gradient-blue transition-all hover:opacity-90 hover:-translate-y-px disabled:opacity-50 disabled:pointer-events-none"
             onClick={() => analyze()}
             disabled={loading || !selectedAccountId}
           >
             {loading ? (
               <><Loader2 className="w-3.5 h-3.5 animate-spin" />Analisando...</>
             ) : (
-              <><Zap className="w-3.5 h-3.5" />Analisar</>
+              <><Play className="w-3.5 h-3.5 fill-current" />Analisar</>
             )}
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -118,7 +222,7 @@ export default function DashboardHeader() {
           </>
         ) : (
           <span className="text-text-muted">
-            {selectedAccountId ? 'Clique em Analisar para carregar os dados desta conta' : 'Selecione uma conta na sidebar'}
+            {selectedAccountId ? 'Clique em Analisar para carregar os dados desta conta' : 'Selecione uma conta no header'}
           </span>
         )}
       </div>

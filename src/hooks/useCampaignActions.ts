@@ -143,7 +143,7 @@ export function useCampaignActions() {
     } finally {
       setLoading(false);
     }
-  }, [isConnected, selectedAccountId, callMetaApi, syncCacheStatus]);
+  }, [isConnected, selectedAccountId, callMetaApi, syncCacheStatus, invalidateCache]);
 
   return { loading, toggleCampaignStatus, updateBudget, updateCampaignName, syncCacheStatus, detectBudgetType };
 }

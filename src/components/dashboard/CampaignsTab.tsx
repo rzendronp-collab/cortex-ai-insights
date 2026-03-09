@@ -629,15 +629,15 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                           tick={{ fontSize: 9, fill: 'hsl(var(--success))' }}
                                           tickFormatter={(v) => `${currency}${v.toFixed(0)}`}
                                         />
-                                        <Tooltip 
-                                          contentStyle={{ 
-                                            background: 'hsl(var(--card))', 
-                                            border: '1px solid hsl(var(--border))',
-                                            borderRadius: '6px',
-                                            fontSize: '10px'
-                                          }}
-                                          labelFormatter={(v) => new Date(v).toLocaleDateString('pt-BR')}
-                                        />
+                                         <RechartsTooltip 
+                                           contentStyle={{ 
+                                             background: 'hsl(var(--card))', 
+                                             border: '1px solid hsl(var(--border))',
+                                             borderRadius: '6px',
+                                             fontSize: '10px'
+                                           }}
+                                           labelFormatter={(v) => new Date(v).toLocaleDateString('pt-BR')}
+                                         />
                                         <Legend 
                                           wrapperStyle={{ fontSize: '10px' }}
                                           iconSize={8}

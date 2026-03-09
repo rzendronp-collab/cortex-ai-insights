@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
@@ -40,7 +40,20 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
   const isMobile = useIsMobile();
 
   const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+  const [isStale, setIsStale] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const checkStale = useCallback(() => {
+    if (!analysisData?.lastUpdated) { setIsStale(false); return; }
+    const age = Date.now() - new Date(analysisData.lastUpdated).getTime();
+    setIsStale(age > 60 * 60 * 1000);
+  }, [analysisData?.lastUpdated]);
+
+  useEffect(() => {
+    checkStale();
+    const interval = setInterval(checkStale, 60_000);
+    return () => clearInterval(interval);
+  }, [checkStale]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -222,6 +235,14 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
             <div className="w-px h-5 bg-border-default" />
             <AlertsPanel />
             <div className="w-px h-5 bg-border-default" />
+            {isStale && (
+              <button
+                onClick={() => analyze()}
+                className="bg-data-yellow/10 border border-data-yellow/30 text-data-yellow text-[10px] px-2 py-0.5 rounded-full hover:bg-data-yellow/20 transition-colors"
+              >
+                ⚠ Dados desatualizados
+              </button>
+            )}
             <button
               className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold text-white rounded-lg gradient-blue transition-all hover:opacity-90 hover:-translate-y-px disabled:opacity-50 disabled:pointer-events-none"
               onClick={() => analyze()}

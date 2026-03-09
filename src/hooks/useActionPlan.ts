@@ -387,12 +387,16 @@ Formato exato:
   const simulatePlan = useCallback((acoes: ActionItem[]) => {
     if (acoes.length === 0) return { receita_atual: 0, receita_estimada: 0, ganho: 0, ganho_pct: 0 };
 
-    const receitaAtual = acoes.reduce((sum, a) => sum + (a.roas_atual * a.valor_atual), 0);
-    const roasEstimadoMedio = acoes.reduce((sum, a) => sum + a.roas_estimado, 0) / acoes.length;
-    const roasAtualMedio = acoes.reduce((sum, a) => sum + a.roas_atual, 0) / acoes.length;
-    const receitaEstimada = roasAtualMedio > 0
-      ? receitaAtual * (roasEstimadoMedio / roasAtualMedio)
-      : receitaAtual;
+    const receitaAtual = acoes.reduce((sum, a) => {
+      const spendReal = a.valor_atual > 0 ? a.valor_atual : 0;
+      return sum + (spendReal * a.roas_atual);
+    }, 0);
+
+    const receitaEstimada = acoes.reduce((sum, a) => {
+      const spendNovo = a.valor_novo > 0 ? a.valor_novo : a.valor_atual;
+      return sum + (spendNovo * a.roas_estimado);
+    }, 0);
+
     const ganho = receitaEstimada - receitaAtual;
     const ganho_pct = receitaAtual > 0 ? (ganho / receitaAtual) * 100 : 0;
 

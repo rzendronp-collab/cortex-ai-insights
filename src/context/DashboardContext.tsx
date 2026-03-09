@@ -108,7 +108,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       selectedPeriod, setSelectedPeriod,
       dateRange, setDateRange,
       activeTab, setActiveTab,
-      analysisData, isFromCache, cacheTimestamp,
+      analysisData, isFromCache, isStale, cacheTimestamp,
       setAnalysisForAccount, clearCurrentAnalysis,
       currencySymbol, setSelectedAccountCurrency,
       analyzeRef,

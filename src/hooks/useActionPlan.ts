@@ -372,7 +372,9 @@ Formato exato:
     setIsApplying(false);
     await fetchHistory();
     toast.success(`${successCount}/${actions.length} ações aplicadas com sucesso!`);
-  }, [applyAction, fetchHistory]);
+    // Re-analyze after 2.5s
+    setTimeout(() => analyzeRef?.current?.(), 2500);
+  }, [applyAction, fetchHistory, analyzeRef]);
 
   const simulatePlan = useCallback((acoes: ActionItem[]) => {
     if (acoes.length === 0) return { receita_atual: 0, receita_estimada: 0, ganho: 0, ganho_pct: 0 };

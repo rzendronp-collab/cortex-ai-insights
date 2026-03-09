@@ -125,7 +125,7 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
   const navItems = [
     { id: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
     { id: 'campaigns', label: 'Campanhas', icon: BarChart2 },
-    { id: 'action-plan', label: 'Otimizar', icon: Zap },
+    { id: 'action-plan', label: '⚡ CORTEX', icon: Zap },
     { id: 'comparison', label: 'Comparação', icon: Calendar },
     { id: 'consolidated', label: 'Consolidado', icon: Globe },
     { id: 'rules', label: 'Regras', icon: Shield },

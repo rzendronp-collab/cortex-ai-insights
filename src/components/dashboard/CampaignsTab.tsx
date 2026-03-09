@@ -192,7 +192,7 @@ export default function CampaignsTab() {
   const [budgetCache, setBudgetCache] = useState<Record<string, number | null>>({});
   const [budgetFetching, setBudgetFetching] = useState<Set<string>>(new Set());
 
-  const { analysisData, selectedAccountId, selectedPeriod, currencySymbol } = useDashboard();
+  const { analysisData, selectedAccountId, selectedPeriod, currencySymbol, setAnalysisForAccount } = useDashboard();
   const { profile } = useProfile();
   const { callMetaApi, isConnected } = useMetaConnection();
   const { notes, saving: noteSaving, fetchNotes, saveNote, deleteNote } = useCampaignNotes();

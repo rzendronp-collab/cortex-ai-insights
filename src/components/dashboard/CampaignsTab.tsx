@@ -1071,21 +1071,42 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     }
                     case 'spend':
                       return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(c.spend, currency)}</p></td>;
-                    case 'budget':
+                    case 'budget': {
+                      const rawBudget = analysisData?.budgetByCampaignId?.[c.id];
+                      const bVal = rawBudget != null && rawBudget > 0 ? rawBudget : null;
+                      const isEditingBgt = editingBudgetId === c.id;
+                      const isSavingBgt = savingBudgetId === c.id;
+                      const bFeedback = budgetFeedback[c.id];
+                      const feedbackBorderB = bFeedback === 'success' ? 'border-[#34D399]' : bFeedback === 'error' ? 'border-[#F87171]' : '';
                       return (
                         <td key={colId} className="px-3 text-right" onClick={e => e.stopPropagation()}>
-                          {(() => {
-                            const rawBudget = analysisData?.budgetByCampaignId?.[c.id];
-                            const bVal = rawBudget != null && rawBudget > 0 ? rawBudget : null;
-                            return (
-                              <div className="flex items-center justify-end gap-1 group/budget">
-                                {bVal != null ? <p className="text-[13px] text-text-primary">{formatCurrency(bVal, currency)}</p> : <p className="text-[13px] text-text-muted">—</p>}
-                                <Pencil className="w-3 h-3 text-muted-foreground/0 group-hover/budget:text-muted-foreground cursor-pointer hover:text-primary transition-all" onClick={() => { setBudgetDialog({ id: c.id, name: c.name, currentSpend: bVal || 0 }); setBudgetValue(''); }} />
-                              </div>
-                            );
-                          })()}
+                          {isEditingBgt ? (
+                            <input
+                              autoFocus
+                              type="number"
+                              step="0.01"
+                              min="1"
+                              value={editingBudgetValue}
+                              onChange={e => setEditingBudgetValue(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter') saveBudgetInline(c.id);
+                                if (e.key === 'Escape') setEditingBudgetId(null);
+                              }}
+                              onBlur={() => saveBudgetInline(c.id)}
+                              className="w-24 text-[13px] text-right bg-transparent border border-primary/40 rounded px-1.5 py-0.5 text-text-primary outline-none focus:ring-1 focus:ring-primary"
+                            />
+                          ) : (
+                            <div className={`flex items-center justify-end gap-1 group/budget ${feedbackBorderB ? `border ${feedbackBorderB} rounded px-1` : ''}`}>
+                              {isSavingBgt ? (
+                                <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                              ) : null}
+                              {bVal != null ? <p className="text-[13px] text-text-primary">{formatCurrency(bVal, currency)}</p> : <p className="text-[13px] text-text-muted">—</p>}
+                              <Pencil className="w-3 h-3 shrink-0 text-muted-foreground/0 group-hover/budget:text-muted-foreground cursor-pointer hover:text-primary transition-all" onClick={() => startBudgetEdit(c.id, bVal)} />
+                            </div>
+                          )}
                         </td>
                       );
+                    }
                     case 'revenue':
                       return <td key={colId} className="px-3 text-right"><p className="text-[13px] text-text-primary">{formatCurrency(c.revenue, currency)}</p></td>;
                     case 'profit':

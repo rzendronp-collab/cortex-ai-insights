@@ -173,11 +173,20 @@ export default function CampaignsTab() {
   const PAGE_SIZE = 20;
   const tableRef = React.useRef<HTMLDivElement>(null);
   
-  // Sorting
-  const [sortColumn, setSortColumn] = useState<SortColumn>('spend');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  // Sorting with localStorage persistence
+  const [sortColumn, setSortColumn] = useState<SortColumn>(
+    (localStorage.getItem('cortexads_sort_column') as SortColumn) || 'spend'
+  );
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(
+    (localStorage.getItem('cortexads_sort_direction') as 'asc' | 'desc') || 'desc'
+  );
 
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
+  // Feature 9: Track which campaign is being edited
+  const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
+  // Feature 10: Track toggle flash status
+  const [toggleFlash, setToggleFlash] = useState<Record<string, 'active' | 'paused'>>({});
+  const [togglePop, setTogglePop] = useState<Set<string>>(new Set());
   const [aiLoadingIds, setAiLoadingIds] = useState<Set<string>>(new Set());
   const [aiResults, setAiResults] = useState<Record<string, any>>({});
   const [localStatuses, setLocalStatuses] = useState<Record<string, string>>({});
@@ -260,12 +269,16 @@ export default function CampaignsTab() {
   const hourlyData = analysisData?.hourlyData || [];
 
   const handleSort = (column: SortColumn) => {
+    let newDir: 'asc' | 'desc';
     if (sortColumn === column) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      newDir = sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
-      setSortColumn(column);
-      setSortDirection('desc');
+      newDir = 'desc';
     }
+    setSortColumn(column);
+    setSortDirection(newDir);
+    localStorage.setItem('cortexads_sort_column', column);
+    localStorage.setItem('cortexads_sort_direction', newDir);
   };
 
   const detectCountry = useCallback((name: string): string => {
@@ -358,6 +371,7 @@ export default function CampaignsTab() {
   const executeToggle = useCallback(async (campaignId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
     setTogglingIds(prev => new Set(prev).add(campaignId));
+    setEditingCampaignId(campaignId);
     try {
       await callMetaApi(campaignId, { status: newStatus, _method: 'POST' });
 
@@ -373,6 +387,14 @@ export default function CampaignsTab() {
       } catch { /* verification failed, use expected status */ }
 
       setLocalStatuses(prev => ({ ...prev, [campaignId]: confirmedStatus }));
+
+      // Feature 10: Flash + pop animation
+      setToggleFlash(prev => ({ ...prev, [campaignId]: confirmedStatus === 'ACTIVE' ? 'active' : 'paused' }));
+      setTogglePop(prev => new Set(prev).add(campaignId));
+      setTimeout(() => {
+        setToggleFlash(prev => { const n = { ...prev }; delete n[campaignId]; return n; });
+        setTogglePop(prev => { const n = new Set(prev); n.delete(campaignId); return n; });
+      }, 300);
 
       // Sync global analysis cache so status persists across tab switches
       if (analysisData && selectedAccountId) {
@@ -392,11 +414,12 @@ export default function CampaignsTab() {
           });
       }
 
-      toast.success(confirmedStatus === 'ACTIVE' ? 'Campanha ativada ✓' : 'Campanha pausada ✓');
+      toast.success(confirmedStatus === 'ACTIVE' ? '✅ Campanha ativada. A sincronizar dados em 2s...' : '✅ Campanha pausada. A sincronizar dados em 2s...');
     } catch (err: any) {
       toast.error(err?.message || 'Erro ao alterar status da campanha.');
     } finally {
       setTogglingIds(prev => { const n = new Set(prev); n.delete(campaignId); return n; });
+      setEditingCampaignId(null);
     }
   }, [callMetaApi, analysisData, selectedAccountId, selectedPeriod, setAnalysisForAccount]);
 
@@ -421,6 +444,7 @@ export default function CampaignsTab() {
     if (isNaN(val) || val <= 0) { setEditingBudgetId(null); return; }
     setSavingBudgetId(campaignId);
     setEditingBudgetId(null);
+    setEditingCampaignId(campaignId);
     try {
       const budgetCents = String(Math.round(val * 100));
       // Check ABO vs CBO
@@ -450,6 +474,7 @@ export default function CampaignsTab() {
       toast.error(err?.message || 'Erro ao atualizar budget.');
     } finally {
       setSavingBudgetId(null);
+      setEditingCampaignId(null);
     }
   }, [editingBudgetValue, callMetaApi, analysisData, selectedAccountId, selectedPeriod, setAnalysisForAccount]);
 
@@ -464,6 +489,7 @@ export default function CampaignsTab() {
     if (!newName) { setEditingNameId(null); return; }
     setSavingNameId(campaignId);
     setEditingNameId(null);
+    setEditingCampaignId(campaignId);
     try {
       await callMetaApi(campaignId, { name: newName, _method: 'POST' });
       setLocalNames(prev => ({ ...prev, [campaignId]: newName }));
@@ -477,6 +503,7 @@ export default function CampaignsTab() {
       toast.error(err?.message || 'Erro ao atualizar nome.');
     } finally {
       setSavingNameId(null);
+      setEditingCampaignId(null);
     }
   }, [editingNameValue, callMetaApi, syncCacheStatus]);
 
@@ -995,8 +1022,16 @@ Responda SOMENTE com o JSON, sem markdown.`;
       </div>
       <div className="md:hidden"><PaginationBar /></div>
 
-      {/* Desktop Table */}
+      {/* Sort indicator badge */}
       <div className="hidden md:block bg-[#0E1420] border border-[#1E2D4A] rounded-lg overflow-x-auto">
+        <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#1C2538]">
+          <span className="text-[10px] text-text-muted">
+            Ordenado por: <span className="font-semibold text-text-secondary">{
+              { status: 'Status', name: 'Nome', spend: 'Gasto', budget: 'Orçamento', revenue: 'Receita', profit: 'Lucro', roas: 'ROAS', purchases: 'Vendas', cpa: 'CPA', ctr: 'CTR', cpm: 'CPM', impressions: 'Impressões', clicks: 'Cliques' }[sortColumn]
+            }</span> {sortDirection === 'desc' ? '↓' : '↑'}
+          </span>
+          <span className="text-[10px] text-text-muted">{sortedCampaigns.length} campanhas</span>
+        </div>
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr className="border-b border-[#1C2538] bg-[#0D1121] sticky top-0 z-10">
@@ -1071,9 +1106,12 @@ Responda SOMENTE com o JSON, sem markdown.`;
 
                 const renderCell = (colId: string) => {
                   switch (colId) {
-                    case 'status':
+                    case 'status': {
+                      const flash = toggleFlash[c.id];
+                      const hasPop = togglePop.has(c.id);
+                      const flashBg = flash === 'active' ? 'bg-[#10B981]/20' : flash === 'paused' ? 'bg-[#F59E0B]/20' : '';
                       return (
-                        <td key={colId} className="px-3" onClick={e => e.stopPropagation()}>
+                        <td key={colId} className={`px-3 transition-colors duration-100 ${flashBg}`} onClick={e => e.stopPropagation()}>
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => {
@@ -1086,12 +1124,16 @@ Responda SOMENTE com o JSON, sem markdown.`;
                               <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 ${adsetExpandedId === c.id ? 'rotate-90' : ''}`} />
                             </button>
                             {isToggling ? (
-                              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                              <div className="w-4 h-4 border-2 border-muted-foreground border-t-primary rounded-full animate-spin" />
                             ) : (
                               <button
                                 onClick={() => handleToggleClick(c.id, c.name, effectiveStatus)}
                                 className="relative inline-flex items-center cursor-pointer"
-                                style={{ width: 36, height: 20, borderRadius: 10 }}
+                                style={{ 
+                                  width: 36, height: 20, borderRadius: 10,
+                                  transform: hasPop ? 'scale(1.2)' : 'scale(1)',
+                                  transition: 'transform 200ms ease-out',
+                                }}
                               >
                                 <span className="block w-full h-full rounded-[10px] transition-colors duration-200 ease-in-out" style={{ backgroundColor: isActive ? '#10B981' : '#374151' }} />
                                 <span className="absolute block w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out" style={{ top: 2, left: isActive ? 18 : 2 }} />
@@ -1100,6 +1142,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                           </div>
                         </td>
                       );
+                    }
                     case 'campaign': {
                       const displayName = localNames[c.id] || c.name;
                       const isEditingName = editingNameId === c.id;
@@ -1230,13 +1273,15 @@ Responda SOMENTE com o JSON, sem markdown.`;
                   }
                 };
 
+                const isEditing = editingCampaignId === c.id;
+
                 return (
                   <React.Fragment key={c.id}>
                     <tr 
                       onClick={() => setExpandedId(expanded ? null : c.id)}
-                      className={`border-b border-[#1C2538] bg-[#0E1420] cursor-pointer transition-colors duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''} animate-fade-in opacity-0 [animation-fill-mode:forwards]`}
+                      className={`border-b border-[#1C2538] bg-[#0E1420] cursor-pointer transition-all duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''} ${isEditing ? 'opacity-60 cursor-wait border-l-2 border-l-primary animate-pulse pointer-events-none' : ''} animate-fade-in [animation-fill-mode:forwards]`}
                       style={{ height: 52, animationDelay: `${rowIndex * 30}ms` }}
-                      onMouseEnter={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(96,165,250,0.04)'; }}
+                      onMouseEnter={e => { if (!expanded && !isEditing) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(96,165,250,0.04)'; }}
                       onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = ''; }}
                     >
                       {/* Checkbox */}

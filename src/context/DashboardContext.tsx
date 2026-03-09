@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useState, useRef, ReactNode, useCallback, MutableRefObject } from 'react';
 import { AnalysisData } from '@/hooks/useMetaData';
 import { getCurrencySymbol } from '@/lib/currencyUtils';
 
@@ -31,6 +31,7 @@ interface DashboardContextType {
   clearCurrentAnalysis: () => void;
   currencySymbol: string;
   setSelectedAccountCurrency: (currency: string | null) => void;
+  analyzeRef: MutableRefObject<(() => void) | null>;
 }
 
 const DashboardContext = createContext<DashboardContextType | null>(null);
@@ -45,6 +46,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [activeTab, setActiveTab] = useState('overview');
   const [analysisCache, setAnalysisCache] = useState<Record<string, CachedAnalysis>>({});
   const [accountCurrency, setAccountCurrency] = useState<string | null>(null);
+  const analyzeRef = useRef<(() => void) | null>(null);
 
   const currencySymbol = getCurrencySymbol(accountCurrency);
 
@@ -103,6 +105,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       analysisData, isFromCache, cacheTimestamp,
       setAnalysisForAccount, clearCurrentAnalysis,
       currencySymbol, setSelectedAccountCurrency,
+      analyzeRef,
     }}>
       {children}
     </DashboardContext.Provider>

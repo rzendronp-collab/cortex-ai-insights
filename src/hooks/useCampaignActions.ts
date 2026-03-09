@@ -13,9 +13,15 @@ export interface BudgetInfo {
 
 export function useCampaignActions() {
   const { callMetaApi, isConnected } = useMetaConnection();
-  const { selectedAccountId, selectedPeriod, analysisData, setAnalysisForAccount, clearCurrentAnalysis } = useDashboard();
+  const { selectedAccountId, selectedPeriod, analysisData, setAnalysisForAccount, clearCurrentAnalysis, analyzeRef } = useDashboard();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+
+  const triggerReanalyze = useCallback(() => {
+    setTimeout(() => {
+      analyzeRef.current?.();
+    }, 2000);
+  }, [analyzeRef]);
 
   const invalidateCache = useCallback(async () => {
     if (!user || !selectedAccountId) return;
@@ -70,6 +76,7 @@ export function useCampaignActions() {
 
       await invalidateCache();
       clearCurrentAnalysis();
+      triggerReanalyze();
       return confirmedStatus;
     } catch (err: any) {
       console.error(`[TOGGLE] Error:`, err);
@@ -78,7 +85,7 @@ export function useCampaignActions() {
     } finally {
       setLoading(false);
     }
-  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, invalidateCache, verifyStatus]);
+  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, invalidateCache, verifyStatus, triggerReanalyze]);
 
   /**
    * Detect whether a campaign uses CBO or ABO budgeting.
@@ -128,7 +135,8 @@ export function useCampaignActions() {
 
       await invalidateCache();
       clearCurrentAnalysis();
-      toast.success(`✅ Orçamento atualizado (${budgetInfo.isCBO ? 'CBO' : 'ABO'})`);
+      triggerReanalyze();
+      toast.success(`✅ Orçamento atualizado (${budgetInfo.isCBO ? 'CBO' : 'ABO'}). A sincronizar dados em 2s...`);
       return true;
     } catch (err: any) {
       const msg = err?.message || 'Erro ao atualizar budget.';
@@ -137,7 +145,7 @@ export function useCampaignActions() {
     } finally {
       setLoading(false);
     }
-  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, detectBudgetType, invalidateCache]);
+  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, detectBudgetType, invalidateCache, triggerReanalyze]);
 
   const updateCampaignName = useCallback(async (campaignId: string, newName: string) => {
     if (!isConnected || !selectedAccountId) {
@@ -149,7 +157,8 @@ export function useCampaignActions() {
       await callMetaApi(campaignId, { name: newName, _method: 'POST' });
       await invalidateCache();
       syncCacheStatus(campaignId, { name: newName });
-      toast.success('Nome atualizado ✓');
+      triggerReanalyze();
+      toast.success('✅ Nome atualizado. A sincronizar dados em 2s...');
       return true;
     } catch (err: any) {
       toast.error(err?.message || 'Erro ao atualizar nome.');
@@ -157,7 +166,7 @@ export function useCampaignActions() {
     } finally {
       setLoading(false);
     }
-  }, [isConnected, selectedAccountId, callMetaApi, syncCacheStatus, invalidateCache]);
+  }, [isConnected, selectedAccountId, callMetaApi, syncCacheStatus, invalidateCache, triggerReanalyze]);
 
   // Feature 4: Duplicate campaign
   const duplicateCampaign = useCallback(async (campaignId: string, campaignName: string, newName: string, keepActive: boolean) => {
@@ -184,7 +193,8 @@ export function useCampaignActions() {
 
       await invalidateCache();
       clearCurrentAnalysis();
-      toast.success('Campanha duplicada! Aceda ao Meta Ads Manager para configurar adsets.');
+      triggerReanalyze();
+      toast.success('✅ Campanha duplicada! A sincronizar dados em 2s...');
       return true;
     } catch (err: any) {
       toast.error(err?.message || 'Erro ao duplicar campanha.');
@@ -192,7 +202,7 @@ export function useCampaignActions() {
     } finally {
       setLoading(false);
     }
-  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, invalidateCache]);
+  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, invalidateCache, triggerReanalyze]);
 
   return { loading, toggleCampaignStatus, updateBudget, updateCampaignName, syncCacheStatus, detectBudgetType, duplicateCampaign };
 }

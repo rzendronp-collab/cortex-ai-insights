@@ -218,7 +218,7 @@ function isRateLimitError(err: any): boolean {
 
 export function useMetaData() {
   const { callMetaApi, isConnected, isTokenExpired } = useMetaConnection();
-  const { selectedAccountId, selectedPeriod, dateRange, setAnalysisForAccount } = useDashboard();
+  const { selectedAccountId, selectedPeriod, dateRange, setAnalysisForAccount, analyzeRef } = useDashboard();
   const { profile } = useProfile();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -618,6 +618,12 @@ export function useMetaData() {
       if (autoRefreshInterval.current) clearInterval(autoRefreshInterval.current);
     };
   }, [selectedAccountId, isConnected, analyze]);
+
+  // Wire analyzeRef so other hooks can trigger re-analysis
+  useEffect(() => {
+    analyzeRef.current = analyze;
+    return () => { analyzeRef.current = null; };
+  }, [analyze, analyzeRef]);
 
   return { loading, error, analyze, roasTarget: profile?.roas_target || 3.0 };
 }

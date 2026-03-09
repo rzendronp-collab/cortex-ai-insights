@@ -69,6 +69,11 @@ export default function CampaignsTab() {
   // Confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{ id: string; name: string; currentStatus: string } | null>(null);
   
+  // Budget dialog state
+  const [budgetDialog, setBudgetDialog] = useState<{ id: string; name: string; currentSpend: number } | null>(null);
+  const [budgetValue, setBudgetValue] = useState('');
+  const [budgetLoading, setBudgetLoading] = useState(false);
+
   const { analysisData, selectedAccountId } = useDashboard();
   const { profile } = useProfile();
   const { callMetaApi, isConnected } = useMetaConnection();

@@ -46,7 +46,7 @@ const dailyMetricConfig: Record<string, { label: string; color: string; type: 'l
 export default function OverviewTab() {
   const [visibleMetrics, setVisibleMetrics] = useState<Set<string>>(new Set(['roas', 'spend']));
   const { analysisData, selectedAccountId, currencySymbol, setActiveTab } = useDashboard();
-  const { isConnected } = useMetaConnection();
+  const { isConnected, connectMeta } = useMetaConnection();
   const { analyze, loading } = useMetaData();
   const { profile } = useProfile();
   const roasTarget = profile?.roas_target || 3.0;
@@ -61,10 +61,34 @@ export default function OverviewTab() {
     });
   };
 
-  // Show empty state if account selected but no data
-  if (selectedAccountId && !analysisData && isConnected) {
+  // No account selected empty state
+  if (!selectedAccountId) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-up">
+      <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
+        <div className="text-[80px] leading-none mb-6 opacity-[0.15] select-none">📊</div>
+        <h3 className="text-lg font-semibold text-text-primary mb-2">Selecione uma conta</h3>
+        <p className="text-sm text-text-muted mb-6 max-w-xs">
+          Escolha uma conta no header para ver os dados
+        </p>
+        {!isConnected && (
+          <Button
+            onClick={() => connectMeta()}
+            className="h-11 px-8 text-sm bg-gradient-to-r from-[#3B82F6] to-[#2563EB] text-white hover:opacity-90 rounded-lg gap-2 font-semibold"
+          >
+            Conectar Meta
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  // Account selected but loading/no data
+  if (selectedAccountId && !analysisData && isConnected) {
+    if (loading) {
+      return <OverviewSkeleton />;
+    }
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
         <div className="w-20 h-20 rounded-2xl bg-data-blue/10 flex items-center justify-center mb-6">
           <Zap className="w-10 h-10 text-data-blue" />
         </div>

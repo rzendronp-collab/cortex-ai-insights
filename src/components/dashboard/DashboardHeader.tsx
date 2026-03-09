@@ -70,20 +70,6 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
   const lastTime = ad?.lastUpdated ? new Date(ad.lastUpdated).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
   const cacheTime = cacheTimestamp ? new Date(cacheTimestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
 
-  const handleSelectAccount = (account: typeof adAccounts[0]) => {
-    setSelectedAccountId(account.account_id);
-    setSelectedAccountName(account.account_name);
-    setSelectedAccountCurrency(account.currency || null);
-    setAccountDropdownOpen(false);
-  };
-
-  const accountsByBm = adAccounts.reduce((acc, a) => {
-    const bm = a.business_name || 'Sem Business Manager';
-    if (!acc[bm]) acc[bm] = [];
-    acc[bm].push(a);
-    return acc;
-  }, {} as Record<string, typeof adAccounts>);
-
   const pageTitle = tabLabels[activeTab] || 'Dashboard';
   const isCustomActive = selectedPeriod === 'custom' && !!dateRange;
   const periodLabel = isCustomActive ? `${dateRange!.from} → ${dateRange!.to}` : (selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`);

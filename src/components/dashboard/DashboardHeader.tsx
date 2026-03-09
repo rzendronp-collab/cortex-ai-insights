@@ -3,7 +3,7 @@ import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Play, Loader2, Clock, AlertTriangle, RefreshCw, Building2, ChevronDown, Circle, Menu } from 'lucide-react';
+import { Play, Loader2, Clock, AlertTriangle, RefreshCw, Building2, ChevronDown, Circle, Menu, X as XIcon, Calendar } from 'lucide-react';
 import AlertsPanel from './AlertsPanel';
 import DateRangePicker from '@/components/ui/DateRangePicker';
 import { getRoasColor } from '@/lib/mockData';

@@ -200,17 +200,13 @@ export function useMetaData() {
       // Parallel API calls
       const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes] = await Promise.all([
         callMetaApi(`${acctPath}/campaigns`, {
-          fields:
-            'id,name,status,insights.time_range(' +
-            currentTimeRange +
-            '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
+          fields: 'id,name,status,insights{spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
+          time_range: currentTimeRange,
           limit: '50',
         }),
         callMetaApi(`${acctPath}/campaigns`, {
-          fields:
-            'id,name,status,insights.time_range(' +
-            previousTimeRange +
-            '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
+          fields: 'id,name,status,insights{spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
+          time_range: previousTimeRange,
           limit: '50',
         }),
         callMetaApi(`${acctPath}/insights`, {

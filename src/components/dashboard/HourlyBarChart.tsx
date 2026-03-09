@@ -78,7 +78,7 @@ export function HourlyBarChart({ data, emptyMessage, currency = '€' }: HourlyB
         {fullData.map((item) => {
           const pct = item.spend > 0 ? (item.spend / maxSpend) * 100 : 0;
           const height = item.spend <= 0 ? '6px' : `${Math.max(pct, 4)}%`;
-          const color = getBarColor(item.spend);
+          const color = getBarColor(item.spend, item.sales);
           const icon = getBarIcon(item.spend);
           const isHovered = hoveredHour === item.hour;
           const roas = item.spend > 0 ? (item.sales / item.spend) : 0;

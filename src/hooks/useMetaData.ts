@@ -323,24 +323,31 @@ export function useMetaData() {
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([age, spend]) => ({ age, percentage: Math.round((spend / totalDemoSpend) * 100) }));
 
-      const rawAdsets = adsetsRes?.data || [];
-      console.log('[ADSETS DEBUG]', {
-        total: rawAdsets.length,
-        first: rawAdsets[0],
-        sample: rawAdsets.slice(0, 3).map((a: any) => ({
-          id: a.id,
-          campaign_id: a.campaign_id,
-          daily_budget: a.daily_budget,
-          lifetime_budget: a.lifetime_budget,
-        }))
-      });
+      // Build budgetByCampaignId: prefer campaign-level CBO budget, fallback to adset sum
       const budgetByCampaignId: Record<string, number> = {};
-      rawAdsets.forEach((adset: any) => {
-        if (adset.campaign_id) {
-          const budget = parseFloat(adset.daily_budget || adset.lifetime_budget || '0');
-          budgetByCampaignId[adset.campaign_id] = (budgetByCampaignId[adset.campaign_id] || 0) + budget;
+
+      // Step 1: Extract CBO budgets directly from campaigns
+      const rawCampaigns = campaignsRes?.data || [];
+      rawCampaigns.forEach((campaign: any) => {
+        if (campaign.daily_budget) {
+          budgetByCampaignId[campaign.id] = parseInt(campaign.daily_budget, 10) / 100;
+        } else if (campaign.lifetime_budget) {
+          budgetByCampaignId[campaign.id] = parseInt(campaign.lifetime_budget, 10) / 100;
         }
       });
+
+      // Step 2: For campaigns without CBO, fallback to adset-level budgets
+      const rawAdsets = adsetsRes?.data || [];
+      rawAdsets.forEach((adset: any) => {
+        if (adset.campaign_id && !budgetByCampaignId[adset.campaign_id]) {
+          const budget = parseFloat(adset.daily_budget || adset.lifetime_budget || '0') / 100;
+          if (budget > 0) {
+            budgetByCampaignId[adset.campaign_id] = (budgetByCampaignId[adset.campaign_id] || 0) + budget;
+          }
+        }
+      });
+
+      console.log('[BUDGET DEBUG]', budgetByCampaignId);
 
       const now = new Date().toISOString();
       const analysisResult: AnalysisData = {

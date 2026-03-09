@@ -13,6 +13,7 @@ import ActionPlanTab from '@/components/dashboard/ActionPlanTab';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useNotifications } from '@/hooks/useNotifications';
 import { AlertTriangle, Menu, X } from 'lucide-react';
 
 function DashboardContent() {
@@ -20,8 +21,10 @@ function DashboardContent() {
   const { isTokenExpired, connectMeta } = useMetaConnection();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { requestPermission } = useNotifications();
 
   useEffect(() => { document.title = 'Dashboard — CortexAds AI'; }, []);
+  useEffect(() => { requestPermission(); }, []);
 
   const renderTab = () => {
     switch (activeTab) {

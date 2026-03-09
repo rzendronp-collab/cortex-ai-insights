@@ -4,6 +4,7 @@ import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
 import { useMetaConnection } from './useMetaConnection';
 import { ProcessedCampaign } from './useMetaData';
+import { useNotifications } from './useNotifications';
 
 interface Alert {
   id: string;
@@ -22,6 +23,7 @@ export function useAlerts() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { isTokenExpired } = useMetaConnection();
+  const { notify } = useNotifications();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -99,6 +101,9 @@ export function useAlerts() {
 
     if (newAlerts.length > 0) {
       await supabase.from('alerts').insert(newAlerts);
+      for (const a of newAlerts) {
+        notify('⚠️ CortexAds — Alerta', a.message);
+      }
       await fetchAlerts();
     }
   }, [user, roasTarget, isTokenExpired, fetchAlerts]);

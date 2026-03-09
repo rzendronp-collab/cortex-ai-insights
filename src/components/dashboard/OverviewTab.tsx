@@ -45,7 +45,7 @@ const dailyMetricConfig: Record<string, { label: string; color: string; type: 'l
 
 export default function OverviewTab() {
   const [visibleMetrics, setVisibleMetrics] = useState<Set<string>>(new Set(['roas', 'spend']));
-  const { analysisData, selectedAccountId, currencySymbol, setActiveTab } = useDashboard();
+  const { analysisData, isStale, selectedAccountId, currencySymbol, setActiveTab, analyzeRef } = useDashboard();
   const { isConnected, connectMeta } = useMetaConnection();
   const { analyze, loading } = useMetaData();
   const { profile } = useProfile();
@@ -60,6 +60,14 @@ export default function OverviewTab() {
       return next;
     });
   };
+
+  // Stale data warning
+  const staleWarning = isStale && selectedAccountId ? (
+    <div className="mb-3 flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-2 text-sm text-amber-400">
+      ⚠ Dados expirados (mais de 1h) —
+      <button className="underline" onClick={() => analyzeRef.current?.()}>Re-analisar agora</button>
+    </div>
+  ) : null;
 
   // No account selected empty state
   if (!selectedAccountId) {
@@ -216,6 +224,7 @@ export default function OverviewTab() {
 
   return (
     <div className="space-y-4">
+      {staleWarning}
       {/* ─── KPIs ─── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {[

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
 import { useMetaConnection } from './useMetaConnection';
+import { useDashboard } from '@/context/DashboardContext';
 import { ProcessedCampaign } from './useMetaData';
 import { useNotifications } from './useNotifications';
 
@@ -23,6 +24,7 @@ export function useAlerts() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { isTokenExpired } = useMetaConnection();
+  const { selectedAccountId } = useDashboard();
   const { notify } = useNotifications();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(false);
@@ -32,15 +34,19 @@ export function useAlerts() {
 
   const fetchAlerts = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
+    const query = supabase
       .from('alerts')
       .select('*')
       .eq('user_id', user.id)
       .eq('read', false)
       .order('created_at', { ascending: false })
       .limit(50);
+
+    if (selectedAccountId) query.eq('account_id', selectedAccountId);
+
+    const { data } = await query;
     if (data) setAlerts(data as Alert[]);
-  }, [user]);
+  }, [user, selectedAccountId]);
 
   const markAsRead = useCallback(async (id: string) => {
     await supabase.from('alerts').update({ read: true }).eq('id', id);

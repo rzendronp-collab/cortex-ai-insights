@@ -135,10 +135,10 @@ function getPrevTimeRange(period: string, dateRange?: { from: string; to: string
   const days = periodDays[period] || 7;
   
   const until = new Date(today);
-  until.setDate(until.getDate() - days);
+  until.setDate(until.getDate() - 1); // always yesterday as end of previous period
   
   const since = new Date(until);
-  since.setDate(since.getDate() - days);
+  since.setDate(since.getDate() - days + 1); // start = days back from yesterday
   
   return { since: fmt(since), until: fmt(until) };
 }

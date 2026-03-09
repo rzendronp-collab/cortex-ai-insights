@@ -26,6 +26,7 @@ interface DashboardContextType {
   setActiveTab: (t: string) => void;
   analysisData: AnalysisData | null;
   isFromCache: boolean;
+  isStale: boolean;
   cacheTimestamp: number | null;
   setAnalysisForAccount: (accountId: string, period: string, data: AnalysisData) => void;
   clearCurrentAnalysis: () => void;
@@ -51,12 +52,17 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const currencySymbol = getCurrencySymbol(accountCurrency);
 
   // Derive current analysis from cache
-  const cacheKey = selectedAccountId ? `${selectedAccountId}__${selectedPeriod}` : null;
+  const cacheKey = selectedAccountId
+    ? dateRange
+      ? `${selectedAccountId}__custom_${dateRange.from}_${dateRange.to}`
+      : `${selectedAccountId}__${selectedPeriod}`
+    : null;
   const cached = cacheKey ? analysisCache[cacheKey] : null;
   const isFresh = cached ? (Date.now() - cached.timestamp < CACHE_TTL) : false;
   const analysisData = (cached && isFresh) ? cached.data : null;
   const isFromCache = !!(cached && isFresh);
   const cacheTimestamp = cached?.timestamp ?? null;
+  const isStale = !!(cached && !isFresh);
 
   const setAnalysisForAccount = useCallback((accountId: string, period: string, data: AnalysisData) => {
     const key = `${accountId}__${period}`;
@@ -102,7 +108,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       selectedPeriod, setSelectedPeriod,
       dateRange, setDateRange,
       activeTab, setActiveTab,
-      analysisData, isFromCache, cacheTimestamp,
+      analysisData, isFromCache, isStale, cacheTimestamp,
       setAnalysisForAccount, clearCurrentAnalysis,
       currencySymbol, setSelectedAccountCurrency,
       analyzeRef,

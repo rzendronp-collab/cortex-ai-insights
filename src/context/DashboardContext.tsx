@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useRef, ReactNode, useCallback, MutableRefObject } from 'react';
+import { createContext, useContext, useState, useRef, ReactNode, useCallback, useMemo, MutableRefObject } from 'react';
 import { AnalysisData } from '@/hooks/useMetaData';
 import { getCurrencySymbol } from '@/lib/currencyUtils';
 
@@ -33,6 +33,12 @@ interface DashboardContextType {
   currencySymbol: string;
   setSelectedAccountCurrency: (currency: string | null) => void;
   analyzeRef: MutableRefObject<(() => void) | null>;
+  // Multi-account
+  activeAccountIds: string[];
+  setActiveAccountIds: React.Dispatch<React.SetStateAction<string[]>>;
+  toggleActiveAccount: (id: string) => void;
+  consolidatedData: AnalysisData | null;
+  analysisCache: Record<string, CachedAnalysis>;
 }
 
 const DashboardContext = createContext<DashboardContextType | null>(null);
@@ -49,6 +55,21 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [accountCurrency, setAccountCurrency] = useState<string | null>(null);
   const analyzeRef = useRef<(() => void) | null>(null);
 
+  // Multi-account active list
+  const [activeAccountIds, setActiveAccountIds] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('cortexads_active_accounts') || '[]');
+    } catch { return []; }
+  });
+
+  const toggleActiveAccount = useCallback((id: string) => {
+    setActiveAccountIds(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      localStorage.setItem('cortexads_active_accounts', JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const currencySymbol = getCurrencySymbol(accountCurrency);
 
   // Derive current analysis from cache
@@ -63,6 +84,35 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const isFromCache = !!(cached && isFresh);
   const cacheTimestamp = cached?.timestamp ?? null;
   const isStale = !!(cached && !isFresh);
+
+  // Consolidated data from all active accounts
+  const consolidatedData = useMemo(() => {
+    const allData = activeAccountIds
+      .map(id => {
+        const key = dateRange
+          ? `${id}__custom_${dateRange.from}_${dateRange.to}`
+          : `${id}__${selectedPeriod}`;
+        const c = analysisCache[key];
+        if (!c) return null;
+        const fresh = (Date.now() - c.timestamp < CACHE_TTL);
+        return fresh ? c.data : null;
+      })
+      .filter(Boolean) as AnalysisData[];
+
+    if (!allData.length) return null;
+
+    return {
+      campaigns: allData.flatMap(d => d.campaigns),
+      campaignsPrev: allData.flatMap(d => d.campaignsPrev),
+      dailyData: allData[0].dailyData,
+      hourlyData: allData[0].hourlyData,
+      platformData: allData[0].platformData,
+      genderData: allData[0].genderData,
+      ageData: allData[0].ageData,
+      budgetByCampaignId: Object.assign({}, ...allData.map(d => d.budgetByCampaignId)),
+      lastUpdated: new Date().toISOString(),
+    } as AnalysisData;
+  }, [activeAccountIds, analysisCache, selectedPeriod, dateRange]);
 
   const setAnalysisForAccount = useCallback((accountId: string, period: string, data: AnalysisData) => {
     const key = `${accountId}__${period}`;
@@ -89,7 +139,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const setSelectedPeriod = useCallback((p: string) => {
     setSelectedPeriodRaw(p);
     localStorage.setItem('cortexads_period', p);
-    setDateRangeRaw(null); // Clear custom range when selecting preset
+    setDateRangeRaw(null);
   }, []);
 
   const setDateRange = useCallback((range: DateRange | null) => {
@@ -112,6 +162,8 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       setAnalysisForAccount, clearCurrentAnalysis,
       currencySymbol, setSelectedAccountCurrency,
       analyzeRef,
+      activeAccountIds, setActiveAccountIds, toggleActiveAccount, consolidatedData,
+      analysisCache,
     }}>
       {children}
     </DashboardContext.Provider>

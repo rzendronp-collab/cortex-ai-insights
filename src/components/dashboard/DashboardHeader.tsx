@@ -41,16 +41,10 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
 
   const handleAtualizar = useCallback(async () => {
     if (activeAccountIds.length === 0) return;
-    // Ensure selectedAccountId is set, then analyze sequentially for each active account
     for (const id of activeAccountIds) {
-      setSelectedAccountId(id);
-      // Small delay to let state propagate before analyze reads it
-      await new Promise(r => setTimeout(r, 50));
-      await analyze();
+      await analyze(id);
     }
-    // Reset to first active account
-    setSelectedAccountId(activeAccountIds[0]);
-  }, [activeAccountIds, setSelectedAccountId, analyze]);
+  }, [activeAccountIds, analyze]);
 
   const checkStale = useCallback(() => {
     if (!analysisData?.lastUpdated) { setIsStale(false); return; }

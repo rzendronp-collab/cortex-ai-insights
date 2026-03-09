@@ -417,22 +417,16 @@ Responda SOMENTE com o JSON, sem markdown.`;
     return { label: 'Otimizar', bg: 'rgba(96,165,250,0.1)', text: '#60A5FA', border: 'rgba(96,165,250,0.25)' };
   };
 
-  const columns = [
-    { key: 'status', label: 'Status', align: 'left' },
-    { key: 'name', label: 'Campanha', align: 'left' },
-    { key: 'spend', label: 'Gastos', align: 'right' },
-    { key: 'budget', label: 'Orçamento', align: 'right' },
-    { key: 'revenue', label: 'Faturamento', align: 'right' },
-    { key: 'profit', label: 'Lucro', align: 'right' },
-    { key: 'roas', label: 'ROAS', align: 'right' },
-    { key: 'purchases', label: 'Vendas', align: 'right' },
-    { key: 'cpa', label: 'CPA', align: 'right' },
-    { key: 'ctr', label: 'CTR', align: 'right' },
-    { key: 'cpm', label: 'CPM', align: 'right' },
-    { key: 'impressions', label: 'Impr.', align: 'right' },
-    { key: 'clicks', label: 'Cliques', align: 'right' },
-    { key: 'recommendation', label: 'Recom.', align: 'center' },
-  ] as const;
+  // Column ID → sort key mapping
+  const colSortKey: Record<string, SortColumn | null> = {
+    status: 'status', campaign: 'name', spend: 'spend', budget: 'budget',
+    revenue: 'revenue', profit: 'profit', roas: 'roas', sales: 'purchases',
+    cpa: 'cpa', ctr: 'ctr', cpm: 'cpm', impressions: 'impressions', clicks: 'clicks', notes: null,
+  };
+  const colAlign: Record<string, string> = {
+    status: 'left', campaign: 'left', notes: 'center',
+  };
+  // default align = right for metrics
 
   // Pagination logic
   const totalPages = Math.ceil(sortedCampaigns.length / PAGE_SIZE);

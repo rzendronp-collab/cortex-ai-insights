@@ -300,11 +300,7 @@ export default function CampaignsTab() {
     return hourlySorted.filter(h => h.spend > 0).slice(0, 3).map(h => h.hour);
   }, [hourlySorted]);
 
-  const toggleCampaignStatus = useCallback(async (campaignId: string, currentStatus: string) => {
-    if (!isConnected || !selectedAccountId) {
-      toast.error('Conecte sua conta Meta primeiro.');
-      return;
-    }
+  const executeToggle = useCallback(async (campaignId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
     setTogglingIds(prev => new Set(prev).add(campaignId));
     try {
@@ -316,7 +312,17 @@ export default function CampaignsTab() {
     } finally {
       setTogglingIds(prev => { const n = new Set(prev); n.delete(campaignId); return n; });
     }
-  }, [isConnected, selectedAccountId, callMetaApi]);
+  }, [callMetaApi]);
+
+  const handleToggleClick = useCallback((id: string, name: string, currentStatus: string) => {
+    const skipConfirm = localStorage.getItem('cortexads_toggle_confirmed') === 'true';
+    if (skipConfirm) {
+      executeToggle(id, currentStatus);
+    } else {
+      setDontAskAgain(false);
+      setConfirmDialog({ id, name, currentStatus });
+    }
+  }, [executeToggle]);
 
   const generateAiAnalysis = useCallback(async (campaign: ProcessedCampaign) => {
     setAiLoadingIds(prev => new Set(prev).add(campaign.id));

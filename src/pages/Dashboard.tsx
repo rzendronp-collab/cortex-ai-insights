@@ -35,7 +35,7 @@ function DashboardContent() {
     <div className="min-h-screen bg-background">
       <OnboardingModal />
       <DashboardSidebar />
-      <div className="ml-[260px]">
+      <div className="ml-[240px]">
         <DashboardHeader />
         {isTokenExpired && (
           <div className="mx-6 mt-4 bg-warning/10 border border-warning/30 rounded-lg px-4 py-3 flex items-center gap-3">

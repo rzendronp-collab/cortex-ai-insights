@@ -4,6 +4,7 @@ import SettingsDialog from './SettingsDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
+
 import { useDashboard } from '@/context/DashboardContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -249,11 +250,11 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                             className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-bg-card-hover cursor-pointer select-none"
                             onClick={() => {
                               if (account.account_id) {
-                                toggleActiveAccount(account.account_id);
+                                console.log('[SIDEBAR] conta clicada:', account.account_id, account.account_name);
                                 setSelectedAccountId(account.account_id);
-                                setSelectedAccountName(account.account_name || null);
+                                setSelectedAccountName(account.account_name || account.account_id);
                                 setSelectedAccountCurrency(account.currency || null);
-                                setTimeout(() => { analyzeRef.current?.(account.account_id); }, 150);
+                                setTimeout(() => analyzeRef.current?.(account.account_id), 200);
                               }
                             }}
                           >

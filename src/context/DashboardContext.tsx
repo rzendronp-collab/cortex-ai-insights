@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { AnalysisData } from '@/hooks/useMetaData';
+import { getCurrencySymbol } from '@/lib/currencyUtils';
 
 interface CachedAnalysis {
   data: AnalysisData;
@@ -21,6 +22,8 @@ interface DashboardContextType {
   cacheTimestamp: number | null;
   setAnalysisForAccount: (accountId: string, period: string, data: AnalysisData) => void;
   clearCurrentAnalysis: () => void;
+  currencySymbol: string;
+  setSelectedAccountCurrency: (currency: string | null) => void;
 }
 
 const DashboardContext = createContext<DashboardContextType | null>(null);
@@ -33,6 +36,9 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [selectedPeriod, setSelectedPeriodRaw] = useState('7d');
   const [activeTab, setActiveTab] = useState('overview');
   const [analysisCache, setAnalysisCache] = useState<Record<string, CachedAnalysis>>({});
+  const [accountCurrency, setAccountCurrency] = useState<string | null>(null);
+
+  const currencySymbol = getCurrencySymbol(accountCurrency);
 
   // Derive current analysis from cache
   const cacheKey = selectedAccountId ? `${selectedAccountId}__${selectedPeriod}` : null;
@@ -60,13 +66,16 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     }
   }, [cacheKey]);
 
-  // When switching accounts, no need to do anything — derived state handles it
   const setSelectedAccountId = useCallback((id: string | null) => {
     setSelectedAccountIdRaw(id);
   }, []);
 
   const setSelectedPeriod = useCallback((p: string) => {
     setSelectedPeriodRaw(p);
+  }, []);
+
+  const setSelectedAccountCurrency = useCallback((currency: string | null) => {
+    setAccountCurrency(currency);
   }, []);
 
   return (
@@ -77,6 +86,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       activeTab, setActiveTab,
       analysisData, isFromCache, cacheTimestamp,
       setAnalysisForAccount, clearCurrentAnalysis,
+      currencySymbol, setSelectedAccountCurrency,
     }}>
       {children}
     </DashboardContext.Provider>

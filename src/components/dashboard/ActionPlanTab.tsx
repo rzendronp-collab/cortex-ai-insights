@@ -396,7 +396,7 @@ export default function ActionPlanTab() {
             </div>
 
             <div className="divide-y divide-[#2A3850]">
-              {plan.acoes.map((action) => {
+              {plan.acoes.map((action, actionIdx) => {
                 const Icon = ACTION_ICONS[action.tipo] || TrendingUp;
                 const borderColor = ACTION_BORDER_COLORS[action.tipo] || 'border-l-muted';
                 const priority = PRIORITY_BADGES[action.prioridade] || PRIORITY_BADGES[3];
@@ -407,9 +407,10 @@ export default function ActionPlanTab() {
                 return (
                   <div
                     key={action.campaign_id}
-                    className={`px-5 py-3 border-l-4 ${borderColor} transition-colors ${
+                    className={`px-5 py-3 border-l-4 ${borderColor} transition-colors animate-slide-in-left opacity-0 [animation-fill-mode:forwards] ${
                       isSelected ? 'bg-[#60A5FA]/5' : ''
                     } ${actionState === 'success' ? 'opacity-50' : ''}`}
+                    style={{ animationDelay: `${actionIdx * 60}ms` }}
                   >
                     {/* LINE 1 */}
                     <div className="flex items-center gap-3">

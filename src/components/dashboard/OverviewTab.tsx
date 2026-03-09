@@ -46,7 +46,7 @@ const dailyMetricConfig: Record<string, { label: string; color: string; type: 'l
 export default function OverviewTab() {
   const [visibleMetrics, setVisibleMetrics] = useState<Set<string>>(new Set(['roas', 'spend']));
   const { analysisData, selectedAccountId, currencySymbol, setActiveTab } = useDashboard();
-  const { isConnected } = useMetaConnection();
+  const { isConnected, connectMeta } = useMetaConnection();
   const { analyze, loading } = useMetaData();
   const { profile } = useProfile();
   const roasTarget = profile?.roas_target || 3.0;
@@ -61,10 +61,34 @@ export default function OverviewTab() {
     });
   };
 
-  // Show empty state if account selected but no data
-  if (selectedAccountId && !analysisData && isConnected) {
+  // No account selected empty state
+  if (!selectedAccountId) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-up">
+      <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
+        <div className="text-[80px] leading-none mb-6 opacity-[0.15] select-none">📊</div>
+        <h3 className="text-lg font-semibold text-text-primary mb-2">Selecione uma conta</h3>
+        <p className="text-sm text-text-muted mb-6 max-w-xs">
+          Escolha uma conta no header para ver os dados
+        </p>
+        {!isConnected && (
+          <Button
+            onClick={() => connectMeta()}
+            className="h-11 px-8 text-sm bg-gradient-to-r from-[#3B82F6] to-[#2563EB] text-white hover:opacity-90 rounded-lg gap-2 font-semibold"
+          >
+            Conectar Meta
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  // Account selected but loading/no data
+  if (selectedAccountId && !analysisData && isConnected) {
+    if (loading) {
+      return <OverviewSkeleton />;
+    }
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
         <div className="w-20 h-20 rounded-2xl bg-data-blue/10 flex items-center justify-center mb-6">
           <Zap className="w-10 h-10 text-data-blue" />
         </div>
@@ -180,18 +204,24 @@ export default function OverviewTab() {
     <div className="space-y-4">
       {/* ─── KPIs ─── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <KPICard label="ROAS" value={`${avgRoas.toFixed(1)}x`} subtitle="Retorno sobre investimento" delta={calcDelta(avgRoas, prevRoas)} valueClassName={roasValueClass} isHero />
-        <KPICard label="Investido" value={formatCurrency(totalSpend, currency)} subtitle="Período selecionado" delta={calcDelta(totalSpend, prevSpend)} />
-        <KPICard label="Receita" value={formatCurrency(totalRevenue, currency)} subtitle="Total gerado" delta={calcDelta(totalRevenue, prevRevenue)} valueClassName="text-data-green" />
-        <KPICard label="Vendas" value={totalSales.toString()} subtitle="Conversões" delta={calcDelta(totalSales, prevSales)} />
-        <KPICard label="CTR Médio" value={`${avgCtr.toFixed(1)}%`} subtitle="Taxa de cliques" delta={calcDelta(avgCtr, prevCtr)} />
-        <KPICard label="Custo/Venda" value={`${currency} ${costPerSale.toFixed(2)}`} subtitle="CPV médio" delta={calcDelta(costPerSale, prevCpv)} valueClassName="text-data-yellow" />
+        {[
+          { label: "ROAS", value: `${avgRoas.toFixed(1)}x`, subtitle: "Retorno sobre investimento", delta: calcDelta(avgRoas, prevRoas), valueClassName: roasValueClass, isHero: true },
+          { label: "Investido", value: formatCurrency(totalSpend, currency), subtitle: "Período selecionado", delta: calcDelta(totalSpend, prevSpend) },
+          { label: "Receita", value: formatCurrency(totalRevenue, currency), subtitle: "Total gerado", delta: calcDelta(totalRevenue, prevRevenue), valueClassName: "text-data-green" },
+          { label: "Vendas", value: totalSales.toString(), subtitle: "Conversões", delta: calcDelta(totalSales, prevSales) },
+          { label: "CTR Médio", value: `${avgCtr.toFixed(1)}%`, subtitle: "Taxa de cliques", delta: calcDelta(avgCtr, prevCtr) },
+          { label: "Custo/Venda", value: `${currency} ${costPerSale.toFixed(2)}`, subtitle: "CPV médio", delta: calcDelta(costPerSale, prevCpv), valueClassName: "text-data-yellow" },
+        ].map((kpi, i) => (
+          <div key={kpi.label} style={{ animationDelay: `${i * 50}ms` }} className="animate-fade-in opacity-0 [animation-fill-mode:forwards]">
+            <KPICard {...kpi} />
+          </div>
+        ))}
       </div>
 
       {/* ─── Charts Row 1 ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* ROAS por Campanha */}
-        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
+        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '200ms' }}>
           <h3 className="text-xs font-semibold text-text-primary mb-4">ROAS por Campanha <span className="text-text-muted font-normal">(top 10)</span></h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={roasCampaignData} layout="vertical" barSize={28}>
@@ -442,6 +472,63 @@ export default function OverviewTab() {
            })}
          </div>
        </div>
+    </div>
+  );
+}
+
+/* ═══ SKELETON LOADING STATE ═══ */
+function OverviewSkeleton() {
+  return (
+    <div className="space-y-4 animate-fade-in">
+      {/* KPI skeletons */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div
+            key={i}
+            className="bg-[#1C2538] border border-[#2A3850] rounded-xl py-5 px-6 animate-pulse"
+            style={{ animationDelay: `${i * 80}ms`, minHeight: 100 }}
+          >
+            <div className="h-2.5 w-16 bg-[#2A3850] rounded mb-3" />
+            <div className="h-7 w-24 bg-[#2A3850] rounded mb-2" />
+            <div className="h-2 w-20 bg-[#2A3850] rounded" />
+          </div>
+        ))}
+      </div>
+
+      {/* Chart skeletons row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className="bg-[#1C2538] border border-[#2A3850] rounded-xl p-5 animate-pulse"
+            style={{ animationDelay: `${(i + 6) * 80}ms`, minHeight: 260 }}
+          >
+            <div className="h-3 w-32 bg-[#2A3850] rounded mb-6" />
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, j) => (
+                <div key={j} className="flex items-center gap-3">
+                  <div className="h-3 bg-[#2A3850] rounded flex-1" style={{ maxWidth: `${60 - j * 8}%` }} />
+                  <div className="h-3 w-8 bg-[#2A3850] rounded" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Large chart skeleton */}
+      <div className="bg-[#1C2538] border border-[#2A3850] rounded-xl p-5 animate-pulse" style={{ minHeight: 240 }}>
+        <div className="h-3 w-28 bg-[#2A3850] rounded mb-6" />
+        <div className="flex items-end gap-2 h-[180px] pb-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex-1 bg-[#2A3850] rounded-t"
+              style={{ height: `${30 + Math.sin(i * 0.8) * 40 + 30}%` }}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

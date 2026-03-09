@@ -254,12 +254,17 @@ Responda SOMENTE com o JSON, sem markdown.`;
     }
   }, [budgetCache, budgetFetching, callMetaApi]);
 
+  // Loading skeleton state
+  if (selectedAccountId && !analysisData) {
+    return <CampaignsTableSkeleton />;
+  }
+
   if (analysisData && rawCampaigns.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <Inbox className="w-12 h-12 text-muted-foreground mb-4" />
-        <h3 className="text-sm font-semibold text-foreground mb-1">Sem campanhas para este período</h3>
-        <p className="text-xs text-muted-foreground">Selecione um período maior ou verifique a conta.</p>
+      <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in">
+        <div className="text-[80px] leading-none mb-6 opacity-[0.15] select-none">🎯</div>
+        <h3 className="text-sm font-semibold text-foreground mb-1">Nenhuma campanha encontrada</h3>
+        <p className="text-xs text-muted-foreground">Tente outro período ou verifique os filtros</p>
       </div>
     );
   }
@@ -362,7 +367,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 </td>
               </tr>
             ) : (
-              sortedCampaigns.map(c => {
+              sortedCampaigns.map((c, rowIndex) => {
                 const expanded = expandedId === c.id;
                 const effectiveStatus = localStatuses[c.id] || c.status;
                 const isActive = effectiveStatus === 'ACTIVE';
@@ -402,8 +407,8 @@ Responda SOMENTE com o JSON, sem markdown.`;
                   <React.Fragment key={c.id}>
                     <tr 
                       onClick={() => setExpandedId(expanded ? null : c.id)}
-                      className={`border-b border-[#1C2538] bg-[#0E1420] cursor-pointer transition-colors duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''}`}
-                      style={{ height: 52 }}
+                      className={`border-b border-[#1C2538] bg-[#0E1420] cursor-pointer transition-colors duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''} animate-fade-in opacity-0 [animation-fill-mode:forwards]`}
+                      style={{ height: 52, animationDelay: `${rowIndex * 30}ms` }}
                       onMouseEnter={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(96,165,250,0.04)'; }}
                       onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = ''; }}
                     >
@@ -868,6 +873,46 @@ Responda SOMENTE com o JSON, sem markdown.`;
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+/* ═══ TABLE SKELETON ═══ */
+function CampaignsTableSkeleton() {
+  const colWidths = [36, 200, 80, 80, 80, 80, 60, 50, 60, 50, 60, 60, 50];
+  return (
+    <div className="space-y-4 animate-fade-in">
+      {/* Filter skeleton */}
+      <div className="flex items-center gap-2">
+        <div className="h-8 w-64 bg-[#1C2538] rounded-md animate-pulse" />
+        <div className="h-8 w-36 bg-[#1C2538] rounded-md animate-pulse" />
+        <div className="h-8 w-24 bg-[#1C2538] rounded-md animate-pulse" />
+      </div>
+      {/* Table skeleton */}
+      <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center gap-2 px-3 py-2.5 bg-[#0D1121] border-b border-[#1C2538]">
+          {colWidths.map((w, i) => (
+            <div key={i} className="h-3 bg-[#2A3850] rounded" style={{ width: w, flexShrink: 0 }} />
+          ))}
+        </div>
+        {/* Rows */}
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-2 px-3 border-b border-[#1C2538] animate-pulse"
+            style={{ height: 52, animationDelay: `${i * 60}ms` }}
+          >
+            {colWidths.map((w, j) => (
+              <div
+                key={j}
+                className="h-3.5 bg-[#1C2538] rounded"
+                style={{ width: w + Math.random() * 20, flexShrink: 0 }}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

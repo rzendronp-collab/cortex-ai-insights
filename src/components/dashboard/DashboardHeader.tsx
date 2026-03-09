@@ -28,9 +28,7 @@ interface DashboardHeaderProps {
 export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps) {
   const {
     selectedPeriod, setSelectedPeriod,
-    selectedAccountId, setSelectedAccountId,
-    selectedAccountName, setSelectedAccountName,
-    setSelectedAccountCurrency,
+    selectedAccountId,
     dateRange, setDateRange,
     analysisData, isFromCache, cacheTimestamp, currencySymbol,
     activeTab,
@@ -39,9 +37,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
   const { analyze, loading, roasTarget } = useMetaData();
   const isMobile = useIsMobile();
 
-  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
   const [isStale, setIsStale] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const checkStale = useCallback(() => {
     if (!analysisData?.lastUpdated) { setIsStale(false); return; }

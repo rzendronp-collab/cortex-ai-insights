@@ -11,10 +11,10 @@ interface KPICardProps {
 
 export default function KPICard({ label, value, subtitle, delta, valueClassName = 'text-foreground', isHero }: KPICardProps) {
   return (
-    <div className={`border rounded-xl p-4 transition-all duration-200 animate-fade-up hover:-translate-y-0.5 ${
+    <div className={`rounded-xl p-4 transition-all duration-200 animate-fade-up hover:-translate-y-0.5 ${
       isHero 
-        ? 'bg-card border-primary/30 shadow-kpi-hero glow-blue' 
-        : 'bg-card border-border hover:shadow-card-hover'
+        ? 'bg-[#0E1420] border border-[#3B82F6]/30 shadow-kpi-hero glow-blue' 
+        : 'bg-[#0E1420] border border-[#1E2D4A] hover:shadow-card-hover'
     }`}>
       <div className="flex items-center justify-between mb-1">
         <p className="text-[10px] uppercase tracking-[1px] text-muted-foreground font-medium">{label}</p>

@@ -1018,8 +1018,16 @@ Responda SOMENTE com o JSON, sem markdown.`;
       </div>
       <div className="md:hidden"><PaginationBar /></div>
 
-      {/* Desktop Table */}
+      {/* Sort indicator badge */}
       <div className="hidden md:block bg-[#0E1420] border border-[#1E2D4A] rounded-lg overflow-x-auto">
+        <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#1C2538]">
+          <span className="text-[10px] text-text-muted">
+            Ordenado por: <span className="font-semibold text-text-secondary">{
+              { status: 'Status', name: 'Nome', spend: 'Gasto', budget: 'Orçamento', revenue: 'Receita', profit: 'Lucro', roas: 'ROAS', purchases: 'Vendas', cpa: 'CPA', ctr: 'CTR', cpm: 'CPM', impressions: 'Impressões', clicks: 'Cliques' }[sortColumn]
+            }</span> {sortDirection === 'desc' ? '↓' : '↑'}
+          </span>
+          <span className="text-[10px] text-text-muted">{sortedCampaigns.length} campanhas</span>
+        </div>
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
             <tr className="border-b border-[#1C2538] bg-[#0D1121] sticky top-0 z-10">

@@ -56,6 +56,13 @@ export default function CampaignsTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused'>('all');
   const [activeTodayFilter, setActiveTodayFilter] = useState(false);
+  const [roasFilter, setRoasFilter] = useState<'all' | 'above' | 'near' | 'below' | 'scaling'>('all');
+  const [roasDropdownOpen, setRoasDropdownOpen] = useState(false);
+  
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 20;
+  const tableRef = React.useRef<HTMLDivElement>(null);
   
   // Sorting
   const [sortColumn, setSortColumn] = useState<SortColumn>('spend');

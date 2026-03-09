@@ -64,6 +64,7 @@ export interface AnalysisData {
   platformData: PlatformData[];
   genderData: GenderData[];
   ageData: AgeData[];
+  budgetByCampaignId: Record<string, number>;
   lastUpdated: string;
 }
 

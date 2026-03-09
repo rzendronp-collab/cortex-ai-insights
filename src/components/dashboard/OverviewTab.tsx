@@ -317,9 +317,9 @@ export default function OverviewTab() {
           </div>
         </div>
 
-        <div className="bg-card border border-border rounded-lg p-4 animate-fade-up">
+        <div className="bg-card border border-border rounded-lg p-4 animate-fade-up" style={{ minHeight: 220 }}>
           <h3 className="text-xs font-semibold text-foreground mb-3">Faixa Etária</h3>
-          <div className="space-y-2.5 mt-2">
+          <div className="space-y-2.5 mt-2" style={{ minHeight: 180 }}>
             {ageData.map(a => (
               <div key={a.age} className="flex items-center gap-2">
                 <span className="text-[10px] text-muted-foreground w-10">{a.age}</span>

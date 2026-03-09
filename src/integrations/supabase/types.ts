@@ -230,6 +230,7 @@ export type Database = {
           id: string
           name: string | null
           niche: string | null
+          onboarding_completed: boolean | null
           roas_target: number | null
           updated_at: string | null
         }
@@ -240,6 +241,7 @@ export type Database = {
           id: string
           name?: string | null
           niche?: string | null
+          onboarding_completed?: boolean | null
           roas_target?: number | null
           updated_at?: string | null
         }
@@ -250,6 +252,7 @@ export type Database = {
           id?: string
           name?: string | null
           niche?: string | null
+          onboarding_completed?: boolean | null
           roas_target?: number | null
           updated_at?: string | null
         }

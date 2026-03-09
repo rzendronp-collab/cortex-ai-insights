@@ -9,9 +9,10 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 
 function getMetricSemaphore(value: number, thresholds: { good: number; warn: number; higher?: boolean }) {
   const { good, warn, higher = true } = thresholds;
@@ -336,11 +337,13 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 const isActive = effectiveStatus === 'ACTIVE';
                 const isToggling = togglingIds.has(c.id);
                 
-                const roasColorClass = c.roas >= roasTarget 
-                  ? 'text-success' 
-                  : c.roas >= roasTarget * 0.7 
-                    ? 'text-warning' 
-                    : 'text-destructive';
+                const roasColorClass = c.roas >= 10
+                  ? 'text-success font-black brightness-125' 
+                  : c.roas >= roasTarget 
+                    ? 'text-success' 
+                    : c.roas >= roasTarget * 0.7 
+                      ? 'text-warning' 
+                      : 'text-destructive';
 
                 const profit = c.revenue - c.spend;
                 const cpa = c.purchases > 0 ? c.spend / c.purchases : 0;
@@ -374,21 +377,38 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     <tr 
                       key={c.id}
                       onClick={() => setExpandedId(expanded ? null : c.id)}
-                      className={`border-b border-border hover:bg-muted/30 cursor-pointer transition-colors ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-muted/10' : ''}`}
+                      className={`border-b border-border hover:bg-muted/30 cursor-pointer transition-colors ${!isActive ? 'bg-muted/20 opacity-60' : ''} ${expanded ? 'bg-muted/10' : ''}`}
                     >
                       <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
                         {isToggling ? (
                           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />
                         ) : (
-                          <div 
-                            className={`w-2.5 h-2.5 rounded-full mx-auto cursor-pointer ${isActive ? 'bg-success shadow-[0_0_8px_hsl(var(--success))]' : 'bg-muted-foreground/30'}`}
-                            title={isActive ? 'Ativa (Clique para pausar)' : 'Pausada (Clique para ativar)'}
-                            onClick={() => toggleCampaignStatus(c.id, effectiveStatus)}
-                          />
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div 
+                                  className={`w-2.5 h-2.5 rounded-full mx-auto cursor-pointer ${isActive ? 'bg-success shadow-[0_0_8px_hsl(var(--success))]' : 'bg-muted-foreground/40'}`}
+                                  onClick={() => toggleCampaignStatus(c.id, effectiveStatus)}
+                                />
+                              </TooltipTrigger>
+                              <TooltipContent side="right">
+                                <p className="text-xs">{isActive ? 'Ativo' : 'Pausado'}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                       </td>
                       <td className="px-3 py-3">
-                        <p className="text-xs font-semibold text-foreground truncate max-w-[200px]" title={c.name}>{c.name}</p>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <p className="text-xs font-semibold text-foreground truncate max-w-[200px] cursor-default">{c.name}</p>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs max-w-xs">{c.name}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </td>
                       <td className="px-3 py-3 text-right">
                         <p className="text-xs text-foreground">{formatCurrency(c.spend, currency)}</p>
@@ -397,7 +417,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                         <p className="text-xs text-foreground">{formatCurrency(c.revenue, currency)}</p>
                       </td>
                       <td className="px-3 py-3 text-right">
-                        <p className={`text-xs font-medium ${profit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        <p className={`text-xs font-medium px-2 py-1 rounded ${profit >= 0 ? 'text-success bg-success/10' : 'text-destructive bg-destructive/10'}`}>
                           {profit > 0 ? '+' : ''}{formatCurrency(profit, currency)}
                         </p>
                       </td>
@@ -452,24 +472,25 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                     <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Métricas Completas</h4>
                                   </div>
                                   <div className="grid grid-cols-2 gap-3">
-                                    {metrics.map(m => {
-                                      const deltaVal = m.delta;
-                                      const isGood = m.invert ? (deltaVal !== null && deltaVal <= 0) : (deltaVal !== null && deltaVal >= 0);
-                                      return (
-                                        <div key={m.label} className="flex items-start gap-2">
-                                          <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${m.sem}`} />
-                                          <div className="min-w-0">
-                                            <p className="text-[10px] text-muted-foreground">{m.label}</p>
-                                            <p className="text-xs font-bold text-foreground">{m.value}</p>
-                                            {deltaVal !== null && (
-                                              <p className={`text-[9px] ${isGood ? 'text-success' : 'text-destructive'}`}>
-                                                {deltaVal >= 0 ? '▲' : '▼'} {Math.abs(deltaVal).toFixed(1)}% vs anterior
-                                              </p>
-                                            )}
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
+                                     {metrics.map(m => {
+                                       const deltaVal = m.delta;
+                                       const isNeutral = deltaVal !== null && Math.abs(deltaVal) < 0.05;
+                                       const isGood = m.invert ? (deltaVal !== null && deltaVal <= 0) : (deltaVal !== null && deltaVal >= 0);
+                                       return (
+                                         <div key={m.label} className="flex items-start gap-2">
+                                           <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${m.sem}`} />
+                                           <div className="min-w-0">
+                                             <p className="text-[10px] text-muted-foreground">{m.label}</p>
+                                             <p className="text-xs font-bold text-foreground">{m.value}</p>
+                                             {deltaVal !== null && (
+                                               <p className={`text-[9px] ${isNeutral ? 'text-muted-foreground' : isGood ? 'text-success' : 'text-destructive'}`}>
+                                                 {isNeutral ? '—' : (deltaVal >= 0 ? '▲' : '▼')} {Math.abs(deltaVal).toFixed(1)}% vs anterior
+                                               </p>
+                                             )}
+                                           </div>
+                                         </div>
+                                       );
+                                     })}
                                   </div>
 
                                   {sparkData.length >= 2 && (
@@ -608,15 +629,15 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                           tick={{ fontSize: 9, fill: 'hsl(var(--success))' }}
                                           tickFormatter={(v) => `${currency}${v.toFixed(0)}`}
                                         />
-                                        <Tooltip 
-                                          contentStyle={{ 
-                                            background: 'hsl(var(--card))', 
-                                            border: '1px solid hsl(var(--border))',
-                                            borderRadius: '6px',
-                                            fontSize: '10px'
-                                          }}
-                                          labelFormatter={(v) => new Date(v).toLocaleDateString('pt-BR')}
-                                        />
+                                         <RechartsTooltip 
+                                           contentStyle={{ 
+                                             background: 'hsl(var(--card))', 
+                                             border: '1px solid hsl(var(--border))',
+                                             borderRadius: '6px',
+                                             fontSize: '10px'
+                                           }}
+                                           labelFormatter={(v) => new Date(v).toLocaleDateString('pt-BR')}
+                                         />
                                         <Legend 
                                           wrapperStyle={{ fontSize: '10px' }}
                                           iconSize={8}

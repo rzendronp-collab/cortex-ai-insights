@@ -439,10 +439,6 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       </td>
                       <td className="px-3 py-3 text-right" onClick={e => e.stopPropagation()}>
                         {(() => {
-                          // Lazy fetch budget
-                          if (budgetCache[c.id] === undefined && !budgetFetching.has(c.id)) {
-                            fetchBudget(c.id);
-                          }
                           const bVal = budgetCache[c.id];
                           const isFetching = budgetFetching.has(c.id);
                           return (

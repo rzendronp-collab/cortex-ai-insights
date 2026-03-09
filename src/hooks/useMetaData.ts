@@ -192,7 +192,7 @@ export function useMetaData() {
       const acctPath = `act_${selectedAccountId}`;
       const { since, until } = getPrevTimeRange(selectedPeriod);
 
-      const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes] = await Promise.all([
+      const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes, adsetsRes] = await Promise.all([
         callMetaApi(`${acctPath}/campaigns`, {
           fields: `id,name,status,insights.date_preset(${period}){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}`,
           limit: '50',

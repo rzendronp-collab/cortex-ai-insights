@@ -288,7 +288,7 @@ export default function OverviewTab() {
             </defs>
             <CartesianGrid strokeDasharray="4 4" stroke={CHART_GRID} />
             <XAxis dataKey="date" tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} />
+            <YAxis domain={[0, 'auto']} tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v < 1 ? v.toFixed(2) : String(Math.round(v))} />
             <Tooltip contentStyle={chartTooltipStyle} />
             <Area type="monotone" dataKey="spend" stroke={DATA_BLUE} strokeWidth={2} fill="url(#gradSpendArea)" dot={{ r: 3, fill: DATA_BLUE, strokeWidth: 2, stroke: '#161D2E' }} />
             <Area type="monotone" dataKey="revenue" stroke={DATA_GREEN} strokeWidth={2} fill="url(#gradRevenueArea)" dot={{ r: 3, fill: DATA_GREEN, strokeWidth: 2, stroke: '#161D2E' }} />

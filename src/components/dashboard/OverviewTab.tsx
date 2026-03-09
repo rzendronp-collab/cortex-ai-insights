@@ -221,7 +221,7 @@ export default function OverviewTab() {
       {/* ─── Charts Row 1 ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* ROAS por Campanha */}
-        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
+        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '200ms' }}>
           <h3 className="text-xs font-semibold text-text-primary mb-4">ROAS por Campanha <span className="text-text-muted font-normal">(top 10)</span></h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={roasCampaignData} layout="vertical" barSize={28}>

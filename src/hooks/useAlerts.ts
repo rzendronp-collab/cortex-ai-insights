@@ -23,6 +23,7 @@ export function useAlerts() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { isTokenExpired } = useMetaConnection();
+  const { notify } = useNotifications();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(false);
 

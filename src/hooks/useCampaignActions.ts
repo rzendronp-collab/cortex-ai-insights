@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react';
 import { useMetaConnection } from './useMetaConnection';
 import { useDashboard } from '@/context/DashboardContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 
 export interface BudgetInfo {
@@ -12,7 +14,17 @@ export interface BudgetInfo {
 export function useCampaignActions() {
   const { callMetaApi, isConnected } = useMetaConnection();
   const { selectedAccountId, selectedPeriod, analysisData, setAnalysisForAccount, clearCurrentAnalysis } = useDashboard();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+
+  const invalidateCache = useCallback(async () => {
+    if (!user || !selectedAccountId) return;
+    await supabase
+      .from('analysis_cache')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('account_id', selectedAccountId);
+  }, [user, selectedAccountId]);
 
   const syncCacheStatus = useCallback((campaignId: string, updates: Record<string, any>) => {
     if (!analysisData || !selectedAccountId) return;
@@ -36,6 +48,7 @@ export function useCampaignActions() {
       console.log(`[TOGGLE] Sending POST to ${campaignId}: status=${newStatus}`);
       const result = await callMetaApi(campaignId, { status: newStatus, _method: 'POST' });
       console.log(`[TOGGLE] Response:`, result);
+      await invalidateCache();
       clearCurrentAnalysis();
       return newStatus;
     } catch (err: any) {
@@ -45,7 +58,7 @@ export function useCampaignActions() {
     } finally {
       setLoading(false);
     }
-  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis]);
+  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, invalidateCache]);
 
   /**
    * Detect whether a campaign uses CBO or ABO budgeting.
@@ -99,6 +112,7 @@ export function useCampaignActions() {
 
       await callMetaApi(budgetInfo.targetId, { daily_budget: budgetCents, _method: 'POST' });
 
+      await invalidateCache();
       clearCurrentAnalysis();
       toast.success(`✅ Orçamento atualizado (${budgetInfo.isCBO ? 'CBO' : 'ABO'})`);
       return true;
@@ -109,7 +123,7 @@ export function useCampaignActions() {
     } finally {
       setLoading(false);
     }
-  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, detectBudgetType]);
+  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, detectBudgetType, invalidateCache]);
 
   const updateCampaignName = useCallback(async (campaignId: string, newName: string) => {
     if (!isConnected || !selectedAccountId) {
@@ -119,6 +133,7 @@ export function useCampaignActions() {
     setLoading(true);
     try {
       await callMetaApi(campaignId, { name: newName, _method: 'POST' });
+      await invalidateCache();
       syncCacheStatus(campaignId, { name: newName });
       toast.success('Nome atualizado ✓');
       return true;
@@ -128,7 +143,7 @@ export function useCampaignActions() {
     } finally {
       setLoading(false);
     }
-  }, [isConnected, selectedAccountId, callMetaApi, syncCacheStatus]);
+  }, [isConnected, selectedAccountId, callMetaApi, syncCacheStatus, invalidateCache]);
 
   return { loading, toggleCampaignStatus, updateBudget, updateCampaignName, syncCacheStatus, detectBudgetType };
 }

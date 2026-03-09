@@ -233,32 +233,7 @@ export function useMetaData() {
 
     try {
 
-      // Layer 1: Try Supabase persistent cache
-      if (user) {
-        try {
-          const { data: cached } = await supabase
-            .from('analysis_cache')
-            .select('data, updated_at')
-            .eq('user_id', user.id)
-            .eq('account_id', selectedAccountId)
-            .eq('period', cachePeriodKey)
-            .maybeSingle();
-
-          if (cached?.data && cached.updated_at && (cached.data as any).budgetByCampaignId) {
-            const cacheAge = Date.now() - new Date(cached.updated_at).getTime();
-            if (cacheAge < CACHE_MAX_AGE_MS) {
-              setAnalysisForAccount(selectedAccountId, selectedPeriod, cached.data as unknown as AnalysisData);
-              toast.success('♻️ Dados do cache');
-              setLoading(false);
-              return;
-            }
-          }
-        } catch {
-          // Cache miss — proceed to fresh fetch
-        }
-      }
-
-      // Layer 2: Fresh fetch from Meta API (with retry)
+      // Always fetch fresh from Meta API (cache is only used as fallback on rate limit)
       const period = periodMap[selectedPeriod] || 'last_7d';
       const acctPath = `act_${selectedAccountId}`;
       const { since, until } = getPrevTimeRange(selectedPeriod, dateRange);

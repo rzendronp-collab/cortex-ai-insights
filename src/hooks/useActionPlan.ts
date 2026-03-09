@@ -225,7 +225,8 @@ Formato exato:
     "roas_atual": number,
     "roas_estimado": number,
     "dias_ativo": number,
-    "frequency": number
+    "frequency": number,
+    "regra_aplicada": "qual regra determinou esta ação"
   }]
 }`;
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, Settings, ChevronDown, ChevronRight, Circle, Save, Loader2, Eye, EyeOff, BarChart3, Target, Calendar, Cog, Globe, MessageCircle, FileText, Unplug } from 'lucide-react';
+import { LogOut, Settings, ChevronDown, ChevronRight, Circle, Save, Loader2, Eye, EyeOff, BarChart3, Target, Calendar, Cog, Globe, MessageCircle, FileText, Unplug, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
@@ -127,6 +127,7 @@ export default function DashboardSidebar() {
     { id: 'consolidated', label: 'Consolidado', icon: Globe },
     { id: 'chat', label: 'Chat IA', icon: MessageCircle },
     { id: 'report', label: 'Relatório', icon: FileText },
+    { id: 'action-plan', label: '⚡ Otimizar', icon: Zap },
   ];
 
   return (

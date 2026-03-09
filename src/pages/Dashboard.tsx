@@ -8,6 +8,7 @@ import RulesTab from '@/components/dashboard/RulesTab';
 import ConsolidatedTab from '@/components/dashboard/ConsolidatedTab';
 import ChatTab from '@/components/dashboard/ChatTab';
 import ReportTab from '@/components/dashboard/ReportTab';
+import ActionPlanTab from '@/components/dashboard/ActionPlanTab';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 
 function DashboardContent() {
@@ -22,6 +23,7 @@ function DashboardContent() {
       case 'consolidated': return <ConsolidatedTab />;
       case 'chat': return <ChatTab />;
       case 'report': return <ReportTab />;
+      case 'action-plan': return <ActionPlanTab />;
       default: return <OverviewTab />;
     }
   };

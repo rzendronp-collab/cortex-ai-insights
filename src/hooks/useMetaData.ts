@@ -64,6 +64,7 @@ export interface AnalysisData {
   platformData: PlatformData[];
   genderData: GenderData[];
   ageData: AgeData[];
+  budgetByCampaignId: Record<string, number>;
   lastUpdated: string;
 }
 
@@ -191,7 +192,7 @@ export function useMetaData() {
       const acctPath = `act_${selectedAccountId}`;
       const { since, until } = getPrevTimeRange(selectedPeriod);
 
-      const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes] = await Promise.all([
+      const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes, adsetsRes] = await Promise.all([
         callMetaApi(`${acctPath}/campaigns`, {
           fields: `id,name,status,insights.date_preset(${period}){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}`,
           limit: '50',
@@ -224,6 +225,11 @@ export function useMetaData() {
           fields: 'spend,impressions,clicks,actions,action_values',
           date_preset: period,
           limit: '100',
+        }),
+        callMetaApi(`${acctPath}/adsets`, {
+          fields: 'id,name,campaign_id,daily_budget,lifetime_budget,status',
+          limit: '200',
+          date_preset: period,
         }),
       ]);
 
@@ -317,6 +323,15 @@ export function useMetaData() {
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([age, spend]) => ({ age, percentage: Math.round((spend / totalDemoSpend) * 100) }));
 
+      const rawAdsets = adsetsRes?.data || [];
+      const budgetByCampaignId: Record<string, number> = {};
+      rawAdsets.forEach((adset: any) => {
+        if (adset.campaign_id) {
+          const budget = parseFloat(adset.daily_budget || adset.lifetime_budget || '0');
+          budgetByCampaignId[adset.campaign_id] = (budgetByCampaignId[adset.campaign_id] || 0) + budget;
+        }
+      });
+
       const now = new Date().toISOString();
       const analysisResult: AnalysisData = {
         campaigns,
@@ -326,6 +341,7 @@ export function useMetaData() {
         platformData,
         genderData,
         ageData,
+        budgetByCampaignId,
         lastUpdated: now,
       };
 

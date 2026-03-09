@@ -495,7 +495,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     
                     {/* EXPANDED CONTENT */}
                     {expanded && (
-                      <tr className="bg-muted/5 border-b border-border">
+                      <tr className="bg-[#080B14] border-b border-[#1E2D4A]">
                         <td colSpan={14} className="p-0">
                           <div className="p-4 border-l-2 border-l-primary/50 animate-fade-up">
                             {aiLoading ? (

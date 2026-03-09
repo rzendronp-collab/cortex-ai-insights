@@ -26,5 +26,41 @@ export function useCampaignActions() {
     }
   }, [isConnected, selectedAccountId, callMetaApi]);
 
-  return { loading, toggleCampaignStatus };
+  const updateBudget = useCallback(async (campaignId: string, newDailyBudget: number) => {
+    if (!isConnected || !selectedAccountId) {
+      toast.error('Conecte sua conta Meta primeiro.');
+      return false;
+    }
+    setLoading(true);
+    try {
+      // Fetch adsets for this campaign
+      const adSetsRes = await callMetaApi(`${campaignId}/adsets`, {
+        fields: 'id,name,daily_budget,lifetime_budget',
+      });
+      const adsets = adSetsRes?.data || [];
+      const budgetCents = String(Math.round(newDailyBudget * 100));
+
+      if (adsets.length > 0) {
+        // ABO: update each adset
+        await Promise.all(
+          adsets.map((adset: any) =>
+            callMetaApi(adset.id, { daily_budget: budgetCents, _method: 'POST' })
+          )
+        );
+      } else {
+        // CBO: update campaign directly
+        await callMetaApi(campaignId, { daily_budget: budgetCents, _method: 'POST' });
+      }
+
+      toast.success('Budget atualizado ✓');
+      return true;
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao atualizar budget.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [isConnected, selectedAccountId, callMetaApi]);
+
+  return { loading, toggleCampaignStatus, updateBudget };
 }

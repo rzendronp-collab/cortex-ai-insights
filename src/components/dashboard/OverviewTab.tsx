@@ -210,6 +210,7 @@ export default function OverviewTab() {
               const maxVal = funnelData[0].value || 1;
               const width = Math.max((item.value / maxVal) * 100, 15);
               const rate = i > 0 ? ((item.value / (funnelData[i - 1].value || 1)) * 100).toFixed(1) : null;
+              const barColor = i === 0 ? '#3B82F6' : i === 1 ? '#8B5CF6' : '#10B981';
               return (
                 <div key={item.name}>
                   <div className="flex justify-between text-[11px] mb-1">
@@ -217,9 +218,9 @@ export default function OverviewTab() {
                     <span className="text-foreground font-semibold">{item.value.toLocaleString()}</span>
                   </div>
                   <div className="h-7 bg-muted rounded-md overflow-hidden">
-                    <div className="h-full gradient-primary rounded-md transition-all" style={{ width: `${width}%` }} />
+                    <div className="h-full rounded-md transition-all" style={{ width: `${width}%`, backgroundColor: barColor }} />
                   </div>
-                  {rate && <p className="text-[10px] text-primary mt-0.5">{i === 1 ? 'CTR' : 'CVR'}: {rate}%</p>}
+                  {rate && <p className="text-[10px] mt-0.5" style={{ color: barColor }}>{i === 1 ? 'CTR' : 'CVR'}: {rate}%</p>}
                 </div>
               );
             })}
@@ -245,7 +246,7 @@ export default function OverviewTab() {
       </div>
 
       {/* Fix #3: Daily chart — multi-metric with checkboxes and dual Y axis */}
-      <div className="bg-card border border-border rounded-lg p-4 animate-fade-up">
+      <div className="bg-card border border-border rounded-lg p-4 mb-6 animate-fade-up" style={{ minHeight: 280 }}>
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h3 className="text-xs font-semibold text-foreground">Evolução Diária</h3>
           <div className="flex gap-3 flex-wrap">
@@ -264,7 +265,7 @@ export default function OverviewTab() {
             ))}
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={240}>
+        <ResponsiveContainer width="100%" height={260}>
           <ComposedChart data={dailyData}>
             <defs>
               {Object.entries(dailyMetricConfig).map(([key, cfg]) => (

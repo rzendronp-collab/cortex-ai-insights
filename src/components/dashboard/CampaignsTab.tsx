@@ -136,12 +136,7 @@ export default function CampaignsTab() {
     return [...hourlyData].sort((a, b) => b.spend - a.spend);
   }, [hourlyData]);
 
-  const hourlyRankMap = useMemo(() => {
-    const map: Record<string, number> = {};
-    hourlySorted.forEach((h, i) => { map[h.hour] = i + 1; });
-    return map;
-  }, [hourlySorted]);
-
+  
   const topHours = useMemo(() => {
     return hourlySorted.filter(h => h.spend > 0).slice(0, 3).map(h => h.hour);
   }, [hourlySorted]);

@@ -474,6 +474,7 @@ export default function CampaignsTab() {
       toast.error(err?.message || 'Erro ao atualizar budget.');
     } finally {
       setSavingBudgetId(null);
+      setEditingCampaignId(null);
     }
   }, [editingBudgetValue, callMetaApi, analysisData, selectedAccountId, selectedPeriod, setAnalysisForAccount]);
 

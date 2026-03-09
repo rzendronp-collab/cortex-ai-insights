@@ -502,8 +502,6 @@ Responda SOMENTE com o JSON, sem markdown.`;
           CSV
         </button>
       </div>
-        </div>
-      </div>
 
       {/* Mobile Card View */}
       <div className="md:hidden space-y-3">

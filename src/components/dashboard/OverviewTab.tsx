@@ -122,7 +122,7 @@ export default function OverviewTab() {
 
   const top10Campaigns = [...activeCampaigns].sort((a, b) => b.spend - a.spend).slice(0, 10);
   const roasCampaignData = top10Campaigns.map(c => ({
-    name: c.name.length > 18 ? c.name.slice(0, 18) + '...' : c.name,
+    name: c.name.length > 16 ? c.name.slice(0, 16) + '…' : c.name,
     fullName: c.name,
     roas: parseFloat(c.roas.toFixed(1)),
     fill: c.roas >= roasTarget ? DATA_GREEN : DATA_RED,
@@ -191,10 +191,10 @@ export default function OverviewTab() {
       {/* ─── Charts Row 1 ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* ROAS por Campanha */}
-        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
           <h3 className="text-xs font-semibold text-text-primary mb-4">ROAS por Campanha <span className="text-text-muted font-normal">(top 10)</span></h3>
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={roasCampaignData} layout="vertical">
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={roasCampaignData} layout="vertical" barSize={28}>
               <defs>
                 <linearGradient id="barGreen" x1="0" y1="0" x2="1" y2="0">
                   <stop offset="0%" stopColor={DATA_GREEN} stopOpacity={0.9} />
@@ -207,10 +207,10 @@ export default function OverviewTab() {
               </defs>
               <CartesianGrid strokeDasharray="4 4" stroke={CHART_GRID} horizontal={false} />
               <XAxis type="number" tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: CHART_AXIS }} width={90} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: CHART_AXIS }} width={85} axisLine={false} tickLine={false} />
               <Tooltip content={<RoasTooltip />} />
               <ReferenceLine x={roasTarget} stroke={MUTED} strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 9, fill: MUTED }} />
-              <Bar dataKey="roas" radius={[0, 6, 6, 0]} animationDuration={800}>
+              <Bar dataKey="roas" radius={[0, 6, 6, 0]} animationDuration={800} label={{ position: 'right', fontSize: 10, fill: '#F1F5F9', formatter: (v: number) => `${v}x` }}>
                 {roasCampaignData.map((entry, i) => (
                   <Cell key={i} fill={entry.roas >= roasTarget ? 'url(#barGreen)' : 'url(#barRed)'} />
                 ))}
@@ -220,20 +220,20 @@ export default function OverviewTab() {
         </div>
 
         {/* Funil de Conversão */}
-        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
-          <h3 className="text-xs font-semibold text-text-primary mb-4">Funil de Conversão</h3>
-          <div className="space-y-4 mt-4">
+        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up" style={{ minHeight: 180 }}>
+          <h3 className="text-xs font-semibold text-text-primary mb-3">Funil de Conversão</h3>
+          <div className="space-y-3">
             {funnelData.map((item, i) => {
               const maxVal = funnelData[0].value || 1;
               const width = Math.max((item.value / maxVal) * 100, 15);
               const rate = i > 0 ? ((item.value / (funnelData[i - 1].value || 1)) * 100).toFixed(1) : null;
               return (
                 <div key={item.name} className="animate-fade-up" style={{ animationDelay: `${i * 100}ms` }}>
-                  <div className="flex justify-between text-[11px] mb-1.5">
+                  <div className="flex justify-between text-[11px] mb-1">
                     <span className="text-text-secondary">{item.name}</span>
-                    <span className="text-text-primary font-semibold">{item.value.toLocaleString()}</span>
+                    <span className="text-[14px] text-text-primary font-bold">{item.value.toLocaleString()}</span>
                   </div>
-                  <div className="h-8 bg-bg-base rounded-lg overflow-hidden flex items-center justify-center relative">
+                  <div className="h-7 bg-bg-base rounded-lg overflow-hidden relative">
                     <div
                       className="h-full rounded-lg transition-all duration-500 absolute left-0 top-0"
                       style={{
@@ -242,7 +242,7 @@ export default function OverviewTab() {
                       }}
                     />
                   </div>
-                  {rate && <p className="text-[10px] mt-1 font-medium" style={{ color: item.color }}>{i === 1 ? 'CTR' : 'CVR'}: {rate}%</p>}
+                  {rate && <p className="text-[10px] mt-0.5 font-medium" style={{ color: item.color }}>{i === 1 ? 'CTR' : 'CVR'}: {rate}%</p>}
                 </div>
               );
             })}
@@ -250,7 +250,7 @@ export default function OverviewTab() {
         </div>
 
         {/* Origem tráfego */}
-        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
           <h3 className="text-xs font-semibold text-text-primary mb-4">Origem do Tráfego</h3>
           <div className="space-y-3 mt-2">
             {platformData.map((p, i) => {
@@ -272,9 +272,9 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Gasto vs Receita (Area Chart) ─── */}
-      <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+      <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
         <h3 className="text-xs font-semibold text-text-primary mb-4">Gasto vs Receita</h3>
-        <ResponsiveContainer width="100%" height={220}>
+        <ResponsiveContainer width="100%" height={180}>
           <AreaChart data={dailyData}>
             <defs>
               <linearGradient id="gradSpendArea" x1="0" y1="0" x2="0" y2="1">
@@ -290,8 +290,8 @@ export default function OverviewTab() {
             <XAxis dataKey="date" tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} />
             <Tooltip contentStyle={chartTooltipStyle} />
-            <Area type="monotone" dataKey="spend" stroke={DATA_BLUE} strokeWidth={2} fill="url(#gradSpendArea)" dot={{ r: 3, fill: DATA_BLUE, strokeWidth: 2, stroke: '#141928' }} />
-            <Area type="monotone" dataKey="revenue" stroke={DATA_GREEN} strokeWidth={2} fill="url(#gradRevenueArea)" dot={{ r: 3, fill: DATA_GREEN, strokeWidth: 2, stroke: '#141928' }} />
+            <Area type="monotone" dataKey="spend" stroke={DATA_BLUE} strokeWidth={2} fill="url(#gradSpendArea)" dot={{ r: 3, fill: DATA_BLUE, strokeWidth: 2, stroke: '#161D2E' }} />
+            <Area type="monotone" dataKey="revenue" stroke={DATA_GREEN} strokeWidth={2} fill="url(#gradRevenueArea)" dot={{ r: 3, fill: DATA_GREEN, strokeWidth: 2, stroke: '#161D2E' }} />
           </AreaChart>
         </ResponsiveContainer>
         <div className="flex justify-center gap-6 mt-2">
@@ -301,7 +301,7 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Daily Evolution ─── */}
-      <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up" style={{ minHeight: 320 }}>
+      <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up" style={{ minHeight: 320 }}>
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h3 className="text-xs font-semibold text-text-primary">Evolução Diária</h3>
           <div className="flex gap-3 flex-wrap">
@@ -349,8 +349,8 @@ export default function OverviewTab() {
                   yAxisId={cfg.yAxisId}
                   stroke={cfg.color}
                   strokeWidth={2}
-                  dot={{ r: 4, fill: cfg.color, strokeWidth: 2, stroke: '#141928' }}
-                  activeDot={{ r: 6, fill: cfg.color, strokeWidth: 2, stroke: '#141928' }}
+                  dot={{ r: 4, fill: cfg.color, strokeWidth: 2, stroke: '#161D2E' }}
+                  activeDot={{ r: 6, fill: cfg.color, strokeWidth: 2, stroke: '#161D2E' }}
                 />
               );
             })}
@@ -359,14 +359,14 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Hourly ─── */}
-      <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+      <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
         <h3 className="text-xs font-semibold text-text-primary mb-4">Desempenho por Hora</h3>
         <HourlyBarChart data={hourlyData} currency={currency} />
       </div>
 
       {/* ─── Demographics ─── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
           <h3 className="text-xs font-semibold text-text-primary mb-4">Gênero</h3>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
@@ -383,7 +383,7 @@ export default function OverviewTab() {
           </div>
         </div>
 
-        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up" style={{ minHeight: 220 }}>
+        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up" style={{ minHeight: 220 }}>
           <h3 className="text-xs font-semibold text-text-primary mb-4">Faixa Etária</h3>
           <div className="space-y-2.5 mt-2" style={{ minHeight: 180 }}>
             {ageData.map(a => (
@@ -398,7 +398,7 @@ export default function OverviewTab() {
           </div>
         </div>
 
-        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
           <h3 className="text-xs font-semibold text-text-primary mb-4">Gasto vs Receita</h3>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
@@ -416,33 +416,31 @@ export default function OverviewTab() {
         </div>
       </div>
 
-      {/* ─── Action Plan Summary ─── */}
-      <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
-        <h3 className="text-xs font-semibold text-text-primary mb-3">🎯 Plano de Ação</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-          {actions.map(a => {
+      {/* ─── Action Plan Summary (top 3) ─── */}
+      <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xs font-semibold text-text-primary">🎯 Plano de Ação</h3>
+          <button onClick={() => setActiveTab('action-plan')} className="text-[11px] text-data-blue hover:underline cursor-pointer font-medium">
+            Ver todas →
+          </button>
+        </div>
+        <div className="space-y-2">
+          {actions.slice(0, 3).map(a => {
             const isPausar = a.recommendation.label.includes('Pausar');
             const isEscalar = a.recommendation.label.includes('Escalar');
             const isOtimizar = a.recommendation.label.includes('Otimizar');
             const borderColor = isPausar ? DATA_RED : isEscalar ? DATA_GREEN : isOtimizar ? DATA_BLUE : DATA_YELLOW;
             const roasColor = isPausar ? 'text-data-red' : isEscalar ? 'text-data-green' : isOtimizar ? 'text-data-blue' : 'text-data-yellow';
             return (
-              <div key={a.id} className="bg-bg-base border border-border-default rounded-lg p-3" style={{ borderLeftWidth: 3, borderLeftColor: borderColor }}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded ${a.recommendation.bg} border`}>{a.recommendation.label}</span>
-                  <span className={`text-[10px] font-bold ${roasColor}`}>ROAS {a.roas.toFixed(1)}x</span>
-                </div>
-                <p className="text-xs text-text-primary font-semibold truncate">{a.name}</p>
-                <p className="text-[10px] text-text-muted mt-1">
-                  Gasto {currency} {a.spend.toFixed(0)} • {a.purchases} vendas • CTR {a.ctr.toFixed(1)}%
-                </p>
+              <div key={a.id} className="flex items-center gap-3 bg-bg-base border border-border-default rounded-lg px-3 py-2.5" style={{ borderLeftWidth: 3, borderLeftColor: borderColor, maxHeight: 60 }}>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${a.recommendation.bg} border whitespace-nowrap`}>{a.recommendation.label}</span>
+                <p className="text-[12px] text-text-primary font-semibold truncate flex-1">{a.name}</p>
+                <span className="text-[10px] text-text-muted whitespace-nowrap">{currency} {a.spend.toFixed(0)} • {a.purchases}v</span>
+                <span className={`text-[11px] font-bold ${roasColor} whitespace-nowrap`}>{a.roas.toFixed(1)}x</span>
               </div>
             );
            })}
          </div>
-         <button onClick={() => setActiveTab('action-plan')} className="text-xs text-data-blue hover:underline mt-3 cursor-pointer font-medium">
-           Ver Plano Completo ⚡ →
-         </button>
        </div>
     </div>
   );

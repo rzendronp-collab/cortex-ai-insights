@@ -10,9 +10,12 @@ import ChatTab from '@/components/dashboard/ChatTab';
 import ReportTab from '@/components/dashboard/ReportTab';
 import ActionPlanTab from '@/components/dashboard/ActionPlanTab';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
+import { useMetaConnection } from '@/hooks/useMetaConnection';
+import { AlertTriangle } from 'lucide-react';
 
 function DashboardContent() {
   const { activeTab } = useDashboard();
+  const { isTokenExpired, connectMeta } = useMetaConnection();
 
   const renderTab = () => {
     switch (activeTab) {
@@ -34,6 +37,13 @@ function DashboardContent() {
       <DashboardSidebar />
       <div className="ml-[260px]">
         <DashboardHeader />
+        {isTokenExpired && (
+          <div className="mx-6 mt-4 bg-warning/10 border border-warning/30 rounded-lg px-4 py-3 flex items-center gap-3">
+            <AlertTriangle className="w-4 h-4 text-warning shrink-0" />
+            <span className="text-xs text-warning font-medium">⚠ Token Meta expirado. Reconecte para continuar.</span>
+            <button onClick={() => connectMeta()} className="text-xs text-warning underline font-semibold ml-auto">Reconectar →</button>
+          </div>
+        )}
         <main className="p-6">
           {renderTab()}
         </main>

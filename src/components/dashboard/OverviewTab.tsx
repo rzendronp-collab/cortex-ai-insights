@@ -35,7 +35,7 @@ const dailyMetricConfig: Record<string, { label: string; color: string; type: 'l
 
 export default function OverviewTab() {
   const [visibleMetrics, setVisibleMetrics] = useState<Set<string>>(new Set(['roas', 'spend']));
-  const { analysisData, selectedAccountId, currencySymbol } = useDashboard();
+  const { analysisData, selectedAccountId, currencySymbol, setActiveTab } = useDashboard();
   const { isConnected } = useMetaConnection();
   const { analyze, loading } = useMetaData();
   const { profile } = useProfile();
@@ -376,9 +376,12 @@ export default function OverviewTab() {
                 </p>
               </div>
             );
-          })}
-        </div>
-      </div>
+           })}
+         </div>
+         <button onClick={() => setActiveTab('action-plan')} className="text-xs text-[#3B82F6] hover:underline mt-2 cursor-pointer">
+           Ver Plano Completo ⚡ →
+         </button>
+       </div>
     </div>
   );
 }

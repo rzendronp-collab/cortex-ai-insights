@@ -228,7 +228,7 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
           {/* Scrollable BM list */}
           <div className="flex-1 overflow-y-auto px-2 pb-2">
             {Object.entries(accountsByBm).map(([bmName, accounts]) => {
-              const isOpen = openBMs[bmName] ?? false;
+              const isOpen = openBMs[bmName] ?? true;
               return (
                 <div key={bmName} className="mb-1">
                   <div

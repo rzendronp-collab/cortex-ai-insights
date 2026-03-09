@@ -97,9 +97,13 @@ Deno.serve(async (req) => {
     if (!claudeResponse.ok) {
       const errorBody = await claudeResponse.text();
       console.error("Claude API error:", claudeResponse.status, errorBody);
+      const isAuthError = claudeResponse.status === 401 || claudeResponse.status === 403;
       return new Response(
         JSON.stringify({
-          error: `Claude API error: ${claudeResponse.status}`,
+          error: isAuthError
+            ? "Claude API Key inválida — verifique em Config"
+            : `Claude API error: ${claudeResponse.status}`,
+          code: isAuthError ? 'INVALID_API_KEY' : 'API_ERROR',
         }),
         {
           status: 502,

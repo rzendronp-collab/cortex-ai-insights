@@ -85,6 +85,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
     return acc;
   }, {} as Record<string, typeof adAccounts>);
 
+  const pageTitle = tabLabels[activeTab] || 'Dashboard';
   const isCustomActive = selectedPeriod === 'custom' && !!dateRange;
   const periodLabel = isCustomActive ? `${dateRange!.from} → ${dateRange!.to}` : (selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`);
   const subtitle = `Meta Ads · ${periodLabel}`;

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { LogOut, Settings, ChevronRight, Circle, Save, Loader2, LayoutDashboard, BarChart2, Zap, Calendar, Globe, Shield, MessageSquare, FileText, Unplug } from 'lucide-react';
+import { LogOut, Settings, ChevronRight, Circle, Save, Loader2, LayoutDashboard, BarChart2, Zap, Calendar, Globe, Shield, MessageSquare, FileText, Unplug, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
@@ -29,7 +29,11 @@ function CortexLogo() {
   );
 }
 
-export default function DashboardSidebar() {
+interface DashboardSidebarProps {
+  onCloseMobile?: () => void;
+}
+
+export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
   const { user, signOut } = useAuth();
   const { profile, updateProfile } = useProfile();
   const { connection, adAccounts, isConnected, isTokenExpired, connectMeta, disconnectMeta, connectionLoading } = useMetaConnection();
@@ -103,10 +107,12 @@ export default function DashboardSidebar() {
     setSelectedAccountCurrency(accountCurrency || null);
   };
 
+  const handleNavClick = (tabId: string) => {
+    setActiveTab(tabId);
+    onCloseMobile?.();
+  };
+
   const initials = profile?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
-
-
-
 
   // Calculate current ROAS for selected account
   const ad = analysisData;
@@ -131,10 +137,16 @@ export default function DashboardSidebar() {
       {/* ─── LOGO ─── */}
       <div className="px-5 py-5 flex items-center gap-3">
         <CortexLogo />
-        <div className="flex items-baseline gap-1.5">
+        <div className="flex items-baseline gap-1.5 flex-1">
           <span className="font-bold text-text-primary text-[16px] tracking-tight">CortexAds</span>
           <span className="text-[10px] font-semibold text-data-blue">AI</span>
         </div>
+        {/* Close button for mobile */}
+        {onCloseMobile && (
+          <button onClick={onCloseMobile} className="p-1 text-text-muted hover:text-text-primary transition-colors md:hidden">
+            <X className="w-5 h-5" />
+          </button>
+        )}
       </div>
 
       {/* ─── SCROLLABLE CONTENT ─── */}
@@ -176,7 +188,7 @@ export default function DashboardSidebar() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => handleNavClick(item.id)}
                   className={`flex items-center gap-2.5 w-full px-3 py-[10px] rounded-lg transition-all duration-150 text-[13px] ${
                     isActive
                       ? 'bg-[hsl(217_40%_18%)] text-data-blue font-semibold border-l-2 border-l-data-blue'

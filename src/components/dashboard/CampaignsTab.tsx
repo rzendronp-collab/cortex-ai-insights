@@ -377,12 +377,12 @@ Responda SOMENTE com o JSON, sem markdown.`;
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <div 
-                                  className={`w-2.5 h-2.5 rounded-full mx-auto cursor-pointer ${isActive ? 'bg-success shadow-[0_0_8px_hsl(var(--success))]' : 'bg-muted-foreground/40'}`}
-                                  onClick={() => toggleCampaignStatus(c.id, effectiveStatus)}
+                                  className={`w-2.5 h-2.5 rounded-full mx-auto cursor-pointer transition-all hover:scale-150 ${isActive ? 'bg-success shadow-[0_0_8px_hsl(var(--success))]' : 'bg-muted-foreground/40'}`}
+                                  onClick={() => setConfirmDialog({ id: c.id, name: c.name, currentStatus: effectiveStatus })}
                                 />
                               </TooltipTrigger>
                               <TooltipContent side="right">
-                                <p className="text-xs">{isActive ? 'Ativo' : 'Pausado'}</p>
+                                <p className="text-xs">Clique para {isActive ? 'pausar' : 'ativar'}</p>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>

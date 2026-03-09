@@ -255,7 +255,7 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                                 setSelectedAccountId(account.account_id);
                                 setSelectedAccountName(account.account_name || null);
                                 setSelectedAccountCurrency(account.currency || null);
-                                setTimeout(() => { analyzeRef.current?.(account.account_id); }, 150);
+                                setTimeout(() => analyze(), 200);
                               }
                             }}
                           >

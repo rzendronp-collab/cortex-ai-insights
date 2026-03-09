@@ -6,6 +6,7 @@ import { useProfile } from '@/hooks/useProfile';
 import KPICard from './KPICard';
 import { mockCampaigns, mockDailyData, mockHourlyData, mockGenderData, mockAgeData, mockPlatformData, getRoasColor, formatCurrency } from '@/lib/mockData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, ReferenceLine, Line, ComposedChart } from 'recharts';
+import { HourlyBarChart } from './HourlyBarChart';
 import { Inbox, Zap, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';

@@ -323,6 +323,15 @@ export function useMetaData() {
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([age, spend]) => ({ age, percentage: Math.round((spend / totalDemoSpend) * 100) }));
 
+      const rawAdsets = adsetsRes?.data || [];
+      const budgetByCampaignId: Record<string, number> = {};
+      rawAdsets.forEach((adset: any) => {
+        if (adset.campaign_id) {
+          const budget = parseFloat(adset.daily_budget || adset.lifetime_budget || '0');
+          budgetByCampaignId[adset.campaign_id] = (budgetByCampaignId[adset.campaign_id] || 0) + budget;
+        }
+      });
+
       const now = new Date().toISOString();
       const analysisResult: AnalysisData = {
         campaigns,

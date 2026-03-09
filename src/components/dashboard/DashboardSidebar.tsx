@@ -65,9 +65,10 @@ export default function DashboardSidebar() {
     }
   };
 
-  const handleSelectAccount = (accountId: string | null, accountName: string | null) => {
+  const handleSelectAccount = (accountId: string | null, accountName: string | null, accountCurrency?: string | null) => {
     setSelectedAccountId(accountId);
     setSelectedAccountName(accountName);
+    setSelectedAccountCurrency(accountCurrency || null);
   };
 
   const initials = profile?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';

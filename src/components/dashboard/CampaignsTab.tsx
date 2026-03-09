@@ -296,9 +296,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
             placeholder="Buscar campanha..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full sm:w-64 h-8 text-xs bg-card"
+            className="w-full sm:w-64 h-8 text-xs bg-[#0E1420]"
           />
-          <div className="flex items-center bg-card border border-border rounded-md">
+          <div className="flex items-center bg-[#0E1420] border border-[#1E2D4A] rounded-md">
             <button
               onClick={() => setStatusFilter('all')}
               className={`px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
@@ -495,13 +495,13 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     
                     {/* EXPANDED CONTENT */}
                     {expanded && (
-                      <tr className="bg-muted/5 border-b border-border">
+                      <tr className="bg-[#080B14] border-b border-[#1E2D4A]">
                         <td colSpan={14} className="p-0">
                           <div className="p-4 border-l-2 border-l-primary/50 animate-fade-up">
                             {aiLoading ? (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {[0,1,2,3].map(i => (
-                                  <div key={i} className="bg-card border border-border rounded-lg p-4 space-y-3">
+                                  <div key={i} className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 space-y-3">
                                     <Skeleton className="h-3 w-32" />
                                     <Skeleton className="h-4 w-full" />
                                     <Skeleton className="h-4 w-3/4" />
@@ -512,7 +512,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                             ) : (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* BLOCO 1 — MÉTRICAS COMPLETAS */}
-                                <div className="bg-card border border-border rounded-lg p-4">
+                                <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4">
                                   <div className="flex items-center gap-2 mb-3">
                                     <BarChart3 className="w-3.5 h-3.5 text-primary" />
                                     <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Métricas Completas</h4>
@@ -563,7 +563,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                 </div>
 
                                 {/* BLOCO 2 — ANÁLISE IA */}
-                                <div className="bg-card border border-border rounded-lg p-4">
+                                <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4">
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
                                       <Sparkles className="w-3.5 h-3.5 text-secondary" />
@@ -618,7 +618,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                 </div>
 
                                 {/* BLOCO 3 — PERFORMANCE POR HORA */}
-                                <div className="bg-card border border-border rounded-lg p-4">
+                                <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4">
                                   <div className="flex items-center gap-2 mb-3">
                                     <Clock className="w-3.5 h-3.5 text-success" />
                                     <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Performance por Hora</h4>
@@ -630,7 +630,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                 </div>
 
                                 {/* BLOCO 4 — EVOLUÇÃO DIÁRIA */}
-                                <div className="bg-card border border-border rounded-lg p-4">
+                                <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4">
                                   <div className="flex items-center gap-2 mb-3">
                                     <LineChart className="w-3.5 h-3.5 text-primary" />
                                     <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Evolução Diária</h4>

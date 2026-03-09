@@ -44,15 +44,26 @@ export default function DashboardSidebar() {
   const [currency, setCurrency] = useState(profile?.currency || 'R$');
   const [niche, setNiche] = useState(profile?.niche || '');
 
+  const [apiKeyError, setApiKeyError] = useState<string | null>(null);
+  const [apiKeyValid, setApiKeyValid] = useState(false);
+
   const handleSaveConfig = async () => {
     setSaving(true);
+    setApiKeyError(null);
+    setApiKeyValid(false);
     try {
       if (apiKey.trim()) {
+        if (!apiKey.trim().startsWith('sk-ant-')) {
+          setApiKeyError('Chave inválida — deve começar com sk-ant-');
+          setSaving(false);
+          return;
+        }
         const { error: keyError } = await supabase
           .from('profiles')
           .update({ claude_api_key: apiKey, updated_at: new Date().toISOString() })
           .eq('id', user!.id);
         if (keyError) throw keyError;
+        setApiKeyValid(true);
       }
       await updateProfile.mutateAsync({
         roas_target: parseFloat(roasTarget),

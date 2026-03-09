@@ -399,9 +399,8 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 const rec = getRecommendation(c);
 
                 return (
-                  <>
+                  <React.Fragment key={c.id}>
                     <tr 
-                      key={c.id}
                       onClick={() => setExpandedId(expanded ? null : c.id)}
                       className={`border-b border-[#1C2538] bg-[#0E1420] cursor-pointer transition-colors duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''}`}
                       style={{ height: 52 }}

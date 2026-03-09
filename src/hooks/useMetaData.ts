@@ -619,5 +619,11 @@ export function useMetaData() {
     };
   }, [selectedAccountId, isConnected, analyze]);
 
+  // Wire analyzeRef so other hooks can trigger re-analysis
+  useEffect(() => {
+    analyzeRef.current = analyze;
+    return () => { analyzeRef.current = null; };
+  }, [analyze, analyzeRef]);
+
   return { loading, error, analyze, roasTarget: profile?.roas_target || 3.0 };
 }

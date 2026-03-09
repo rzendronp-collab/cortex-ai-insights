@@ -202,7 +202,7 @@ export function useCampaignActions() {
     } finally {
       setLoading(false);
     }
-  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, invalidateCache]);
+  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, invalidateCache, triggerReanalyze]);
 
   return { loading, toggleCampaignStatus, updateBudget, updateCampaignName, syncCacheStatus, detectBudgetType, duplicateCampaign };
 }

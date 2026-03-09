@@ -78,7 +78,7 @@ export default function OverviewTab() {
   const ageData = analysisData?.ageData || (!isConnected ? mockAgeData : []);
 
   // Only campaigns with real spend for aggregations
-  const activeCampaigns = campaigns.filter(c => c.spend > 0);
+  const activeCampaigns = campaigns.filter(c => c.spend > 0 && c.status === 'ACTIVE');
 
   const totalSpend = activeCampaigns.reduce((s, c) => s + c.spend, 0);
   const totalRevenue = activeCampaigns.reduce((s, c) => s + c.revenue, 0);

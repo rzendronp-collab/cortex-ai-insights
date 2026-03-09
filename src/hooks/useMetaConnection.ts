@@ -104,6 +104,7 @@ export function useMetaConnection() {
     connectionLoading,
     accountsLoading,
     connectMeta,
+    disconnectMeta,
     refreshAccounts,
     callMetaApi,
   };

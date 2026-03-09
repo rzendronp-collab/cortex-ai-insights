@@ -26,6 +26,9 @@ export interface ActionItem {
   roas_estimado: number;
   dias_ativo?: number;
   frequency?: number;
+  regra_aplicada?: string;
+  spend_diario?: number;
+  tipo_budget?: string;
 }
 
 export interface ActionPlan {

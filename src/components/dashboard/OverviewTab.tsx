@@ -274,11 +274,11 @@ export default function OverviewTab() {
                 </linearGradient>
               ))}
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(224,30%,16%)" />
-            <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
-            <YAxis yAxisId="left" tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
-            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
-            <Tooltip contentStyle={{ background: 'hsl(228,20%,7%)', border: '1px solid hsl(224,30%,16%)', borderRadius: 8, fontSize: 11 }} />
+            <CartesianGrid strokeDasharray="3 3" stroke={chartGrid} />
+            <XAxis dataKey="date" tick={{ fontSize: 10, fill: chartAxisTick }} />
+            <YAxis yAxisId="left" tick={{ fontSize: 10, fill: chartAxisTick }} />
+            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10, fill: chartAxisTick }} />
+            <Tooltip contentStyle={chartTooltipStyle} />
             {activeMetrics.map(key => {
               const cfg = dailyMetricConfig[key];
               if (!cfg) return null;

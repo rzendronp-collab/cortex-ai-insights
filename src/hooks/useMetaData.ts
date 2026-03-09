@@ -75,6 +75,7 @@ const periodMap: Record<string, string> = {
   '30d': 'last_30d',
 };
 
+const CACHE_MAX_AGE_MS = 60 * 60 * 1000; // 1 hour
 
 function getPrevTimeRange(period: string): { since: string; until: string } {
   const today = new Date();
@@ -142,6 +143,62 @@ export function useMetaData() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const loadFromSupabaseCache = useCallback(async (): Promise<boolean> => {
+    if (!user || !selectedAccountId) return false;
+
+    try {
+      const { data: cached } = await supabase
+        .from('analysis_cache')
+        .select('data, updated_at')
+        .eq('user_id', user.id)
+        .eq('account_id', selectedAccountId)
+        .eq('period', selectedPeriod)
+        .maybeSingle();
+
+      if (cached?.data && cached.updated_at) {
+        const cacheAge = Date.now() - new Date(cached.updated_at).getTime();
+        if (cacheAge < CACHE_MAX_AGE_MS) {
+          setAnalysisForAccount(selectedAccountId, selectedPeriod, cached.data as unknown as AnalysisData);
+          toast.success('♻️ Dados do cache');
+          return true;
+        }
+      }
+    } catch {
+      // Cache miss — proceed to fresh fetch
+    }
+    return false;
+  }, [user, selectedAccountId, selectedPeriod, setAnalysisForAccount]);
+
+  const saveToSupabaseCache = useCallback(async (analysisResult: AnalysisData, now: string) => {
+    if (!user || !selectedAccountId) return;
+
+    const cachePayload = {
+      user_id: user.id,
+      account_id: selectedAccountId,
+      period: selectedPeriod,
+      data: analysisResult as any,
+      updated_at: now,
+    };
+
+    try {
+      const { data: existing } = await supabase
+        .from('analysis_cache')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('account_id', selectedAccountId)
+        .eq('period', selectedPeriod)
+        .maybeSingle();
+
+      if (existing) {
+        await supabase.from('analysis_cache').update(cachePayload).eq('id', existing.id);
+      } else {
+        await supabase.from('analysis_cache').insert(cachePayload);
+      }
+    } catch {
+      // Silent cache save failure
+    }
+  }, [user, selectedAccountId, selectedPeriod]);
+
   const analyze = useCallback(async () => {
     if (!selectedAccountId) {
       toast.error('Selecione uma conta na sidebar primeiro.');
@@ -159,33 +216,18 @@ export function useMetaData() {
     setLoading(true);
     setError(null);
 
-    const period = periodMap[selectedPeriod] || 'last_7d';
-    const acctPath = `act_${selectedAccountId}`;
-    const { since, until } = getPrevTimeRange(selectedPeriod);
-
-    console.log('[DELTA DEBUG] prevTimeRange:', { since, until }, 'selectedPeriod:', selectedPeriod);
-
     try {
-      // Cache temporarily disabled to force fresh API calls
-      // if (user) {
-      //   const { data: cached } = await supabase
-      //     .from('analysis_cache')
-      //     .select('data, updated_at')
-      //     .eq('user_id', user.id)
-      //     .eq('account_id', selectedAccountId)
-      //     .eq('period', selectedPeriod)
-      //     .maybeSingle();
-      //
-      //   if (cached?.data && cached.updated_at) {
-      //     const cacheAge = Date.now() - new Date(cached.updated_at).getTime();
-      //     if (cacheAge < 15 * 60 * 1000) {
-      //       setAnalysisForAccount(selectedAccountId, selectedPeriod, cached.data as unknown as AnalysisData);
-      //       setLoading(false);
-      //       toast.success('Dados carregados do cache.');
-      //       return;
-      //     }
-      //   }
-      // }
+      // Layer 1: Try Supabase persistent cache
+      const cacheHit = await loadFromSupabaseCache();
+      if (cacheHit) {
+        setLoading(false);
+        return;
+      }
+
+      // Layer 2: Fresh fetch from Meta API
+      const period = periodMap[selectedPeriod] || 'last_7d';
+      const acctPath = `act_${selectedAccountId}`;
+      const { since, until } = getPrevTimeRange(selectedPeriod);
 
       const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes] = await Promise.all([
         callMetaApi(`${acctPath}/campaigns`, {
@@ -224,7 +266,6 @@ export function useMetaData() {
       ]);
 
       const campaigns: ProcessedCampaign[] = (campaignsRes?.data || []).map(processCampaign);
-      console.log('[PREV RAW]', campaignsPrevRes?.data?.[0]);
       const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map((d: any) => {
         const spend = parseFloat(d.spend || '0');
         const purchases = extractPurchases(d.actions);
@@ -244,16 +285,6 @@ export function useMetaData() {
           roas: spend > 0 ? revenue / spend : 0,
           cpv: purchases > 0 ? spend / purchases : 0,
         };
-      });
-
-      const prevTotalSpend = campaignsPrev.reduce((s, c) => s + c.spend, 0);
-      const currTotalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
-      console.log('[DELTA DEBUG] results:', {
-        currCount: campaigns.length,
-        prevCount: campaignsPrev.length,
-        currTotalSpend,
-        prevTotalSpend,
-        firstPrev: campaignsPrev[0] ? { name: campaignsPrev[0].name, spend: campaignsPrev[0].spend, roas: campaignsPrev[0].roas } : null,
       });
 
       const dailyData: DailyData[] = (dailyRes?.data || []).map((d: any) => {
@@ -336,29 +367,9 @@ export function useMetaData() {
         lastUpdated: now,
       };
 
+      // Save to memory (DashboardContext) + Supabase persistent cache
       setAnalysisForAccount(selectedAccountId, selectedPeriod, analysisResult);
-
-      if (user) {
-        const cachePayload = {
-          user_id: user.id,
-          account_id: selectedAccountId,
-          period: selectedPeriod,
-          data: analysisResult as any,
-          updated_at: now,
-        };
-        const { data: existing } = await supabase
-          .from('analysis_cache')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('account_id', selectedAccountId)
-          .eq('period', selectedPeriod)
-          .maybeSingle();
-        if (existing) {
-          await supabase.from('analysis_cache').update(cachePayload).eq('id', existing.id);
-        } else {
-          await supabase.from('analysis_cache').insert(cachePayload);
-        }
-      }
+      await saveToSupabaseCache(analysisResult, now);
 
       toast.success('Análise concluída!');
     } catch (err: any) {
@@ -373,7 +384,7 @@ export function useMetaData() {
     } finally {
       setLoading(false);
     }
-  }, [selectedAccountId, selectedPeriod, isConnected, isTokenExpired, callMetaApi, user, setAnalysisForAccount]);
+  }, [selectedAccountId, selectedPeriod, isConnected, isTokenExpired, callMetaApi, user, setAnalysisForAccount, loadFromSupabaseCache, saveToSupabaseCache]);
 
-  return { loading, error, analyze, roasTarget: profile?.roas_target || 3.0 };
+  return { loading, error, analyze, loadFromSupabaseCache, roasTarget: profile?.roas_target || 3.0 };
 }

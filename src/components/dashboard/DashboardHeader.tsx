@@ -1,7 +1,7 @@
 import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
-import { Zap, Loader2, Clock, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Zap, Loader2, Clock, AlertTriangle, RefreshCw, Bell } from 'lucide-react';
 import AlertsPanel from './AlertsPanel';
 import { Button } from '@/components/ui/button';
 import { getRoasColor } from '@/lib/mockData';
@@ -36,40 +36,45 @@ export default function DashboardHeader() {
   const cacheTime = cacheTimestamp ? new Date(cacheTimestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
 
   return (
-    <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-xl border-b border-border">
+    <div className="sticky top-0 z-30 bg-bg-sidebar/90 backdrop-blur-xl border-b border-border-subtle">
+      {/* Token expired banner */}
       {isTokenExpired && (
-        <div className="bg-warning/10 border-b border-warning/30 px-6 py-2 flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-warning" />
-          <span className="text-[11px] text-warning font-medium">Sua conexão Meta expirou.</span>
-          <button onClick={() => connectMeta()} className="text-[11px] text-warning underline font-semibold">Reconectar →</button>
+        <div className="bg-data-yellow/10 border-b border-data-yellow/30 px-6 py-2 flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-data-yellow" />
+          <span className="text-[11px] text-data-yellow font-medium">Sua conexão Meta expirou.</span>
+          <button onClick={() => connectMeta()} className="text-[11px] text-data-yellow underline font-semibold">Reconectar →</button>
         </div>
       )}
 
-      <div className="h-[60px] flex items-center justify-between px-6">
+      {/* Main header row — 56px */}
+      <div className="h-[56px] flex items-center justify-between px-6">
+        {/* Left: Account selector */}
         <div>
-          <h1 className="text-sm font-semibold text-foreground">{accountTitle}</h1>
-          <p className="text-[11px] text-muted-foreground">
+          <h1 className="text-sm font-semibold text-text-primary">{accountTitle}</h1>
+          <p className="text-[11px] text-text-secondary">
             {accountSubtitle && `${accountSubtitle} • `}
             {selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`}
             {lastTime && <span className="ml-2"><Clock className="w-3 h-3 inline" /> {lastTime}</span>}
             {isFromCache && cacheTime && (
-              <span className="ml-2 text-primary">
+              <span className="ml-2 text-data-blue">
                 <RefreshCw className="w-3 h-3 inline" /> cache {cacheTime}
               </span>
             )}
           </p>
         </div>
 
+        {/* Right: Period + Alerts + Analyze */}
         <div className="flex items-center gap-4">
-          <div className="flex bg-muted rounded-lg p-0.5">
+          {/* Period selector */}
+          <div className="flex bg-bg-card rounded-lg p-0.5 border border-border-subtle">
             {periods.map((p) => (
               <button
                 key={p}
                 onClick={() => setSelectedPeriod(p)}
                 className={`px-3 py-1.5 text-[11px] font-medium rounded-md transition-all ${
                   selectedPeriod === p
-                    ? 'gradient-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-data-blue text-white shadow-sm'
+                    : 'text-text-secondary hover:text-text-primary'
                 }`}
               >
                 {p}
@@ -77,11 +82,13 @@ export default function DashboardHeader() {
             ))}
           </div>
 
+          {/* Alerts */}
           <AlertsPanel />
 
+          {/* Analyze button */}
           <Button
             size="sm"
-            className="h-9 px-5 text-[13px] font-bold gradient-primary text-primary-foreground gap-1.5 rounded-lg glow-primary-btn hover:shadow-lg transition-all"
+            className="h-9 px-5 text-[13px] font-semibold gradient-blue text-white gap-1.5 rounded-lg hover:opacity-90 transition-all"
             onClick={() => analyze()}
             disabled={loading || !selectedAccountId}
           >
@@ -94,22 +101,23 @@ export default function DashboardHeader() {
         </div>
       </div>
 
-      <div className="h-9 flex items-center gap-4 px-6 bg-[#0E1420] border-b border-[#1E2D4A] text-[12px]">
+      {/* Metrics bar */}
+      <div className="h-9 flex items-center gap-4 px-6 bg-bg-card border-t border-border-subtle text-[12px]">
         {ad ? (
           <>
             <span className={`font-bold ${getRoasColor(avgRoas, roasTarget)}`}>
               ROAS {avgRoas.toFixed(1)}x
               {delta !== null && delta !== 0 && <span className="opacity-70 ml-1">{delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(0)}%</span>}
             </span>
-            <span className="text-[#1E2D4A]">|</span>
-            <span className="text-[#F0F4FF]">Gasto: <span className="font-semibold">{currencySymbol} {(totalSpend / 1000).toFixed(1)}k</span></span>
-            <span className="text-[#1E2D4A]">|</span>
-            <span className="text-[#F0F4FF]">Receita: <span className="font-semibold text-[#10B981]">{currencySymbol} {(totalRevenue / 1000).toFixed(1)}k</span></span>
-            <span className="text-[#1E2D4A]">|</span>
-            <span className="text-foreground">{aboveMeta} acima da meta • {belowMeta} abaixo</span>
+            <span className="text-border-default">|</span>
+            <span className="text-text-primary">Gasto: <span className="font-semibold">{currencySymbol} {(totalSpend / 1000).toFixed(1)}k</span></span>
+            <span className="text-border-default">|</span>
+            <span className="text-text-primary">Receita: <span className="font-semibold text-data-green">{currencySymbol} {(totalRevenue / 1000).toFixed(1)}k</span></span>
+            <span className="text-border-default">|</span>
+            <span className="text-text-primary">{aboveMeta} acima da meta • {belowMeta} abaixo</span>
           </>
         ) : (
-          <span className="text-muted-foreground">
+          <span className="text-text-muted">
             {selectedAccountId ? 'Clique em Analisar para carregar os dados desta conta' : 'Selecione uma conta na sidebar'}
           </span>
         )}

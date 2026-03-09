@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bot, Loader2, Zap, RefreshCw, FileText } from 'lucide-react';
+import { Bot, Loader2, Zap, RefreshCw, FileText, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboard } from '@/context/DashboardContext';

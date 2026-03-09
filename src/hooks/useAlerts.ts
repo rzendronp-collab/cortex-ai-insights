@@ -4,6 +4,7 @@ import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
 import { useMetaConnection } from './useMetaConnection';
 import { ProcessedCampaign } from './useMetaData';
+import { useNotifications } from './useNotifications';
 
 interface Alert {
   id: string;

@@ -23,10 +23,10 @@ export default function KPICard({ label, value, subtitle, delta, valueClassName,
   const resolvedValueClass = valueClassName || 'text-text-primary';
 
   return (
-    <div className={`rounded-xl p-4 transition-all duration-200 animate-fade-up group cursor-default ${
+    <div className={`rounded-xl py-5 px-6 transition-all duration-200 animate-fade-up group cursor-default ${
       isHero
-        ? `bg-gradient-to-br ${heroAccent.gradFrom} to-bg-card border ${heroAccent.border} ${heroAccent.glow} shadow-kpi-hero`
-        : 'bg-bg-card border border-border-default hover:border-border-focus hover:-translate-y-0.5 hover:shadow-card-hover'
+        ? `bg-gradient-to-br ${heroAccent.gradFrom} to-[#161D2E] border ${heroAccent.border} ${heroAccent.glow} shadow-kpi-hero`
+        : 'bg-[#161D2E] border border-[#2A3850] hover:border-border-focus hover:-translate-y-0.5 hover:shadow-card-hover'
     }`}>
       <div className="flex items-center justify-between mb-1.5">
         <p className="text-[10px] uppercase tracking-wider text-text-muted font-medium">{label}</p>
@@ -41,7 +41,7 @@ export default function KPICard({ label, value, subtitle, delta, valueClassName,
           </div>
         )}
       </div>
-      <p className={`${isHero ? 'text-[32px]' : 'text-xl'} font-extrabold ${resolvedValueClass} leading-tight`}
+      <p className={`${isHero ? 'text-[36px]' : 'text-xl'} font-extrabold ${resolvedValueClass} leading-tight`}
          style={{ letterSpacing: '-0.5px' }}>
         {value}
       </p>

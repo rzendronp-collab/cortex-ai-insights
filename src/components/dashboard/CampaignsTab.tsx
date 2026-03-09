@@ -1,15 +1,17 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, ArrowUpDown, ArrowDown, ArrowUp, Pencil, Download, StickyNote } from 'lucide-react';
+import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, ArrowUpDown, ArrowDown, ArrowUp, Pencil, Download, StickyNote, Columns3, GripVertical } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useCampaignNotes } from '@/hooks/useCampaignNotes';
+import { useColumnPreferences, ALL_COLUMNS } from '@/hooks/useColumnPreferences';
 import { getRoasColor, formatCurrency, formatNumber } from '@/lib/mockData';
 import { ProcessedCampaign } from '@/hooks/useMetaData';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -17,6 +19,23 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 import { HourlyBarChart } from './HourlyBarChart';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+function SortableColumnItem({ id, label, checked, onToggle }: { id: string; label: string; checked: boolean; onToggle: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+  const style = { transform: CSS.Transform.toString(transform), transition };
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors">
+      <button {...attributes} {...listeners} className="cursor-grab text-muted-foreground hover:text-foreground touch-none">
+        <GripVertical className="w-3.5 h-3.5" />
+      </button>
+      <Checkbox id={`col-${id}`} checked={checked} onCheckedChange={onToggle} className="h-3.5 w-3.5" />
+      <label htmlFor={`col-${id}`} className="text-xs text-foreground cursor-pointer select-none flex-1">{label}</label>
+    </div>
+  );
+}
 
 function getMetricSemaphore(value: number, thresholds: { good: number; warn: number; higher?: boolean }) {
   const { good, warn, higher = true } = thresholds;

@@ -101,7 +101,11 @@ function getCurrentPeriodTimeRange(days: number, now = new Date()) {
 
 function getPreviousPeriodTimeRange(days: number, now = new Date()) {
   const current = getCurrentPeriodTimeRange(days, now);
-  const currentSinceDate = new Date(current.since);
+
+  // IMPORTANT: "new Date('YYYY-MM-DD')" is parsed as UTC, which can shift the day in local timezones
+  // and break the previous period calculation (off-by-one / wrong week). Parse as local date instead.
+  const [y, m, d] = current.since.split('-').map(Number);
+  const currentSinceDate = new Date(y, (m || 1) - 1, d || 1);
 
   const previousUntilDate = addDays(currentSinceDate, -1);
   const previousSinceDate = addDays(previousUntilDate, -(days - 1));

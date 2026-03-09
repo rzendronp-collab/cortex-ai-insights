@@ -44,15 +44,26 @@ export default function DashboardSidebar() {
   const [currency, setCurrency] = useState(profile?.currency || 'R$');
   const [niche, setNiche] = useState(profile?.niche || '');
 
+  const [apiKeyError, setApiKeyError] = useState<string | null>(null);
+  const [apiKeyValid, setApiKeyValid] = useState(false);
+
   const handleSaveConfig = async () => {
     setSaving(true);
+    setApiKeyError(null);
+    setApiKeyValid(false);
     try {
       if (apiKey.trim()) {
+        if (!apiKey.trim().startsWith('sk-ant-')) {
+          setApiKeyError('Chave inválida — deve começar com sk-ant-');
+          setSaving(false);
+          return;
+        }
         const { error: keyError } = await supabase
           .from('profiles')
           .update({ claude_api_key: apiKey, updated_at: new Date().toISOString() })
           .eq('id', user!.id);
         if (keyError) throw keyError;
+        setApiKeyValid(true);
       }
       await updateProfile.mutateAsync({
         roas_target: parseFloat(roasTarget),
@@ -256,7 +267,15 @@ export default function DashboardSidebar() {
                   placeholder="sk-ant-..."
                   className="h-8 text-[11px] bg-bg-base border-border-default rounded-lg"
                 />
-                <p className="text-[9px] text-text-muted">Salva com segurança no servidor</p>
+                {apiKeyError && (
+                  <p className="text-[9px] text-[#F87171] font-medium">{apiKeyError}</p>
+                )}
+                {apiKeyValid && (
+                  <p className="text-[9px] text-[#34D399] font-medium">✓ Chave válida</p>
+                )}
+                {!apiKeyError && !apiKeyValid && (
+                  <p className="text-[9px] text-text-muted">Salva com segurança no servidor</p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label className="text-[10px] text-text-muted uppercase tracking-[1px]">ROAS Target</Label>

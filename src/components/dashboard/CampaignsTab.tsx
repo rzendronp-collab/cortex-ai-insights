@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, ArrowUpDown, ArrowDown, ArrowUp, Pencil } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from '@/hooks/useProfile';
@@ -399,9 +399,8 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 const rec = getRecommendation(c);
 
                 return (
-                  <>
+                  <React.Fragment key={c.id}>
                     <tr 
-                      key={c.id}
                       onClick={() => setExpandedId(expanded ? null : c.id)}
                       className={`border-b border-[#1C2538] bg-[#0E1420] cursor-pointer transition-colors duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''}`}
                       style={{ height: 52 }}
@@ -746,7 +745,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 );
               })
             )}

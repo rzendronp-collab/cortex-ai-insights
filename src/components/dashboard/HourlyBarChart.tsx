@@ -14,10 +14,10 @@ function parseHourToNumber(hour: string): number {
 }
 
 const BAR_COLORS = {
-  peak: '#10B981',
-  high: '#3B82F6',
-  normal: '#8B5CF6',
-  low: '#1E2D4A',
+  peak: '#34D399',
+  high: '#60A5FA',
+  normal: '#A78BFA',
+  low: '#232D45',
 };
 
 export function HourlyBarChart({ data, emptyMessage, currency = '€' }: HourlyBarChartProps) {
@@ -41,7 +41,7 @@ export function HourlyBarChart({ data, emptyMessage, currency = '€' }: HourlyB
   if (!hasAnyData) {
     return (
       <div className="h-[150px] flex items-center justify-center">
-        <p className="text-[11px] text-muted-foreground text-center px-4">
+        <p className="text-[11px] text-text-muted text-center px-4">
           {emptyMessage || 'Dados horários não disponíveis para este período'}
         </p>
       </div>
@@ -72,12 +72,6 @@ export function HourlyBarChart({ data, emptyMessage, currency = '€' }: HourlyB
 
   return (
     <div className="space-y-3">
-      {/* Title */}
-      <div>
-        <h3 className="text-sm font-semibold text-foreground">⏰ Desempenho por Hora</h3>
-        <p className="text-[10px] text-muted-foreground">Distribuição de gasto e vendas nas 24h</p>
-      </div>
-
       {/* Chart */}
       <div className="w-full h-[150px] flex items-end justify-between gap-[2px] pt-5">
         {fullData.map((item) => {
@@ -95,47 +89,44 @@ export function HourlyBarChart({ data, emptyMessage, currency = '€' }: HourlyB
               onMouseEnter={() => setHoveredHour(item.hour)}
               onMouseLeave={() => setHoveredHour(null)}
             >
-              {/* Icon above bar */}
               {icon && (
                 <span className="absolute -top-1 left-1/2 -translate-x-1/2 text-[10px] z-10 leading-none">
                   {icon}
                 </span>
               )}
 
-              {/* Tooltip */}
               {isHovered && (
-                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 bg-popover border border-border rounded-lg px-2.5 py-2 shadow-lg whitespace-nowrap pointer-events-none">
-                  <p className="text-[10px] font-semibold text-foreground mb-1">
+                <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 bg-chart-tooltip-bg border border-chart-tooltip-border rounded-lg px-2.5 py-2 shadow-xl whitespace-nowrap pointer-events-none">
+                  <p className="text-[10px] font-semibold text-text-primary mb-1">
                     {item.hour}h - {item.hour + 1}h
                   </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    Gasto: <span className="text-foreground font-medium">{currency} {item.spend.toFixed(2)}</span>
+                  <p className="text-[10px] text-text-secondary">
+                    Gasto: <span className="text-text-primary font-medium">{currency} {item.spend.toFixed(2)}</span>
                   </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    Vendas: <span className="text-foreground font-medium">{item.sales} vendas</span>
+                  <p className="text-[10px] text-text-secondary">
+                    Vendas: <span className="text-text-primary font-medium">{item.sales} vendas</span>
                   </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    ROAS: <span className="font-medium" style={{ color: roas >= 1 ? BAR_COLORS.peak : '#ef4444' }}>{roas.toFixed(2)}x</span>
+                  <p className="text-[10px] text-text-secondary">
+                    ROAS: <span className="font-medium" style={{ color: roas >= 1 ? BAR_COLORS.peak : '#F87171' }}>{roas.toFixed(2)}x</span>
                   </p>
                 </div>
               )}
 
-              {/* Bar */}
               <div className="flex-1 w-full flex items-end justify-center relative">
                 <div
-                  className={`w-full max-w-[14px] mx-auto transition-all ${isHovered ? 'opacity-80 scale-x-110' : ''}`}
+                  className={`w-full max-w-[14px] mx-auto transition-all duration-150 ${isHovered ? 'opacity-80 scale-x-110' : ''}`}
                   style={{
                     height,
-                    borderRadius: '3px 3px 0 0',
+                    borderRadius: '4px 4px 0 0',
                     backgroundColor: color,
                     boxShadow: item.spend === maxSpend && item.spend > 0
-                      ? `0 0 8px ${BAR_COLORS.peak}66`
+                      ? `0 0 12px ${BAR_COLORS.peak}44`
                       : undefined,
                   }}
                 />
               </div>
 
-              <span className="text-[7px] text-muted-foreground font-mono leading-none">
+              <span className="text-[7px] text-text-muted font-mono leading-none">
                 {item.hour}
               </span>
             </div>
@@ -145,15 +136,9 @@ export function HourlyBarChart({ data, emptyMessage, currency = '€' }: HourlyB
 
       {/* Legend */}
       <div className="flex items-center justify-center gap-4 pt-1">
-        <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
-          🔥 Pico de investimento
-        </span>
-        <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
-          💰 Alta performance
-        </span>
-        <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
-          ❄️ Menor atividade
-        </span>
+        <span className="flex items-center gap-1 text-[9px] text-text-muted">🔥 Pico</span>
+        <span className="flex items-center gap-1 text-[9px] text-text-muted">💰 Alta performance</span>
+        <span className="flex items-center gap-1 text-[9px] text-text-muted">❄️ Menor atividade</span>
       </div>
     </div>
   );

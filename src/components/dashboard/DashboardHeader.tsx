@@ -176,7 +176,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
             <div className="w-px h-5 bg-border-default" />
             {isStale && (
               <button
-                onClick={() => analyze()}
+                onClick={handleAtualizar}
                 className="bg-data-yellow/10 border border-data-yellow/30 text-data-yellow text-[10px] px-2 py-0.5 rounded-full hover:bg-data-yellow/20 transition-colors"
               >
                 ⚠ Dados desatualizados

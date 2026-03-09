@@ -270,31 +270,6 @@ export default function DashboardSidebar() {
               </button>
             ))}
           </div>
-        </div>
-          </>
-        )}
-
-        {/* ZONA 3: NAVEGAÇÃO */}
-        <Separator />
-        <div className="space-y-1.5">
-          <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Navegação</h3>
-          <div className="space-y-0.5">
-            {navItems.map(item => (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-md transition-all ${
-                  currentTab === item.id
-                    ? 'bg-accent text-accent-foreground font-medium'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
-                }`}
-              >
-                <item.icon className="w-4 h-4" />
-                <span className="text-xs">{item.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* RODAPÉ: CONFIGURAÇÕES + USUÁRIO */}

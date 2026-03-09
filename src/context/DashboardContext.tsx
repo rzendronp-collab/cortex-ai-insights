@@ -40,7 +40,7 @@ const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 export function DashboardProvider({ children }: { children: ReactNode }) {
   const [selectedAccountId, setSelectedAccountIdRaw] = useState<string | null>(null);
   const [selectedAccountName, setSelectedAccountName] = useState<string | null>(null);
-  const [selectedPeriod, setSelectedPeriodRaw] = useState('7d');
+  const [selectedPeriod, setSelectedPeriodRaw] = useState(localStorage.getItem('cortexads_period') || '3d');
   const [dateRange, setDateRangeRaw] = useState<DateRange | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [analysisCache, setAnalysisCache] = useState<Record<string, CachedAnalysis>>({});

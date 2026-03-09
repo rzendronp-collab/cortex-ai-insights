@@ -251,6 +251,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
     { key: 'status', label: 'Status', align: 'left' },
     { key: 'name', label: 'Campanha', align: 'left' },
     { key: 'spend', label: 'Gastos', align: 'right' },
+    { key: 'budget', label: 'Orçamento', align: 'right' },
     { key: 'revenue', label: 'Faturamento', align: 'right' },
     { key: 'profit', label: 'Lucro', align: 'right' },
     { key: 'roas', label: 'ROAS', align: 'right' },
@@ -261,6 +262,31 @@ Responda SOMENTE com o JSON, sem markdown.`;
     { key: 'impressions', label: 'Impr.', align: 'right' },
     { key: 'clicks', label: 'Cliques', align: 'right' },
   ] as const;
+
+  const fetchBudget = useCallback(async (campaignId: string) => {
+    if (budgetCache[campaignId] !== undefined || budgetFetching.has(campaignId)) return;
+    setBudgetFetching(prev => new Set(prev).add(campaignId));
+    try {
+      const res = await callMetaApi(`${campaignId}/adsets`, {
+        fields: 'id,daily_budget,lifetime_budget',
+      });
+      const adsets = res?.data || [];
+      // Check adset-level budget first (ABO)
+      const withBudget = adsets.find((a: any) => a.daily_budget);
+      if (withBudget) {
+        setBudgetCache(prev => ({ ...prev, [campaignId]: parseInt(withBudget.daily_budget, 10) / 100 }));
+      } else {
+        // Try campaign-level budget (CBO)
+        const campRes = await callMetaApi(campaignId, { fields: 'daily_budget,lifetime_budget' });
+        const db = campRes?.daily_budget;
+        setBudgetCache(prev => ({ ...prev, [campaignId]: db ? parseInt(db, 10) / 100 : null }));
+      }
+    } catch {
+      setBudgetCache(prev => ({ ...prev, [campaignId]: null }));
+    } finally {
+      setBudgetFetching(prev => { const n = new Set(prev); n.delete(campaignId); return n; });
+    }
+  }, [budgetCache, budgetFetching, callMetaApi]);
 
   return (
     <div className="space-y-4">

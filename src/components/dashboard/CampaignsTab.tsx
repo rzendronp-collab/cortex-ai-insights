@@ -512,7 +512,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                             ) : (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* BLOCO 1 — MÉTRICAS COMPLETAS */}
-                                <div className="bg-card border border-border rounded-lg p-4">
+                                <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4">
                                   <div className="flex items-center gap-2 mb-3">
                                     <BarChart3 className="w-3.5 h-3.5 text-primary" />
                                     <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Métricas Completas</h4>

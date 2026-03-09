@@ -360,17 +360,28 @@ export default function CampaignsTab() {
     setTogglingIds(prev => new Set(prev).add(campaignId));
     try {
       await callMetaApi(campaignId, { status: newStatus, _method: 'POST' });
-      setLocalStatuses(prev => ({ ...prev, [campaignId]: newStatus }));
+
+      // Feature 5: Wait 1.5s then verify real status from Meta
+      await new Promise(r => setTimeout(r, 1500));
+      let confirmedStatus = newStatus;
+      try {
+        const verifyRes = await callMetaApi(campaignId, { fields: 'status' });
+        if (verifyRes?.status && verifyRes.status !== newStatus) {
+          toast.warning('⚠ Meta API retornou status diferente — a sincronizar...');
+          confirmedStatus = verifyRes.status;
+        }
+      } catch { /* verification failed, use expected status */ }
+
+      setLocalStatuses(prev => ({ ...prev, [campaignId]: confirmedStatus }));
 
       // Sync global analysis cache so status persists across tab switches
       if (analysisData && selectedAccountId) {
         const updatedCampaigns = (analysisData.campaigns || []).map(c =>
-          c.id === campaignId ? { ...c, status: newStatus } : c
+          c.id === campaignId ? { ...c, status: confirmedStatus } : c
         );
         const updatedData = { ...analysisData, campaigns: updatedCampaigns };
         setAnalysisForAccount(selectedAccountId, selectedPeriod, updatedData);
 
-        // Also update Supabase analysis_cache so it persists across reloads
         supabase
           .from('analysis_cache')
           .update({ data: updatedData as any, updated_at: new Date().toISOString() })
@@ -381,7 +392,7 @@ export default function CampaignsTab() {
           });
       }
 
-      toast.success(newStatus === 'ACTIVE' ? 'Campanha ativada ✓' : 'Campanha pausada ✓');
+      toast.success(confirmedStatus === 'ACTIVE' ? 'Campanha ativada ✓' : 'Campanha pausada ✓');
     } catch (err: any) {
       toast.error(err?.message || 'Erro ao alterar status da campanha.');
     } finally {

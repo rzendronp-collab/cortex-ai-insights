@@ -157,7 +157,8 @@ export function useCampaignActions() {
       await callMetaApi(campaignId, { name: newName, _method: 'POST' });
       await invalidateCache();
       syncCacheStatus(campaignId, { name: newName });
-      toast.success('Nome atualizado ✓');
+      triggerReanalyze();
+      toast.success('✅ Nome atualizado. A sincronizar dados em 2s...');
       return true;
     } catch (err: any) {
       toast.error(err?.message || 'Erro ao atualizar nome.');

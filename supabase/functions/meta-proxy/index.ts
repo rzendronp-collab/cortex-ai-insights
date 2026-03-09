@@ -87,16 +87,20 @@ Deno.serve(async (req) => {
     let graphRes: Response;
 
     if (graphMethod === 'POST') {
-      // POST: send params as form body
+      // POST: send params as x-www-form-urlencoded body with access_token
       const graphUrl = `https://graph.facebook.com/v19.0/${path}`;
-      const body = new URLSearchParams();
+      const formData = new URLSearchParams();
       const p = params || {};
       for (const [key, value] of Object.entries(p)) {
-        body.set(key, String(value));
+        formData.append(key, String(value));
       }
-      body.set('access_token', connection.access_token);
-      console.log(`[meta-proxy] POST ${graphUrl} body=${body.toString().replace(/access_token=[^&]+/, 'access_token=***')}`);
-      graphRes = await fetch(graphUrl, { method: 'POST', body });
+      formData.append('access_token', connection.access_token);
+      console.log(`[meta-proxy] POST ${graphUrl} body=${formData.toString().replace(/access_token=[^&]+/, 'access_token=***')}`);
+      graphRes = await fetch(graphUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString(),
+      });
     } else {
       // GET: send params as query string
       const p = params || {};

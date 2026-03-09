@@ -26,6 +26,7 @@ interface DashboardContextType {
   setActiveTab: (t: string) => void;
   analysisData: AnalysisData | null;
   isFromCache: boolean;
+  isStale: boolean;
   cacheTimestamp: number | null;
   setAnalysisForAccount: (accountId: string, period: string, data: AnalysisData) => void;
   clearCurrentAnalysis: () => void;

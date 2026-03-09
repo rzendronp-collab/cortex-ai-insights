@@ -75,12 +75,13 @@ const periodMap: Record<string, string> = {
   '30d': 'last_30d',
 };
 
-const prevPeriodMap: Record<string, string> = {
-  'Hoje': 'yesterday',
-  '3d': 'last_7d',
-  '7d': 'last_14d',
-  '14d': 'last_28d',
-  '30d': 'last_30d',
+// For delta comparison, we fetch a "double window" and subtract current period to get previous-only
+const doublePeriodMap: Record<string, string> = {
+  'Hoje': 'last_3d',       // Will subtract today to get yesterday+day-before
+  '3d': 'last_7d',         // Subtract 3d to get previous 4 days
+  '7d': 'last_14d',        // Subtract 7d to get previous 7 days
+  '14d': 'last_30d',       // Subtract 14d to get previous ~16 days
+  '30d': 'last_90d',       // Subtract 30d to get previous 60 days
 };
 
 function extractPurchases(actions: any[]): number {

@@ -1147,7 +1147,13 @@ Responda SOMENTE com o JSON, sem markdown.`;
                               {isSavingBgt ? (
                                 <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
                               ) : null}
-                              {bVal != null ? <p className="text-[13px] text-text-primary">{formatCurrency(bVal, currency)}</p> : <p className="text-[13px] text-text-muted">—</p>}
+                              {bVal != null ? (
+                                <p className="text-[13px] text-text-primary">{formatCurrency(bVal, currency)}</p>
+                              ) : (
+                                <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                                  <p className="text-[13px] text-text-muted cursor-help">CBO</p>
+                                </TooltipTrigger><TooltipContent><p className="text-xs">Orçamento gerido ao nível da campanha</p></TooltipContent></Tooltip></TooltipProvider>
+                              )}
                               <Pencil className="w-3 h-3 shrink-0 text-muted-foreground/0 group-hover/budget:text-muted-foreground cursor-pointer hover:text-primary transition-all" onClick={() => startBudgetEdit(c.id, bVal)} />
                             </div>
                           )}

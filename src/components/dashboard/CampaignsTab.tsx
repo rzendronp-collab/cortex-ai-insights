@@ -820,6 +820,27 @@ Responda SOMENTE com o JSON, sem markdown.`;
               </>
             )}
           </div>
+
+          {/* Country Filter */}
+          {availableCountries.length > 0 && (
+            <div className="flex items-center bg-[#0E1420] border border-[#1E2D4A] rounded-md">
+              <button
+                onClick={() => setCountryFilter('all')}
+                className={`px-2 py-1.5 text-xs font-medium transition-colors ${countryFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                🌍
+              </button>
+              {availableCountries.map(c => (
+                <button
+                  key={c}
+                  onClick={() => setCountryFilter(c as any)}
+                  className={`px-2 py-1.5 text-xs font-medium border-l border-[#1E2D4A] transition-colors ${countryFilter === c ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                  {{ PT: '🇵🇹', ES: '🇪🇸', GR: '🇬🇷', BR: '🇧🇷' }[c]}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Export CSV + Columns */}

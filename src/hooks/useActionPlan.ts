@@ -109,7 +109,7 @@ export function useActionPlan() {
         ? (extraData[1] as PromiseFulfilledResult<any>).value?.data || [] : [];
 
       const periodDays = (() => {
-        const p = analysisData?.period || '7d';
+        const p = selectedPeriod || '7d';
         const map: Record<string, number> = {
           'today': 1, '1d': 1, '3d': 3, '7d': 7, '14d': 14, '30d': 30
         };

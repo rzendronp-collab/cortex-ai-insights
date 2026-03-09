@@ -296,9 +296,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
             placeholder="Buscar campanha..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full sm:w-64 h-8 text-xs bg-card"
+            className="w-full sm:w-64 h-8 text-xs bg-[#0E1420]"
           />
-          <div className="flex items-center bg-card border border-border rounded-md">
+          <div className="flex items-center bg-[#0E1420] border border-[#1E2D4A] rounded-md">
             <button
               onClick={() => setStatusFilter('all')}
               className={`px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}

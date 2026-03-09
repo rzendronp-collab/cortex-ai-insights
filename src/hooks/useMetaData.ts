@@ -5,6 +5,7 @@ import { useProfile } from './useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { useAlerts } from './useAlerts';
 
 export interface ProcessedCampaign {
   id: string;

@@ -77,6 +77,8 @@ export default function DashboardHeader() {
             ))}
           </div>
 
+          <AlertsPanel />
+
           <Button
             size="sm"
             className="h-9 px-5 text-[13px] font-bold gradient-primary text-primary-foreground gap-1.5 rounded-lg glow-primary-btn hover:shadow-lg transition-all"

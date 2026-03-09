@@ -226,6 +226,11 @@ export function useMetaData() {
           date_preset: period,
           limit: '100',
         }),
+        callMetaApi(`${acctPath}/adsets`, {
+          fields: 'id,name,campaign_id,daily_budget,lifetime_budget,status',
+          limit: '200',
+          date_preset: period,
+        }),
       ]);
 
       const campaigns: ProcessedCampaign[] = (campaignsRes?.data || []).map(processCampaign);

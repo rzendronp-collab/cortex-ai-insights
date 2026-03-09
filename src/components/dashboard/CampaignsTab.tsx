@@ -47,7 +47,7 @@ function Sparkline({ data, color = 'hsl(var(--primary))' }: { data: number[]; co
 }
 
 
-type SortColumn = 'status' | 'name' | 'spend' | 'revenue' | 'profit' | 'roas' | 'purchases' | 'cpa' | 'ctr' | 'cpm' | 'impressions' | 'clicks';
+type SortColumn = 'status' | 'name' | 'spend' | 'budget' | 'revenue' | 'profit' | 'roas' | 'purchases' | 'cpa' | 'ctr' | 'cpm' | 'impressions' | 'clicks';
 
 export default function CampaignsTab() {
   const [expandedId, setExpandedId] = useState<string | null>(null);

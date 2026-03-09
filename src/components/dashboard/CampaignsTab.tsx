@@ -1167,9 +1167,13 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     case 'profit':
                       return (
                         <td key={colId} className="px-3 text-right">
-                          <span className={`text-[13px] font-medium inline-flex items-center gap-0.5 ${profit >= 0 ? 'text-[#34D399]' : 'text-[#F87171]'}`}>
-                            {profit >= 0 ? '↑' : '↓'}{profit > 0 ? '+' : ''}{formatCurrency(profit, currency)}
-                          </span>
+                          {c.spend === 0 ? (
+                            <span className="text-[13px] text-text-muted">—</span>
+                          ) : (
+                            <span className={`text-[13px] font-medium inline-flex items-center gap-0.5 ${profit >= 0 ? 'text-[#34D399]' : 'text-[#F87171]'}`}>
+                              {profit >= 0 ? '↑' : '↓'}{profit > 0 ? '+' : ''}{formatCurrency(profit, currency)}
+                            </span>
+                          )}
                         </td>
                       );
                     case 'roas':

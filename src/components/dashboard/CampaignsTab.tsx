@@ -472,24 +472,25 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                     <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Métricas Completas</h4>
                                   </div>
                                   <div className="grid grid-cols-2 gap-3">
-                                    {metrics.map(m => {
-                                      const deltaVal = m.delta;
-                                      const isGood = m.invert ? (deltaVal !== null && deltaVal <= 0) : (deltaVal !== null && deltaVal >= 0);
-                                      return (
-                                        <div key={m.label} className="flex items-start gap-2">
-                                          <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${m.sem}`} />
-                                          <div className="min-w-0">
-                                            <p className="text-[10px] text-muted-foreground">{m.label}</p>
-                                            <p className="text-xs font-bold text-foreground">{m.value}</p>
-                                            {deltaVal !== null && (
-                                              <p className={`text-[9px] ${isGood ? 'text-success' : 'text-destructive'}`}>
-                                                {deltaVal >= 0 ? '▲' : '▼'} {Math.abs(deltaVal).toFixed(1)}% vs anterior
-                                              </p>
-                                            )}
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
+                                     {metrics.map(m => {
+                                       const deltaVal = m.delta;
+                                       const isNeutral = deltaVal !== null && Math.abs(deltaVal) < 0.05;
+                                       const isGood = m.invert ? (deltaVal !== null && deltaVal <= 0) : (deltaVal !== null && deltaVal >= 0);
+                                       return (
+                                         <div key={m.label} className="flex items-start gap-2">
+                                           <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${m.sem}`} />
+                                           <div className="min-w-0">
+                                             <p className="text-[10px] text-muted-foreground">{m.label}</p>
+                                             <p className="text-xs font-bold text-foreground">{m.value}</p>
+                                             {deltaVal !== null && (
+                                               <p className={`text-[9px] ${isNeutral ? 'text-muted-foreground' : isGood ? 'text-success' : 'text-destructive'}`}>
+                                                 {isNeutral ? '—' : (deltaVal >= 0 ? '▲' : '▼')} {Math.abs(deltaVal).toFixed(1)}% vs anterior
+                                               </p>
+                                             )}
+                                           </div>
+                                         </div>
+                                       );
+                                     })}
                                   </div>
 
                                   {sparkData.length >= 2 && (

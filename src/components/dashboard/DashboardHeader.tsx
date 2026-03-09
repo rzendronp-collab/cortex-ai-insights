@@ -75,59 +75,6 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
   const periodLabel = isCustomActive ? `${dateRange!.from} → ${dateRange!.to}` : (selectedPeriod === 'Hoje' ? 'Hoje' : `Últimos ${selectedPeriod}`);
   const subtitle = `Meta Ads · ${periodLabel}`;
 
-  // Account dropdown JSX
-  const accountDropdown = (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        onClick={() => setAccountDropdownOpen(!accountDropdownOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 rounded-md text-[12px] font-medium hover:bg-bg-card-hover transition-colors"
-      >
-        <Building2 className="w-3.5 h-3.5 text-text-muted" />
-        <span className="text-text-primary max-w-[140px] truncate">
-          {selectedAccountName || (selectedAccountId ? `act_${selectedAccountId}` : 'Selecionar conta')}
-        </span>
-        <ChevronDown className={`w-3 h-3 text-text-muted transition-transform ${accountDropdownOpen ? 'rotate-180' : ''}`} />
-      </button>
-
-      {accountDropdownOpen && (
-        <div className="absolute top-full right-0 mt-2 w-[280px] bg-bg-card border border-border-default rounded-lg shadow-xl overflow-hidden z-50">
-          <div className="max-h-[280px] overflow-y-auto py-1">
-            {Object.entries(accountsByBm).map(([bmName, accounts], groupIdx) => (
-              <div key={bmName}>
-                {groupIdx > 0 && <div className="mx-3 my-1 h-px bg-border-subtle" />}
-                <p className="text-[10px] text-text-muted uppercase tracking-wider font-semibold px-3 pt-2 pb-1">{bmName}</p>
-                {accounts.map(account => {
-                  const isActive = selectedAccountId === account.account_id;
-                  return (
-                    <button
-                      key={account.id}
-                      onClick={() => handleSelectAccount(account)}
-                      className={`flex flex-col w-full px-3 py-2.5 text-left transition-colors ${
-                        isActive
-                          ? 'bg-[hsl(217_40%_18%)] border-l-2 border-l-data-blue'
-                          : 'hover:bg-bg-card-hover border-l-2 border-l-transparent'
-                      }`}
-                    >
-                      <span className={`text-[13px] font-semibold truncate ${isActive ? 'text-data-blue' : 'text-text-primary'}`}>
-                        {account.account_name || `act_${account.account_id}`}
-                      </span>
-                      <span className="text-[11px] text-text-muted truncate">
-                        {account.business_name || 'Conta Pessoal'}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
-            {adAccounts.length === 0 && (
-              <p className="text-[11px] text-text-muted text-center py-4">Nenhuma conta encontrada</p>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
   // Period selector JSX
   const periodSelector = (
     <div className="flex items-center gap-0.5">

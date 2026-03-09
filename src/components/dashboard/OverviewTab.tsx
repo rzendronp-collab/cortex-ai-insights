@@ -265,7 +265,7 @@ export default function OverviewTab() {
             ))}
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={260}>
+        <ResponsiveContainer width="100%" height={300}>
           <ComposedChart data={dailyData}>
             <defs>
               {Object.entries(dailyMetricConfig).map(([key, cfg]) => (

@@ -98,11 +98,11 @@ export default function DashboardHeader() {
               ROAS {avgRoas.toFixed(1)}x
               {delta !== null && delta !== 0 && <span className="opacity-70 ml-1">{delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(0)}%</span>}
             </span>
-            <span className="text-border-hover">|</span>
-            <span className="text-foreground">Gasto: <span className="font-semibold">{currencySymbol} {(totalSpend / 1000).toFixed(1)}k</span></span>
-            <span className="text-border-hover">|</span>
-            <span className="text-foreground">Receita: <span className="font-semibold text-success">{currencySymbol} {(totalRevenue / 1000).toFixed(1)}k</span></span>
-            <span className="text-border-hover">|</span>
+            <span className="text-[#1E2D4A]">|</span>
+            <span className="text-[#F0F4FF]">Gasto: <span className="font-semibold">{currencySymbol} {(totalSpend / 1000).toFixed(1)}k</span></span>
+            <span className="text-[#1E2D4A]">|</span>
+            <span className="text-[#F0F4FF]">Receita: <span className="font-semibold text-[#10B981]">{currencySymbol} {(totalRevenue / 1000).toFixed(1)}k</span></span>
+            <span className="text-[#1E2D4A]">|</span>
             <span className="text-foreground">{aboveMeta} acima da meta • {belowMeta} abaixo</span>
           </>
         ) : (

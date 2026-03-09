@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bot, Loader2, Zap, RefreshCw } from 'lucide-react';
+import { Bot, Loader2, Zap, RefreshCw, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDashboard } from '@/context/DashboardContext';
@@ -137,12 +137,12 @@ export default function ReportTab() {
   // No data state
   if (!analysisData) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-up">
-        <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
-          <Bot className="w-10 h-10 text-primary" />
+      <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl flex flex-col items-center justify-center py-24 text-center animate-fade-up">
+        <div className="w-20 h-20 rounded-2xl bg-[#60A5FA]/10 flex items-center justify-center mb-6">
+          <FileText className="w-10 h-10 text-[#60A5FA]" />
         </div>
-        <h3 className="text-base font-semibold text-foreground mb-2">Relatório Inteligente</h3>
-        <p className="text-sm text-muted-foreground mb-6 max-w-xs">
+        <h3 className="text-base font-semibold text-text-primary mb-2">Relatório Inteligente</h3>
+        <p className="text-sm text-text-muted mb-6 max-w-xs">
           Primeiro analise uma conta na aba Visão Geral, depois gere o relatório completo com IA.
         </p>
       </div>
@@ -150,16 +150,16 @@ export default function ReportTab() {
   }
 
   return (
-    <div className="bg-card border border-border rounded-lg animate-fade-up">
+    <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl animate-fade-up">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-border">
+      <div className="flex items-center justify-between p-6 border-b border-[#2A3850]">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
-            <Bot className="w-5 h-5 text-primary-foreground" />
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3B82F6] to-[#2563EB] flex items-center justify-center">
+            <Bot className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="text-sm font-bold text-foreground">Relatório Inteligente CortexAds</h2>
-            <p className="text-[11px] text-muted-foreground">
+            <h2 className="text-sm font-bold text-text-primary">Relatório Inteligente CortexAds</h2>
+            <p className="text-[11px] text-text-muted">
               {report ? 'Gerado por IA com dados reais' : 'Pronto para gerar'} • {selectedAccountName || 'Conta'}
             </p>
           </div>
@@ -167,7 +167,7 @@ export default function ReportTab() {
         <Button
           onClick={generateReport}
           disabled={loading}
-          className="h-9 px-4 text-xs gradient-primary text-primary-foreground gap-2"
+          className="h-9 px-4 text-xs bg-gradient-to-r from-[#3B82F6] to-[#2563EB] text-white hover:opacity-90 rounded-lg font-semibold gap-2"
         >
           {loading ? (
             <><Loader2 className="w-3.5 h-3.5 animate-spin" />Gerando...</>
@@ -185,21 +185,21 @@ export default function ReportTab() {
           <div className="space-y-6">
             {[0, 1, 2, 3, 4].map(i => (
               <div key={i} className="space-y-3">
-                <Skeleton className="h-5 w-48" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-5 w-48 bg-[#2A3850]" />
+                <Skeleton className="h-4 w-full bg-[#2A3850]" />
+                <Skeleton className="h-4 w-3/4 bg-[#2A3850]" />
+                <Skeleton className="h-4 w-5/6 bg-[#2A3850]" />
               </div>
             ))}
           </div>
         ) : report ? (
-          <div className="prose prose-sm prose-invert max-w-none [&_h2]:text-primary [&_h2]:text-sm [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-2 [&_h3]:text-xs [&_h3]:font-bold [&_h3]:mt-4 [&_h3]:mb-1 [&_p]:text-[13px] [&_p]:text-foreground/80 [&_p]:leading-relaxed [&_li]:text-[13px] [&_li]:text-foreground/80 [&_strong]:text-foreground [&_table]:text-[12px] [&_th]:text-muted-foreground [&_th]:text-left [&_th]:py-1 [&_th]:pr-4 [&_td]:py-1 [&_td]:pr-4">
+          <div className="prose prose-sm prose-invert max-w-none [&_h2]:text-[#60A5FA] [&_h2]:text-sm [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-2 [&_h2]:uppercase [&_h2]:tracking-wide [&_h3]:text-xs [&_h3]:font-bold [&_h3]:mt-4 [&_h3]:mb-1 [&_h3]:text-[#60A5FA] [&_p]:text-[13px] [&_p]:text-text-primary/80 [&_p]:leading-[1.8] [&_li]:text-[13px] [&_li]:text-text-primary/80 [&_li]:leading-[1.8] [&_strong]:text-text-primary [&_table]:text-[12px] [&_th]:text-text-muted [&_th]:text-left [&_th]:py-1 [&_th]:pr-4 [&_td]:py-1 [&_td]:pr-4">
             <ReactMarkdown>{report}</ReactMarkdown>
           </div>
         ) : (
           <div className="text-center py-12">
-            <p className="text-sm text-muted-foreground">
-              Clique em <strong className="text-foreground">"Gerar Relatório"</strong> para criar um diagnóstico completo com IA usando os dados reais da sua conta.
+            <p className="text-sm text-text-muted">
+              Clique em <strong className="text-text-primary">"Gerar Relatório"</strong> para criar um diagnóstico completo com IA usando os dados reais da sua conta.
             </p>
           </div>
         )}

@@ -85,7 +85,7 @@ export function useCampaignActions() {
     } finally {
       setLoading(false);
     }
-  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, invalidateCache, verifyStatus]);
+  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, invalidateCache, verifyStatus, triggerReanalyze]);
 
   /**
    * Detect whether a campaign uses CBO or ABO budgeting.

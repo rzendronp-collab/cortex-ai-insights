@@ -203,7 +203,7 @@ export default function OverviewTab() {
         </div>
 
         {/* Funil */}
-        <div className="bg-card border border-border rounded-lg p-4 animate-fade-up">
+        <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 animate-fade-up">
           <h3 className="text-xs font-semibold text-foreground mb-3">Funil de Conversão</h3>
           <div className="space-y-3 mt-4">
             {funnelData.map((item, i) => {

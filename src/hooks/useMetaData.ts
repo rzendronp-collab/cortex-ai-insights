@@ -173,7 +173,7 @@ export function useMetaData() {
             .eq('period', selectedPeriod)
             .maybeSingle();
 
-          if (cached?.data && cached.updated_at) {
+          if (cached?.data && cached.updated_at && (cached.data as any).budgetByCampaignId) {
             const cacheAge = Date.now() - new Date(cached.updated_at).getTime();
             if (cacheAge < CACHE_MAX_AGE_MS) {
               setAnalysisForAccount(selectedAccountId, selectedPeriod, cached.data as unknown as AnalysisData);

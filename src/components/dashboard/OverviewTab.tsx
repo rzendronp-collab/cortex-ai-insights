@@ -12,13 +12,17 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const chartColors = {
-  primary: 'hsl(216, 91%, 64%)',
-  secondary: 'hsl(250, 90%, 71%)',
-  success: 'hsl(152, 72%, 44%)',
-  warning: 'hsl(34, 87%, 53%)',
-  destructive: 'hsl(349, 83%, 62%)',
-  muted: 'hsl(218, 25%, 38%)',
+  primary: '#3B82F6',
+  secondary: '#8B5CF6',
+  success: '#10B981',
+  warning: '#F59E0B',
+  destructive: '#EF4444',
+  muted: '#64748B',
 };
+
+const chartGrid = 'rgba(30,45,74,0.8)';
+const chartAxisTick = '#64748B';
+const chartTooltipStyle = { background: '#0E1420', border: '1px solid #1E2D4A', borderRadius: 8, fontSize: 11, color: '#F0F4FF' };
 
 const dailyMetricConfig: Record<string, { label: string; color: string; type: 'line' | 'bar'; yAxisId: 'left' | 'right' }> = {
   roas: { label: 'ROAS', color: chartColors.primary, type: 'line', yAxisId: 'right' },

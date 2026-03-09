@@ -836,7 +836,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                               <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                             ) : (
                               <button
-                                onClick={() => setConfirmDialog({ id: c.id, name: c.name, currentStatus: effectiveStatus })}
+                                onClick={() => handleToggleClick(c.id, c.name, effectiveStatus)}
                                 className="relative inline-flex items-center cursor-pointer"
                                 style={{ width: 36, height: 20, borderRadius: 10 }}
                               >

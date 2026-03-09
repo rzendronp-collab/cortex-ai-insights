@@ -213,9 +213,10 @@ export default function CampaignsTab() {
 
   const { analysisData, selectedAccountId, selectedPeriod, currencySymbol, setAnalysisForAccount } = useDashboard();
   const { profile } = useProfile();
+  const { user } = useAuth();
   const { callMetaApi, isConnected } = useMetaConnection();
   const { updateCampaignName, syncCacheStatus } = useCampaignActions();
-  const { notes, saving: noteSaving, fetchNotes, saveNote, deleteNote } = useCampaignNotes();
+  const { notes, saving: noteSaving, fetchNotes, saveNote, deleteNote } = useCampaignNotes(user?.id);
   const { activeColumns, orderedColumns, isVisible, toggleColumn, reorderColumns, resetToDefault } = useColumnPreferences();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }), useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }));
   const handleDragEnd = useCallback((event: DragEndEvent) => {

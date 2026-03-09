@@ -473,10 +473,12 @@ export function useMetaData() {
       const budgetByCampaignId: Record<string, number> = {};
       const rawCampaigns = campaignsRes?.data || [];
       rawCampaigns.forEach((campaign: any) => {
-        if (campaign.daily_budget) {
-          budgetByCampaignId[campaign.id] = parseInt(campaign.daily_budget, 10) / 100;
-        } else if (campaign.lifetime_budget) {
-          budgetByCampaignId[campaign.id] = parseInt(campaign.lifetime_budget, 10) / 100;
+        const dailyBudget = parseInt(campaign.daily_budget || '0', 10);
+        const lifetimeBudget = parseInt(campaign.lifetime_budget || '0', 10);
+        if (dailyBudget > 0) {
+          budgetByCampaignId[campaign.id] = dailyBudget / 100;
+        } else if (lifetimeBudget > 0) {
+          budgetByCampaignId[campaign.id] = lifetimeBudget / 100;
         }
       });
 

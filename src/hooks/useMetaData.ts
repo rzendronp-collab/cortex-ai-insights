@@ -221,18 +221,25 @@ export function useMetaData() {
       });
 
       const rawHourly = hourlyRes?.data || [];
-      const hourlyAgg: Record<string, { spend: number; sales: number }> = {};
+      // Aggregate spend per hour (0-23).
+      // Meta API field hourly_stats_aggregated_by_advertiser_time_zone is "0-1", "14-15", etc.
+      // Extract the starting hour (number before the hyphen).
+      const hourSpend: Record<number, number> = {};
+      const hourSales: Record<number, number> = {};
       rawHourly.forEach((h: any) => {
-        const hour = h.hourly_stats_aggregated_by_advertiser_time_zone || '0';
-        if (!hourlyAgg[hour]) hourlyAgg[hour] = { spend: 0, sales: 0 };
-        hourlyAgg[hour].spend += parseFloat(h.spend || '0');
-        hourlyAgg[hour].sales += extractPurchases(h.actions);
+        const raw = h.hourly_stats_aggregated_by_advertiser_time_zone || '';
+        // Parse "14-15" → 14, "14:00:00" → 14, "14" → 14
+        const parsed = parseInt(String(raw).split('-')[0].split(':')[0].replace(/[^0-9]/g, ''), 10);
+        const hourNum = isNaN(parsed) ? 0 : parsed;
+        hourSpend[hourNum] = (hourSpend[hourNum] || 0) + parseFloat(h.spend || '0');
+        hourSales[hourNum] = (hourSales[hourNum] || 0) + extractPurchases(h.actions);
       });
-      const hourlyData: HourlyData[] = Array.from({ length: 24 }, (_, i) => {
-        const key = String(i).padStart(2, '0') + ':00:00';
-        const agg = hourlyAgg[key] || hourlyAgg[String(i)] || { spend: 0, sales: 0 };
-        return { hour: `${i}h`, spend: agg.spend, sales: agg.sales, isPeak: false };
-      });
+      const hourlyData: HourlyData[] = Array.from({ length: 24 }, (_, i) => ({
+        hour: `${i}h`,
+        spend: hourSpend[i] || 0,
+        sales: hourSales[i] || 0,
+        isPeak: false,
+      }));
       const maxSpend = Math.max(...hourlyData.map(h => h.spend), 1);
       hourlyData.forEach(h => { h.isPeak = h.spend > maxSpend * 0.7; });
 

@@ -620,6 +620,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                   </div>
                 </th>
               ))}
+              <th className="px-3 py-2.5 w-8 text-center text-[11px] font-semibold text-text-muted">📝</th>
               <th className="px-3 py-2.5 w-8"></th>
             </tr>
           </thead>

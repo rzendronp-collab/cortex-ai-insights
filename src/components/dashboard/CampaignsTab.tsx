@@ -1255,9 +1255,14 @@ Responda SOMENTE com o JSON, sem markdown.`;
                         />
                       </td>
                       {activeColumns.map(col => renderCell(col.id))}
-                      {/* Actions: expand + open in meta */}
+                      {/* Actions: expand + duplicate + open in meta */}
                       <td className="px-2" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-1">
+                          <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                            <button onClick={() => { setDuplicateName(`Cópia de ${localNames[c.id] || c.name}`); setDuplicateKeepActive(false); setDuplicateDialog({ id: c.id, name: localNames[c.id] || c.name }); }} className="p-1 text-muted-foreground hover:text-primary transition-colors">
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                          </TooltipTrigger><TooltipContent><p className="text-xs">Duplicar campanha</p></TooltipContent></Tooltip></TooltipProvider>
                           <TooltipProvider><Tooltip><TooltipTrigger asChild>
                             <button onClick={() => openInMeta(c.id)} className="p-1 text-muted-foreground hover:text-primary transition-colors">
                               <ExternalLink className="w-3.5 h-3.5" />

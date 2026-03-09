@@ -271,6 +271,12 @@ Responda SOMENTE com o JSON, sem markdown.`;
     return sortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-primary" /> : <ArrowDown className="w-3 h-3 text-primary" />;
   };
 
+  const getRecommendation = (campaign: ProcessedCampaign) => {
+    if (campaign.roas >= roasTarget * 1.3) return { label: 'Escalar', bg: 'rgba(52,211,153,0.1)', text: '#34D399', border: 'rgba(52,211,153,0.25)' };
+    if (campaign.roas < roasTarget * 0.5 && campaign.spend > 10) return { label: 'Pausar', bg: 'rgba(248,113,113,0.1)', text: '#F87171', border: 'rgba(248,113,113,0.25)' };
+    return { label: 'Otimizar', bg: 'rgba(96,165,250,0.1)', text: '#60A5FA', border: 'rgba(96,165,250,0.25)' };
+  };
+
   const columns = [
     { key: 'status', label: 'Status', align: 'left' },
     { key: 'name', label: 'Campanha', align: 'left' },
@@ -285,6 +291,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
     { key: 'cpm', label: 'CPM', align: 'right' },
     { key: 'impressions', label: 'Impr.', align: 'right' },
     { key: 'clicks', label: 'Cliques', align: 'right' },
+    { key: 'recommendation', label: 'Recom.', align: 'center' },
   ] as const;
 
   return (
@@ -331,20 +338,20 @@ Responda SOMENTE com o JSON, sem markdown.`;
       <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
-            <tr className="border-b border-[#1E2D4A] bg-[#080B14]">
+            <tr className="border-b border-[#1C2538] bg-[#0D1121] sticky top-0 z-10">
               {columns.map(col => (
                 <th
                   key={col.key}
-                  onClick={() => handleSort(col.key as SortColumn)}
-                  className={`px-3 py-2 text-[10px] font-semibold text-[#64748B] uppercase tracking-wider cursor-pointer hover:bg-[#111827] transition-colors select-none ${col.align === 'right' ? 'text-right' : 'text-left'}`}
+                  onClick={() => col.key !== 'recommendation' ? handleSort(col.key as SortColumn) : undefined}
+                  className={`px-3 py-2.5 text-[11px] font-semibold text-text-muted uppercase tracking-wider ${col.key !== 'recommendation' ? 'cursor-pointer hover:bg-[#111827]' : ''} transition-colors select-none ${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'}`}
                 >
-                  <div className={`flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end' : col.align === 'center' ? 'justify-center' : 'justify-start'}`}>
                     {col.label}
-                    <SortIcon column={col.key as SortColumn} />
+                    {col.key !== 'recommendation' && <SortIcon column={col.key as SortColumn} />}
                   </div>
                 </th>
               ))}
-              <th className="px-3 py-2 w-8"></th>
+              <th className="px-3 py-2.5 w-8"></th>
             </tr>
           </thead>
           <tbody>
@@ -361,13 +368,6 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 const isActive = effectiveStatus === 'ACTIVE';
                 const isToggling = togglingIds.has(c.id);
                 
-                const roasColorClass = c.roas >= 10
-                  ? 'text-success font-black brightness-125' 
-                  : c.roas >= roasTarget 
-                    ? 'text-success' 
-                    : c.roas >= roasTarget * 0.7 
-                      ? 'text-warning' 
-                      : 'text-destructive';
 
                 const profit = c.revenue - c.spend;
                 const cpa = c.purchases > 0 ? c.spend / c.purchases : 0;
@@ -396,37 +396,45 @@ Responda SOMENTE com o JSON, sem markdown.`;
                   { label: 'CTR', value: `${c.ctr.toFixed(2)}%`, sem: getMetricSemaphore(c.ctr, { good: 2.0, warn: 1.0, higher: true }), delta: computeDelta(c.ctr, prev?.ctr), invert: false },
                 ];
 
+                const rec = getRecommendation(c);
+
                 return (
                   <>
                     <tr 
                       key={c.id}
                       onClick={() => setExpandedId(expanded ? null : c.id)}
-                      className={`border-b border-[#1E2D4A] bg-[#0E1420] hover:bg-[#111827] cursor-pointer transition-colors ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''}`}
+                      className={`border-b border-[#1C2538] bg-[#0E1420] cursor-pointer transition-colors duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''}`}
+                      style={{ height: 52 }}
+                      onMouseEnter={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(96,165,250,0.04)'; }}
+                      onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = ''; }}
                     >
-                      <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
+                      {/* Switch Toggle */}
+                      <td className="px-3" onClick={e => e.stopPropagation()}>
                         {isToggling ? (
                           <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />
                         ) : (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div 
-                                  className={`w-2.5 h-2.5 rounded-full mx-auto cursor-pointer transition-all hover:scale-150 ${isActive ? 'bg-success shadow-[0_0_8px_hsl(var(--success))]' : 'bg-muted-foreground/40'}`}
-                                  onClick={() => setConfirmDialog({ id: c.id, name: c.name, currentStatus: effectiveStatus })}
-                                />
-                              </TooltipTrigger>
-                              <TooltipContent side="right">
-                                <p className="text-xs">Clique para {isActive ? 'pausar' : 'ativar'}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          <button
+                            onClick={() => setConfirmDialog({ id: c.id, name: c.name, currentStatus: effectiveStatus })}
+                            className="relative inline-flex items-center cursor-pointer"
+                            style={{ width: 36, height: 20, borderRadius: 10 }}
+                          >
+                            <span
+                              className="block w-full h-full rounded-[10px] transition-colors duration-200 ease-in-out"
+                              style={{ backgroundColor: isActive ? '#10B981' : '#374151' }}
+                            />
+                            <span
+                              className="absolute block w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"
+                              style={{ top: 2, left: isActive ? 18 : 2 }}
+                            />
+                          </button>
                         )}
                       </td>
-                      <td className="px-3 py-3">
+                      {/* Name */}
+                      <td className="px-3">
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <p className="text-xs font-semibold text-foreground truncate max-w-[200px] cursor-default">{c.name}</p>
+                              <p className="text-[13px] font-semibold text-text-primary truncate max-w-[200px] cursor-default">{c.name}</p>
                             </TooltipTrigger>
                             <TooltipContent>
                               <p className="text-xs max-w-xs">{c.name}</p>
@@ -434,19 +442,21 @@ Responda SOMENTE com o JSON, sem markdown.`;
                           </Tooltip>
                         </TooltipProvider>
                       </td>
-                      <td className="px-3 py-3 text-right">
-                        <p className="text-xs text-foreground">{formatCurrency(c.spend, currency)}</p>
+                      {/* Spend */}
+                      <td className="px-3 text-right">
+                        <p className="text-[13px] text-text-primary">{formatCurrency(c.spend, currency)}</p>
                       </td>
-                      <td className="px-3 py-3 text-right" onClick={e => e.stopPropagation()}>
+                      {/* Budget */}
+                      <td className="px-3 text-right" onClick={e => e.stopPropagation()}>
                         {(() => {
                           const rawBudget = analysisData?.budgetByCampaignId?.[c.id];
                           const bVal = rawBudget != null && rawBudget > 0 ? rawBudget : null;
                           return (
                             <div className="flex items-center justify-end gap-1 group/budget">
                               {bVal != null ? (
-                                <p className="text-xs text-foreground">{formatCurrency(bVal, currency)}</p>
+                                <p className="text-[13px] text-text-primary">{formatCurrency(bVal, currency)}</p>
                               ) : (
-                                <p className="text-xs text-muted-foreground">—</p>
+                                <p className="text-[13px] text-text-muted">—</p>
                               )}
                               <Pencil
                                 className="w-3 h-3 text-muted-foreground/0 group-hover/budget:text-muted-foreground cursor-pointer hover:text-primary transition-all"
@@ -459,44 +469,80 @@ Responda SOMENTE com o JSON, sem markdown.`;
                           );
                         })()}
                       </td>
-                      <td className="px-3 py-3 text-right">
-                        <p className="text-xs text-foreground">{formatCurrency(c.revenue, currency)}</p>
+                      {/* Revenue */}
+                      <td className="px-3 text-right">
+                        <p className="text-[13px] text-text-primary">{formatCurrency(c.revenue, currency)}</p>
                       </td>
-                      <td className="px-3 py-3 text-right">
-                        <p className={`text-xs font-medium px-2 py-1 rounded ${profit >= 0 ? 'text-success bg-success/10' : 'text-destructive bg-destructive/10'}`}>
-                          {profit > 0 ? '+' : ''}{formatCurrency(profit, currency)}
-                        </p>
+                      {/* Profit with arrow */}
+                      <td className="px-3 text-right">
+                        <span className={`text-[13px] font-medium inline-flex items-center gap-0.5 ${profit >= 0 ? 'text-[#34D399]' : 'text-[#F87171]'}`}>
+                          {profit >= 0 ? '↑' : '↓'}{profit > 0 ? '+' : ''}{formatCurrency(profit, currency)}
+                        </span>
                       </td>
-                      <td className="px-3 py-3 text-right">
-                        <p className={`text-xs font-bold ${roasColorClass}`}>{c.roas.toFixed(2)}x</p>
+                      {/* ROAS Badge */}
+                      <td className="px-3 text-right">
+                        {(() => {
+                          let badgeBg: string, badgeText: string, badgeBorder: string;
+                          if (c.roas >= roasTarget) {
+                            badgeBg = 'rgba(52,211,153,0.12)'; badgeText = '#34D399'; badgeBorder = 'rgba(52,211,153,0.25)';
+                          } else if (c.roas >= roasTarget * 0.7) {
+                            badgeBg = 'rgba(251,191,36,0.12)'; badgeText = '#FBBF24'; badgeBorder = 'rgba(251,191,36,0.25)';
+                          } else {
+                            badgeBg = 'rgba(248,113,113,0.12)'; badgeText = '#F87171'; badgeBorder = 'rgba(248,113,113,0.25)';
+                          }
+                          return (
+                            <span
+                              className="text-[13px] font-bold inline-block"
+                              style={{ background: badgeBg, color: badgeText, border: `1px solid ${badgeBorder}`, borderRadius: 6, padding: '3px 8px' }}
+                            >
+                              {c.roas.toFixed(2)}x
+                            </span>
+                          );
+                        })()}
                       </td>
-                      <td className="px-3 py-3 text-right">
-                        <p className="text-xs text-foreground">{c.purchases}</p>
+                      {/* Purchases */}
+                      <td className="px-3 text-right">
+                        <p className="text-[13px] text-text-primary">{c.purchases}</p>
                       </td>
-                      <td className="px-3 py-3 text-right">
-                        <p className="text-xs text-foreground">{formatCurrency(cpa, currency)}</p>
+                      {/* CPA */}
+                      <td className="px-3 text-right">
+                        <p className="text-[13px] text-text-primary">{formatCurrency(cpa, currency)}</p>
                       </td>
-                      <td className="px-3 py-3 text-right">
-                        <p className="text-xs text-foreground">{c.ctr.toFixed(2)}%</p>
+                      {/* CTR */}
+                      <td className="px-3 text-right">
+                        <p className="text-[13px] text-text-primary">{c.ctr.toFixed(2)}%</p>
                       </td>
-                      <td className="px-3 py-3 text-right">
-                        <p className="text-xs text-foreground">{formatCurrency(c.cpm, currency)}</p>
+                      {/* CPM */}
+                      <td className="px-3 text-right">
+                        <p className="text-[13px] text-text-primary">{formatCurrency(c.cpm, currency)}</p>
                       </td>
-                      <td className="px-3 py-3 text-right">
-                        <p className="text-xs text-foreground">{formatNumber(c.impressions)}</p>
+                      {/* Impressions */}
+                      <td className="px-3 text-right">
+                        <p className="text-[13px] text-text-primary">{formatNumber(c.impressions)}</p>
                       </td>
-                      <td className="px-3 py-3 text-right">
-                        <p className="text-xs text-foreground">{formatNumber(c.clicks)}</p>
+                      {/* Clicks */}
+                      <td className="px-3 text-right">
+                        <p className="text-[13px] text-text-primary">{formatNumber(c.clicks)}</p>
                       </td>
-                      <td className="px-3 py-3 text-center text-muted-foreground">
+                      {/* Recommendation */}
+                      <td className="px-3 text-center">
+                        <span
+                          className="text-[11px] font-semibold inline-block whitespace-nowrap"
+                          style={{ background: rec.bg, color: rec.text, border: `1px solid ${rec.border}`, borderRadius: 20, padding: '3px 10px' }}
+                        >
+                          {rec.label}
+                        </span>
+                      </td>
+                      {/* Expand */}
+                      <td className="px-3 text-center text-text-muted">
                         {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                       </td>
                     </tr>
                     
                     {/* EXPANDED CONTENT */}
                     {expanded && (
-                      <tr className="bg-[#080B14] border-b border-[#1E2D4A]">
-                        <td colSpan={14} className="p-0">
+                      <tr className="bg-[#080B14] border-b border-[#1C2538]">
+                        <td colSpan={16} className="p-0">
                           <div className="p-4 border-l-2 border-l-primary/50 animate-fade-up">
                             {aiLoading ? (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

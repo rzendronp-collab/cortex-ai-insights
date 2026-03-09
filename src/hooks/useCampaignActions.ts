@@ -34,20 +34,28 @@ export function useCampaignActions() {
     setLoading(true);
     try {
       const budgetCents = String(Math.round(newDailyBudget * 100));
+      const acctPath = `act_${selectedAccountId}`;
 
-      // Fetch adsets for this campaign to determine ABO vs CBO
-      const adSetsRes = await callMetaApi(`${campaignId}/adsets`, {
-        fields: 'id,name,daily_budget,lifetime_budget',
+      // Fetch adsets for this campaign using proper filtering
+      const adSetsRes = await callMetaApi(`${acctPath}/adsets`, {
+        fields: 'id,name,daily_budget,lifetime_budget,bid_amount,status',
+        filtering: JSON.stringify([{
+          field: 'campaign.id',
+          operator: 'EQUAL',
+          value: campaignId,
+        }]),
       });
       const adsets = adSetsRes?.data || [];
 
       // ABO: adsets have their own daily_budget
-      const aboAdsets = adsets.filter((a: any) => a.daily_budget || a.lifetime_budget);
+      const aboAdsets = adsets.filter((a: any) => a.daily_budget);
 
       if (aboAdsets.length > 0) {
-        // ABO: update each adset's daily_budget
+        // ABO: update each active adset's daily_budget
+        const activeAdsets = aboAdsets.filter((a: any) => a.status === 'ACTIVE');
+        const targets = activeAdsets.length > 0 ? activeAdsets : aboAdsets;
         await Promise.all(
-          aboAdsets.map((adset: any) =>
+          targets.map((adset: any) =>
             callMetaApi(adset.id, { daily_budget: budgetCents, _method: 'POST' })
           )
         );
@@ -59,7 +67,7 @@ export function useCampaignActions() {
       // Invalidate analysis cache so next fetch gets fresh budget data
       clearCurrentAnalysis();
 
-      toast.success('Budget atualizado ✓');
+      toast.success('✅ Orçamento atualizado');
       return true;
     } catch (err: any) {
       const msg = err?.message || 'Erro ao atualizar budget.';

@@ -237,32 +237,6 @@ export function useMetaData() {
       const campaigns: ProcessedCampaign[] = (campaignsRes?.data || []).map(processCampaign);
       const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map(processCampaign);
 
-      if (import.meta.env.DEV) {
-        const currSpend = campaigns.reduce((s, c) => s + c.spend, 0);
-        const currRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
-        const currRoas = currSpend > 0 ? currRevenue / currSpend : 0;
-
-        const prevSpend = campaignsPrev.reduce((s, c) => s + c.spend, 0);
-        const prevRevenue = campaignsPrev.reduce((s, c) => s + c.revenue, 0);
-        const prevRoas = prevSpend > 0 ? prevRevenue / prevSpend : 0;
-
-        const delta = prevRoas > 0 ? ((currRoas - prevRoas) / prevRoas) * 100 : null;
-
-        console.log('[useMetaData] ROAS current/prev/delta', {
-          accountId: selectedAccountId,
-          period: selectedPeriod,
-          currRoas,
-          prevRoas,
-          delta,
-          currSpend,
-          prevSpend,
-          currRevenue,
-          prevRevenue,
-          currentRange,
-          previousRange,
-        });
-      }
-
       const dailyData: DailyData[] = (dailyRes?.data || []).map((d: any) => {
         const spend = parseFloat(d.spend || '0');
         const revenue = extractRevenue(d.action_values);

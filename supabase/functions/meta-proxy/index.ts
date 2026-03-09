@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     const userId = user.id;
 
     // Parse request
-    const { path, params } = await req.json();
+    const { path, params, method: reqMethod } = await req.json();
     if (!path) {
       return new Response(JSON.stringify({ error: "path is required" }), {
         status: 400,
@@ -82,21 +82,32 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Build Graph API URL
-    const p = params || {};
-    const parts: string[] = [];
-    for (const [key, value] of Object.entries(p)) {
-      if (key === 'fields') {
-        parts.push(`fields=${encodeURIComponent(String(value))}`);
-      } else {
+    const graphMethod = (reqMethod || 'GET').toUpperCase();
+    let graphRes: Response;
+
+    if (graphMethod === 'POST') {
+      // POST: send params as form body
+      const graphUrl = `https://graph.facebook.com/v19.0/${path}`;
+      const body = new URLSearchParams();
+      const p = params || {};
+      for (const [key, value] of Object.entries(p)) {
+        body.set(key, String(value));
+      }
+      body.set('access_token', connection.access_token);
+      graphRes = await fetch(graphUrl, { method: 'POST', body });
+    } else {
+      // GET: send params as query string
+      const p = params || {};
+      const parts: string[] = [];
+      for (const [key, value] of Object.entries(p)) {
         parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
       }
+      parts.push(`access_token=${encodeURIComponent(connection.access_token)}`);
+      const graphUrl = `https://graph.facebook.com/v19.0/${path}?${parts.join('&')}`;
+      graphRes = await fetch(graphUrl);
     }
-    parts.push(`access_token=${encodeURIComponent(connection.access_token)}`);
-    const graphUrl = `https://graph.facebook.com/v19.0/${path}?${parts.join('&')}`;
 
     // Call Meta Graph API
-    const graphRes = await fetch(graphUrl);
     const graphData = await graphRes.json();
 
     if (!graphRes.ok) {

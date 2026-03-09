@@ -202,8 +202,8 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
             <AlertsPanel />
             <button
               className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold text-white rounded-lg gradient-blue transition-all disabled:opacity-50 disabled:pointer-events-none"
-              onClick={() => analyze()}
-              disabled={loading || !selectedAccountId}
+              onClick={handleAtualizar}
+              disabled={loading || (activeAccountIds.length === 0 && !selectedAccountId)}
             >
               {loading ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />

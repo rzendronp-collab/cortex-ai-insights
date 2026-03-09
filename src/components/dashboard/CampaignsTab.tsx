@@ -182,6 +182,11 @@ export default function CampaignsTab() {
   );
 
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
+  // Feature 9: Track which campaign is being edited
+  const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null);
+  // Feature 10: Track toggle flash status
+  const [toggleFlash, setToggleFlash] = useState<Record<string, 'active' | 'paused'>>({});
+  const [togglePop, setTogglePop] = useState<Set<string>>(new Set());
   const [aiLoadingIds, setAiLoadingIds] = useState<Set<string>>(new Set());
   const [aiResults, setAiResults] = useState<Record<string, any>>({});
   const [localStatuses, setLocalStatuses] = useState<Record<string, string>>({});

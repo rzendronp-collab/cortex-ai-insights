@@ -274,10 +274,10 @@ export default function DashboardSidebar() {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg transition-all text-[13px] font-medium ${
+                className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-none transition-all text-[13px] ${
                   currentTab === item.id
-                    ? 'bg-[hsl(217,50%,15%)] text-primary border-l-2 border-l-primary -ml-[1px]'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-card'
+                    ? 'text-[#F0F4FF] font-semibold border-b-2 border-b-[#3B82F6] bg-transparent'
+                    : 'text-[#64748B] font-medium hover:text-[#94A3B8] bg-transparent'
                 }`}
               >
                 <item.icon className="w-4 h-4" />

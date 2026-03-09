@@ -121,7 +121,7 @@ export default function OverviewTab() {
     name: c.name.length > 18 ? c.name.slice(0, 18) + '...' : c.name,
     fullName: c.name,
     roas: parseFloat(c.roas.toFixed(1)),
-    fill: c.roas >= roasTarget * 1.2 ? chartColors.success : c.roas >= roasTarget ? chartColors.primary : c.roas >= roasTarget * 0.7 ? chartColors.warning : chartColors.destructive,
+    fill: c.roas >= roasTarget * 1.3 ? '#10B981' : c.roas >= roasTarget * 0.7 ? '#F59E0B' : '#EF4444',
   }));
 
   const funnelData = [
@@ -246,7 +246,7 @@ export default function OverviewTab() {
       </div>
 
       {/* Fix #3: Daily chart — multi-metric with checkboxes and dual Y axis */}
-      <div className="bg-card border border-border rounded-lg p-4 mb-6 animate-fade-up" style={{ minHeight: 280 }}>
+      <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 mb-6 animate-fade-up" style={{ minHeight: 320 }}>
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h3 className="text-xs font-semibold text-foreground">Evolução Diária</h3>
           <div className="flex gap-3 flex-wrap">
@@ -265,7 +265,7 @@ export default function OverviewTab() {
             ))}
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={260}>
+        <ResponsiveContainer width="100%" height={300}>
           <ComposedChart data={dailyData}>
             <defs>
               {Object.entries(dailyMetricConfig).map(([key, cfg]) => (

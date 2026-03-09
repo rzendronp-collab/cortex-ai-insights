@@ -91,18 +91,18 @@ export default function DashboardHeader() {
         </div>
       </div>
 
-      <div className="h-9 flex items-center gap-4 px-6 bg-card/50 border-t border-border text-[11px]">
+      <div className="h-9 flex items-center gap-4 px-6 bg-[#0E1420] border-b border-[#1E2D4A] text-[12px]">
         {ad ? (
           <>
             <span className={`font-bold ${getRoasColor(avgRoas, roasTarget)}`}>
               ROAS {avgRoas.toFixed(1)}x
               {delta !== null && delta !== 0 && <span className="opacity-70 ml-1">{delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(0)}%</span>}
             </span>
-            <span className="text-border-hover">|</span>
-            <span className="text-foreground">Gasto: <span className="font-semibold">{currencySymbol} {(totalSpend / 1000).toFixed(1)}k</span></span>
-            <span className="text-border-hover">|</span>
-            <span className="text-foreground">Receita: <span className="font-semibold text-success">{currencySymbol} {(totalRevenue / 1000).toFixed(1)}k</span></span>
-            <span className="text-border-hover">|</span>
+            <span className="text-[#1E2D4A]">|</span>
+            <span className="text-[#F0F4FF]">Gasto: <span className="font-semibold">{currencySymbol} {(totalSpend / 1000).toFixed(1)}k</span></span>
+            <span className="text-[#1E2D4A]">|</span>
+            <span className="text-[#F0F4FF]">Receita: <span className="font-semibold text-[#10B981]">{currencySymbol} {(totalRevenue / 1000).toFixed(1)}k</span></span>
+            <span className="text-[#1E2D4A]">|</span>
             <span className="text-foreground">{aboveMeta} acima da meta • {belowMeta} abaixo</span>
           </>
         ) : (

@@ -99,18 +99,28 @@ function getCurrentPeriodTimeRange(days: number, now = new Date()) {
   return { since: formatYmd(sinceDate), until: formatYmd(untilDate) };
 }
 
-function getPreviousPeriodTimeRange(days: number, now = new Date()) {
-  const current = getCurrentPeriodTimeRange(days, now);
+function getPrevTimeRange(period: string, now = new Date()) {
+  // Use local-day boundaries (no UTC parsing) to avoid off-by-one issues.
+  const d = new Date(now);
+  d.setHours(0, 0, 0, 0);
 
-  // IMPORTANT: "new Date('YYYY-MM-DD')" is parsed as UTC, which can shift the day in local timezones
-  // and break the previous period calculation (off-by-one / wrong week). Parse as local date instead.
-  const [y, m, d] = current.since.split('-').map(Number);
-  const currentSinceDate = new Date(y, (m || 1) - 1, d || 1);
+  const offsets: Record<string, { sinceOffset: number; untilOffset: number }> = {
+    'Hoje': { sinceOffset: -1, untilOffset: -1 },
+    '3d': { sinceOffset: -6, untilOffset: -4 },
+    '7d': { sinceOffset: -14, untilOffset: -8 },
+    '14d': { sinceOffset: -28, untilOffset: -15 },
+    '30d': { sinceOffset: -60, untilOffset: -31 },
+  };
 
-  const previousUntilDate = addDays(currentSinceDate, -1);
-  const previousSinceDate = addDays(previousUntilDate, -(days - 1));
+  const { sinceOffset, untilOffset } = offsets[period] ?? offsets['7d'];
+  const sinceDate = addDays(d, sinceOffset);
+  const untilDate = addDays(d, untilOffset);
 
-  return { since: formatYmd(previousSinceDate), until: formatYmd(previousUntilDate) };
+  // en-CA reliably formats as YYYY-MM-DD in browsers.
+  const since = sinceDate.toLocaleDateString('en-CA');
+  const until = untilDate.toLocaleDateString('en-CA');
+
+  return { since, until };
 }
 
 function extractPurchases(actions: any[]): number {
@@ -174,9 +184,10 @@ export function useMetaData() {
 
     const days = periodDaysMap[selectedPeriod] ?? 7;
     const currentRange = getCurrentPeriodTimeRange(days);
-    const previousRange = getPreviousPeriodTimeRange(days);
+    const prevTimeRange = getPrevTimeRange(selectedPeriod);
+    const { since, until } = prevTimeRange;
     const currentTimeRange = JSON.stringify(currentRange);
-    const previousTimeRange = JSON.stringify(previousRange);
+    const previousTimeRange = JSON.stringify(prevTimeRange);
     const acctPath = `act_${selectedAccountId}`;
 
     try {
@@ -248,11 +259,10 @@ export function useMetaData() {
       const prevRevenue = campaignsPrev.reduce((s, c) => s + c.revenue, 0);
       const prevRoas = prevSpend > 0 ? prevRevenue / prevSpend : 0;
       console.log('[DELTA DEBUG]', {
-        prevSpend, prevRevenue, prevRoas, currRoas,
-        prevTimeRange: previousRange,
-        currTimeRange: currentRange,
-        prevCampaignsCount: campaignsPrev.length,
-        prevRawData: campaignsPrevRes?.data?.slice(0, 2),
+        since,
+        until,
+        campaigns: campaignsPrev.length,
+        prevTotalSpend: campaignsPrev.reduce((s, c) => s + c.spend, 0),
       });
 
       const dailyData: DailyData[] = (dailyRes?.data || []).map((d: any) => {

@@ -30,7 +30,7 @@ function DashboardContent() {
       <DashboardSidebar />
       <div className="ml-[260px]">
         <DashboardHeader />
-        <main className="p-5">
+        <main className="p-6">
           {renderTab()}
         </main>
       </div>

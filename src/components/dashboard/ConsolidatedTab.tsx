@@ -71,7 +71,7 @@ export default function ConsolidatedTab() {
             <ReferenceLine x={roasTarget} stroke="#64748B" strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 10, fill: '#64748B' }} />
             <Bar dataKey="roas" radius={[0, 4, 4, 0]}>
               {chartData.map((a, i) => {
-                const fill = a.roas >= roasTarget * 1.2 ? 'hsl(152, 72%, 44%)' : a.roas >= roasTarget ? 'hsl(216, 91%, 64%)' : 'hsl(349, 83%, 62%)';
+                const fill = a.roas >= roasTarget * 1.2 ? '#10B981' : a.roas >= roasTarget ? '#3B82F6' : '#EF4444';
                 return <Cell key={i} fill={fill} />;
               })}
             </Bar>

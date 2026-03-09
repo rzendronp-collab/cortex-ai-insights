@@ -20,7 +20,7 @@ const BAR_COLORS = {
   low: '#1E2D4A',
 };
 
-export function HourlyBarChart({ data, emptyMessage, currency = 'R$' }: HourlyBarChartProps) {
+export function HourlyBarChart({ data, emptyMessage, currency = '€' }: HourlyBarChartProps) {
   const [hoveredHour, setHoveredHour] = useState<number | null>(null);
 
   const hourSpend = new Map<number, number>();

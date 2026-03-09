@@ -73,7 +73,7 @@ ${dailyLines || 'Sem dados diários.'}
 
 REGRAS:
 - Sempre cite números reais das campanhas acima
-- Sugira ações com valores exatos (ex: "aumentar budget de R$60 para R$150")
+- Sugira ações com valores exatos (ex: "aumentar budget de ${currency}60 para ${currency}150")
 - Priorize campanhas por impacto no resultado total
 - Se perguntarem sobre escalar, considere ROAS vs meta e volume de gasto
 - Se perguntarem sobre pausar, olhe campanhas com ROAS abaixo de ${(roasTarget * 0.5).toFixed(1)}x`;

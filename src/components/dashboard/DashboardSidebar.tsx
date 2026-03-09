@@ -188,7 +188,7 @@ export default function DashboardSidebar() {
                     </button>
                   )}
 
-                  <ScrollArea className="max-h-[220px]">
+                  <ScrollArea className="max-h-[calc(100vh-480px)]">
                     <div className="space-y-1.5 px-1">
                       {Object.entries(accountsByBusiness).map(([bizName, accounts]) => (
                         <div key={bizName} className="space-y-0.5">

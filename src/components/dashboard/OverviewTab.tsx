@@ -164,7 +164,7 @@ export default function OverviewTab() {
     if (!active || !payload?.length) return null;
     const data = payload[0].payload;
     return (
-      <div className="bg-popover border border-border rounded-lg px-3 py-2 shadow-lg">
+      <div style={chartTooltipStyle} className="rounded-lg px-3 py-2 shadow-lg">
         <p className="text-[11px] text-foreground font-medium mb-0.5">{data.fullName}</p>
         <p className="text-[11px] text-muted-foreground">ROAS: <span className="text-foreground font-semibold">{data.roas}x</span></p>
       </div>

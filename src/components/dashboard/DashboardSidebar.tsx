@@ -18,7 +18,7 @@ export default function DashboardSidebar() {
   const { user, signOut } = useAuth();
   const { profile, updateProfile } = useProfile();
   const { connection, adAccounts, isConnected, isTokenExpired, connectMeta, connectionLoading } = useMetaConnection();
-  const { selectedAccountId, setSelectedAccountId, setSelectedAccountName, analysisData, activeTab: currentTab, setActiveTab } = useDashboard();
+  const { selectedAccountId, setSelectedAccountId, setSelectedAccountName, setSelectedAccountCurrency, analysisData, activeTab: currentTab, setActiveTab } = useDashboard();
   const [metaExpanded, setMetaExpanded] = useState(true);
   const [bmExpanded, setBmExpanded] = useState<Record<string, boolean>>({});
   const [configOpen, setConfigOpen] = useState(false);
@@ -65,9 +65,10 @@ export default function DashboardSidebar() {
     }
   };
 
-  const handleSelectAccount = (accountId: string | null, accountName: string | null) => {
+  const handleSelectAccount = (accountId: string | null, accountName: string | null, accountCurrency?: string | null) => {
     setSelectedAccountId(accountId);
     setSelectedAccountName(accountName);
+    setSelectedAccountCurrency(accountCurrency || null);
   };
 
   const initials = profile?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
@@ -197,7 +198,7 @@ export default function DashboardSidebar() {
                                 return (
                                   <div
                                     key={account.id}
-                                    onClick={() => handleSelectAccount(account.account_id, account.account_name)}
+                                    onClick={() => handleSelectAccount(account.account_id, account.account_name, account.currency)}
                                     className={`flex items-center gap-2 rounded-md px-2 py-1.5 cursor-pointer transition-all ${
                                       isSelected
                                         ? 'bg-accent/60 border-l-2 border-l-accent-foreground'

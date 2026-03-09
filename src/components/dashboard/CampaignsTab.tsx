@@ -78,11 +78,11 @@ export default function CampaignsTab() {
   const [budgetCache, setBudgetCache] = useState<Record<string, number | null>>({});
   const [budgetFetching, setBudgetFetching] = useState<Set<string>>(new Set());
 
-  const { analysisData, selectedAccountId } = useDashboard();
+  const { analysisData, selectedAccountId, currencySymbol } = useDashboard();
   const { profile } = useProfile();
   const { callMetaApi, isConnected } = useMetaConnection();
   const roasTarget = profile?.roas_target || 3.0;
-  const currency = profile?.currency || 'R$';
+  const currency = currencySymbol;
 
   const rawCampaigns: ProcessedCampaign[] = analysisData?.campaigns || [];
   const prevCampaigns = analysisData?.campaignsPrev || [];

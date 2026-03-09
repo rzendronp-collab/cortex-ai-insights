@@ -80,10 +80,10 @@ REGRAS:
 }
 
 export default function ChatTab() {
-  const { analysisData, selectedAccountName } = useDashboard();
+  const { analysisData, selectedAccountName, currencySymbol } = useDashboard();
   const { profile } = useProfile();
   const roasTarget = profile?.roas_target || 3.0;
-  const currency = profile?.currency || 'R$';
+  const currency = currencySymbol;
 
   const [messages, setMessages] = useState<Message[]>([
     { role: 'assistant', content: 'Olá! Sou o **CortexAds**. Tenho acesso completo aos dados da sua conta. Pergunte qualquer coisa — qual campanha escalar, onde cortar, copies, budget ideal. 🚀' }

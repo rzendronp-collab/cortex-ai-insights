@@ -105,6 +105,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       analysisData, isFromCache, cacheTimestamp,
       setAnalysisForAccount, clearCurrentAnalysis,
       currencySymbol, setSelectedAccountCurrency,
+      analyzeRef,
     }}>
       {children}
     </DashboardContext.Provider>

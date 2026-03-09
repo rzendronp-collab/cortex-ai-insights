@@ -80,6 +80,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const setSelectedPeriod = useCallback((p: string) => {
     setSelectedPeriodRaw(p);
+    localStorage.setItem('cortexads_period', p);
     setDateRangeRaw(null); // Clear custom range when selecting preset
   }, []);
 

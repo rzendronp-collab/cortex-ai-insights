@@ -485,7 +485,9 @@ export function useMetaData() {
       const rawAdsets = adsetsRes?.data || [];
       rawAdsets.forEach((adset: any) => {
         if (adset.campaign_id && !budgetByCampaignId[adset.campaign_id]) {
-          const budget = parseFloat(adset.daily_budget || adset.lifetime_budget || '0') / 100;
+          const dailyAdset = parseFloat(adset.daily_budget || '0');
+          const lifetimeAdset = parseFloat(adset.lifetime_budget || '0');
+          const budget = (dailyAdset > 0 ? dailyAdset : lifetimeAdset) / 100;
           if (budget > 0) {
             budgetByCampaignId[adset.campaign_id] = (budgetByCampaignId[adset.campaign_id] || 0) + budget;
           }

@@ -632,6 +632,8 @@ Responda SOMENTE com o JSON, sem markdown.`;
   };
 
   const getRecommendation = (campaign: ProcessedCampaign) => {
+    // Campaigns with zero spend show a neutral "no data" badge
+    if (campaign.spend === 0) return { label: 'Sem dados', bg: 'rgba(100,116,139,0.12)', text: '#94A3B8', border: 'rgba(100,116,139,0.25)' };
     if (campaign.roas >= roasTarget * 1.3) return { label: 'Escalar', bg: 'rgba(52,211,153,0.1)', text: '#34D399', border: 'rgba(52,211,153,0.25)' };
     if (campaign.roas < roasTarget * 0.5 && campaign.spend > 10) return { label: 'Pausar', bg: 'rgba(248,113,113,0.1)', text: '#F87171', border: 'rgba(248,113,113,0.25)' };
     return { label: 'Otimizar', bg: 'rgba(96,165,250,0.1)', text: '#60A5FA', border: 'rgba(96,165,250,0.25)' };

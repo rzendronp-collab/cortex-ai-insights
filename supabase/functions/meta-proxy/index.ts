@@ -83,10 +83,17 @@ Deno.serve(async (req) => {
     }
 
     // Build Graph API URL
-    const queryParams = new URLSearchParams(params || {});
-    queryParams.set("access_token", connection.access_token);
-
-    const graphUrl = `https://graph.facebook.com/v19.0/${path}?${queryParams.toString()}`;
+    const p = params || {};
+    const parts: string[] = [];
+    for (const [key, value] of Object.entries(p)) {
+      if (key === 'fields') {
+        parts.push(`fields=${encodeURIComponent(String(value))}`);
+      } else {
+        parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
+      }
+    }
+    parts.push(`access_token=${encodeURIComponent(connection.access_token)}`);
+    const graphUrl = `https://graph.facebook.com/v19.0/${path}?${parts.join('&')}`;
 
     // Call Meta Graph API
     const graphRes = await fetch(graphUrl);

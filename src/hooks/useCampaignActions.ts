@@ -123,7 +123,7 @@ export function useCampaignActions() {
     } finally {
       setLoading(false);
     }
-  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, detectBudgetType]);
+  }, [isConnected, selectedAccountId, callMetaApi, clearCurrentAnalysis, detectBudgetType, invalidateCache]);
 
   const updateCampaignName = useCallback(async (campaignId: string, newName: string) => {
     if (!isConnected || !selectedAccountId) {

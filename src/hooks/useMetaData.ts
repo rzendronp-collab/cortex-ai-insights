@@ -67,60 +67,42 @@ export interface AnalysisData {
   lastUpdated: string;
 }
 
-const periodDaysMap: Record<string, number> = {
-  'Hoje': 1,
-  '3d': 3,
-  '7d': 7,
-  '14d': 14,
-  '30d': 30,
+const periodMap: Record<string, string> = {
+  'Hoje': 'today',
+  '3d': 'last_3d',
+  '7d': 'last_7d',
+  '14d': 'last_14d',
+  '30d': 'last_30d',
 };
 
-function addDays(date: Date, days: number) {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
+function toDateStr(d: Date): string {
+  return d.toLocaleDateString('en-CA'); // YYYY-MM-DD
 }
 
-function startOfLocalDay(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
+function getPrevTimeRange(selectedPeriod: string): { since: string; until: string } {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
 
-function formatYmd(date: Date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function getCurrentPeriodTimeRange(days: number, now = new Date()) {
-  // Meta time_range uses day granularity; use local-day boundaries for predictable windows
-  const untilDate = startOfLocalDay(now);
-  const sinceDate = addDays(untilDate, -(days - 1));
-  return { since: formatYmd(sinceDate), until: formatYmd(untilDate) };
-}
-
-function getPrevTimeRange(period: string, now = new Date()) {
-  // Use local-day boundaries (no UTC parsing) to avoid off-by-one issues.
-  const d = new Date(now);
-  d.setHours(0, 0, 0, 0);
-
-  const offsets: Record<string, { sinceOffset: number; untilOffset: number }> = {
-    'Hoje': { sinceOffset: -1, untilOffset: -1 },
-    '3d': { sinceOffset: -6, untilOffset: -4 },
-    '7d': { sinceOffset: -14, untilOffset: -8 },
-    '14d': { sinceOffset: -28, untilOffset: -15 },
-    '30d': { sinceOffset: -60, untilOffset: -31 },
+  const d = (n: number) => {
+    const x = new Date(now);
+    x.setDate(x.getDate() - n);
+    return x;
   };
 
-  const { sinceOffset, untilOffset } = offsets[period] ?? offsets['7d'];
-  const sinceDate = addDays(d, sinceOffset);
-  const untilDate = addDays(d, untilOffset);
-
-  // en-CA reliably formats as YYYY-MM-DD in browsers.
-  const since = sinceDate.toLocaleDateString('en-CA');
-  const until = untilDate.toLocaleDateString('en-CA');
-
-  return { since, until };
+  switch (selectedPeriod) {
+    case 'Hoje':
+      return { since: toDateStr(d(1)), until: toDateStr(d(1)) };
+    case '3d':
+      return { since: toDateStr(d(6)), until: toDateStr(d(4)) };
+    case '7d':
+      return { since: toDateStr(d(14)), until: toDateStr(d(8)) };
+    case '14d':
+      return { since: toDateStr(d(28)), until: toDateStr(d(15)) };
+    case '30d':
+      return { since: toDateStr(d(60)), until: toDateStr(d(31)) };
+    default:
+      return { since: toDateStr(d(14)), until: toDateStr(d(8)) };
+  }
 }
 
 function extractPurchases(actions: any[]): number {
@@ -152,8 +134,16 @@ function processCampaign(campaign: any): ProcessedCampaign {
     id: campaign.id,
     name: campaign.name,
     status: campaign.status,
-    spend, impressions, clicks, ctr, cpm, cpc,
-    purchases, revenue, roas, cpv,
+    spend,
+    impressions,
+    clicks,
+    ctr,
+    cpm,
+    cpc,
+    purchases,
+    revenue,
+    roas,
+    cpv,
   };
 }
 
@@ -182,17 +172,15 @@ export function useMetaData() {
     setLoading(true);
     setError(null);
 
-    const days = periodDaysMap[selectedPeriod] ?? 7;
-    const currentRange = getCurrentPeriodTimeRange(days);
-    const prevTimeRange = getPrevTimeRange(selectedPeriod);
-    const { since, until } = prevTimeRange;
-    const currentTimeRange = JSON.stringify(currentRange);
-    const previousTimeRange = JSON.stringify(prevTimeRange);
+    const period = periodMap[selectedPeriod] || 'last_7d';
+    const { since, until } = getPrevTimeRange(selectedPeriod);
     const acctPath = `act_${selectedAccountId}`;
 
+    console.log('[DELTA DEBUG] prevTimeRange:', { since, until, selectedPeriod });
+
     try {
-      // Check Supabase cache first (skip in DEV so fixes can be validated immediately)
-      if (user && !import.meta.env.DEV) {
+      // Check Supabase cache first
+      if (user) {
         const { data: cached } = await supabase
           .from('analysis_cache')
           .select('data, updated_at')
@@ -212,39 +200,36 @@ export function useMetaData() {
         }
       }
 
-      // IMPORTANT: For /campaigns endpoint, time_range must be embedded inside the
-      // insights field spec, NOT as a separate query param (which is ignored by Meta API).
-      const insightsFields = 'spend,impressions,clicks,ctr,cpm,cpc,actions,action_values';
       const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes] = await Promise.all([
         callMetaApi(`${acctPath}/campaigns`, {
-          fields: `id,name,status,insights.time_range(${currentTimeRange}){${insightsFields}}`,
+          fields: `id,name,status,insights.date_preset(${period}){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}`,
           limit: '50',
         }),
         callMetaApi(`${acctPath}/campaigns`, {
-          fields: `id,name,status,insights.time_range(${previousTimeRange}){${insightsFields}}`,
+          fields: `id,name,status,insights.time_range({"since":"${since}","until":"${until}"}){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}`,
           limit: '50',
         }),
         callMetaApi(`${acctPath}/insights`, {
           breakdowns: 'hourly_stats_aggregated_by_advertiser_time_zone',
           fields: 'spend,actions,impressions,clicks',
-          time_range: currentTimeRange,
+          date_preset: period,
           limit: '200',
         }),
         callMetaApi(`${acctPath}/insights`, {
           breakdowns: 'publisher_platform',
           fields: 'spend,actions,impressions',
-          time_range: currentTimeRange,
+          date_preset: period,
         }),
         callMetaApi(`${acctPath}/insights`, {
           time_increment: '1',
           fields: 'spend,impressions,clicks,ctr,cpm,actions,action_values',
-          time_range: currentTimeRange,
+          date_preset: period,
           limit: '90',
         }),
         callMetaApi(`${acctPath}/insights`, {
           breakdowns: 'age,gender',
           fields: 'spend,impressions,clicks,actions,action_values',
-          time_range: currentTimeRange,
+          date_preset: period,
           limit: '100',
         }),
       ]);
@@ -252,20 +237,14 @@ export function useMetaData() {
       const campaigns: ProcessedCampaign[] = (campaignsRes?.data || []).map(processCampaign);
       const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map(processCampaign);
 
-      const currSpend = campaigns.reduce((s, c) => s + c.spend, 0);
-      const currRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
-      const currRoas = currSpend > 0 ? currRevenue / currSpend : 0;
-      const prevSpend = campaignsPrev.reduce((s, c) => s + c.spend, 0);
-      const prevRevenue = campaignsPrev.reduce((s, c) => s + c.revenue, 0);
-      const prevRoas = prevSpend > 0 ? prevRevenue / prevSpend : 0;
       const prevTotalSpend = campaignsPrev.reduce((s, c) => s + c.spend, 0);
       const currTotalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
-      console.log('[DELTA DEBUG]', {
-        prevCount: campaignsPrev.length,
+      console.log('[DELTA DEBUG] results:', {
         currCount: campaigns.length,
-        prevTotalSpend,
+        prevCount: campaignsPrev.length,
         currTotalSpend,
-        firstPrevCampaign: campaignsPrev[0] ? { name: campaignsPrev[0].name, spend: campaignsPrev[0].spend, roas: campaignsPrev[0].roas } : null,
+        prevTotalSpend,
+        firstPrev: campaignsPrev[0] ? { name: campaignsPrev[0].name, spend: campaignsPrev[0].spend, roas: campaignsPrev[0].roas } : null,
       });
 
       const dailyData: DailyData[] = (dailyRes?.data || []).map((d: any) => {
@@ -273,9 +252,10 @@ export function useMetaData() {
         const revenue = extractRevenue(d.action_values);
         const purchases = extractPurchases(d.actions);
         return {
-          date: d.date_start ? new Date(d.date_start).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '',
+          date: d.date_start ? new Date(d.date_start + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '',
           roas: spend > 0 ? revenue / spend : 0,
-          spend, revenue,
+          spend,
+          revenue,
           ctr: parseFloat(d.ctr || '0'),
           sales: purchases,
           cpm: parseFloat(d.cpm || '0'),
@@ -283,14 +263,10 @@ export function useMetaData() {
       });
 
       const rawHourly = hourlyRes?.data || [];
-      // Aggregate spend per hour (0-23).
-      // Meta API field hourly_stats_aggregated_by_advertiser_time_zone is "0-1", "14-15", etc.
-      // Extract the starting hour (number before the hyphen).
       const hourSpend: Record<number, number> = {};
       const hourSales: Record<number, number> = {};
       rawHourly.forEach((h: any) => {
         const raw = h.hourly_stats_aggregated_by_advertiser_time_zone || '';
-        // Parse "14-15" → 14, "14:00:00" → 14, "14" → 14
         const parsed = parseInt(String(raw).split('-')[0].split(':')[0].replace(/[^0-9]/g, ''), 10);
         const hourNum = isNaN(parsed) ? 0 : parsed;
         hourSpend[hourNum] = (hourSpend[hourNum] || 0) + parseFloat(h.spend || '0');
@@ -303,7 +279,9 @@ export function useMetaData() {
         isPeak: false,
       }));
       const maxSpend = Math.max(...hourlyData.map(h => h.spend), 1);
-      hourlyData.forEach(h => { h.isPeak = h.spend > maxSpend * 0.7; });
+      hourlyData.forEach(h => {
+        h.isPeak = h.spend > maxSpend * 0.7;
+      });
 
       const rawPlatform = platformRes?.data || [];
       const totalPlatformSpend = rawPlatform.reduce((s: number, p: any) => s + parseFloat(p.spend || '0'), 0) || 1;
@@ -324,12 +302,14 @@ export function useMetaData() {
       });
 
       const genderColors: Record<string, string> = {
-        'Feminino': 'hsl(216, 91%, 64%)',
-        'Masculino': 'hsl(250, 90%, 71%)',
-        'Outro': 'hsl(218, 25%, 38%)',
+        Feminino: 'hsl(216, 91%, 64%)',
+        Masculino: 'hsl(250, 90%, 71%)',
+        Outro: 'hsl(218, 25%, 38%)',
       };
       const genderData: GenderData[] = Object.entries(genderAgg).map(([name, spend]) => ({
-        name, value: Math.round((spend / totalDemoSpend) * 100), fill: genderColors[name] || 'hsl(218, 25%, 38%)',
+        name,
+        value: Math.round((spend / totalDemoSpend) * 100),
+        fill: genderColors[name] || 'hsl(218, 25%, 38%)',
       }));
       const ageData: AgeData[] = Object.entries(ageAgg)
         .sort(([a], [b]) => a.localeCompare(b))
@@ -337,13 +317,18 @@ export function useMetaData() {
 
       const now = new Date().toISOString();
       const analysisResult: AnalysisData = {
-        campaigns, campaignsPrev, dailyData, hourlyData, platformData, genderData, ageData, lastUpdated: now,
+        campaigns,
+        campaignsPrev,
+        dailyData,
+        hourlyData,
+        platformData,
+        genderData,
+        ageData,
+        lastUpdated: now,
       };
 
-      // Save to context cache
       setAnalysisForAccount(selectedAccountId, selectedPeriod, analysisResult);
 
-      // Save to Supabase cache
       if (user) {
         const cachePayload = {
           user_id: user.id,

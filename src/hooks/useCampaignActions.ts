@@ -135,7 +135,8 @@ export function useCampaignActions() {
 
       await invalidateCache();
       clearCurrentAnalysis();
-      toast.success(`✅ Orçamento atualizado (${budgetInfo.isCBO ? 'CBO' : 'ABO'})`);
+      triggerReanalyze();
+      toast.success(`✅ Orçamento atualizado (${budgetInfo.isCBO ? 'CBO' : 'ABO'}). A sincronizar dados em 2s...`);
       return true;
     } catch (err: any) {
       const msg = err?.message || 'Erro ao atualizar budget.';

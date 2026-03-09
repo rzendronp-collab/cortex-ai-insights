@@ -29,7 +29,7 @@ export default function KPICard({ label, value, subtitle, delta, valueClassName 
          style={{ letterSpacing: '-0.5px' }}>
         {value}
       </p>
-      {subtitle && <p className="text-[11px] text-muted-foreground mt-1">{subtitle}</p>}
+      {subtitle && <p className="text-[11px] text-[#64748B] mt-1">{subtitle}</p>}
     </div>
   );
 }

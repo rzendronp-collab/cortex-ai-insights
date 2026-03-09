@@ -1010,6 +1010,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
             )}
           </tbody>
         </table>
+        <PaginationBar />
       </div>
 
       {/* Confirmation Dialog */}

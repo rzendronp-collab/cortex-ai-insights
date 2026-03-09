@@ -228,9 +228,10 @@ export function useMetaData() {
     setLoading(true);
     setError(null);
 
+    // Build a unique cache period key (includes date range for custom)
+    const cachePeriodKey = dateRange ? `custom_${dateRange.from}_${dateRange.to}` : selectedPeriod;
+
     try {
-      // Build a unique cache period key (includes date range for custom)
-      const cachePeriodKey = dateRange ? `custom_${dateRange.from}_${dateRange.to}` : selectedPeriod;
 
       // Layer 1: Try Supabase persistent cache
       if (user) {

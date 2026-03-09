@@ -6,6 +6,7 @@ import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useCampaignNotes } from '@/hooks/useCampaignNotes';
 import { useColumnPreferences, ALL_COLUMNS } from '@/hooks/useColumnPreferences';
 import { useAdsets, ProcessedAdset } from '@/hooks/useAdsets';
+import { useCampaignActions } from '@/hooks/useCampaignActions';
 import { getRoasColor, formatCurrency, formatNumber } from '@/lib/mockData';
 import { ProcessedCampaign } from '@/hooks/useMetaData';
 import { Switch } from '@/components/ui/switch';

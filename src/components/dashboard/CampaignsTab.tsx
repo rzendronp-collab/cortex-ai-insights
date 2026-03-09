@@ -1778,6 +1778,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
   );
 }
 

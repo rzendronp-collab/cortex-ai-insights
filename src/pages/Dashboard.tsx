@@ -51,6 +51,12 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-background">
+      {showOnboarding && onboardingChecked && (
+        <OnboardingModal
+          onComplete={() => setShowOnboarding(false)}
+          connectMeta={connectMeta}
+        />
+      )}
       <DashboardSidebar />
       <div className="ml-[260px]">
         <DashboardHeader />

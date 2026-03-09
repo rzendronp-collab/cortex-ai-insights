@@ -435,17 +435,36 @@ Responda SOMENTE com o JSON, sem markdown.`;
                           </Tooltip>
                         </TooltipProvider>
                       </td>
-                      <td className="px-3 py-3 text-right group/spend" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1">
-                          <p className="text-xs text-foreground">{formatCurrency(c.spend, currency)}</p>
-                          <Pencil
-                            className="w-3 h-3 text-muted-foreground/0 group-hover/spend:text-muted-foreground cursor-pointer hover:text-primary transition-all"
-                            onClick={() => {
-                              setBudgetDialog({ id: c.id, name: c.name, currentSpend: c.spend });
-                              setBudgetValue('');
-                            }}
-                          />
-                        </div>
+                      <td className="px-3 py-3 text-right">
+                        <p className="text-xs text-foreground">{formatCurrency(c.spend, currency)}</p>
+                      </td>
+                      <td className="px-3 py-3 text-right" onClick={e => e.stopPropagation()}>
+                        {(() => {
+                          // Lazy fetch budget
+                          if (budgetCache[c.id] === undefined && !budgetFetching.has(c.id)) {
+                            fetchBudget(c.id);
+                          }
+                          const bVal = budgetCache[c.id];
+                          const isFetching = budgetFetching.has(c.id);
+                          return (
+                            <div className="flex items-center justify-end gap-1 group/budget">
+                              {isFetching ? (
+                                <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                              ) : bVal != null ? (
+                                <p className="text-xs text-foreground">{formatCurrency(bVal, currency)}</p>
+                              ) : (
+                                <p className="text-xs text-muted-foreground">—</p>
+                              )}
+                              <Pencil
+                                className="w-3 h-3 text-muted-foreground/0 group-hover/budget:text-muted-foreground cursor-pointer hover:text-primary transition-all"
+                                onClick={() => {
+                                  setBudgetDialog({ id: c.id, name: c.name, currentSpend: bVal || 0 });
+                                  setBudgetValue('');
+                                }}
+                              />
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-3 py-3 text-right">
                         <p className="text-xs text-foreground">{formatCurrency(c.revenue, currency)}</p>

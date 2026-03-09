@@ -118,45 +118,19 @@ export default function OverviewTab() {
     </div>
   ) : null;
 
-  // No active accounts
-  if (activeAccountIds.length === 0) {
+  // No account selected
+  if (!selectedAccountId) {
     return (
-      <div className="flex flex-col items-center justify-center h-full py-24 gap-3 text-text-muted animate-fade-in">
-        <RefreshCw className="h-12 w-12 opacity-20" />
-        <p className="text-sm">Ative pelo menos uma conta na sidebar para continuar.</p>
-        {!isConnected && (
-          <Button
-            onClick={() => connectMeta()}
-            className="h-11 px-8 text-sm bg-gradient-to-r from-[hsl(var(--data-blue))] to-[#2563EB] text-white hover:opacity-90 rounded-lg gap-2 font-semibold mt-4"
-          >
-            Conectar Meta
-          </Button>
-        )}
+      <div className="flex flex-col items-center justify-center h-full py-24 gap-4 text-center">
+        <div className="text-5xl opacity-20">🎯</div>
+        <p className="text-text-muted text-sm">Selecione uma conta na sidebar para começar</p>
       </div>
     );
   }
 
-  // Has accounts but no data yet
-  if (!effectiveData && isConnected) {
-    if (loading) {
-      return <OverviewSkeleton />;
-    }
-    return (
-      <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
-        <div className="w-20 h-20 rounded-2xl bg-data-blue/10 flex items-center justify-center mb-6">
-          <RefreshCw className="w-10 h-10 text-data-blue" />
-        </div>
-        <h3 className="text-base font-semibold text-text-primary mb-2">Pronto para atualizar</h3>
-        <p className="text-sm text-text-secondary mb-6 max-w-xs">Selecione um período e clique em Atualizar para carregar os dados.</p>
-        <Button
-          onClick={async () => { for (const id of activeAccountIds) { await analyze(id); } }}
-          disabled={loading}
-          className="h-11 px-8 text-sm gradient-blue text-white gap-2"
-        >
-          {loading ? <><Loader2 className="w-4 h-4 animate-spin" />Atualizando...</> : <><RefreshCw className="w-4 h-4" />Atualizar</>}
-        </Button>
-      </div>
-    );
+  // Data loading
+  if (!effectiveData) {
+    return <OverviewSkeleton />;
   }
 
   // Use effective data

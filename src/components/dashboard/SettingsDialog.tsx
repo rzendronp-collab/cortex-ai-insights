@@ -9,6 +9,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
+const AUTO_REFRESH_OPTIONS = [
+  { value: '0', label: 'Desativado' },
+  { value: '15', label: '15 min' },
+  { value: '30', label: '30 min' },
+  { value: '60', label: '60 min' },
+];
+
 export default function SettingsDialog() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -21,6 +28,17 @@ export default function SettingsDialog() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
+
+  // Auto-refresh state
+  const [autoRefresh, setAutoRefresh] = useState(() => {
+    return localStorage.getItem('cortexads_autorefresh_interval') || '30';
+  });
+
+  const handleAutoRefreshChange = (val: string) => {
+    setAutoRefresh(val);
+    localStorage.setItem('cortexads_autorefresh_interval', val);
+    toast.success('Intervalo de auto-refresh atualizado');
+  };
 
   const handleUpdateEmail = async () => {
     if (!newEmail.trim()) return;
@@ -78,6 +96,7 @@ export default function SettingsDialog() {
           <TabsList className="w-full bg-bg-base border border-border-default">
             <TabsTrigger value="account" className="flex-1 text-[12px] data-[state=active]:bg-bg-card">Conta</TabsTrigger>
             <TabsTrigger value="password" className="flex-1 text-[12px] data-[state=active]:bg-bg-card">Senha</TabsTrigger>
+            <TabsTrigger value="preferences" className="flex-1 text-[12px] data-[state=active]:bg-bg-card">Preferências</TabsTrigger>
           </TabsList>
 
           <TabsContent value="account" className="space-y-4 mt-4">
@@ -144,6 +163,28 @@ export default function SettingsDialog() {
               {passwordLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
               Atualizar senha
             </Button>
+          </TabsContent>
+
+          <TabsContent value="preferences" className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label className="text-[11px] text-text-muted uppercase tracking-wide">Auto-refresh dados</Label>
+              <p className="text-[10px] text-text-muted">Atualiza automaticamente os dados da Meta no intervalo selecionado.</p>
+              <div className="flex gap-1.5 mt-1">
+                {AUTO_REFRESH_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => handleAutoRefreshChange(opt.value)}
+                    className={`px-3 py-1.5 text-[11px] font-medium rounded-md border transition-all ${
+                      autoRefresh === opt.value
+                        ? 'bg-data-blue text-white border-data-blue'
+                        : 'bg-bg-base border-border-default text-text-secondary hover:text-text-primary'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </DialogContent>

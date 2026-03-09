@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useActionPlan, ActionItem } from '@/hooks/useActionPlan';
 import { useDashboard } from '@/context/DashboardContext';
-import { Loader2, Pause, Play, TrendingUp, TrendingDown, Check, X, Bot, ChevronRight, ChevronDown, ChevronUp, Settings2, Filter } from 'lucide-react';
+import { Loader2, Pause, Play, TrendingUp, TrendingDown, Check, X, Bot, ChevronRight, ChevronDown, ChevronUp, Settings2, Filter, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -77,6 +77,7 @@ export default function ActionPlanTab() {
   const [showContext, setShowContext] = useState(false);
   const [showAllAlerts, setShowAllAlerts] = useState(false);
   const [historyFilter, setHistoryFilter] = useState('all');
+  const [editedBudgets, setEditedBudgets] = useState<Record<string, number>>({});
 
   // Per-action loading/result state
   const [actionStates, setActionStates] = useState<Record<string, 'loading' | 'success' | 'error'>>({});
@@ -88,6 +89,7 @@ export default function ActionPlanTab() {
   useEffect(() => {
     if (plan?.acoes) {
       setSelectedIds(new Set(plan.acoes.map(a => a.campaign_id)));
+      setEditedBudgets({});
     }
   }, [plan]);
 
@@ -118,6 +120,11 @@ export default function ActionPlanTab() {
     return history.filter(h => new Date(h.applied_at).getTime() > weekAgo).length;
   }, [history]);
 
+  const urgentCount = useMemo(() => {
+    if (!plan) return 0;
+    return plan.acoes.filter(a => a.prioridade === 1 && actionStates[a.campaign_id] !== 'success').length;
+  }, [plan, actionStates]);
+
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
@@ -146,7 +153,6 @@ export default function ActionPlanTab() {
   };
 
   const handleApplySingle = async (action: ActionItem) => {
-    // If it's a pause action, show confirmation first
     if (action.tipo === 'pause') {
       setPauseConfirm(action);
       return;
@@ -157,7 +163,10 @@ export default function ActionPlanTab() {
   const executeSingleAction = async (action: ActionItem) => {
     setActionStates(prev => ({ ...prev, [action.campaign_id]: 'loading' }));
     try {
-      const success = await applyAction(action);
+      const overrideValue = (action.tipo === 'increase_budget' || action.tipo === 'decrease_budget')
+        ? editedBudgets[action.campaign_id] ?? undefined
+        : undefined;
+      const success = await applyAction(action, overrideValue);
       if (success) {
         setActionStates(prev => ({ ...prev, [action.campaign_id]: 'success' }));
         toast.success('Ação aplicada com sucesso');
@@ -170,7 +179,6 @@ export default function ActionPlanTab() {
       setActionStates(prev => ({ ...prev, [action.campaign_id]: 'error' }));
       toast.error(err?.message || 'Erro ao aplicar ação');
     }
-    // Reset state after 2s
     setTimeout(() => {
       setActionStates(prev => {
         const next = { ...prev };
@@ -182,12 +190,18 @@ export default function ActionPlanTab() {
 
   const handleApply = () => {
     if (selectedActions.length === 0) return;
-    // Check if any selected action is a pause
-    const hasPause = selectedActions.some(a => a.tipo === 'pause');
-    if (hasPause) {
-      // For bulk apply with pauses, just proceed (individual confirmation too cumbersome)
-    }
     applyAllActions(selectedActions);
+  };
+
+  const handleExecuteAllUrgent = async () => {
+    if (!plan) return;
+    const urgent = plan.acoes.filter(a => a.prioridade === 1);
+    const confirmed = window.confirm(
+      `Executar ${urgent.length} acção(ões) urgente(s) no Meta Ads? Esta operação é irreversível.`
+    );
+    if (!confirmed) return;
+    await applyAllActions(urgent);
+    await fetchHistory();
   };
 
   const fmt = (v: number) => `${currencySymbol} ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -211,16 +225,16 @@ export default function ActionPlanTab() {
           {showContext && <ContextPanel context={context} setContext={setContext} />}
 
           <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl flex flex-col items-center justify-center py-20 text-center">
-            <div className="text-6xl mb-5">🤖</div>
-            <h2 className="text-xl font-bold text-text-primary mb-2">Pronto para otimizar</h2>
+            <div className="text-6xl mb-5">⚡</div>
+            <h2 className="text-xl font-bold text-text-primary mb-2">⚡ CORTEX Mode — Plano IA Executável</h2>
             <p className="text-[13px] text-text-muted mb-6 max-w-md">
-              A IA vai analisar suas campanhas e sugerir ações inteligentes:
+              A IA analisa as tuas campanhas e gera um plano de acções que podes executar com 1 clique directamente no Meta Ads.
             </p>
             <div className="text-left space-y-2.5 mb-8 max-w-md">
               {[
-                'Analisa ROAS, budget diário e frequência de cada campanha',
-                'Aplica regras de segurança para não pausar campanhas em aprendizado',
-                'Sugere aumentos graduais de budget (máx +30% por ação)',
+                'Detecta campanhas a queimar budget sem retorno (ROAS crítico)',
+                'Identifica oportunidades de escala com segurança (+20-30% budget)',
+                'Aplica regras de segurança: não pausa campanhas em aprendizado',
               ].map((text, i) => (
                 <div key={i} className="flex items-start gap-2.5 text-[13px] text-text-muted">
                   <span className="text-[#60A5FA] mt-0.5">•</span>
@@ -233,8 +247,8 @@ export default function ActionPlanTab() {
               disabled={isGenerating || campaigns.length === 0}
               className="h-11 px-8 text-sm font-bold bg-gradient-to-r from-[#3B82F6] to-[#2563EB] text-white hover:opacity-90 rounded-lg gap-2"
             >
-              <Bot className="w-4 h-4" />
-              Gerar Plano IA
+              <Zap className="w-4 h-4" />
+              ⚡ Gerar Plano CORTEX
             </Button>
             {campaigns.length === 0 && (
               <p className="text-[11px] text-text-muted mt-3">
@@ -267,6 +281,12 @@ export default function ActionPlanTab() {
                 <>
                   <ScoreCircle score={plan.score_conta} />
                   <span className="text-[10px] text-text-muted font-medium tracking-wide uppercase">Saúde da Conta</span>
+                  {/* Score legend */}
+                  <div className="flex gap-1.5 mt-1">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400">0-39 Crítico</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400">40-69 Médio</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400">70+ Bom</span>
+                  </div>
                 </>
               ) : (
                 <div className="w-24 h-24 rounded-full border-2 border-[#2A3850] flex items-center justify-center">
@@ -278,6 +298,8 @@ export default function ActionPlanTab() {
             <div className="flex-1 min-w-0 space-y-2.5 pt-1">
               {plan ? (
                 <>
+                  {/* CORTEX subtitle */}
+                  <p className="text-[11px] text-text-muted">⚡ CORTEX Mode · Claude Sonnet 4 · Plano executável</p>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-text-muted text-[12px]">ROAS</span>
@@ -311,7 +333,7 @@ export default function ActionPlanTab() {
                 {isGenerating ? (
                   <><Loader2 className="w-4 h-4 animate-spin" />Gerando...</>
                 ) : (
-                  <><Bot className="w-4 h-4" />Gerar Plano IA</>
+                  <><Zap className="w-4 h-4" />Gerar Plano CORTEX</>
                 )}
               </Button>
               <Button
@@ -393,6 +415,11 @@ export default function ActionPlanTab() {
               <span className="text-[11px] text-text-muted font-semibold uppercase tracking-wider">
                 Selecionar todas ({plan.acoes.length})
               </span>
+              {urgentCount > 0 && (
+                <span className="bg-red-500/10 text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full ml-auto">
+                  🔴 {urgentCount} urgente(s)
+                </span>
+              )}
             </div>
 
             <div className="divide-y divide-[#2A3850]">
@@ -402,7 +429,9 @@ export default function ActionPlanTab() {
                 const priority = PRIORITY_BADGES[action.prioridade] || PRIORITY_BADGES[3];
                 const isSelected = selectedIds.has(action.campaign_id);
                 const isPauseResume = action.tipo === 'pause' || action.tipo === 'resume';
+                const isBudgetAction = action.tipo === 'increase_budget' || action.tipo === 'decrease_budget';
                 const actionState = actionStates[action.campaign_id];
+                const confidence = action.prioridade === 1 ? 0.92 : action.prioridade === 2 ? 0.75 : 0.60;
 
                 return (
                   <div
@@ -454,7 +483,7 @@ export default function ActionPlanTab() {
                           <>
                             <span>{fmt(action.valor_atual)}</span>
                             <ChevronRight className="w-3 h-3" />
-                            <span className="font-semibold text-text-primary">{fmt(action.valor_novo)}</span>
+                            <span className="font-semibold text-text-primary">{fmt(editedBudgets[action.campaign_id] ?? action.valor_novo)}</span>
                           </>
                         )}
                       </div>
@@ -493,12 +522,32 @@ export default function ActionPlanTab() {
                       </Button>
                     </div>
 
-                    {/* LINE 2 */}
+                    {/* LINE 2 - Motivo */}
                     <div className="ml-[30px] mt-1">
                       <span className="text-[12px] text-text-muted">{action.motivo}</span>
+                      {/* Editable budget input */}
+                      {isBudgetAction && (
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <span className="text-[11px] text-text-muted">Valor novo:</span>
+                          <span className="text-[11px] text-text-muted line-through">{fmt(action.valor_novo)}</span>
+                          <span className="text-[10px] text-text-muted">→</span>
+                          <input
+                            type="number"
+                            defaultValue={action.valor_novo}
+                            onChange={e => {
+                              const val = parseFloat(e.target.value);
+                              if (!isNaN(val)) {
+                                setEditedBudgets(prev => ({ ...prev, [action.campaign_id]: val }));
+                              }
+                            }}
+                            className="w-20 h-6 bg-[#0D1121] border border-[#2A3850] rounded px-2 text-[11px] text-white focus:border-[#60A5FA] outline-none"
+                          />
+                          <span className="text-[11px] text-text-muted">/dia</span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* LINE 3: Pills */}
+                    {/* LINE 3: Pills + Confidence */}
                     <div className="ml-[30px] mt-1.5 flex items-center gap-2 flex-wrap">
                       {action.dias_ativo != null && (
                         <span className="bg-[#0D1121] border border-[#2A3850] rounded-full px-2 py-0.5 text-[10px] text-text-muted">
@@ -522,11 +571,47 @@ export default function ActionPlanTab() {
                           📏 {action.regra_aplicada}
                         </span>
                       )}
+                      {/* Confidence bar */}
+                      <div className="flex items-center gap-2 ml-auto">
+                        <span className="text-[10px] text-slate-500">Confiança:</span>
+                        <div className="w-16 h-1 bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-blue-500 transition-all duration-700"
+                            style={{ width: `${confidence * 100}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-slate-400">{Math.round(confidence * 100)}%</span>
+                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {/* ═══ EXECUTE ALL URGENT ═══ */}
+        {plan && plan.acoes.filter(a => a.prioridade === 1).length > 0 && (
+          <div className="flex items-center justify-between bg-red-500/5 border border-red-500/20 rounded-xl px-5 py-3">
+            <div>
+              <span className="text-[13px] font-semibold text-red-400">
+                🔴 {plan.acoes.filter(a => a.prioridade === 1).length} acção(ões) urgente(s) pendente(s)
+              </span>
+              <p className="text-[11px] text-text-muted mt-0.5">
+                Executar todas as acções de prioridade máxima de uma vez
+              </p>
+            </div>
+            <Button
+              onClick={handleExecuteAllUrgent}
+              disabled={isApplying}
+              className="h-9 px-5 text-[12px] font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg gap-2 flex-shrink-0"
+            >
+              {isApplying ? (
+                <><Loader2 className="w-3.5 h-3.5 animate-spin" />A executar...</>
+              ) : (
+                '⚡ Executar Urgentes'
+              )}
+            </Button>
           </div>
         )}
 

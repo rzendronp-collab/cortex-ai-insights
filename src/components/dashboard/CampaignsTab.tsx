@@ -320,8 +320,6 @@ Responda SOMENTE com o JSON, sem markdown.`;
     ? sortedCampaigns.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
     : sortedCampaigns;
 
-  // Reset page when filters change
-  React.useEffect(() => { setCurrentPage(1); }, [searchQuery, statusFilter, activeTodayFilter, roasFilter]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);

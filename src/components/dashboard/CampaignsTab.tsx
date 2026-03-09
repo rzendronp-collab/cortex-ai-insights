@@ -1485,6 +1485,42 @@ Responda SOMENTE com o JSON, sem markdown.`;
         <PaginationBar />
       </div>
 
+      {/* Bulk Actions Floating Bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1C2538] border border-[#2D3F5E] rounded-xl shadow-2xl px-5 py-3 flex items-center gap-4 animate-fade-up">
+          <span className="text-xs font-semibold text-text-primary">{selectedIds.size} campanha{selectedIds.size > 1 ? 's' : ''} selecionada{selectedIds.size > 1 ? 's' : ''}</span>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={bulkLoading}
+              onClick={() => executeBulkAction('ACTIVE')}
+              className="h-7 text-[11px] gap-1 border-[#34D399]/30 text-[#34D399] hover:bg-[#34D399]/10"
+            >
+              {bulkLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : '▶'} Ativar
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={bulkLoading}
+              onClick={() => executeBulkAction('PAUSED')}
+              className="h-7 text-[11px] gap-1 border-[#FBBF24]/30 text-[#FBBF24] hover:bg-[#FBBF24]/10"
+            >
+              {bulkLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : '⏸'} Pausar
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={bulkLoading}
+              onClick={() => setSelectedIds(new Set())}
+              className="h-7 text-[11px] text-muted-foreground hover:text-foreground"
+            >
+              ✕ Limpar
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Confirmation Dialog */}
       <Dialog open={!!confirmDialog} onOpenChange={(open) => !open && setConfirmDialog(null)}>
         <DialogContent className="sm:max-w-md">

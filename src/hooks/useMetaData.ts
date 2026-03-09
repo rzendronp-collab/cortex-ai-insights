@@ -264,6 +264,10 @@ export function useMetaData() {
       const datePresetParam = isCustom ? undefined : period;
       const timeRangeParam = isCustom ? JSON.stringify({ since: dateRange.from, until: dateRange.to }) : undefined;
 
+      if (isCustom) {
+        console.log('[META] Custom date range:', dateRange.from, '->', dateRange.to, 'time_range:', timeRangeParam);
+      }
+
       // Helper to build params with the right date filter
       const withDateFilter = (extra: Record<string, string>): Record<string, string> => {
         const params: Record<string, string> = { ...extra };

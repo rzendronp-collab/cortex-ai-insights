@@ -290,17 +290,7 @@ export default function OverviewTab() {
       {/* Hourly */}
       <div className="bg-card border border-border rounded-lg p-4 animate-fade-up">
         <h3 className="text-xs font-semibold text-foreground mb-3">Desempenho por Hora</h3>
-        <ResponsiveContainer width="100%" height={160}>
-          <BarChart data={hourlyData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(224,30%,16%)" />
-            <XAxis dataKey="hour" tick={{ fontSize: 9, fill: 'hsl(218,25%,38%)' }} interval={2} />
-            <YAxis tick={{ fontSize: 10, fill: 'hsl(218,25%,38%)' }} />
-            <Tooltip contentStyle={{ background: 'hsl(228,20%,7%)', border: '1px solid hsl(224,30%,16%)', borderRadius: 8, fontSize: 11 }} />
-            <Bar dataKey="spend" radius={[3, 3, 0, 0]}>
-              {hourlyData.map((entry, i) => <Cell key={i} fill={entry.isPeak ? chartColors.primary : 'hsl(224,30%,20%)'} />)}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
+        <HourlyBarChart data={hourlyData} />
       </div>
 
       {/* Demographics */}

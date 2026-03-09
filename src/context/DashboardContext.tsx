@@ -80,6 +80,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
   const setSelectedPeriod = useCallback((p: string) => {
     setSelectedPeriodRaw(p);
+    setDateRangeRaw(null); // Clear custom range when selecting preset
+  }, []);
+
+  const setDateRange = useCallback((range: DateRange | null) => {
+    setDateRangeRaw(range);
+    if (range) setSelectedPeriodRaw('custom');
   }, []);
 
   const setSelectedAccountCurrency = useCallback((currency: string | null) => {

@@ -593,6 +593,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
           })
         )}
       </div>
+      <div className="md:hidden"><PaginationBar /></div>
 
       {/* Desktop Table */}
       <div className="hidden md:block bg-[#0E1420] border border-[#1E2D4A] rounded-lg overflow-x-auto">

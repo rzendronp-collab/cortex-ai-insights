@@ -75,9 +75,6 @@ const periodMap: Record<string, string> = {
   '30d': 'last_30d',
 };
 
-function toDateStr(d: Date): string {
-  return d.toLocaleDateString('en-CA'); // YYYY-MM-DD
-}
 
 function getPrevTimeRange(period: string): { since: string; until: string } {
   const today = new Date();

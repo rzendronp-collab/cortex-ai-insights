@@ -18,13 +18,12 @@ export default function DashboardHeader() {
   const avgRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
   const aboveMeta = ad?.campaigns.filter(c => c.roas >= roasTarget).length || 0;
   const belowMeta = ad?.campaigns.filter(c => c.roas < roasTarget && c.spend > 0).length || 0;
-  // Calculate delta only if previous period has meaningful data
   const delta: number | null = ad && ad.campaignsPrev.length > 0
     ? (() => {
         const prevSpend = ad.campaignsPrev.reduce((s, c) => s + c.spend, 0);
         const prevRevenue = ad.campaignsPrev.reduce((s, c) => s + c.revenue, 0);
         const prevRoas = prevSpend > 0 ? prevRevenue / prevSpend : 0;
-        if (prevRoas === 0) return null; // Hide delta if no previous data
+        if (prevRoas === 0) return null;
         return ((avgRoas - prevRoas) / prevRoas * 100);
       })()
     : null;
@@ -36,16 +35,16 @@ export default function DashboardHeader() {
   const cacheTime = cacheTimestamp ? new Date(cacheTimestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
 
   return (
-    <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border">
+    <div className="sticky top-0 z-30 bg-background/90 backdrop-blur-xl border-b border-border">
       {isTokenExpired && (
-        <div className="bg-warning/10 border-b border-warning/30 px-5 py-2 flex items-center gap-2">
+        <div className="bg-warning/10 border-b border-warning/30 px-6 py-2 flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-warning" />
-          <span className="text-xs text-warning font-medium">Sua conexão Meta expirou.</span>
-          <button onClick={() => connectMeta()} className="text-xs text-warning underline font-semibold">Reconectar →</button>
+          <span className="text-[11px] text-warning font-medium">Sua conexão Meta expirou.</span>
+          <button onClick={() => connectMeta()} className="text-[11px] text-warning underline font-semibold">Reconectar →</button>
         </div>
       )}
 
-      <div className="h-[54px] flex items-center justify-between px-5">
+      <div className="h-[60px] flex items-center justify-between px-6">
         <div>
           <h1 className="text-sm font-semibold text-foreground">{accountTitle}</h1>
           <p className="text-[11px] text-muted-foreground">
@@ -60,7 +59,7 @@ export default function DashboardHeader() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <div className="flex bg-muted rounded-lg p-0.5">
             {periods.map((p) => (
               <button
@@ -79,7 +78,7 @@ export default function DashboardHeader() {
 
           <Button
             size="sm"
-            className="h-8 text-xs gradient-primary text-primary-foreground gap-1.5"
+            className="h-9 px-5 text-[13px] font-bold gradient-primary text-primary-foreground gap-1.5 rounded-lg glow-primary-btn hover:shadow-lg transition-all"
             onClick={() => analyze()}
             disabled={loading || !selectedAccountId}
           >
@@ -92,18 +91,18 @@ export default function DashboardHeader() {
         </div>
       </div>
 
-      <div className="h-9 flex items-center gap-4 px-5 bg-card/50 border-t border-border text-[11px]">
+      <div className="h-9 flex items-center gap-4 px-6 bg-card/50 border-t border-border text-[11px]">
         {ad ? (
           <>
             <span className={`font-bold ${getRoasColor(avgRoas, roasTarget)}`}>
               ROAS {avgRoas.toFixed(1)}x
               {delta !== null && delta !== 0 && <span className="opacity-70 ml-1">{delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(0)}%</span>}
             </span>
-            <span className="text-muted-foreground">|</span>
+            <span className="text-border-hover">|</span>
             <span className="text-foreground">Gasto: <span className="font-semibold">{currencySymbol} {(totalSpend / 1000).toFixed(1)}k</span></span>
-            <span className="text-muted-foreground">|</span>
+            <span className="text-border-hover">|</span>
             <span className="text-foreground">Receita: <span className="font-semibold text-success">{currencySymbol} {(totalRevenue / 1000).toFixed(1)}k</span></span>
-            <span className="text-muted-foreground">|</span>
+            <span className="text-border-hover">|</span>
             <span className="text-foreground">{aboveMeta} acima da meta • {belowMeta} abaixo</span>
           </>
         ) : (

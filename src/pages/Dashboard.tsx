@@ -28,7 +28,7 @@ function DashboardContent() {
   return (
     <div className="min-h-screen bg-background">
       <DashboardSidebar />
-      <div className="ml-56">
+      <div className="ml-[260px]">
         <DashboardHeader />
         <main className="p-5">
           {renderTab()}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Brain, LogOut, Settings, ChevronDown, ChevronRight, Circle, Save, Loader2, CheckCircle2, Eye, EyeOff, BarChart3, Target, Calendar, Cog, Globe, MessageCircle, FileText, RefreshCw } from 'lucide-react';
+import { LogOut, Settings, ChevronDown, ChevronRight, Circle, Save, Loader2, Eye, EyeOff, BarChart3, Target, Calendar, Cog, Globe, MessageCircle, FileText } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
@@ -13,6 +13,21 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
+
+function CortexLogo() {
+  return (
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="logoGrad" x1="0" y1="0" x2="32" y2="32">
+          <stop offset="0%" stopColor="#3B82F6"/>
+          <stop offset="100%" stopColor="#8B5CF6"/>
+        </linearGradient>
+      </defs>
+      <path d="M16 2L28.7 9V23L16 30L3.3 23V9L16 2Z" fill="url(#logoGrad)"/>
+      <text x="16" y="21" textAnchor="middle" fontFamily="Inter" fontWeight="800" fontSize="13" fill="white">C</text>
+    </svg>
+  );
+}
 
 export default function DashboardSidebar() {
   const { user, signOut } = useAuth();
@@ -105,91 +120,85 @@ export default function DashboardSidebar() {
   ];
 
   return (
-    <div className="w-56 h-screen bg-sidebar border-r border-border flex flex-col fixed left-0 top-0 z-40">
+    <div className="w-[260px] h-screen bg-background border-r border-border flex flex-col fixed left-0 top-0 z-40">
       {/* Logo */}
-      <div className="p-4 border-b border-border">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
-            <Brain className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <div>
-            <span className="font-bold text-foreground text-sm">CortexAds</span>
-            <span className="text-muted-foreground text-[10px] ml-1.5">v1.0</span>
-          </div>
+      <div className="h-[60px] px-5 flex items-center gap-3 border-b border-border">
+        <CortexLogo />
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-foreground text-[15px] tracking-tight">CortexAds</span>
+          <span className="text-[10px] text-muted-foreground bg-border/60 px-1.5 py-0.5 rounded">v1.0</span>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {/* ZONA 1: CANAIS */}
-        <div className="space-y-1.5">
-          <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Canais</h3>
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-4">
+        {/* META CONNECTION STATUS */}
+        {(!isConnected || isTokenExpired) && (
+          <div className="bg-muted/50 rounded-lg border border-border p-3">
+            {isTokenExpired ? (
+              <>
+                <div className="flex items-center gap-2 mb-2">
+                  <Circle className="w-2 h-2 fill-warning text-warning animate-pulse" />
+                  <span className="text-[11px] text-foreground/80 font-medium">Token expirado</span>
+                </div>
+                <Button onClick={handleConnectMeta} disabled={connecting} size="sm" className="w-full h-8 text-[11px] gradient-primary text-primary-foreground rounded-lg">
+                  {connecting ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Reconectar'}
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-2">
+                  <Circle className="w-2 h-2 fill-destructive text-destructive" />
+                  <span className="text-[11px] text-foreground/80 font-medium">Meta desconectado</span>
+                </div>
+                <Button onClick={handleConnectMeta} disabled={connecting} size="sm" className="w-full h-8 text-[11px] gradient-primary text-primary-foreground rounded-lg">
+                  {connecting ? <Loader2 className="w-3 h-3 animate-spin" /> : 'Conectar Meta Ads'}
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* CANAIS */}
+        <div className="space-y-2">
+          <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[1px] px-2">Canais</h3>
           
-          {/* Meta Ads - Expandable */}
           <Collapsible open={metaExpanded} onOpenChange={setMetaExpanded}>
-            <CollapsibleTrigger className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md hover:bg-muted/50 transition-colors">
-              <div className="w-5 h-5 rounded bg-[#1877F2] flex items-center justify-center">
+            <CollapsibleTrigger className="flex items-center gap-2.5 w-full px-2 py-2 rounded-lg hover:bg-card transition-colors">
+              <div className="w-5 h-5 rounded bg-[#1877F2] flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-[10px] font-bold">f</span>
               </div>
-              <span className="text-xs font-medium text-foreground flex-1 text-left">Meta Ads</span>
+              <span className="text-[13px] font-medium text-foreground flex-1 text-left">Meta Ads</span>
               {isConnected && !isTokenExpired && (
                 <Circle className="w-2 h-2 fill-success text-success" />
               )}
               <ChevronRight className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${metaExpanded ? 'rotate-90' : ''}`} />
             </CollapsibleTrigger>
             
-            <CollapsibleContent className="mt-1 ml-2">
-              {/* Connection status when not connected */}
-              {(!isConnected || isTokenExpired) && (
-                <div className="bg-muted/50 rounded-lg border border-border p-2.5 mb-2">
-                  {isTokenExpired ? (
-                    <>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Circle className="w-2 h-2 fill-warning text-warning animate-pulse" />
-                        <span className="text-[10px] text-foreground/80">Token expirado</span>
-                      </div>
-                      <Button onClick={handleConnectMeta} disabled={connecting} size="sm" className="w-full h-7 text-[10px] gradient-primary text-primary-foreground">
-                        {connecting ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : 'Reconectar'}
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex items-center gap-2 mb-2">
-                        <Circle className="w-2 h-2 fill-destructive text-destructive" />
-                        <span className="text-[10px] text-foreground/80">Desconectado</span>
-                      </div>
-                      <Button onClick={handleConnectMeta} disabled={connecting} size="sm" className="w-full h-7 text-[10px] gradient-primary text-primary-foreground">
-                        {connecting ? <Loader2 className="w-2.5 h-2.5 animate-spin" /> : 'Conectar'}
-                      </Button>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* Account list with scroll */}
+            <CollapsibleContent className="mt-1">
               {isConnected && !isTokenExpired && (
                 <>
-                  {/* Show/hide inactive toggle */}
                   {adAccounts.length > 0 && (
                     <button
                       onClick={() => setShowInactive(!showInactive)}
-                      className="flex items-center gap-1.5 text-[9px] text-muted-foreground hover:text-foreground transition-colors w-full px-1 mb-1.5"
+                      className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors w-full px-3 mb-2"
                     >
                       {showInactive ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                       {showInactive ? 'Ocultar inativas' : `Mostrar inativas (${adAccounts.filter(a => !a.is_active).length})`}
                     </button>
                   )}
 
-                  <ScrollArea className="max-h-[180px]">
-                    <div className="space-y-2 pr-2">
+                  <ScrollArea className="max-h-[220px]">
+                    <div className="space-y-1.5 px-1">
                       {Object.entries(accountsByBusiness).map(([bizName, accounts]) => (
                         <div key={bizName} className="space-y-0.5">
                           <button
                             onClick={() => toggleBm(bizName)}
-                            className="flex items-center gap-1.5 w-full text-[10px] text-muted-foreground hover:text-foreground px-1"
+                            className="flex items-center gap-1.5 w-full text-[10px] text-muted-foreground hover:text-foreground px-2 py-1"
                           >
                             {isBmExpanded(bizName) ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
-                            {bizName} ({accounts.length})
+                            <span className="font-medium">{bizName}</span>
+                            <span className="text-muted-foreground/60">({accounts.length})</span>
                           </button>
                           {isBmExpanded(bizName) && (
                             <div className="space-y-0.5 ml-2">
@@ -199,16 +208,21 @@ export default function DashboardSidebar() {
                                   <div
                                     key={account.id}
                                     onClick={() => handleSelectAccount(account.account_id, account.account_name, account.currency)}
-                                    className={`flex items-center gap-2 rounded-md px-2 py-1.5 cursor-pointer transition-all ${
+                                    className={`flex items-center gap-2 rounded-lg px-2.5 py-2 cursor-pointer transition-all ${
                                       isSelected
-                                        ? 'bg-accent/60 border-l-2 border-l-accent-foreground'
-                                        : 'hover:bg-muted/50 border-l-2 border-l-transparent'
+                                        ? 'bg-primary/10 border-l-2 border-l-primary'
+                                        : 'hover:bg-card border-l-2 border-l-transparent'
                                     }`}
+                                    title={account.account_name || `act_${account.account_id}`}
                                   >
                                     <Circle className={`w-1.5 h-1.5 flex-shrink-0 ${account.is_active ? 'fill-success text-success' : 'fill-muted-foreground text-muted-foreground'}`} />
-                                    <span className="text-[10px] truncate flex-1">{account.account_name || `act_${account.account_id}`}</span>
+                                    <span className={`text-[11px] truncate flex-1 ${isSelected ? 'text-primary font-medium' : 'text-foreground/80'}`}>
+                                      {account.account_name || `act_${account.account_id}`}
+                                    </span>
                                     {isSelected && currentRoas > 0 && (
-                                      <span className={`text-[9px] font-bold flex-shrink-0 ${currentRoas >= 3 ? 'text-success' : currentRoas >= 2 ? 'text-warning' : 'text-destructive'}`}>
+                                      <span className={`text-[10px] font-bold flex-shrink-0 px-1.5 py-0.5 rounded ${
+                                        currentRoas >= 3 ? 'text-success bg-success/10' : currentRoas >= 2 ? 'text-warning bg-warning/10' : 'text-destructive bg-destructive/10'
+                                      }`}>
                                         {currentRoas.toFixed(1)}x
                                       </span>
                                     )}
@@ -221,7 +235,7 @@ export default function DashboardSidebar() {
                       ))}
                       
                       {filteredAccounts.length === 0 && adAccounts.length > 0 && (
-                        <p className="text-[9px] text-muted-foreground text-center py-2">
+                        <p className="text-[10px] text-muted-foreground text-center py-3">
                           Nenhuma conta ativa
                         </p>
                       )}
@@ -233,82 +247,83 @@ export default function DashboardSidebar() {
           </Collapsible>
 
           {/* Google Ads - Coming Soon */}
-          <div className="flex items-center gap-2 px-2 py-1.5 rounded-md opacity-50">
-            <div className="w-5 h-5 rounded bg-[#4285F4] flex items-center justify-center">
+          <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg opacity-40">
+            <div className="w-5 h-5 rounded bg-[#4285F4] flex items-center justify-center flex-shrink-0">
               <span className="text-white text-[10px] font-bold">G</span>
             </div>
-            <span className="text-xs text-muted-foreground flex-1">Google Ads</span>
-            <span className="text-[8px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded">Em breve</span>
+            <span className="text-[13px] text-muted-foreground flex-1">Google Ads</span>
+            <span className="text-[9px] bg-border text-muted-foreground px-1.5 py-0.5 rounded font-medium">Em breve</span>
           </div>
 
           {/* TikTok Ads - Coming Soon */}
-          <div className="flex items-center gap-2 px-2 py-1.5 rounded-md opacity-50">
-            <div className="w-5 h-5 rounded bg-foreground flex items-center justify-center">
+          <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg opacity-40">
+            <div className="w-5 h-5 rounded bg-foreground flex items-center justify-center flex-shrink-0">
               <span className="text-background text-[10px] font-bold">T</span>
             </div>
-            <span className="text-xs text-muted-foreground flex-1">TikTok Ads</span>
-            <span className="text-[8px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded">Em breve</span>
+            <span className="text-[13px] text-muted-foreground flex-1">TikTok Ads</span>
+            <span className="text-[9px] bg-border text-muted-foreground px-1.5 py-0.5 rounded font-medium">Em breve</span>
           </div>
         </div>
 
         {/* NAVEGAÇÃO */}
-        <Separator />
-        <div className="space-y-1.5">
-          <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">Navegação</h3>
+        <Separator className="bg-border" />
+        <div className="space-y-2">
+          <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[1px] px-2">Navegação</h3>
           <div className="space-y-0.5">
             {navItems.map(item => (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2 w-full px-2 py-1.5 rounded-md transition-all ${
+                className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg transition-all text-[13px] font-medium ${
                   currentTab === item.id
-                    ? 'bg-accent text-accent-foreground font-medium'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                    ? 'bg-[hsl(217,50%,15%)] text-primary border-l-2 border-l-primary -ml-[1px]'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-card'
                 }`}
               >
                 <item.icon className="w-4 h-4" />
-                <span className="text-xs">{item.label}</span>
+                <span>{item.label}</span>
               </button>
             ))}
           </div>
         </div>
       </div>
+
       {/* RODAPÉ: CONFIGURAÇÕES + USUÁRIO */}
       <div className="border-t border-border">
         <Collapsible open={configOpen} onOpenChange={setConfigOpen}>
-          <CollapsibleTrigger className="flex items-center gap-2 w-full px-4 py-3 hover:bg-muted/50 transition-colors">
+          <CollapsibleTrigger className="flex items-center gap-2.5 w-full px-5 py-3 hover:bg-card transition-colors">
             <Settings className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs font-medium text-foreground">Config</span>
+            <span className="text-[13px] font-medium text-foreground">Config</span>
             <ChevronRight className={`w-3.5 h-3.5 ml-auto text-muted-foreground transition-transform ${configOpen ? 'rotate-90' : ''}`} />
           </CollapsibleTrigger>
           
-          <CollapsibleContent className="px-3 pb-3">
+          <CollapsibleContent className="px-4 pb-3">
             <div className="space-y-3 pt-2">
               <div className="space-y-1.5">
-                <Label className="text-[10px] text-muted-foreground">API Key Claude</Label>
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-[1px]">API Key Claude</Label>
                 <Input
                   type="password"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder="sk-ant-..."
-                  className="h-7 text-[10px] bg-muted border-border"
+                  className="h-8 text-[11px] bg-muted border-border rounded-lg"
                 />
                 <p className="text-[9px] text-muted-foreground">Salva com segurança no servidor</p>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] text-muted-foreground">ROAS Target</Label>
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-[1px]">ROAS Target</Label>
                 <Input
                   type="number"
                   step="0.1"
                   value={roasTarget}
                   onChange={(e) => setRoasTarget(e.target.value)}
-                  className="h-7 text-[10px] bg-muted border-border"
+                  className="h-8 text-[11px] bg-muted border-border rounded-lg"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] text-muted-foreground">Moeda</Label>
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-[1px]">Moeda</Label>
                 <Select value={currency} onValueChange={setCurrency}>
-                  <SelectTrigger className="h-7 text-[10px] bg-muted border-border">
+                  <SelectTrigger className="h-8 text-[11px] bg-muted border-border rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -319,15 +334,15 @@ export default function DashboardSidebar() {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] text-muted-foreground">Nicho</Label>
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-[1px]">Nicho</Label>
                 <Input
                   value={niche}
                   onChange={(e) => setNiche(e.target.value)}
                   placeholder="Ex: E-commerce, SaaS..."
-                  className="h-7 text-[10px] bg-muted border-border"
+                  className="h-8 text-[11px] bg-muted border-border rounded-lg"
                 />
               </div>
-              <Button onClick={handleSaveConfig} disabled={saving} size="sm" className="w-full h-7 text-[10px] gradient-primary text-primary-foreground">
+              <Button onClick={handleSaveConfig} disabled={saving} size="sm" className="w-full h-8 text-[11px] gradient-primary text-primary-foreground rounded-lg glow-primary-btn">
                 {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Save className="w-3 h-3 mr-1" />Salvar</>}
               </Button>
             </div>
@@ -335,15 +350,15 @@ export default function DashboardSidebar() {
         </Collapsible>
 
         {/* User Footer */}
-        <div className="p-3 border-t border-border">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-xs font-bold text-primary-foreground">
+        <div className="px-5 py-3 border-t border-border">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full gradient-primary flex items-center justify-center text-[11px] font-bold text-primary-foreground flex-shrink-0">
               {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-foreground truncate">{profile?.name || 'Usuário'}</p>
+              <p className="text-[13px] font-medium text-foreground truncate">{profile?.name || 'Usuário'}</p>
             </div>
-            <button onClick={signOut} className="text-muted-foreground hover:text-destructive transition-colors">
+            <button onClick={signOut} className="text-muted-foreground hover:text-destructive transition-colors p-1">
               <LogOut className="w-4 h-4" />
             </button>
           </div>

@@ -26,6 +26,8 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          dark: "hsl(var(--primary-dark))",
+          glow: "hsl(var(--primary-glow) / 0.15)",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -59,6 +61,7 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
           secondary: "hsl(var(--card-secondary))",
+          hover: "hsl(var(--card-hover))",
         },
         "text-secondary": "hsl(var(--text-secondary))",
         sidebar: {

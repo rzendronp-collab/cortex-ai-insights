@@ -399,7 +399,16 @@ Responda SOMENTE com o JSON, sem markdown.`;
                         )}
                       </td>
                       <td className="px-3 py-3">
-                        <p className="text-xs font-semibold text-foreground truncate max-w-[200px]" title={c.name}>{c.name}</p>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <p className="text-xs font-semibold text-foreground truncate max-w-[200px] cursor-default">{c.name}</p>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-xs max-w-xs">{c.name}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </td>
                       <td className="px-3 py-3 text-right">
                         <p className="text-xs text-foreground">{formatCurrency(c.spend, currency)}</p>

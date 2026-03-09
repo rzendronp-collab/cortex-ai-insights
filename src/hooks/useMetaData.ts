@@ -160,10 +160,9 @@ export function useMetaData() {
     setError(null);
 
     const period = periodMap[selectedPeriod] || 'last_7d';
-    const { since, until } = getPrevTimeRange(selectedPeriod);
     const acctPath = `act_${selectedAccountId}`;
 
-    console.log('[DELTA DEBUG] prevTimeRange:', { since, until, selectedPeriod });
+    console.log('[DELTA DEBUG] prevTimeRange:', getPrevTimeRange(selectedPeriod), 'selectedPeriod:', selectedPeriod);
 
     try {
       // Cache temporarily disabled to force fresh API calls

@@ -393,6 +393,9 @@ export function useMetaData() {
         }
       }
 
+      // Check and create alerts based on campaign data
+      await checkAndCreateAlerts(campaigns, selectedAccountId);
+
       toast.success('Análise concluída!');
     } catch (err: any) {
       console.error('Analysis error:', err);

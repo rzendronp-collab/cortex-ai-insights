@@ -41,6 +41,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [selectedAccountId, setSelectedAccountIdRaw] = useState<string | null>(null);
   const [selectedAccountName, setSelectedAccountName] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriodRaw] = useState('7d');
+  const [dateRange, setDateRangeRaw] = useState<DateRange | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [analysisCache, setAnalysisCache] = useState<Record<string, CachedAnalysis>>({});
   const [accountCurrency, setAccountCurrency] = useState<string | null>(null);

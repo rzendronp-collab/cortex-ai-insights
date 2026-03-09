@@ -197,76 +197,72 @@ export function useMetaData() {
       // Parallel API calls
       const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes] = await Promise.all([
         callMetaApi(`${acctPath}/campaigns`, {
-          fields: 'id,name,status,insights.date_preset(' + period + '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
+          fields:
+            'id,name,status,insights.time_range(' +
+            currentTimeRange +
+            '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
           limit: '50',
         }),
-      callMetaApi(`${acctPath}/campaigns`, {
-        fields: 'id,name,status,insights.date_preset(' + doublePeriod + '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
-        limit: '50',
-      }),
+        callMetaApi(`${acctPath}/campaigns`, {
+          fields:
+            'id,name,status,insights.time_range(' +
+            previousTimeRange +
+            '){spend,impressions,clicks,ctr,cpm,cpc,actions,action_values}',
+          limit: '50',
+        }),
         callMetaApi(`${acctPath}/insights`, {
           breakdowns: 'hourly_stats_aggregated_by_advertiser_time_zone',
           fields: 'spend,actions,impressions,clicks',
-          date_preset: period,
+          time_range: currentTimeRange,
           limit: '200',
         }),
         callMetaApi(`${acctPath}/insights`, {
           breakdowns: 'publisher_platform',
           fields: 'spend,actions,impressions',
-          date_preset: period,
+          time_range: currentTimeRange,
         }),
         callMetaApi(`${acctPath}/insights`, {
           time_increment: '1',
           fields: 'spend,impressions,clicks,ctr,cpm,actions,action_values',
-          date_preset: period,
+          time_range: currentTimeRange,
           limit: '90',
         }),
         callMetaApi(`${acctPath}/insights`, {
           breakdowns: 'age,gender',
           fields: 'spend,impressions,clicks,actions,action_values',
-          date_preset: period,
+          time_range: currentTimeRange,
           limit: '100',
         }),
       ]);
 
       const campaigns: ProcessedCampaign[] = (campaignsRes?.data || []).map(processCampaign);
-      const campaignsDouble: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map(processCampaign);
+      const campaignsPrev: ProcessedCampaign[] = (campaignsPrevRes?.data || []).map(processCampaign);
 
-      // Compute previous period by subtracting current from double-window
-      // prev = double - current (for each metric)
-      const campaignsPrev: ProcessedCampaign[] = campaigns.map(curr => {
-        const double = campaignsDouble.find(d => d.id === curr.id);
-        if (!double) {
-          // No double-window data, return zeros
-          return { ...curr, spend: 0, impressions: 0, clicks: 0, ctr: 0, cpm: 0, cpc: 0, purchases: 0, revenue: 0, roas: 0, cpv: 0 };
-        }
-        const prevSpend = Math.max(0, double.spend - curr.spend);
-        const prevImpressions = Math.max(0, double.impressions - curr.impressions);
-        const prevClicks = Math.max(0, double.clicks - curr.clicks);
-        const prevPurchases = Math.max(0, double.purchases - curr.purchases);
-        const prevRevenue = Math.max(0, double.revenue - curr.revenue);
+      if (import.meta.env.DEV) {
+        const currSpend = campaigns.reduce((s, c) => s + c.spend, 0);
+        const currRevenue = campaigns.reduce((s, c) => s + c.revenue, 0);
+        const currRoas = currSpend > 0 ? currRevenue / currSpend : 0;
+
+        const prevSpend = campaignsPrev.reduce((s, c) => s + c.spend, 0);
+        const prevRevenue = campaignsPrev.reduce((s, c) => s + c.revenue, 0);
         const prevRoas = prevSpend > 0 ? prevRevenue / prevSpend : 0;
-        const prevCtr = prevImpressions > 0 ? (prevClicks / prevImpressions) * 100 : 0;
-        const prevCpm = prevImpressions > 0 ? (prevSpend / prevImpressions) * 1000 : 0;
-        const prevCpc = prevClicks > 0 ? prevSpend / prevClicks : 0;
-        const prevCpv = prevPurchases > 0 ? prevSpend / prevPurchases : 0;
 
-        return {
-          id: curr.id,
-          name: curr.name,
-          status: curr.status,
-          spend: prevSpend,
-          impressions: prevImpressions,
-          clicks: prevClicks,
-          ctr: prevCtr,
-          cpm: prevCpm,
-          cpc: prevCpc,
-          purchases: prevPurchases,
-          revenue: prevRevenue,
-          roas: prevRoas,
-          cpv: prevCpv,
-        };
-      });
+        const delta = prevRoas > 0 ? ((currRoas - prevRoas) / prevRoas) * 100 : null;
+
+        console.log('[useMetaData] ROAS current/prev/delta', {
+          accountId: selectedAccountId,
+          period: selectedPeriod,
+          currRoas,
+          prevRoas,
+          delta,
+          currSpend,
+          prevSpend,
+          currRevenue,
+          prevRevenue,
+          currentRange,
+          previousRange,
+        });
+      }
 
       const dailyData: DailyData[] = (dailyRes?.data || []).map((d: any) => {
         const spend = parseFloat(d.spend || '0');

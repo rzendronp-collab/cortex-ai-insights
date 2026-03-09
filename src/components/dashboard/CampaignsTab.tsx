@@ -1,27 +1,17 @@
 import { useState, useCallback, useMemo } from 'react';
-import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, Flame, Snowflake } from 'lucide-react';
+import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, Flame, Snowflake, ArrowUpDown, ArrowDown, ArrowUp } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { getRoasColor, formatCurrency, formatNumber } from '@/lib/mockData';
 import { ProcessedCampaign } from '@/hooks/useMetaData';
 import { Switch } from '@/components/ui/switch';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
-type FilterType = 'all' | 'scale' | 'optimize' | 'pause';
-
-function getRec(roas: number, roasTarget: number) {
-  if (roas >= roasTarget * 1.5) return { label: '🚀 Escalar', key: 'scale' as const, color: 'text-success', bg: 'bg-success/10 border-success/20' };
-  if (roas >= roasTarget) return { label: '🔧 Otimizar', key: 'optimize' as const, color: 'text-primary', bg: 'bg-primary/10 border-primary/20' };
-  if (roas > 0) return { label: '⚠ Atenção', key: 'optimize' as const, color: 'text-warning', bg: 'bg-warning/10 border-warning/20' };
-  return { label: '⏸ Pausar', key: 'pause' as const, color: 'text-destructive', bg: 'bg-destructive/10 border-destructive/20' };
-}
 
 function getMetricSemaphore(value: number, thresholds: { good: number; warn: number; higher?: boolean }) {
   const { good, warn, higher = true } = thresholds;
@@ -35,14 +25,6 @@ function getMetricSemaphore(value: number, thresholds: { good: number; warn: num
   return 'bg-destructive';
 }
 
-function getRankBadge(rank: number) {
-  if (rank === 1) return { emoji: '🥇', bg: 'bg-warning/20 text-warning border-warning/30' };
-  if (rank === 2) return { emoji: '🥈', bg: 'bg-muted-foreground/20 text-muted-foreground border-muted-foreground/30' };
-  if (rank === 3) return { emoji: '🥉', bg: 'bg-warning/15 text-warning/80 border-warning/20' };
-  return { emoji: `#${rank}`, bg: 'bg-muted text-muted-foreground border-border' };
-}
-
-/** Tiny inline SVG sparkline */
 function Sparkline({ data, color = 'hsl(var(--primary))' }: { data: number[]; color?: string }) {
   if (data.length < 2) return null;
   const w = 120, h = 28, pad = 2;
@@ -61,7 +43,6 @@ function Sparkline({ data, color = 'hsl(var(--primary))' }: { data: number[]; co
   );
 }
 
-/** Compact horizontal bar for hourly chart */
 function CompactHourlyBar({ hour, value, maxValue, isTop, isBottom }: { hour: string; value: number; maxValue: number; isTop: boolean; isBottom: boolean }) {
   const pct = maxValue > 0 ? (value / maxValue) * 100 : 0;
   const barColor = isTop ? 'bg-success' : isBottom ? 'bg-destructive/50' : 'bg-muted-foreground/30';
@@ -78,13 +59,25 @@ function CompactHourlyBar({ hour, value, maxValue, isTop, isBottom }: { hour: st
   );
 }
 
+type SortColumn = 'status' | 'name' | 'spend' | 'revenue' | 'profit' | 'roas' | 'purchases' | 'cpa' | 'ctr' | 'cpm' | 'impressions' | 'clicks';
+
 export default function CampaignsTab() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<FilterType>('all');
+  
+  // Filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused'>('all');
+  const [activeTodayFilter, setActiveTodayFilter] = useState(false);
+  
+  // Sorting
+  const [sortColumn, setSortColumn] = useState<SortColumn>('spend');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
   const [aiLoadingIds, setAiLoadingIds] = useState<Set<string>>(new Set());
   const [aiResults, setAiResults] = useState<Record<string, any>>({});
   const [localStatuses, setLocalStatuses] = useState<Record<string, string>>({});
+  
   const { analysisData, selectedAccountId } = useDashboard();
   const { profile } = useProfile();
   const { callMetaApi, isConnected } = useMetaConnection();
@@ -92,7 +85,6 @@ export default function CampaignsTab() {
   const currency = profile?.currency || 'R$';
 
   const rawCampaigns: ProcessedCampaign[] = analysisData?.campaigns || [];
-
   const prevCampaigns = analysisData?.campaignsPrev || [];
   const prevMap = useMemo(() => {
     const map: Record<string, ProcessedCampaign> = {};
@@ -103,25 +95,57 @@ export default function CampaignsTab() {
   const dailyData = analysisData?.dailyData || [];
   const hourlyData = analysisData?.hourlyData || [];
 
-  const sorted = useMemo(() => {
-    const s = [...rawCampaigns].sort((a, b) => b.roas - a.roas);
-    return s.map((c, i) => ({ ...c, rank: i + 1 }));
-  }, [rawCampaigns]);
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('desc');
+    }
+  };
 
-  const campaigns = useMemo(() => {
-    if (filter === 'all') return sorted;
-    return sorted.filter(c => {
-      const rec = getRec(c.roas, roasTarget);
-      if (filter === 'scale') return rec.key === 'scale';
-      if (filter === 'optimize') return rec.key === 'optimize';
-      if (filter === 'pause') return rec.key === 'pause';
+  const filteredCampaigns = useMemo(() => {
+    return rawCampaigns.filter(c => {
+      if (searchQuery && !c.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      const effStatus = localStatuses[c.id] || c.status;
+      if (statusFilter === 'active' && effStatus !== 'ACTIVE') return false;
+      if (statusFilter === 'paused' && effStatus !== 'PAUSED') return false;
+      if (activeTodayFilter && c.spend <= 0) return false;
       return true;
     });
-  }, [sorted, filter, roasTarget]);
+  }, [rawCampaigns, searchQuery, statusFilter, activeTodayFilter, localStatuses]);
 
-  const totalSpend = rawCampaigns.reduce((s, c) => s + c.spend, 0);
+  const sortedCampaigns = useMemo(() => {
+    return [...filteredCampaigns].sort((a, b) => {
+      const effStatusA = localStatuses[a.id] || a.status;
+      const effStatusB = localStatuses[b.id] || b.status;
+      
+      const cpaA = a.purchases > 0 ? a.spend / a.purchases : 0;
+      const cpaB = b.purchases > 0 ? b.spend / b.purchases : 0;
 
-  // Derive ROAS trend from daily data
+      let valA: any, valB: any;
+      switch (sortColumn) {
+        case 'status': valA = effStatusA === 'ACTIVE' ? 1 : 0; valB = effStatusB === 'ACTIVE' ? 1 : 0; break;
+        case 'name': valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); break;
+        case 'spend': valA = a.spend; valB = b.spend; break;
+        case 'revenue': valA = a.revenue; valB = b.revenue; break;
+        case 'profit': valA = a.revenue - a.spend; valB = b.revenue - b.spend; break;
+        case 'roas': valA = a.roas; valB = b.roas; break;
+        case 'purchases': valA = a.purchases; valB = b.purchases; break;
+        case 'cpa': valA = cpaA; valB = cpaB; break;
+        case 'ctr': valA = a.ctr; valB = b.ctr; break;
+        case 'cpm': valA = a.cpm; valB = b.cpm; break;
+        case 'impressions': valA = a.impressions; valB = b.impressions; break;
+        case 'clicks': valA = a.clicks; valB = b.clicks; break;
+        default: valA = a.spend; valB = b.spend;
+      }
+      
+      if (valA < valB) return sortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [filteredCampaigns, sortColumn, sortDirection, localStatuses]);
+
   const roasTrend = useMemo(() => {
     if (dailyData.length < 3) return 'stable';
     const last = dailyData[dailyData.length - 1]?.roas ?? 0;
@@ -131,11 +155,9 @@ export default function CampaignsTab() {
     return 'stable';
   }, [dailyData]);
 
-  // Hourly sorted by spend for ranking
   const hourlySorted = useMemo(() => {
     return [...hourlyData].sort((a, b) => b.spend - a.spend);
   }, [hourlyData]);
-
   
   const topHours = useMemo(() => {
     return hourlySorted.filter(h => h.spend > 0).slice(0, 3).map(h => h.hour);
@@ -159,7 +181,7 @@ export default function CampaignsTab() {
     }
   }, [isConnected, selectedAccountId, callMetaApi]);
 
-  const generateAiAnalysis = useCallback(async (campaign: ProcessedCampaign & { rank: number }) => {
+  const generateAiAnalysis = useCallback(async (campaign: ProcessedCampaign) => {
     setAiLoadingIds(prev => new Set(prev).add(campaign.id));
     try {
       const prev = prevMap[campaign.id];
@@ -177,8 +199,7 @@ Dados da campanha:
 - CPC: ${currency} ${campaign.cpc.toFixed(2)}
 - CPM: ${currency} ${campaign.cpm.toFixed(2)}
 - Impressões: ${campaign.impressions}
-- Cliques: ${campaign.clicks}
-- Ranking: #${campaign.rank} de ${sorted.length}${hourlyCtx}
+- Cliques: ${campaign.clicks}${hourlyCtx}
 ${prev ? `\nPeríodo anterior: ROAS ${prev.roas.toFixed(2)}x, Gasto ${currency} ${prev.spend.toFixed(2)}, Receita ${currency} ${prev.revenue.toFixed(2)}, Vendas ${prev.purchases}` : ''}
 
 Responda SOMENTE com o JSON, sem markdown.`;
@@ -207,7 +228,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
     } finally {
       setAiLoadingIds(prev => { const n = new Set(prev); n.delete(campaign.id); return n; });
     }
-  }, [prevMap, roasTarget, currency, sorted.length, topHours]);
+  }, [prevMap, roasTarget, currency, topHours]);
 
   if (analysisData && rawCampaigns.length === 0) {
     return (
@@ -219,373 +240,426 @@ Responda SOMENTE com o JSON, sem markdown.`;
     );
   }
 
-  const filterButtons: { key: FilterType; label: string; count: number }[] = [
-    { key: 'all', label: 'Todos', count: sorted.length },
-    { key: 'scale', label: '🚀 Escalar', count: sorted.filter(c => getRec(c.roas, roasTarget).key === 'scale').length },
-    { key: 'optimize', label: '🔧 Otimizar', count: sorted.filter(c => getRec(c.roas, roasTarget).key === 'optimize').length },
-    { key: 'pause', label: '⏸ Pausar', count: sorted.filter(c => getRec(c.roas, roasTarget).key === 'pause').length },
-  ];
-
   const maxHourlySpend = Math.max(...hourlyData.map(h => h.spend), 1);
+
+  const SortIcon = ({ column }: { column: SortColumn }) => {
+    if (sortColumn !== column) return <ArrowUpDown className="w-3 h-3 text-muted-foreground/30" />;
+    return sortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-primary" /> : <ArrowDown className="w-3 h-3 text-primary" />;
+  };
+
+  const columns = [
+    { key: 'status', label: 'Status', align: 'left' },
+    { key: 'name', label: 'Campanha', align: 'left' },
+    { key: 'spend', label: 'Gastos', align: 'right' },
+    { key: 'revenue', label: 'Faturamento', align: 'right' },
+    { key: 'profit', label: 'Lucro', align: 'right' },
+    { key: 'roas', label: 'ROAS', align: 'right' },
+    { key: 'purchases', label: 'Vendas', align: 'right' },
+    { key: 'cpa', label: 'CPA', align: 'right' },
+    { key: 'ctr', label: 'CTR', align: 'right' },
+    { key: 'cpm', label: 'CPM', align: 'right' },
+    { key: 'impressions', label: 'Impr.', align: 'right' },
+    { key: 'clicks', label: 'Cliques', align: 'right' },
+  ] as const;
 
   return (
     <div className="space-y-4">
-      {/* Filter Bar */}
-      <div className="flex items-center gap-2 flex-wrap">
-        {filterButtons.map(f => (
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <Input 
+            placeholder="Buscar campanha..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full sm:w-64 h-8 text-xs bg-card"
+          />
+          <div className="flex items-center bg-card border border-border rounded-md">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              Todos
+            </button>
+            <button
+              onClick={() => setStatusFilter('active')}
+              className={`px-3 py-1.5 text-xs font-medium border-l border-border transition-colors ${statusFilter === 'active' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              Ativo
+            </button>
+            <button
+              onClick={() => setStatusFilter('paused')}
+              className={`px-3 py-1.5 text-xs font-medium border-l border-border transition-colors ${statusFilter === 'paused' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+            >
+              Pausado
+            </button>
+          </div>
           <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className={`text-xs px-3 py-1.5 rounded-full border transition-all font-medium ${
-              filter === f.key
-                ? 'bg-primary/15 border-primary/40 text-primary'
-                : 'bg-card border-border text-muted-foreground hover:text-foreground hover:border-border'
-            }`}
+            onClick={() => setActiveTodayFilter(!activeTodayFilter)}
+            className={`px-3 py-1.5 text-xs font-medium border rounded-md transition-colors ${activeTodayFilter ? 'bg-primary/15 text-primary border-primary/40' : 'bg-card border-border text-muted-foreground hover:text-foreground'}`}
           >
-            {f.label} <span className="ml-1 opacity-60">{f.count}</span>
+            Ativas hoje
           </button>
-        ))}
+        </div>
       </div>
 
-      {/* Campaign cards */}
-      {campaigns.map(c => {
-        const expanded = expandedId === c.id;
-        const roas = c.roas;
-        const rec = getRec(roas, roasTarget);
-        const rank = getRankBadge(c.rank);
-        const effectiveStatus = localStatuses[c.id] || c.status;
-        const isActive = effectiveStatus === 'ACTIVE';
-        const isToggling = togglingIds.has(c.id);
-        const borderColor = isActive
-          ? roas >= roasTarget * 1.2 ? 'border-l-success' : roas >= roasTarget ? 'border-l-primary' : roas >= roasTarget * 0.7 ? 'border-l-warning' : 'border-l-destructive'
-          : 'border-l-muted-foreground/30';
-        const purchases = c.purchases;
-        const revenue = c.revenue;
-        const budgetPct = totalSpend > 0 ? ((c.spend / totalSpend) * 100).toFixed(0) : '0';
-        const roasProgress = Math.min((roas / roasTarget) * 100, 200);
-        const prev = prevMap[c.id];
-        const ai = aiResults[c.id];
-        const aiLoading = aiLoadingIds.has(c.id);
+      {/* Table */}
+      <div className="bg-card border border-border rounded-lg overflow-x-auto">
+        <table className="w-full text-left border-collapse min-w-[1000px]">
+          <thead>
+            <tr className="border-b border-border bg-muted/50">
+              {columns.map(col => (
+                <th
+                  key={col.key}
+                  onClick={() => handleSort(col.key as SortColumn)}
+                  className={`px-3 py-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer hover:bg-muted/80 transition-colors select-none ${col.align === 'right' ? 'text-right' : 'text-left'}`}
+                >
+                  <div className={`flex items-center gap-1.5 ${col.align === 'right' ? 'justify-end' : 'justify-start'}`}>
+                    {col.label}
+                    <SortIcon column={col.key as SortColumn} />
+                  </div>
+                </th>
+              ))}
+              <th className="px-3 py-2 w-8"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedCampaigns.length === 0 ? (
+              <tr>
+                <td colSpan={13} className="text-center py-8 text-xs text-muted-foreground">
+                  Nenhuma campanha encontrada com os filtros atuais.
+                </td>
+              </tr>
+            ) : (
+              sortedCampaigns.map(c => {
+                const expanded = expandedId === c.id;
+                const effectiveStatus = localStatuses[c.id] || c.status;
+                const isActive = effectiveStatus === 'ACTIVE';
+                const isToggling = togglingIds.has(c.id);
+                
+                const roasColorClass = c.roas >= roasTarget 
+                  ? 'text-success' 
+                  : c.roas >= roasTarget * 0.7 
+                    ? 'text-warning' 
+                    : 'text-destructive';
 
-        // Sparkline data from daily ROAS
-        const sparkData = dailyData.map(d => d.roas);
+                const profit = c.revenue - c.spend;
+                const cpa = c.purchases > 0 ? c.spend / c.purchases : 0;
+                
+                const prev = prevMap[c.id];
+                const ai = aiResults[c.id];
+                const aiLoading = aiLoadingIds.has(c.id);
+                const sparkData = dailyData.map(d => d.roas);
 
-        // Compute real deltas — only when prev has meaningful data
-        const hasPrevData = prev && prev.spend > 0;
-        const computeDelta = (curr: number, prevVal: number | undefined): number | null => {
-          if (!hasPrevData || prevVal === undefined || prevVal === null) return null;
-          if (prevVal === 0 && curr === 0) return null;
-          if (prevVal === 0) return null; // can't compute % change from zero
-          const delta = ((curr - prevVal) / Math.abs(prevVal)) * 100;
-          return delta;
-        };
+                const computeDelta = (curr: number, prevVal: number | undefined): number | null => {
+                  if (!prev || (prev.spend || 0) === 0 || prevVal === undefined || prevVal === null) return null;
+                  if (prevVal === 0 && curr === 0) return null;
+                  if (prevVal === 0) return null;
+                  return ((curr - prevVal) / Math.abs(prevVal)) * 100;
+                };
 
-        const metrics = [
-          { label: 'Gasto', value: formatCurrency(c.spend, currency), sem: getMetricSemaphore(c.spend, { good: c.spend * 0.5, warn: c.spend * 1.5, higher: false }), delta: computeDelta(c.spend, prev?.spend), invert: true },
-          { label: 'Receita', value: formatCurrency(revenue, currency), sem: getMetricSemaphore(revenue, { good: c.spend * roasTarget, warn: c.spend, higher: true }), delta: computeDelta(revenue, prev?.revenue), invert: false },
-          { label: 'Lucro Bruto', value: formatCurrency(revenue - c.spend, currency), sem: getMetricSemaphore(revenue - c.spend, { good: 0, warn: -c.spend * 0.2, higher: true }), delta: prev ? computeDelta(revenue - c.spend, prev.revenue - prev.spend) : null, invert: false },
-          { label: 'CPC', value: `${currency} ${c.cpc.toFixed(2)}`, sem: getMetricSemaphore(c.cpc, { good: 1.0, warn: 2.5, higher: false }), delta: computeDelta(c.cpc, prev?.cpc), invert: true },
-          { label: 'CPV', value: `${currency} ${(c.cpv || 0).toFixed(2)}`, sem: getMetricSemaphore(c.cpv, { good: 30, warn: 80, higher: false }), delta: computeDelta(c.cpv, prev?.cpv), invert: true },
-          { label: 'Impressões', value: formatNumber(c.impressions), sem: getMetricSemaphore(c.impressions, { good: 10000, warn: 2000, higher: true }), delta: computeDelta(c.impressions, prev?.impressions), invert: false },
-          { label: 'Cliques', value: formatNumber(c.clicks), sem: getMetricSemaphore(c.clicks, { good: 500, warn: 100, higher: true }), delta: computeDelta(c.clicks, prev?.clicks), invert: false },
-          { label: 'CPM', value: `${currency} ${c.cpm.toFixed(2)}`, sem: getMetricSemaphore(c.cpm, { good: 20, warn: 40, higher: false }), delta: computeDelta(c.cpm, prev?.cpm), invert: true },
-          { label: 'CTR', value: `${c.ctr.toFixed(2)}%`, sem: getMetricSemaphore(c.ctr, { good: 2.0, warn: 1.0, higher: true }), delta: computeDelta(c.ctr, prev?.ctr), invert: false },
-        ];
+                const metrics = [
+                  { label: 'Gasto', value: formatCurrency(c.spend, currency), sem: getMetricSemaphore(c.spend, { good: c.spend * 0.5, warn: c.spend * 1.5, higher: false }), delta: computeDelta(c.spend, prev?.spend), invert: true },
+                  { label: 'Receita', value: formatCurrency(c.revenue, currency), sem: getMetricSemaphore(c.revenue, { good: c.spend * roasTarget, warn: c.spend, higher: true }), delta: computeDelta(c.revenue, prev?.revenue), invert: false },
+                  { label: 'Lucro Bruto', value: formatCurrency(profit, currency), sem: getMetricSemaphore(profit, { good: 0, warn: -c.spend * 0.2, higher: true }), delta: prev ? computeDelta(profit, prev.revenue - prev.spend) : null, invert: false },
+                  { label: 'CPC', value: `${currency} ${c.cpc.toFixed(2)}`, sem: getMetricSemaphore(c.cpc, { good: 1.0, warn: 2.5, higher: false }), delta: computeDelta(c.cpc, prev?.cpc), invert: true },
+                  { label: 'CPV', value: `${currency} ${(c.cpv || 0).toFixed(2)}`, sem: getMetricSemaphore(c.cpv, { good: 30, warn: 80, higher: false }), delta: computeDelta(c.cpv, prev?.cpv), invert: true },
+                  { label: 'Impressões', value: formatNumber(c.impressions), sem: getMetricSemaphore(c.impressions, { good: 10000, warn: 2000, higher: true }), delta: computeDelta(c.impressions, prev?.impressions), invert: false },
+                  { label: 'Cliques', value: formatNumber(c.clicks), sem: getMetricSemaphore(c.clicks, { good: 500, warn: 100, higher: true }), delta: computeDelta(c.clicks, prev?.clicks), invert: false },
+                  { label: 'CPM', value: `${currency} ${c.cpm.toFixed(2)}`, sem: getMetricSemaphore(c.cpm, { good: 20, warn: 40, higher: false }), delta: computeDelta(c.cpm, prev?.cpm), invert: true },
+                  { label: 'CTR', value: `${c.ctr.toFixed(2)}%`, sem: getMetricSemaphore(c.ctr, { good: 2.0, warn: 1.0, higher: true }), delta: computeDelta(c.ctr, prev?.ctr), invert: false },
+                ];
 
-        return (
-          <div key={c.id} className={`bg-card border border-border rounded-lg overflow-hidden animate-fade-up border-l-[3px] ${borderColor} ${!isActive ? 'opacity-60' : ''}`}>
-            {/* HEADER */}
-            <div className="p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="flex-shrink-0" onClick={e => e.stopPropagation()}>
-                    {isToggling ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                    ) : (
-                      <Switch checked={isActive} onCheckedChange={() => toggleCampaignStatus(c.id, effectiveStatus)} className="scale-75" />
-                    )}
-                  </div>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded border font-bold flex-shrink-0 ${rank.bg}`}>{rank.emoji}</span>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-foreground truncate">{c.name}</p>
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium whitespace-nowrap ${rec.bg} ${rec.color}`}>{rec.label}</span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{isActive ? 'Ativo' : 'Pausado'} • {budgetPct}% do budget</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 flex-shrink-0">
-                  <div className="text-right">
-                    <p className={`text-lg font-extrabold ${getRoasColor(roas, roasTarget)}`}>{roas.toFixed(1)}x</p>
-                    <p className="text-[10px] text-muted-foreground">ROAS</p>
-                  </div>
-                  <div className="text-right hidden sm:block">
-                    <p className="text-sm font-bold text-foreground">{formatCurrency(c.spend, currency)}</p>
-                    <p className="text-[10px] text-muted-foreground">Gasto</p>
-                  </div>
-                  <div className="text-right hidden sm:block">
-                    <p className="text-sm font-bold text-foreground">{formatCurrency(revenue, currency)}</p>
-                    <p className="text-[10px] text-muted-foreground">Receita</p>
-                  </div>
-                  <div className="text-right hidden md:block">
-                    <p className="text-sm font-bold text-foreground">{purchases}</p>
-                    <p className="text-[10px] text-muted-foreground">Vendas</p>
-                  </div>
-                  <div className="text-right hidden md:block">
-                    <p className="text-sm font-bold text-foreground">{c.ctr.toFixed(1)}%</p>
-                    <p className="text-[10px] text-muted-foreground">CTR</p>
-                  </div>
-                  <div className="text-right hidden lg:block">
-                    <p className="text-sm font-bold text-foreground">{formatCurrency(c.cpm, currency)}</p>
-                    <p className="text-[10px] text-muted-foreground">CPM</p>
-                  </div>
-                  <button onClick={() => setExpandedId(expanded ? null : c.id)} className="p-1 hover:bg-muted/50 rounded transition-colors">
-                    {expanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
-                  </button>
-                </div>
-              </div>
-              <div className="mt-3 flex items-center gap-3">
-                <div className="flex-1 relative">
-                  <Progress value={Math.min(roasProgress, 100)} className="h-1.5 bg-muted" />
-                  {roasProgress > 100 && (
-                    <div className="absolute top-0 left-0 h-1.5 rounded-full bg-success/40" style={{ width: `${Math.min(roasProgress, 200) / 2}%` }} />
-                  )}
-                </div>
-                <span className={`text-[10px] font-semibold ${roas >= roasTarget ? 'text-success' : 'text-warning'}`}>
-                  {roasProgress.toFixed(0)}% da meta
-                </span>
-              </div>
-            </div>
-
-            {/* EXPANDED CONTENT */}
-            {expanded && (
-              <div className="border-t border-border animate-fade-up">
-                {aiLoading ? (
-                  /* Skeleton loading for all 4 blocks */
-                  <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/5">
-                    {[0,1,2,3].map(i => (
-                      <div key={i} className="bg-card border border-border rounded-lg p-4 space-y-3">
-                        <Skeleton className="h-3 w-32" />
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-3/4" />
-                        <Skeleton className="h-20 w-full" />
-                        <Skeleton className="h-4 w-1/2" />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/5">
-                    {/* BLOCO 1 — MÉTRICAS COMPLETAS */}
-                    <div className="bg-card border border-border rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <BarChart3 className="w-3.5 h-3.5 text-primary" />
-                        <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Métricas Completas</h4>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        {metrics.map(m => {
-                          const deltaVal = m.delta;
-                          // For inverted metrics (lower is better), flip the arrow color
-                          const isGood = m.invert ? (deltaVal !== null && deltaVal <= 0) : (deltaVal !== null && deltaVal >= 0);
-                          return (
-                            <div key={m.label} className="flex items-start gap-2">
-                              <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${m.sem}`} />
-                              <div className="min-w-0">
-                                <p className="text-[10px] text-muted-foreground">{m.label}</p>
-                                <p className="text-xs font-bold text-foreground">{m.value}</p>
-                                {deltaVal !== null && (
-                                  <p className={`text-[9px] ${isGood ? 'text-success' : 'text-destructive'}`}>
-                                    {deltaVal >= 0 ? '▲' : '▼'} {Math.abs(deltaVal).toFixed(1)}% vs anterior
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Sparkline + Trend Badge */}
-                      {sparkData.length >= 2 && (
-                        <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <LineChart className="w-3 h-3 text-muted-foreground" />
-                            <span className="text-[10px] text-muted-foreground">ROAS diário</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Sparkline data={sparkData} color={roasTrend === 'up' ? 'hsl(var(--success))' : roasTrend === 'down' ? 'hsl(var(--destructive))' : 'hsl(var(--primary))'} />
-                            {roasTrend === 'up' && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20 flex items-center gap-0.5">
-                                <TrendingUp className="w-2.5 h-2.5" /> Acelerando
-                              </span>
-                            )}
-                            {roasTrend === 'down' && (
-                              <span className="text-[9px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20 flex items-center gap-0.5">
-                                <TrendingDown className="w-2.5 h-2.5" /> Desacelerando
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* BLOCO 2 — ANÁLISE IA */}
-                    <div className="bg-card border border-border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <Sparkles className="w-3.5 h-3.5 text-secondary" />
-                          <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Análise IA</h4>
-                        </div>
-                        {!ai && (
-                          <Button
-                            onClick={() => generateAiAnalysis(c)}
-                            disabled={aiLoading}
-                            size="sm"
-                            variant="outline"
-                            className="h-6 text-[10px] px-2 border-primary/30 text-primary hover:bg-primary/10"
-                          >
-                            <Sparkles className="w-2.5 h-2.5 mr-1" /> Gerar Análise IA
-                          </Button>
+                return (
+                  <>
+                    <tr 
+                      key={c.id}
+                      onClick={() => setExpandedId(expanded ? null : c.id)}
+                      className={`border-b border-border hover:bg-muted/30 cursor-pointer transition-colors ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-muted/10' : ''}`}
+                    >
+                      <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
+                        {isToggling ? (
+                          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />
+                        ) : (
+                          <div 
+                            className={`w-2.5 h-2.5 rounded-full mx-auto cursor-pointer ${isActive ? 'bg-success shadow-[0_0_8px_hsl(var(--success))]' : 'bg-muted-foreground/30'}`}
+                            title={isActive ? 'Ativa (Clique para pausar)' : 'Pausada (Clique para ativar)'}
+                            onClick={() => toggleCampaignStatus(c.id, effectiveStatus)}
+                          />
                         )}
-                      </div>
-                      {ai ? (
-                        <div className="space-y-3">
-                          <div>
-                            <p className="text-[10px] text-primary font-semibold mb-1">Diagnóstico</p>
-                            <p className="text-[11px] text-foreground/80 leading-relaxed">{ai.diagnostico}</p>
-                          </div>
-                          <div className="bg-primary/5 border border-primary/10 rounded-md p-2">
-                            <p className="text-[10px] text-primary font-semibold mb-0.5">🎯 Ação Principal</p>
-                            <p className="text-[11px] text-foreground leading-relaxed">{ai.acao_principal}</p>
-                          </div>
-                          {ai.budget_por_hora && (
-                            <div className="bg-muted rounded-md p-2">
-                              <p className="text-[10px] text-muted-foreground mb-0.5">⏰ Budget por Hora</p>
-                              <p className="text-[11px] text-foreground font-mono">{ai.budget_por_hora}</p>
-                            </div>
-                          )}
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-muted rounded-md p-2">
-                              <p className="text-[10px] text-muted-foreground">Previsão ROAS 7d</p>
-                              <p className={`text-sm font-bold ${getRoasColor(ai.previsao_roas_7d || roas, roasTarget)}`}>{(ai.previsao_roas_7d || roas).toFixed(1)}x</p>
-                            </div>
-                            <div className="bg-muted rounded-md p-2">
-                              <p className="text-[10px] text-muted-foreground">Budget Recomendado</p>
-                              <p className="text-sm font-bold text-foreground">{currency} {parseFloat(ai.budget_recomendado || c.spend).toFixed(0)}</p>
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="py-6 text-center">
-                          <p className="text-[11px] text-muted-foreground leading-relaxed">
-                            Clique em "Gerar Análise IA" para diagnóstico completo, budget ideal e previsão de ROAS.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* BLOCO 3 — PERFORMANCE POR HORA (Compacto) */}
-                    <div className="bg-card border border-border rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Clock className="w-3.5 h-3.5 text-success" />
-                        <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Performance por Hora</h4>
-                      </div>
-                      {hourlyData.length > 0 ? (
-                        <div className="space-y-0.5 max-h-[120px] overflow-y-auto">
-                          {(() => {
-                            const sorted = [...hourlyData].sort((a, b) => b.spend - a.spend);
-                            const top6 = sorted.slice(0, 6).map(h => h.hour);
-                            const bottom3 = sorted.slice(-3).map(h => h.hour);
-                            const selected = hourlyData.filter(h => top6.includes(h.hour) || bottom3.includes(h.hour));
-                            return selected.map(h => (
-                              <CompactHourlyBar
-                                key={h.hour}
-                                hour={h.hour}
-                                value={h.spend}
-                                maxValue={maxHourlySpend}
-                                isTop={top6.includes(h.hour)}
-                                isBottom={bottom3.includes(h.hour)}
-                              />
-                            ));
-                          })()}
-                        </div>
-                      ) : (
-                        <p className="text-[11px] text-muted-foreground text-center py-6">
-                          Dados horários não disponíveis.
+                      </td>
+                      <td className="px-3 py-3">
+                        <p className="text-xs font-semibold text-foreground truncate max-w-[200px]" title={c.name}>{c.name}</p>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <p className="text-xs text-foreground">{formatCurrency(c.spend, currency)}</p>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <p className="text-xs text-foreground">{formatCurrency(c.revenue, currency)}</p>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <p className={`text-xs font-medium ${profit >= 0 ? 'text-success' : 'text-destructive'}`}>
+                          {profit > 0 ? '+' : ''}{formatCurrency(profit, currency)}
                         </p>
-                      )}
-                    </div>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <p className={`text-xs font-bold ${roasColorClass}`}>{c.roas.toFixed(2)}x</p>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <p className="text-xs text-foreground">{c.purchases}</p>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <p className="text-xs text-foreground">{formatCurrency(cpa, currency)}</p>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <p className="text-xs text-foreground">{c.ctr.toFixed(2)}%</p>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <p className="text-xs text-foreground">{formatCurrency(c.cpm, currency)}</p>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <p className="text-xs text-foreground">{formatNumber(c.impressions)}</p>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <p className="text-xs text-foreground">{formatNumber(c.clicks)}</p>
+                      </td>
+                      <td className="px-3 py-3 text-center text-muted-foreground">
+                        {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                      </td>
+                    </tr>
+                    
+                    {/* EXPANDED CONTENT */}
+                    {expanded && (
+                      <tr className="bg-muted/5 border-b border-border">
+                        <td colSpan={13} className="p-0">
+                          <div className="p-4 border-l-2 border-l-primary/50 animate-fade-up">
+                            {aiLoading ? (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {[0,1,2,3].map(i => (
+                                  <div key={i} className="bg-card border border-border rounded-lg p-4 space-y-3">
+                                    <Skeleton className="h-3 w-32" />
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-3/4" />
+                                    <Skeleton className="h-20 w-full" />
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* BLOCO 1 — MÉTRICAS COMPLETAS */}
+                                <div className="bg-card border border-border rounded-lg p-4">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <BarChart3 className="w-3.5 h-3.5 text-primary" />
+                                    <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Métricas Completas</h4>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-3">
+                                    {metrics.map(m => {
+                                      const deltaVal = m.delta;
+                                      const isGood = m.invert ? (deltaVal !== null && deltaVal <= 0) : (deltaVal !== null && deltaVal >= 0);
+                                      return (
+                                        <div key={m.label} className="flex items-start gap-2">
+                                          <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${m.sem}`} />
+                                          <div className="min-w-0">
+                                            <p className="text-[10px] text-muted-foreground">{m.label}</p>
+                                            <p className="text-xs font-bold text-foreground">{m.value}</p>
+                                            {deltaVal !== null && (
+                                              <p className={`text-[9px] ${isGood ? 'text-success' : 'text-destructive'}`}>
+                                                {deltaVal >= 0 ? '▲' : '▼'} {Math.abs(deltaVal).toFixed(1)}% vs anterior
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
 
-                    {/* BLOCO 4 — EVOLUÇÃO DIÁRIA */}
-                    <div className="bg-card border border-border rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <LineChart className="w-3.5 h-3.5 text-primary" />
-                        <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Evolução Diária</h4>
-                      </div>
-                      {dailyData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={180}>
-                          <RechartsLineChart data={dailyData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                            <XAxis 
-                              dataKey="date" 
-                              tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
-                              tickFormatter={(v) => new Date(v).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
-                            />
-                            <YAxis 
-                              yAxisId="left"
-                              tick={{ fontSize: 9, fill: 'hsl(var(--primary))' }}
-                              tickFormatter={(v) => `${v.toFixed(1)}x`}
-                            />
-                            <YAxis 
-                              yAxisId="right" 
-                              orientation="right"
-                              tick={{ fontSize: 9, fill: 'hsl(var(--success))' }}
-                              tickFormatter={(v) => `${currency}${v.toFixed(0)}`}
-                            />
-                            <Tooltip 
-                              contentStyle={{ 
-                                background: 'hsl(var(--card))', 
-                                border: '1px solid hsl(var(--border))',
-                                borderRadius: '6px',
-                                fontSize: '10px'
-                              }}
-                              labelFormatter={(v) => new Date(v).toLocaleDateString('pt-BR')}
-                            />
-                            <Legend 
-                              wrapperStyle={{ fontSize: '10px' }}
-                              iconSize={8}
-                            />
-                            <Line 
-                              yAxisId="left"
-                              type="monotone" 
-                              dataKey="roas" 
-                              stroke="hsl(var(--primary))" 
-                              strokeWidth={2}
-                              name="ROAS"
-                              dot={{ r: 2 }}
-                            />
-                            <Line 
-                              yAxisId="right"
-                              type="monotone" 
-                              dataKey="spend" 
-                              stroke="hsl(var(--success))" 
-                              strokeWidth={2}
-                              name="Gasto"
-                              dot={{ r: 2 }}
-                            />
-                          </RechartsLineChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <p className="text-[11px] text-muted-foreground text-center py-6">
-                          Dados diários não disponíveis.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+                                  {sparkData.length >= 2 && (
+                                    <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <LineChart className="w-3 h-3 text-muted-foreground" />
+                                        <span className="text-[10px] text-muted-foreground">ROAS diário</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Sparkline data={sparkData} color={roasTrend === 'up' ? 'hsl(var(--success))' : roasTrend === 'down' ? 'hsl(var(--destructive))' : 'hsl(var(--primary))'} />
+                                        {roasTrend === 'up' && (
+                                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-success/10 text-success border border-success/20 flex items-center gap-0.5">
+                                            <TrendingUp className="w-2.5 h-2.5" /> Acelerando
+                                          </span>
+                                        )}
+                                        {roasTrend === 'down' && (
+                                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20 flex items-center gap-0.5">
+                                            <TrendingDown className="w-2.5 h-2.5" /> Desacelerando
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* BLOCO 2 — ANÁLISE IA */}
+                                <div className="bg-card border border-border rounded-lg p-4">
+                                  <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                      <Sparkles className="w-3.5 h-3.5 text-secondary" />
+                                      <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Análise IA</h4>
+                                    </div>
+                                    {!ai && (
+                                      <Button
+                                        onClick={() => generateAiAnalysis(c)}
+                                        disabled={aiLoading}
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-6 text-[10px] px-2 border-primary/30 text-primary hover:bg-primary/10"
+                                      >
+                                        <Sparkles className="w-2.5 h-2.5 mr-1" /> Gerar Análise IA
+                                      </Button>
+                                    )}
+                                  </div>
+                                  {ai ? (
+                                    <div className="space-y-3">
+                                      <div>
+                                        <p className="text-[10px] text-primary font-semibold mb-1">Diagnóstico</p>
+                                        <p className="text-[11px] text-foreground/80 leading-relaxed">{ai.diagnostico}</p>
+                                      </div>
+                                      <div className="bg-primary/5 border border-primary/10 rounded-md p-2">
+                                        <p className="text-[10px] text-primary font-semibold mb-0.5">🎯 Ação Principal</p>
+                                        <p className="text-[11px] text-foreground leading-relaxed">{ai.acao_principal}</p>
+                                      </div>
+                                      {ai.budget_por_hora && (
+                                        <div className="bg-muted rounded-md p-2">
+                                          <p className="text-[10px] text-muted-foreground mb-0.5">⏰ Budget por Hora</p>
+                                          <p className="text-[11px] text-foreground font-mono">{ai.budget_por_hora}</p>
+                                        </div>
+                                      )}
+                                      <div className="grid grid-cols-2 gap-2">
+                                        <div className="bg-muted rounded-md p-2">
+                                          <p className="text-[10px] text-muted-foreground">Previsão ROAS 7d</p>
+                                          <p className={`text-sm font-bold ${getRoasColor(ai.previsao_roas_7d || c.roas, roasTarget)}`}>{(ai.previsao_roas_7d || c.roas).toFixed(1)}x</p>
+                                        </div>
+                                        <div className="bg-muted rounded-md p-2">
+                                          <p className="text-[10px] text-muted-foreground">Budget Recomendado</p>
+                                          <p className="text-sm font-bold text-foreground">{currency} {parseFloat(ai.budget_recomendado || c.spend).toFixed(0)}</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="py-6 text-center">
+                                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                                        Clique em "Gerar Análise IA" para diagnóstico completo, budget ideal e previsão de ROAS.
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* BLOCO 3 — PERFORMANCE POR HORA */}
+                                <div className="bg-card border border-border rounded-lg p-4">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <Clock className="w-3.5 h-3.5 text-success" />
+                                    <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Performance por Hora</h4>
+                                  </div>
+                                  {hourlyData.length > 0 ? (
+                                    <div className="space-y-0.5 max-h-[120px] overflow-y-auto">
+                                      {(() => {
+                                        const sorted = [...hourlyData].sort((a, b) => b.spend - a.spend);
+                                        const top6 = sorted.slice(0, 6).map(h => h.hour);
+                                        const bottom3 = sorted.slice(-3).map(h => h.hour);
+                                        const selected = hourlyData.filter(h => top6.includes(h.hour) || bottom3.includes(h.hour));
+                                        return selected.map(h => (
+                                          <CompactHourlyBar
+                                            key={h.hour}
+                                            hour={h.hour}
+                                            value={h.spend}
+                                            maxValue={maxHourlySpend}
+                                            isTop={top6.includes(h.hour)}
+                                            isBottom={bottom3.includes(h.hour)}
+                                          />
+                                        ));
+                                      })()}
+                                    </div>
+                                  ) : (
+                                    <p className="text-[11px] text-muted-foreground text-center py-6">
+                                      Dados horários não disponíveis.
+                                    </p>
+                                  )}
+                                </div>
+
+                                {/* BLOCO 4 — EVOLUÇÃO DIÁRIA */}
+                                <div className="bg-card border border-border rounded-lg p-4">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <LineChart className="w-3.5 h-3.5 text-primary" />
+                                    <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Evolução Diária</h4>
+                                  </div>
+                                  {dailyData.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height={180}>
+                                      <RechartsLineChart data={dailyData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                                        <XAxis 
+                                          dataKey="date" 
+                                          tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
+                                          tickFormatter={(v) => new Date(v).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                                        />
+                                        <YAxis 
+                                          yAxisId="left"
+                                          tick={{ fontSize: 9, fill: 'hsl(var(--primary))' }}
+                                          tickFormatter={(v) => `${v.toFixed(1)}x`}
+                                        />
+                                        <YAxis 
+                                          yAxisId="right" 
+                                          orientation="right"
+                                          tick={{ fontSize: 9, fill: 'hsl(var(--success))' }}
+                                          tickFormatter={(v) => `${currency}${v.toFixed(0)}`}
+                                        />
+                                        <Tooltip 
+                                          contentStyle={{ 
+                                            background: 'hsl(var(--card))', 
+                                            border: '1px solid hsl(var(--border))',
+                                            borderRadius: '6px',
+                                            fontSize: '10px'
+                                          }}
+                                          labelFormatter={(v) => new Date(v).toLocaleDateString('pt-BR')}
+                                        />
+                                        <Legend 
+                                          wrapperStyle={{ fontSize: '10px' }}
+                                          iconSize={8}
+                                        />
+                                        <Line 
+                                          yAxisId="left"
+                                          type="monotone" 
+                                          dataKey="roas" 
+                                          stroke="hsl(var(--primary))" 
+                                          strokeWidth={2}
+                                          name="ROAS"
+                                          dot={{ r: 2 }}
+                                        />
+                                        <Line 
+                                          yAxisId="right"
+                                          type="monotone" 
+                                          dataKey="spend" 
+                                          stroke="hsl(var(--success))" 
+                                          strokeWidth={2}
+                                          name="Gasto"
+                                          dot={{ r: 2 }}
+                                        />
+                                      </RechartsLineChart>
+                                    </ResponsiveContainer>
+                                  ) : (
+                                    <p className="text-[11px] text-muted-foreground text-center py-6">
+                                      Dados diários não disponíveis.
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                );
+              })
             )}
-          </div>
-        );
-      })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

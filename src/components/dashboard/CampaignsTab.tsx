@@ -1261,13 +1261,15 @@ Responda SOMENTE com o JSON, sem markdown.`;
                   }
                 };
 
+                const isEditing = editingCampaignId === c.id;
+
                 return (
                   <React.Fragment key={c.id}>
                     <tr 
                       onClick={() => setExpandedId(expanded ? null : c.id)}
-                      className={`border-b border-[#1C2538] bg-[#0E1420] cursor-pointer transition-colors duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''} animate-fade-in opacity-0 [animation-fill-mode:forwards]`}
+                      className={`border-b border-[#1C2538] bg-[#0E1420] cursor-pointer transition-all duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''} ${isEditing ? 'opacity-60 cursor-wait border-l-2 border-l-primary animate-pulse pointer-events-none' : ''} animate-fade-in [animation-fill-mode:forwards]`}
                       style={{ height: 52, animationDelay: `${rowIndex * 30}ms` }}
-                      onMouseEnter={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(96,165,250,0.04)'; }}
+                      onMouseEnter={e => { if (!expanded && !isEditing) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(96,165,250,0.04)'; }}
                       onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = ''; }}
                     >
                       {/* Checkbox */}

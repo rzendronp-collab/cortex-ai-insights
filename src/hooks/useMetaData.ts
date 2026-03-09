@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
 import { useAlerts } from './useAlerts';
+import { logError } from '@/lib/errorLogger';
 
 export interface ProcessedCampaign {
   id: string;
@@ -542,6 +543,7 @@ export function useMetaData() {
       toast.success('Análise concluída!');
     } catch (err: any) {
       console.error('Analysis error:', err);
+      logError(err, 'useMetaData.analyze');
       const msg = err?.message || 'Erro ao analisar dados da Meta.';
       setError(msg);
 

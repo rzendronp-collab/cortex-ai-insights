@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardProvider, useDashboard } from '@/context/DashboardContext';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
@@ -20,6 +20,8 @@ function DashboardContent() {
   const { isTokenExpired, connectMeta } = useMetaConnection();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => { document.title = 'Dashboard — CortexAds AI'; }, []);
 
   const renderTab = () => {
     switch (activeTab) {

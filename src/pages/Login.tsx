@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Brain, Loader2 } from 'lucide-react';
@@ -13,6 +13,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => { document.title = 'Login — CortexAds AI'; }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

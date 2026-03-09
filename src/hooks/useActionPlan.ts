@@ -5,6 +5,7 @@ import { useProfile } from './useProfile';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logError } from '@/lib/errorLogger';
 
 export interface AccountContext {
   margin?: number;
@@ -261,6 +262,7 @@ Formato exato:
       return parsed;
     } catch (err: any) {
       console.error('generatePlan error:', err);
+      logError(err, 'useActionPlan.generatePlan');
       toast.error(err?.message || 'Erro ao gerar plano de ação.');
       return null;
     } finally {

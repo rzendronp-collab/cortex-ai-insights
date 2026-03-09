@@ -168,7 +168,7 @@ export default function OverviewTab() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         <KPICard label="ROAS" value={`${avgRoas.toFixed(1)}x`} subtitle="Retorno sobre investimento" delta={calcDelta(avgRoas, prevRoas)} valueClassName={getRoasColor(avgRoas, roasTarget)} isHero />

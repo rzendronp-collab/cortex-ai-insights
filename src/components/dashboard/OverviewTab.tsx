@@ -191,10 +191,10 @@ export default function OverviewTab() {
       {/* ─── Charts Row 1 ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* ROAS por Campanha */}
-        <div className="bg-bg-card border border-border-default rounded-xl p-5 animate-fade-up">
+        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
           <h3 className="text-xs font-semibold text-text-primary mb-4">ROAS por Campanha <span className="text-text-muted font-normal">(top 10)</span></h3>
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={roasCampaignData} layout="vertical">
+          <ResponsiveContainer width="100%" height={220}>
+            <BarChart data={roasCampaignData} layout="vertical" barSize={28}>
               <defs>
                 <linearGradient id="barGreen" x1="0" y1="0" x2="1" y2="0">
                   <stop offset="0%" stopColor={DATA_GREEN} stopOpacity={0.9} />
@@ -207,10 +207,10 @@ export default function OverviewTab() {
               </defs>
               <CartesianGrid strokeDasharray="4 4" stroke={CHART_GRID} horizontal={false} />
               <XAxis type="number" tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: CHART_AXIS }} width={90} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: CHART_AXIS }} width={85} axisLine={false} tickLine={false} />
               <Tooltip content={<RoasTooltip />} />
               <ReferenceLine x={roasTarget} stroke={MUTED} strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 9, fill: MUTED }} />
-              <Bar dataKey="roas" radius={[0, 6, 6, 0]} animationDuration={800}>
+              <Bar dataKey="roas" radius={[0, 6, 6, 0]} animationDuration={800} label={{ position: 'right', fontSize: 10, fill: '#F1F5F9', formatter: (v: number) => `${v}x` }}>
                 {roasCampaignData.map((entry, i) => (
                   <Cell key={i} fill={entry.roas >= roasTarget ? 'url(#barGreen)' : 'url(#barRed)'} />
                 ))}

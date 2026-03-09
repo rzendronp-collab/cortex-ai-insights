@@ -92,20 +92,21 @@ function formatYmd(date: Date) {
   return `${y}-${m}-${d}`;
 }
 
-function getMetaRanges(selectedPeriod: string, now = new Date()) {
-  const days = periodDaysMap[selectedPeriod] ?? 7;
-
+function getCurrentPeriodTimeRange(days: number, now = new Date()) {
   // Meta time_range uses day granularity; use local-day boundaries for predictable windows
-  const currentUntilDate = startOfLocalDay(now);
-  const currentSinceDate = addDays(currentUntilDate, -(days - 1));
+  const untilDate = startOfLocalDay(now);
+  const sinceDate = addDays(untilDate, -(days - 1));
+  return { since: formatYmd(sinceDate), until: formatYmd(untilDate) };
+}
+
+function getPreviousPeriodTimeRange(days: number, now = new Date()) {
+  const current = getCurrentPeriodTimeRange(days, now);
+  const currentSinceDate = new Date(current.since);
 
   const previousUntilDate = addDays(currentSinceDate, -1);
   const previousSinceDate = addDays(previousUntilDate, -(days - 1));
 
-  return {
-    current: { since: formatYmd(currentSinceDate), until: formatYmd(currentUntilDate) },
-    previous: { since: formatYmd(previousSinceDate), until: formatYmd(previousUntilDate) },
-  };
+  return { since: formatYmd(previousSinceDate), until: formatYmd(previousUntilDate) };
 }
 
 function extractPurchases(actions: any[]): number {

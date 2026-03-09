@@ -745,7 +745,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 );
               })
             )}

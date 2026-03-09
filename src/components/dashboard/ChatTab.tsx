@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from '@/hooks/useProfile';
 import ReactMarkdown from 'react-markdown';
+import { toast } from 'sonner';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -125,15 +126,27 @@ export default function ChatTab() {
       if (error) throw error;
 
       if (data?.error) {
+        const errorMsg = String(data.error);
+        if (errorMsg.includes('401') || errorMsg.includes('inválida') || errorMsg.includes('invalid')) {
+          toast.error('Claude API Key inválida — verifique em ⚙ Config');
+        } else if (errorMsg.includes('429') || errorMsg.includes('rate') || errorMsg.includes('limite')) {
+          toast.warning('Limite de uso Claude atingido — aguarde alguns minutos');
+        }
         setMessages(prev => [...prev, { role: 'assistant', content: `⚠️ ${data.error}` }]);
       } else {
         setMessages(prev => [...prev, { role: 'assistant', content: data.content }]);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Chat error:', err);
+      const errMsg = String(err?.message || '');
+      if (errMsg.includes('Failed to fetch') || errMsg.includes('NetworkError') || errMsg.includes('network')) {
+        toast.error('Erro de conexão — verifique sua internet');
+      } else {
+        toast.error('Claude API Key inválida — verifique em ⚙ Config');
+      }
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: '⚠️ Erro ao conectar com a IA. Verifique se sua API Key Claude está configurada em Config na sidebar.'
+        content: '⚠️ Erro ao conectar com a IA. Verifique se sua API Key Claude está configurada em ⚙ Config na sidebar.'
       }]);
     }
     setLoading(false);

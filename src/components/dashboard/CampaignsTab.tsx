@@ -317,10 +317,18 @@ export default function CampaignsTab() {
         const updatedCampaigns = (analysisData.campaigns || []).map(c =>
           c.id === campaignId ? { ...c, status: newStatus } : c
         );
-        setAnalysisForAccount(selectedAccountId, selectedPeriod, {
-          ...analysisData,
-          campaigns: updatedCampaigns,
-        });
+        const updatedData = { ...analysisData, campaigns: updatedCampaigns };
+        setAnalysisForAccount(selectedAccountId, selectedPeriod, updatedData);
+
+        // Also update Supabase analysis_cache so it persists across reloads
+        supabase
+          .from('analysis_cache')
+          .update({ data: updatedData as any, updated_at: new Date().toISOString() })
+          .eq('account_id', selectedAccountId)
+          .eq('period', selectedPeriod)
+          .then(({ error }) => {
+            if (error) console.warn('[TOGGLE] Failed to update analysis_cache:', error.message);
+          });
       }
 
       toast.success(newStatus === 'ACTIVE' ? 'Campanha ativada ✓' : 'Campanha pausada ✓');

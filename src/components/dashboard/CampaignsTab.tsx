@@ -802,6 +802,17 @@ Responda SOMENTE com o JSON, sem markdown.`;
                           {rec.label}
                         </span>
                       </td>
+                      {/* Notes */}
+                      <td className="px-3 text-center" onClick={e => e.stopPropagation()}>
+                        <NotePopover
+                          campaignId={c.id}
+                          accountId={selectedAccountId!}
+                          note={notes[c.id] || ''}
+                          isSaving={noteSaving.has(c.id)}
+                          onSave={saveNote}
+                          onDelete={deleteNote}
+                        />
+                      </td>
                       {/* Expand */}
                       <td className="px-3 text-center text-text-muted">
                         {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}

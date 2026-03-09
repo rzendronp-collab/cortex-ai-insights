@@ -371,6 +371,7 @@ export default function CampaignsTab() {
   const executeToggle = useCallback(async (campaignId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
     setTogglingIds(prev => new Set(prev).add(campaignId));
+    setEditingCampaignId(campaignId);
     try {
       await callMetaApi(campaignId, { status: newStatus, _method: 'POST' });
 
@@ -386,6 +387,14 @@ export default function CampaignsTab() {
       } catch { /* verification failed, use expected status */ }
 
       setLocalStatuses(prev => ({ ...prev, [campaignId]: confirmedStatus }));
+
+      // Feature 10: Flash + pop animation
+      setToggleFlash(prev => ({ ...prev, [campaignId]: confirmedStatus === 'ACTIVE' ? 'active' : 'paused' }));
+      setTogglePop(prev => new Set(prev).add(campaignId));
+      setTimeout(() => {
+        setToggleFlash(prev => { const n = { ...prev }; delete n[campaignId]; return n; });
+        setTogglePop(prev => { const n = new Set(prev); n.delete(campaignId); return n; });
+      }, 300);
 
       // Sync global analysis cache so status persists across tab switches
       if (analysisData && selectedAccountId) {
@@ -405,11 +414,12 @@ export default function CampaignsTab() {
           });
       }
 
-      toast.success(confirmedStatus === 'ACTIVE' ? 'Campanha ativada ✓' : 'Campanha pausada ✓');
+      toast.success(confirmedStatus === 'ACTIVE' ? '✅ Campanha ativada. A sincronizar dados em 2s...' : '✅ Campanha pausada. A sincronizar dados em 2s...');
     } catch (err: any) {
       toast.error(err?.message || 'Erro ao alterar status da campanha.');
     } finally {
       setTogglingIds(prev => { const n = new Set(prev); n.delete(campaignId); return n; });
+      setEditingCampaignId(null);
     }
   }, [callMetaApi, analysisData, selectedAccountId, selectedPeriod, setAnalysisForAccount]);
 

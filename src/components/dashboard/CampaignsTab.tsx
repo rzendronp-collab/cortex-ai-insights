@@ -377,7 +377,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     <tr 
                       key={c.id}
                       onClick={() => setExpandedId(expanded ? null : c.id)}
-                      className={`border-b border-border hover:bg-muted/30 cursor-pointer transition-colors ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-muted/10' : ''}`}
+                      className={`border-b border-border hover:bg-muted/30 cursor-pointer transition-colors ${!isActive ? 'bg-muted/20 opacity-60' : ''} ${expanded ? 'bg-muted/10' : ''}`}
                     >
                       <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
                         {isToggling ? (

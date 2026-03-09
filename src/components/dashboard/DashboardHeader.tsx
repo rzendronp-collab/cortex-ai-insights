@@ -148,7 +148,6 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
         {!isMobile && (
           <div className="flex items-center bg-bg-card border border-border-default rounded-[10px] p-[6px] gap-1">
             {periodSelector}
-            {periodSelector}
             {isCustomActive && dateRange && (
               <>
                 <div className="w-px h-5 bg-border-default" />

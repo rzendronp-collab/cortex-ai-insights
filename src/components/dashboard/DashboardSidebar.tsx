@@ -284,18 +284,18 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                           return (
                             <div
                               key={account.id}
-                              className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-bg-card-hover transition-colors cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
+                              className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-bg-card-hover transition-colors cursor-pointer w-full"
+                              onClick={() => {
                                 if (account.account_id) toggleActiveAccount(account.account_id);
                               }}
                             >
-                              <Checkbox
+                              <Switch
                                 checked={isChecked}
                                 onCheckedChange={() => {
                                   if (account.account_id) toggleActiveAccount(account.account_id);
                                 }}
-                                className="h-3.5 w-3.5"
+                                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                                className="h-4 w-7 flex-shrink-0"
                               />
                               <div className="flex-1 min-w-0">
                                 <p className="text-[11px] text-text-primary font-medium truncate">

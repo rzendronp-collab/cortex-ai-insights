@@ -118,19 +118,16 @@ export default function OverviewTab() {
     </div>
   ) : null;
 
-  // No active accounts and no selected account
-  if (activeAccountIds.length === 0 && !selectedAccountId) {
+  // No active accounts
+  if (activeAccountIds.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 text-center animate-fade-in">
-        <div className="text-[80px] leading-none mb-6 opacity-[0.15] select-none">📊</div>
-        <h3 className="text-lg font-semibold text-text-primary mb-2">Selecione contas na sidebar</h3>
-        <p className="text-sm text-text-muted mb-6 max-w-xs">
-          Ative as contas de anúncio na sidebar para ver o resumo consolidado
-        </p>
+      <div className="flex flex-col items-center justify-center h-full py-24 gap-3 text-text-muted animate-fade-in">
+        <RefreshCw className="h-12 w-12 opacity-20" />
+        <p className="text-sm">Ative pelo menos uma conta na sidebar para continuar.</p>
         {!isConnected && (
           <Button
             onClick={() => connectMeta()}
-            className="h-11 px-8 text-sm bg-gradient-to-r from-[hsl(var(--data-blue))] to-[#2563EB] text-white hover:opacity-90 rounded-lg gap-2 font-semibold"
+            className="h-11 px-8 text-sm bg-gradient-to-r from-[hsl(var(--data-blue))] to-[#2563EB] text-white hover:opacity-90 rounded-lg gap-2 font-semibold mt-4"
           >
             Conectar Meta
           </Button>

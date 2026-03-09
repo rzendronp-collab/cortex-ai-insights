@@ -127,27 +127,29 @@ export default function DashboardHeader() {
 
             {accountDropdownOpen && (
               <div className="absolute top-full right-0 mt-2 w-[280px] bg-bg-card border border-border-default rounded-lg shadow-xl overflow-hidden z-50">
-                <div className="max-h-[280px] overflow-y-auto p-1.5">
-                  {Object.entries(accountsByBm).map(([bmName, accounts]) => (
+                <div className="max-h-[280px] overflow-y-auto py-1">
+                  {Object.entries(accountsByBm).map(([bmName, accounts], groupIdx) => (
                     <div key={bmName}>
-                      <p className="text-[9px] text-text-muted uppercase tracking-[1px] font-semibold px-3 py-1.5 mt-1">{bmName}</p>
+                      {groupIdx > 0 && <div className="mx-3 my-1 h-px bg-border-subtle" />}
+                      <p className="text-[10px] text-text-muted uppercase tracking-wider font-semibold px-3 pt-2 pb-1">{bmName}</p>
                       {accounts.map(account => {
                         const isActive = selectedAccountId === account.account_id;
                         return (
                           <button
                             key={account.id}
                             onClick={() => handleSelectAccount(account)}
-                            className={`flex items-center gap-2 w-full px-3 py-2 rounded-md text-left transition-colors ${
+                            className={`flex flex-col w-full px-3 py-2.5 text-left transition-colors ${
                               isActive
-                                ? 'bg-[hsl(217_40%_18%)] text-data-blue'
-                                : 'text-text-primary hover:bg-bg-card-hover'
+                                ? 'bg-[hsl(217_40%_18%)] border-l-2 border-l-data-blue'
+                                : 'hover:bg-bg-card-hover border-l-2 border-l-transparent'
                             }`}
                           >
-                            <Circle className={`w-1.5 h-1.5 flex-shrink-0 ${account.is_active ? 'fill-data-green text-data-green' : 'fill-text-muted text-text-muted'}`} />
-                            <span className="text-[12px] truncate flex-1 font-medium">
+                            <span className={`text-[13px] font-semibold truncate ${isActive ? 'text-data-blue' : 'text-text-primary'}`}>
                               {account.account_name || `act_${account.account_id}`}
                             </span>
-                            {isActive && <span className="text-[9px] text-data-blue font-semibold">✓</span>}
+                            <span className="text-[11px] text-text-muted truncate">
+                              {account.business_name || 'Conta Pessoal'}
+                            </span>
                           </button>
                         );
                       })}

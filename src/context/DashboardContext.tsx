@@ -97,6 +97,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       selectedAccountId, setSelectedAccountId,
       selectedAccountName, setSelectedAccountName,
       selectedPeriod, setSelectedPeriod,
+      dateRange, setDateRange,
       activeTab, setActiveTab,
       analysisData, isFromCache, cacheTimestamp,
       setAnalysisForAccount, clearCurrentAnalysis,

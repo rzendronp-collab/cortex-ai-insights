@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useMetaConnection } from './useMetaConnection';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from './useProfile';

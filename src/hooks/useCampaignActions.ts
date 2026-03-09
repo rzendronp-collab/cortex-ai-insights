@@ -133,6 +133,7 @@ export function useCampaignActions() {
     setLoading(true);
     try {
       await callMetaApi(campaignId, { name: newName, _method: 'POST' });
+      await invalidateCache();
       syncCacheStatus(campaignId, { name: newName });
       toast.success('Nome atualizado ✓');
       return true;

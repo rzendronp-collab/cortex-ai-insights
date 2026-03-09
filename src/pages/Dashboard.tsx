@@ -10,9 +10,12 @@ import ChatTab from '@/components/dashboard/ChatTab';
 import ReportTab from '@/components/dashboard/ReportTab';
 import ActionPlanTab from '@/components/dashboard/ActionPlanTab';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
+import { useMetaConnection } from '@/hooks/useMetaConnection';
+import { AlertTriangle } from 'lucide-react';
 
 function DashboardContent() {
   const { activeTab } = useDashboard();
+  const { isTokenExpired, connectMeta } = useMetaConnection();
 
   const renderTab = () => {
     switch (activeTab) {

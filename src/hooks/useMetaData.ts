@@ -188,6 +188,7 @@ export function useMetaData() {
     const { since, until } = prevTimeRange;
     const currentTimeRange = JSON.stringify(currentRange);
     const previousTimeRange = JSON.stringify(prevTimeRange);
+    const acctPath = `act_${selectedAccountId}`;
 
     try {
       // Check Supabase cache first (skip in DEV so fixes can be validated immediately)

@@ -57,6 +57,32 @@ export interface AgeData {
   percentage: number;
 }
 
+export interface DemographicRow {
+  age: string;
+  gender: string;
+  spend: number;
+  purchases: number;
+  revenue: number;
+  roas: number;
+}
+
+export interface DemoGenderAgg {
+  name: string;
+  spend: number;
+  purchases: number;
+  revenue: number;
+  roas: number;
+  fill: string;
+}
+
+export interface DemoAgeAgg {
+  age: string;
+  spend: number;
+  purchases: number;
+  revenue: number;
+  roas: number;
+}
+
 export interface AnalysisData {
   campaigns: ProcessedCampaign[];
   campaignsPrev: ProcessedCampaign[];
@@ -65,6 +91,9 @@ export interface AnalysisData {
   platformData: PlatformData[];
   genderData: GenderData[];
   ageData: AgeData[];
+  demographics?: DemographicRow[];
+  demoByGender?: DemoGenderAgg[];
+  demoByAge?: DemoAgeAgg[];
   budgetByCampaignId: Record<string, number>;
   lastUpdated: string;
 }

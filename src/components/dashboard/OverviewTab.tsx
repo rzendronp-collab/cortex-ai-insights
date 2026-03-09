@@ -122,7 +122,7 @@ export default function OverviewTab() {
 
   const top10Campaigns = [...activeCampaigns].sort((a, b) => b.spend - a.spend).slice(0, 10);
   const roasCampaignData = top10Campaigns.map(c => ({
-    name: c.name.length > 18 ? c.name.slice(0, 18) + '...' : c.name,
+    name: c.name.length > 16 ? c.name.slice(0, 16) + '…' : c.name,
     fullName: c.name,
     roas: parseFloat(c.roas.toFixed(1)),
     fill: c.roas >= roasTarget ? DATA_GREEN : DATA_RED,

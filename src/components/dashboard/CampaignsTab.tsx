@@ -45,21 +45,6 @@ function Sparkline({ data, color = 'hsl(var(--primary))' }: { data: number[]; co
   );
 }
 
-function CompactHourlyBar({ hour, value, maxValue, isTop, isBottom }: { hour: string; value: number; maxValue: number; isTop: boolean; isBottom: boolean }) {
-  const pct = maxValue > 0 ? (value / maxValue) * 100 : 0;
-  const barColor = isTop ? 'bg-success' : isBottom ? 'bg-destructive/50' : 'bg-muted-foreground/30';
-  return (
-    <div className="flex items-center gap-1.5 h-4">
-      <span className="text-[9px] text-muted-foreground w-5 text-right font-mono">{hour}</span>
-      <div className="flex-1 h-2.5 bg-muted/50 rounded-sm overflow-hidden relative">
-        <div className={`h-full rounded-sm transition-all ${barColor}`} style={{ width: `${Math.max(pct, 2)}%` }} />
-      </div>
-      <span className="text-[9px] text-muted-foreground w-7 text-right font-mono">{value > 0 ? value.toFixed(0) : '-'}</span>
-      {isTop && <Flame className="w-2.5 h-2.5 text-success" />}
-      {isBottom && <Snowflake className="w-2.5 h-2.5 text-destructive/70" />}
-    </div>
-  );
-}
 
 type SortColumn = 'status' | 'name' | 'spend' | 'revenue' | 'profit' | 'roas' | 'purchases' | 'cpa' | 'ctr' | 'cpm' | 'impressions' | 'clicks';
 

@@ -39,6 +39,7 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
   const { profile, updateProfile } = useProfile();
   const { adAccounts, isConnected, isTokenExpired, connectMeta, disconnectMeta } = useMetaConnection();
   const { activeTab: currentTab, setActiveTab, activeAccountIds, toggleActiveAccount, setActiveAccountIds, analysisCache, analyzeRef, setSelectedAccountId, setSelectedAccountName, setSelectedAccountCurrency } = useDashboard();
+  const { analyze } = useMetaData();
   const [configOpen, setConfigOpen] = useState(false);
   const [openBMs, setOpenBMs] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);

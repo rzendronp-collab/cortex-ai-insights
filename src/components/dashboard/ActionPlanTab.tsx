@@ -190,6 +190,10 @@ export default function ActionPlanTab() {
 
   const handleApply = () => {
     if (selectedActions.length === 0) return;
+    const confirmed = window.confirm(
+      `Aplicar ${selectedActions.length} ação(ões) diretamente no Meta Ads?\n\nEsta operação é irreversível.`
+    );
+    if (!confirmed) return;
     applyAllActions(selectedActions);
   };
 

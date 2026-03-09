@@ -179,26 +179,26 @@ export function useMetaData() {
     console.log('[DELTA DEBUG] prevTimeRange:', { since, until, selectedPeriod });
 
     try {
-      // Check Supabase cache first
-      if (user) {
-        const { data: cached } = await supabase
-          .from('analysis_cache')
-          .select('data, updated_at')
-          .eq('user_id', user.id)
-          .eq('account_id', selectedAccountId)
-          .eq('period', selectedPeriod)
-          .maybeSingle();
-
-        if (cached?.data && cached.updated_at) {
-          const cacheAge = Date.now() - new Date(cached.updated_at).getTime();
-          if (cacheAge < 15 * 60 * 1000) {
-            setAnalysisForAccount(selectedAccountId, selectedPeriod, cached.data as unknown as AnalysisData);
-            setLoading(false);
-            toast.success('Dados carregados do cache.');
-            return;
-          }
-        }
-      }
+      // Cache temporarily disabled to force fresh API calls
+      // if (user) {
+      //   const { data: cached } = await supabase
+      //     .from('analysis_cache')
+      //     .select('data, updated_at')
+      //     .eq('user_id', user.id)
+      //     .eq('account_id', selectedAccountId)
+      //     .eq('period', selectedPeriod)
+      //     .maybeSingle();
+      //
+      //   if (cached?.data && cached.updated_at) {
+      //     const cacheAge = Date.now() - new Date(cached.updated_at).getTime();
+      //     if (cacheAge < 15 * 60 * 1000) {
+      //       setAnalysisForAccount(selectedAccountId, selectedPeriod, cached.data as unknown as AnalysisData);
+      //       setLoading(false);
+      //       toast.success('Dados carregados do cache.');
+      //       return;
+      //     }
+      //   }
+      // }
 
       const [campaignsRes, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes] = await Promise.all([
         callMetaApi(`${acctPath}/campaigns`, {

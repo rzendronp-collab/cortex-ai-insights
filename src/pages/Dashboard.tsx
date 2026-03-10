@@ -11,6 +11,7 @@ import ConsolidatedTab from '@/components/dashboard/ConsolidatedTab';
 import ChatTab from '@/components/dashboard/ChatTab';
 import ReportTab from '@/components/dashboard/ReportTab';
 import ActionPlanTab from '@/components/dashboard/ActionPlanTab';
+import CortexTab from '@/components/dashboard/CortexTab';
 import OnboardingModal from '@/components/onboarding/OnboardingModal';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -36,7 +37,7 @@ function DashboardContent() {
       case 'consolidated': return <ConsolidatedTab />;
       case 'chat': return <ChatTab />;
       case 'report': return <ReportTab />;
-      case 'action-plan': return <ActionPlanTab />;
+      case 'action-plan': return <CortexTab />;
       default: return <OverviewTab />;
     }
   };

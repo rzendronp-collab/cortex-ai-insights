@@ -41,7 +41,7 @@ function DashboardContent() {
   };
 
   return (
-    <div className="flex flex-row h-screen overflow-hidden bg-background">
+    <div className="flex h-screen bg-background overflow-hidden">
       <OnboardingModal />
 
       {/* Mobile sidebar overlay */}
@@ -65,7 +65,7 @@ function DashboardContent() {
         <DashboardSidebar />
       )}
 
-      <div className={`flex-1 overflow-y-auto h-screen ${isMobile ? '' : ''}`}>
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <DashboardHeader onOpenSidebar={() => setSidebarOpen(true)} />
         {isTokenExpired && (
           <div className="mx-4 md:mx-6 mt-4 bg-warning/10 border border-warning/30 rounded-lg px-4 py-3 flex items-center gap-3">
@@ -74,7 +74,7 @@ function DashboardContent() {
             <button onClick={() => connectMeta()} className="text-xs text-warning underline font-semibold ml-auto">Reconectar →</button>
           </div>
         )}
-        <main className="p-4 md:p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {renderTab()}
         </main>
       </div>

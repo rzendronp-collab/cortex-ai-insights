@@ -13,25 +13,25 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // ─── Chart theme constants ───
-const CHART_GRID = '#1A2235';
-const CHART_AXIS = '#475569';
-const TOOLTIP_BG = '#1E2D45';
-const TOOLTIP_BORDER = '#4F8EF7';
+const CHART_GRID = '#1F2937';
+const CHART_AXIS = '#6B7280';
+const TOOLTIP_BG = '#111827';
+const TOOLTIP_BORDER = '#6366F1';
 
-const DATA_BLUE = '#60A5FA';
-const DATA_GREEN = '#34D399';
-const DATA_RED = '#F87171';
-const DATA_YELLOW = '#FBBF24';
-const DATA_PURPLE = '#A78BFA';
-const MUTED = '#475569';
+const DATA_BLUE = '#6366F1';
+const DATA_GREEN = '#10B981';
+const DATA_RED = '#EF4444';
+const DATA_YELLOW = '#F59E0B';
+const DATA_PURPLE = '#8B5CF6';
+const MUTED = '#6B7280';
 
 const chartTooltipStyle = {
   background: TOOLTIP_BG,
   border: `1px solid ${TOOLTIP_BORDER}`,
   borderRadius: 8,
   fontSize: 11,
-  color: '#F1F5F9',
-  fontFamily: "'Plus Jakarta Sans', sans-serif",
+  color: '#F9FAFB',
+  fontFamily: "'Inter', sans-serif",
   padding: '10px 12px',
 };
 
@@ -310,7 +310,7 @@ export default function OverviewTab() {
 
       {/* ─── Accounts Table (multi-account) ─── */}
       {accountSummaries.length > 0 && (
-        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
+        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
           <h3 className="text-xs font-semibold text-text-primary mb-4">
             📊 Contas Ativas
             <span className="text-text-muted font-normal ml-2">({accountSummaries.filter(a => a.hasData).length} com dados)</span>
@@ -318,7 +318,7 @@ export default function OverviewTab() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[#2A3850]">
+                <tr className="border-b border-[#1F2937]">
                   <th className="text-left py-2 text-text-muted font-semibold">Conta</th>
                   {[
                     { key: 'roas', label: 'ROAS' },
@@ -353,7 +353,7 @@ export default function OverviewTab() {
                     <tr
                       key={a.id}
                       onClick={() => handleAccountClick(a.id)}
-                      className={`border-b border-[#2A3850]/50 cursor-pointer transition-colors ${bgClass}`}
+                      className={`border-b border-[#1F2937]/50 cursor-pointer transition-colors ${bgClass}`}
                     >
                       <td className="py-2.5 text-text-primary font-medium truncate max-w-[200px]">{a.name}</td>
                       <td className={`py-2.5 text-right font-bold ${a.hasData ? getRoasColor(a.roas, roasTarget) : 'text-text-muted'}`}>
@@ -384,7 +384,7 @@ export default function OverviewTab() {
       {/* ─── Charts Row 1 ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* ROAS por Campanha */}
-        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '200ms' }}>
+        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '200ms' }}>
           <h3 className="text-xs font-semibold text-text-primary mb-4">ROAS por Campanha <span className="text-text-muted font-normal">(top 10)</span></h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={roasCampaignData} layout="vertical" barSize={28}>
@@ -403,7 +403,7 @@ export default function OverviewTab() {
               <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: CHART_AXIS }} width={85} axisLine={false} tickLine={false} />
               <Tooltip content={<RoasTooltip />} />
               <ReferenceLine x={roasTarget} stroke={MUTED} strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 9, fill: MUTED }} />
-              <Bar dataKey="roas" radius={[0, 6, 6, 0]} animationDuration={800} label={{ position: 'right', fontSize: 10, fill: '#F1F5F9', formatter: (v: number) => `${v}x` }}>
+              <Bar dataKey="roas" radius={[0, 6, 6, 0]} animationDuration={800} label={{ position: 'right', fontSize: 10, fill: '#F9FAFB', formatter: (v: number) => `${v}x` }}>
                 {roasCampaignData.map((entry, i) => (
                   <Cell key={i} fill={entry.roas >= roasTarget ? 'url(#barGreen)' : 'url(#barRed)'} />
                 ))}
@@ -413,7 +413,7 @@ export default function OverviewTab() {
         </div>
 
         {/* Funil de Conversão */}
-        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up" style={{ minHeight: 180 }}>
+        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up" style={{ minHeight: 180 }}>
           <h3 className="text-xs font-semibold text-text-primary mb-3">Funil de Conversão</h3>
           <div className="space-y-3">
             {funnelData.map((item, i) => {
@@ -443,7 +443,7 @@ export default function OverviewTab() {
         </div>
 
         {/* Origem tráfego */}
-        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
+        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
           <h3 className="text-xs font-semibold text-text-primary mb-4">Origem do Tráfego</h3>
           <div className="space-y-3 mt-2">
             {platformData.map((p, i) => {
@@ -465,7 +465,7 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Gasto vs Receita (Area Chart) ─── */}
-      <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
+      <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
         <h3 className="text-xs font-semibold text-text-primary mb-4">Gasto vs Receita</h3>
         <ResponsiveContainer width="100%" height={180}>
           <AreaChart data={dailyData}>
@@ -483,8 +483,8 @@ export default function OverviewTab() {
             <XAxis dataKey="date" tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} />
             <YAxis domain={[0, 'auto']} tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v < 1 ? v.toFixed(2) : String(Math.round(v))} />
             <Tooltip contentStyle={chartTooltipStyle} />
-            <Area type="monotone" dataKey="spend" stroke={DATA_BLUE} strokeWidth={2} fill="url(#gradSpendArea)" dot={{ r: 3, fill: DATA_BLUE, strokeWidth: 2, stroke: '#161D2E' }} />
-            <Area type="monotone" dataKey="revenue" stroke={DATA_GREEN} strokeWidth={2} fill="url(#gradRevenueArea)" dot={{ r: 3, fill: DATA_GREEN, strokeWidth: 2, stroke: '#161D2E' }} />
+            <Area type="monotone" dataKey="spend" stroke={DATA_BLUE} strokeWidth={2} fill="url(#gradSpendArea)" dot={{ r: 3, fill: DATA_BLUE, strokeWidth: 2, stroke: '#111827' }} />
+            <Area type="monotone" dataKey="revenue" stroke={DATA_GREEN} strokeWidth={2} fill="url(#gradRevenueArea)" dot={{ r: 3, fill: DATA_GREEN, strokeWidth: 2, stroke: '#111827' }} />
           </AreaChart>
         </ResponsiveContainer>
         <div className="flex justify-center gap-6 mt-2">
@@ -494,7 +494,7 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Daily Evolution ─── */}
-      <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up" style={{ minHeight: 320 }}>
+      <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up" style={{ minHeight: 320 }}>
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h3 className="text-xs font-semibold text-text-primary">Evolução Diária</h3>
           <div className="flex gap-3 flex-wrap">
@@ -542,8 +542,8 @@ export default function OverviewTab() {
                   yAxisId={cfg.yAxisId}
                   stroke={cfg.color}
                   strokeWidth={2}
-                  dot={{ r: 4, fill: cfg.color, strokeWidth: 2, stroke: '#161D2E' }}
-                  activeDot={{ r: 6, fill: cfg.color, strokeWidth: 2, stroke: '#161D2E' }}
+                  dot={{ r: 4, fill: cfg.color, strokeWidth: 2, stroke: '#111827' }}
+                  activeDot={{ r: 6, fill: cfg.color, strokeWidth: 2, stroke: '#111827' }}
                 />
               );
             })}
@@ -552,7 +552,7 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Hourly ─── */}
-      <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
+      <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
         <h3 className="text-xs font-semibold text-text-primary mb-4">Desempenho por Hora</h3>
         <HourlyBarChart data={hourlyData} currency={currency} />
       </div>
@@ -562,17 +562,17 @@ export default function OverviewTab() {
         <h3 className="text-sm font-semibold text-text-primary mb-3">👥 Demográficos</h3>
         {demoByGender.length === 0 && demoByAge.length === 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
+            <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
               <p className="text-xs text-muted-foreground text-center">Dados demográficos não disponíveis para esta conta</p>
             </div>
-            <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
+            <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
               <p className="text-xs text-muted-foreground text-center">Dados demográficos não disponíveis para esta conta</p>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* CARD 1 — Por Gênero */}
-            <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
+            <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
               <h4 className="text-xs font-semibold text-text-primary mb-4">Por Gênero</h4>
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0" style={{ width: 140, height: 140 }}>
@@ -602,7 +602,7 @@ export default function OverviewTab() {
                 </div>
               </div>
               {/* Gender table */}
-              <div className="mt-4 border-t border-[#2A3850] pt-3">
+              <div className="mt-4 border-t border-[#1F2937] pt-3">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-[10px] text-text-muted uppercase">
@@ -614,7 +614,7 @@ export default function OverviewTab() {
                   </thead>
                   <tbody>
                     {demoByGender.map(g => (
-                      <tr key={g.name} className="border-t border-[#2A3850]/50">
+                      <tr key={g.name} className="border-t border-[#1F2937]/50">
                         <td className="py-1.5 text-text-primary font-medium flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: g.fill }} />
                           {g.name}
@@ -634,13 +634,13 @@ export default function OverviewTab() {
             </div>
 
             {/* CARD 2 — Por Faixa Etária */}
-            <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
+            <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
               <h4 className="text-xs font-semibold text-text-primary mb-4">Por Faixa Etária</h4>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={demoByAge} layout="vertical" margin={{ top: 0, right: 5, left: 5, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} horizontal={false} />
                   <XAxis type="number" tick={{ fontSize: 9, fill: CHART_AXIS }} tickFormatter={(v) => formatCurrency(v, currency)} />
-                  <YAxis type="category" dataKey="age" tick={{ fontSize: 10, fill: '#94A3B8' }} width={45} />
+                  <YAxis type="category" dataKey="age" tick={{ fontSize: 10, fill: '#9CA3AF' }} width={45} />
                   <Tooltip
                     contentStyle={chartTooltipStyle}
                     formatter={(value: number, name: string) => [formatCurrency(value, currency), 'Gasto']}
@@ -674,7 +674,7 @@ export default function OverviewTab() {
 
       {/* ─── Gasto vs Receita Pie ─── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
+        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
           <h3 className="text-xs font-semibold text-text-primary mb-4">Gasto vs Receita</h3>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
@@ -693,7 +693,7 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Action Plan Summary (top 3) ─── */}
-      <div className="bg-[#161D2E] border border-[#2A3850] rounded-xl p-5 animate-fade-up">
+      <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-xs font-semibold text-text-primary">🎯 Plano de Ação</h3>
           <button onClick={() => setActiveTab('action-plan')} className="text-[11px] text-data-blue hover:underline cursor-pointer font-medium">
@@ -730,12 +730,12 @@ function OverviewSkeleton() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="bg-[#1C2538] border border-[#2A3850] rounded-xl py-5 px-6 animate-pulse"
+            className="bg-[#111827] border border-[#1F2937] rounded-xl py-5 px-6 animate-pulse"
             style={{ animationDelay: `${i * 80}ms`, minHeight: 100 }}
           >
-            <div className="h-2.5 w-16 bg-[#2A3850] rounded mb-3" />
-            <div className="h-7 w-24 bg-[#2A3850] rounded mb-2" />
-            <div className="h-2 w-20 bg-[#2A3850] rounded" />
+            <div className="h-2.5 w-16 bg-[#1F2937] rounded mb-3" />
+            <div className="h-7 w-24 bg-[#1F2937] rounded mb-2" />
+            <div className="h-2 w-20 bg-[#1F2937] rounded" />
           </div>
         ))}
       </div>
@@ -744,15 +744,15 @@ function OverviewSkeleton() {
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="bg-[#1C2538] border border-[#2A3850] rounded-xl p-5 animate-pulse"
+            className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-pulse"
             style={{ animationDelay: `${(i + 6) * 80}ms`, minHeight: 260 }}
           >
-            <div className="h-3 w-32 bg-[#2A3850] rounded mb-6" />
+            <div className="h-3 w-32 bg-[#1F2937] rounded mb-6" />
             <div className="space-y-3">
               {Array.from({ length: 5 }).map((_, j) => (
                 <div key={j} className="flex items-center gap-3">
-                  <div className="h-3 bg-[#2A3850] rounded flex-1" style={{ maxWidth: `${60 - j * 8}%` }} />
-                  <div className="h-3 w-8 bg-[#2A3850] rounded" />
+                  <div className="h-3 bg-[#1F2937] rounded flex-1" style={{ maxWidth: `${60 - j * 8}%` }} />
+                  <div className="h-3 w-8 bg-[#1F2937] rounded" />
                 </div>
               ))}
             </div>
@@ -760,13 +760,13 @@ function OverviewSkeleton() {
         ))}
       </div>
 
-      <div className="bg-[#1C2538] border border-[#2A3850] rounded-xl p-5 animate-pulse" style={{ minHeight: 240 }}>
-        <div className="h-3 w-28 bg-[#2A3850] rounded mb-6" />
+      <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-pulse" style={{ minHeight: 240 }}>
+        <div className="h-3 w-28 bg-[#1F2937] rounded mb-6" />
         <div className="flex items-end gap-2 h-[180px] pb-4">
           {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
-              className="flex-1 bg-[#2A3850] rounded-t"
+              className="flex-1 bg-[#1F2937] rounded-t"
               style={{ height: `${30 + Math.sin(i * 0.8) * 40 + 30}%` }}
             />
           ))}

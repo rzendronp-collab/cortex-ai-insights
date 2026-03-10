@@ -250,11 +250,16 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                             className="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-bg-card-hover cursor-pointer select-none"
                             onClick={() => {
                               if (account.account_id) {
-                                console.log('[SIDEBAR] conta clicada:', account.account_id, account.account_name);
-                                setSelectedAccountId(account.account_id);
-                                setSelectedAccountName(account.account_name || account.account_id);
-                                setSelectedAccountCurrency(account.currency || null);
-                                setTimeout(() => analyzeRef.current?.(account.account_id), 200);
+                                const wasActive = activeAccountIds.includes(account.account_id);
+                                // Toggle the account in activeAccountIds
+                                toggleActiveAccount(account.account_id);
+                                // Always select and analyze when toggling ON
+                                if (!wasActive) {
+                                  setSelectedAccountId(account.account_id);
+                                  setSelectedAccountName(account.account_name || account.account_id);
+                                  setSelectedAccountCurrency(account.currency || null);
+                                  setTimeout(() => analyzeRef.current?.(account.account_id), 300);
+                                }
                               }
                             }}
                           >

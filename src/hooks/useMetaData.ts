@@ -240,7 +240,6 @@ export function useMetaData() {
   }, [callMetaApi]);
 
   const analyze = useCallback(async (overrideAccountId?: string) => {
-    console.log('[ANALYZE] chamado com accountId:', overrideAccountId, '| selectedAccountId:', selectedAccountId, '| isConnected:', isConnected, '| isTokenExpired:', isTokenExpired);
     const accountId = overrideAccountId || selectedAccountId;
     if (!accountId) {
       // No toast — multi-account flow handles this via activeAccountIds
@@ -274,7 +273,6 @@ export function useMetaData() {
       const timeRangeParam = isCustom ? JSON.stringify({ since: dateRange.from, until: dateRange.to }) : undefined;
 
       if (isCustom) {
-        console.log('[META] Custom date range:', dateRange.from, '->', dateRange.to, 'time_range:', timeRangeParam);
       }
 
       // Helper to build params with the right date filter
@@ -613,7 +611,7 @@ export function useMetaData() {
     if (!minutes || isNaN(minutes)) return;
 
     autoRefreshInterval.current = setInterval(() => {
-      analyze();
+      if (!loading) analyze();
     }, minutes * 60 * 1000);
 
     return () => {

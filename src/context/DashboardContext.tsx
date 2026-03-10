@@ -126,7 +126,6 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   }, [activeAccountIds, analysisCache, selectedPeriod, dateRange]);
 
   const setAnalysisForAccount = useCallback((accountId: string, period: string, data: AnalysisData) => {
-    console.log('[CACHE] salvando para:', accountId, period);
     const key = `${accountId}__${period}`;
     setAnalysisCache(prev => ({
       ...prev,

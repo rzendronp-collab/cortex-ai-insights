@@ -66,9 +66,7 @@ export function useCampaignActions() {
     const newStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
     setLoading(true);
     try {
-      console.log(`[TOGGLE] Sending POST to ${campaignId}: status=${newStatus}`);
       const result = await callMetaApi(campaignId, { status: newStatus, _method: 'POST' });
-      console.log(`[TOGGLE] Response:`, result);
 
       // Feature 5: Verify real status after 1.5s
       await new Promise(r => setTimeout(r, 1500));
@@ -129,8 +127,6 @@ export function useCampaignActions() {
     try {
       const budgetCents = String(Math.round(newDailyBudget * 100));
       const budgetInfo = await detectBudgetType(campaignId);
-      console.log(`[BUDGET] Detected ${budgetInfo.isCBO ? 'CBO' : 'ABO'} for campaign ${campaignId}, target: ${budgetInfo.targetId}`);
-
       await callMetaApi(budgetInfo.targetId, { daily_budget: budgetCents, _method: 'POST' });
 
       await invalidateCache();

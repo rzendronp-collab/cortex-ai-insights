@@ -118,8 +118,6 @@ export default function OverviewTab() {
     </div>
   ) : null;
 
-  console.log('[OVERVIEW] selectedAccountId:', selectedAccountId, '| effectiveData:', !!effectiveData, '| analysisData:', !!analysisData, '| loading:', loading);
-
   // No account selected
   if (!selectedAccountId) {
     return (
@@ -131,7 +129,7 @@ export default function OverviewTab() {
   }
 
   // Account selected but loading/no data
-  if (selectedAccountId && !analysisData) {
+  if (selectedAccountId && !effectiveData) {
     if (loading) {
       return <OverviewSkeleton />;
     }

@@ -16,6 +16,14 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useNotifications } from '@/hooks/useNotifications';
 import { AlertTriangle, Menu, X } from 'lucide-react';
 
+export default function Dashboard() {
+  return (
+    <DashboardProvider>
+      <DashboardContent />
+    </DashboardProvider>
+  );
+}
+
 function DashboardContent() {
   const { activeTab } = useDashboard();
   const { isTokenExpired, connectMeta } = useMetaConnection();
@@ -79,13 +87,5 @@ function DashboardContent() {
         </main>
       </div>
     </div>
-  );
-}
-
-export default function Dashboard() {
-  return (
-    <DashboardProvider>
-      <DashboardContent />
-    </DashboardProvider>
   );
 }

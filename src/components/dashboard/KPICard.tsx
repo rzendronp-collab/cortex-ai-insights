@@ -10,42 +10,31 @@ interface KPICardProps {
 }
 
 export default function KPICard({ label, value, subtitle, delta, valueClassName, isHero }: KPICardProps) {
-  // Determine hero color based on valueClassName
-  const isGreen = valueClassName?.includes('green') || valueClassName?.includes('success');
-  const isRed = valueClassName?.includes('red') || valueClassName?.includes('destructive');
-
-  const heroAccent = isRed
-    ? { border: 'border-data-red/30', glow: 'shadow-[0_0_40px_hsl(var(--data-red)/0.1)]', gradFrom: 'from-data-red/[0.06]' }
-    : isGreen
-      ? { border: 'border-data-green/30', glow: 'shadow-[0_0_40px_hsl(var(--data-green)/0.1)]', gradFrom: 'from-data-green/[0.06]' }
-      : { border: 'border-data-blue/30', glow: 'shadow-[0_0_40px_hsl(var(--data-blue)/0.1)]', gradFrom: 'from-data-blue/[0.06]' };
-
   const resolvedValueClass = valueClassName || 'text-text-primary';
 
   return (
-    <div className={`rounded-xl py-5 px-6 transition-all duration-200 animate-fade-up group cursor-default ${
+    <div className={`relative rounded-xl px-5 py-4 transition-all duration-150 group cursor-default ${
       isHero
-        ? `bg-gradient-to-br ${heroAccent.gradFrom} to-[#161D2E] border ${heroAccent.border} ${heroAccent.glow} shadow-kpi-hero`
-        : 'bg-[#161D2E] border border-[#2A3850] hover:border-border-focus hover:-translate-y-0.5 hover:shadow-card-hover'
+        ? 'bg-gradient-to-br from-[#6366F1]/[0.08] to-[#111827] border border-[#6366F1]/20'
+        : 'bg-[#111827] border border-[#1F2937] hover:border-[#374151] hover:shadow-card-hover'
     }`}>
-      <div className="flex items-center justify-between mb-1.5">
-        <p className="text-[10px] uppercase tracking-wider text-text-muted font-medium">{label}</p>
-        {delta !== undefined && (
-          <div className={`flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
-            delta >= 0
-              ? 'text-data-green bg-data-green/10'
-              : 'text-data-red bg-data-red/10'
-          }`}>
-            {delta >= 0 ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />}
-            {Math.abs(delta)}%
-          </div>
-        )}
-      </div>
-      <p className={`${isHero ? 'text-[36px]' : 'text-xl'} font-extrabold ${resolvedValueClass} leading-tight`}
-         style={{ letterSpacing: '-0.5px' }}>
+      {/* Delta badge - top right */}
+      {delta !== undefined && (
+        <div className={`absolute top-3 right-3 flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
+          delta >= 0
+            ? 'text-[#10B981] bg-[#10B981]/10'
+            : 'text-[#EF4444] bg-[#EF4444]/10'
+        }`}>
+          {delta >= 0 ? <ArrowUp className="w-2.5 h-2.5" /> : <ArrowDown className="w-2.5 h-2.5" />}
+          {Math.abs(delta)}%
+        </div>
+      )}
+
+      <p className="text-[10px] uppercase tracking-[0.08em] text-[#9CA3AF] font-medium mb-2">{label}</p>
+      <p className={`${isHero ? 'text-[32px]' : 'text-xl'} font-bold ${resolvedValueClass} leading-none tracking-tight`}>
         {value}
       </p>
-      {subtitle && <p className="text-[11px] text-text-muted mt-1">{subtitle}</p>}
+      {subtitle && <p className="text-[10px] text-[#6B7280] mt-1.5">{subtitle}</p>}
     </div>
   );
 }

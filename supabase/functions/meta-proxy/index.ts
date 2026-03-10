@@ -94,8 +94,21 @@ Deno.serve(async (req) => {
 
     if (!graphRes.ok) {
       console.error("[meta-proxy] error:", JSON.stringify(graphData));
+      const metaError = graphData.error || {};
+      const subcode = metaError.error_subcode;
+      
+      // Provide clearer error messages for common Meta API errors
+      let userMessage = metaError.error_user_msg || metaError.message || "Graph API error";
+      if (subcode === 4841013 || metaError.code === 200) {
+        userMessage = "Sem permissão para esta ação. Verifique se sua conta tem acesso de gerenciamento (ads_management) para este recurso no Meta Business.";
+      } else if (metaError.code === 17 || metaError.code === 32) {
+        userMessage = "Rate limit atingido. Tente novamente em alguns minutos.";
+      } else if (metaError.code === 190) {
+        userMessage = "Token expirado ou inválido. Reconecte sua conta Meta.";
+      }
+      
       return new Response(
-        JSON.stringify({ error: graphData.error?.message || "Graph API error" }),
+        JSON.stringify({ error: userMessage, meta_error_code: metaError.code, meta_subcode: subcode }),
         { status: graphRes.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

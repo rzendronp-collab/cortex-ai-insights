@@ -678,9 +678,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
   const getRecommendation = (campaign: ProcessedCampaign) => {
     // Campaigns with zero spend show a neutral "no data" badge
     if (campaign.spend === 0) return { label: 'Sem dados', bg: 'rgba(100,116,139,0.12)', text: '#94A3B8', border: 'rgba(100,116,139,0.25)' };
-    if (campaign.roas >= roasTarget * 1.3) return { label: 'Escalar', bg: 'rgba(52,211,153,0.1)', text: '#34D399', border: 'rgba(52,211,153,0.25)' };
-    if (campaign.roas < roasTarget * 0.5 && campaign.spend > 10) return { label: 'Pausar', bg: 'rgba(248,113,113,0.1)', text: '#F87171', border: 'rgba(248,113,113,0.25)' };
-    return { label: 'Otimizar', bg: 'rgba(96,165,250,0.1)', text: '#60A5FA', border: 'rgba(96,165,250,0.25)' };
+    if (campaign.roas >= roasTarget * 1.3) return { label: 'Escalar', bg: 'rgba(16,185,129,0.1)', text: '#10B981', border: 'rgba(16,185,129,0.25)' };
+    if (campaign.roas < roasTarget * 0.5 && campaign.spend > 10) return { label: 'Pausar', bg: 'rgba(239,68,68,0.1)', text: '#EF4444', border: 'rgba(239,68,68,0.25)' };
+    return { label: 'Otimizar', bg: 'rgba(99,102,241,0.1)', text: '#6366F1', border: 'rgba(99,102,241,0.25)' };
   };
 
   // Column ID → sort key mapping
@@ -757,7 +757,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
       pages.push(totalPages);
     }
     return (
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 py-3 border-t border-[#1C2538]">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 py-3 border-t border-[#1F2937]">
         <span className="text-[11px] text-text-muted">Mostrando {start}-{end} de {sortedCampaigns.length} campanhas</span>
         <div className="flex items-center gap-1">
           <button
@@ -805,9 +805,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
             placeholder="Buscar campanha..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full sm:w-64 h-8 text-xs bg-[#0E1420]"
+            className="w-full sm:w-64 h-8 text-xs bg-[#111827]"
           />
-          <div className="flex items-center bg-[#0E1420] border border-[#1E2D4A] rounded-md">
+          <div className="flex items-center bg-[#111827] border border-[#1F2937] rounded-md">
             <button
               onClick={() => setStatusFilter('all')}
               className={`px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
@@ -869,7 +869,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
 
           {/* Country Filter */}
           {availableCountries.length > 0 && (
-            <div className="flex items-center bg-[#0E1420] border border-[#1E2D4A] rounded-md">
+            <div className="flex items-center bg-[#111827] border border-[#1F2937] rounded-md">
               <button
                 onClick={() => setCountryFilter('all')}
                 className={`px-2 py-1.5 text-xs font-medium transition-colors ${countryFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
@@ -880,7 +880,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 <button
                   key={c}
                   onClick={() => setCountryFilter(c as any)}
-                  className={`px-2 py-1.5 text-xs font-medium border-l border-[#1E2D4A] transition-colors ${countryFilter === c ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`px-2 py-1.5 text-xs font-medium border-l border-[#1F2937] transition-colors ${countryFilter === c ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                   {{ PT: '🇵🇹', ES: '🇪🇸', GR: '🇬🇷', BR: '🇧🇷' }[c]}
                 </button>
@@ -946,17 +946,17 @@ Responda SOMENTE com o JSON, sem markdown.`;
 
             let badgeBg: string, badgeText: string, badgeBorder: string;
             if (c.roas >= roasTarget) {
-              badgeBg = 'rgba(52,211,153,0.12)'; badgeText = '#34D399'; badgeBorder = 'rgba(52,211,153,0.25)';
+              badgeBg = 'rgba(16,185,129,0.12)'; badgeText = '#10B981'; badgeBorder = 'rgba(16,185,129,0.25)';
             } else if (c.roas >= roasTarget * 0.7) {
-              badgeBg = 'rgba(251,191,36,0.12)'; badgeText = '#FBBF24'; badgeBorder = 'rgba(251,191,36,0.25)';
+              badgeBg = 'rgba(245,158,11,0.12)'; badgeText = '#F59E0B'; badgeBorder = 'rgba(245,158,11,0.25)';
             } else {
-              badgeBg = 'rgba(248,113,113,0.12)'; badgeText = '#F87171'; badgeBorder = 'rgba(248,113,113,0.25)';
+              badgeBg = 'rgba(239,68,68,0.12)'; badgeText = '#EF4444'; badgeBorder = 'rgba(239,68,68,0.25)';
             }
 
             return (
               <div
                 key={c.id}
-                className={`bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 animate-fade-in opacity-0 [animation-fill-mode:forwards] ${!isActive ? 'opacity-60' : ''}`}
+                className={`bg-[#111827] border border-[#1F2937] rounded-lg p-4 animate-fade-in opacity-0 [animation-fill-mode:forwards] ${!isActive ? 'opacity-60' : ''}`}
                 style={{ animationDelay: `${idx * 30}ms` }}
               >
                 {/* Header: name + toggle */}
@@ -1023,8 +1023,8 @@ Responda SOMENTE com o JSON, sem markdown.`;
       <div className="md:hidden"><PaginationBar /></div>
 
       {/* Sort indicator badge */}
-      <div className="hidden md:block bg-[#0E1420] border border-[#1E2D4A] rounded-lg overflow-x-auto">
-        <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#1C2538]">
+      <div className="hidden md:block bg-[#111827] border border-[#1F2937] rounded-lg overflow-x-auto">
+        <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#1F2937]">
           <span className="text-[10px] text-text-muted">
             Ordenado por: <span className="font-semibold text-text-secondary">{
               { status: 'Status', name: 'Nome', spend: 'Gasto', budget: 'Orçamento', revenue: 'Receita', profit: 'Lucro', roas: 'ROAS', purchases: 'Vendas', cpa: 'CPA', ctr: 'CTR', cpm: 'CPM', impressions: 'Impressões', clicks: 'Cliques' }[sortColumn]
@@ -1034,7 +1034,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
         </div>
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
-            <tr className="border-b border-[#1C2538] bg-[#0D1121] sticky top-0 z-10">
+            <tr className="border-b border-[#1F2937] bg-[#0D1117] sticky top-0 z-10">
               {/* Checkbox column */}
               <th className="px-2 py-2.5 w-8" onClick={e => e.stopPropagation()}>
                 <Checkbox
@@ -1148,7 +1148,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       const isEditingName = editingNameId === c.id;
                       const isSavingName = savingNameId === c.id;
                       const nFeedback = nameFeedback[c.id];
-                      const feedbackBorder = nFeedback === 'success' ? 'border-[#34D399]' : nFeedback === 'error' ? 'border-[#F87171]' : '';
+                      const feedbackBorder = nFeedback === 'success' ? 'border-[#10B981]' : nFeedback === 'error' ? 'border-[#EF4444]' : '';
                       return (
                         <td key={colId} className="px-3" onClick={e => e.stopPropagation()}>
                           {isEditingName ? (
@@ -1186,7 +1186,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       const isEditingBgt = editingBudgetId === c.id;
                       const isSavingBgt = savingBudgetId === c.id;
                       const bFeedback = budgetFeedback[c.id];
-                      const feedbackBorderB = bFeedback === 'success' ? 'border-[#34D399]' : bFeedback === 'error' ? 'border-[#F87171]' : '';
+                      const feedbackBorderB = bFeedback === 'success' ? 'border-[#10B981]' : bFeedback === 'error' ? 'border-[#EF4444]' : '';
                       return (
                         <td key={colId} className="px-3 text-right" onClick={e => e.stopPropagation()}>
                           {isEditingBgt ? (
@@ -1230,7 +1230,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                           {c.spend === 0 ? (
                             <span className="text-[13px] text-text-muted">—</span>
                           ) : (
-                            <span className={`text-[13px] font-medium inline-flex items-center gap-0.5 ${profit >= 0 ? 'text-[#34D399]' : 'text-[#F87171]'}`}>
+                            <span className={`text-[13px] font-medium inline-flex items-center gap-0.5 ${profit >= 0 ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
                               {profit >= 0 ? '↑' : '↓'}{profit > 0 ? '+' : ''}{formatCurrency(profit, currency)}
                             </span>
                           )}
@@ -1243,9 +1243,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
                             <span className="text-[13px] text-text-muted">—</span>
                           ) : (() => {
                             let badgeBg: string, badgeText: string, badgeBorder: string;
-                            if (c.roas >= roasTarget) { badgeBg = 'rgba(52,211,153,0.12)'; badgeText = '#34D399'; badgeBorder = 'rgba(52,211,153,0.25)'; }
-                            else if (c.roas >= roasTarget * 0.7) { badgeBg = 'rgba(251,191,36,0.12)'; badgeText = '#FBBF24'; badgeBorder = 'rgba(251,191,36,0.25)'; }
-                            else { badgeBg = 'rgba(248,113,113,0.12)'; badgeText = '#F87171'; badgeBorder = 'rgba(248,113,113,0.25)'; }
+                            if (c.roas >= roasTarget) { badgeBg = 'rgba(16,185,129,0.12)'; badgeText = '#10B981'; badgeBorder = 'rgba(16,185,129,0.25)'; }
+                            else if (c.roas >= roasTarget * 0.7) { badgeBg = 'rgba(245,158,11,0.12)'; badgeText = '#F59E0B'; badgeBorder = 'rgba(245,158,11,0.25)'; }
+                            else { badgeBg = 'rgba(239,68,68,0.12)'; badgeText = '#EF4444'; badgeBorder = 'rgba(239,68,68,0.25)'; }
                             return <span className="text-[13px] font-bold inline-block" style={{ background: badgeBg, color: badgeText, border: `1px solid ${badgeBorder}`, borderRadius: 6, padding: '3px 8px' }}>{c.roas.toFixed(2)}x</span>;
                           })()}
                         </td>
@@ -1279,9 +1279,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
                   <React.Fragment key={c.id}>
                     <tr 
                       onClick={() => setExpandedId(expanded ? null : c.id)}
-                      className={`border-b border-[#1C2538] bg-[#0E1420] cursor-pointer transition-all duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''} ${isEditing ? 'opacity-60 cursor-wait border-l-2 border-l-primary animate-pulse pointer-events-none' : ''} animate-fade-in [animation-fill-mode:forwards]`}
+                      className={`border-b border-[#1F2937] bg-[#111827] cursor-pointer transition-all duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''} ${isEditing ? 'opacity-60 cursor-wait border-l-2 border-l-primary animate-pulse pointer-events-none' : ''} animate-fade-in [animation-fill-mode:forwards]`}
                       style={{ height: 52, animationDelay: `${rowIndex * 30}ms` }}
-                      onMouseEnter={e => { if (!expanded && !isEditing) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(96,165,250,0.04)'; }}
+                      onMouseEnter={e => { if (!expanded && !isEditing) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(99,102,241,0.04)'; }}
                       onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = ''; }}
                     >
                       {/* Checkbox */}
@@ -1325,7 +1325,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       const campaignAdsets = adsets.get(c.id);
                       const isAdsetLoading = adsetsLoading.has(c.id);
                       return (
-                        <tr className="bg-[#090D18] border-b border-[#1C2538]">
+                        <tr className="bg-[#0A0F1E] border-b border-[#1F2937]">
                           <td colSpan={activeColumns.length + 3} className="p-0">
                             <div className="pl-10 pr-4 py-3 border-l-2 border-l-data-blue/40 animate-fade-up">
                               <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider mb-2">Conjuntos de Anúncios</p>
@@ -1349,7 +1349,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                               ) : (
                                 <table className="w-full text-left text-xs">
                                   <thead>
-                                    <tr className="border-b border-[#1C2538]/50">
+                                    <tr className="border-b border-[#1F2937]/50">
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase w-10">Status</th>
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase">Nome</th>
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">Gasto</th>
@@ -1364,11 +1364,11 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                     {campaignAdsets.map(adset => {
                                       const adsetActive = adset.status === 'ACTIVE';
                                       let abBg: string, abText: string, abBorder: string;
-                                      if (adset.roas >= roasTarget) { abBg = 'rgba(52,211,153,0.12)'; abText = '#34D399'; abBorder = 'rgba(52,211,153,0.25)'; }
-                                      else if (adset.roas >= roasTarget * 0.7) { abBg = 'rgba(251,191,36,0.12)'; abText = '#FBBF24'; abBorder = 'rgba(251,191,36,0.25)'; }
-                                      else { abBg = 'rgba(248,113,113,0.12)'; abText = '#F87171'; abBorder = 'rgba(248,113,113,0.25)'; }
+                                      if (adset.roas >= roasTarget) { abBg = 'rgba(16,185,129,0.12)'; abText = '#10B981'; abBorder = 'rgba(16,185,129,0.25)'; }
+                                      else if (adset.roas >= roasTarget * 0.7) { abBg = 'rgba(245,158,11,0.12)'; abText = '#F59E0B'; abBorder = 'rgba(245,158,11,0.25)'; }
+                                      else { abBg = 'rgba(239,68,68,0.12)'; abText = '#EF4444'; abBorder = 'rgba(239,68,68,0.25)'; }
                                       return (
-                                        <tr key={adset.id} className={`border-b border-[#1C2538]/30 hover:bg-[#0E1420]/50 transition-colors ${!adsetActive ? 'opacity-50' : ''}`}>
+                                        <tr key={adset.id} className={`border-b border-[#1F2937]/30 hover:bg-[#111827]/50 transition-colors ${!adsetActive ? 'opacity-50' : ''}`}>
                                           <td className="py-2 px-2">
                                             <span className={`inline-block w-2 h-2 rounded-full ${adsetActive ? 'bg-success' : 'bg-muted-foreground'}`} />
                                           </td>
@@ -1399,13 +1399,13 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     
                     {/* EXPANDED CONTENT */}
                     {expanded && (
-                      <tr className="bg-[#080B14] border-b border-[#1C2538]">
+                      <tr className="bg-[#0A0F1E] border-b border-[#1F2937]">
                         <td colSpan={activeColumns.length + 3} className="p-0">
                           <div className="p-4 border-l-2 border-l-primary/50 animate-fade-up">
                             {aiLoading ? (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {[0,1,2,3].map(i => (
-                                  <div key={i} className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4 space-y-3">
+                                  <div key={i} className="bg-[#111827] border border-[#1F2937] rounded-lg p-4 space-y-3">
                                     <Skeleton className="h-3 w-32" />
                                     <Skeleton className="h-4 w-full" />
                                     <Skeleton className="h-4 w-3/4" />
@@ -1416,7 +1416,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                             ) : (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* BLOCO 1 — MÉTRICAS COMPLETAS */}
-                                <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4">
+                                <div className="bg-[#111827] border border-[#1F2937] rounded-lg p-4">
                                   <div className="flex items-center gap-2 mb-3">
                                     <BarChart3 className="w-3.5 h-3.5 text-primary" />
                                     <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Métricas Completas</h4>
@@ -1467,7 +1467,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                 </div>
 
                                 {/* BLOCO 2 — ANÁLISE IA */}
-                                <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4">
+                                <div className="bg-[#111827] border border-[#1F2937] rounded-lg p-4">
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
                                       <Sparkles className="w-3.5 h-3.5 text-secondary" />
@@ -1522,7 +1522,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                 </div>
 
                                 {/* BLOCO 3 — PERFORMANCE POR HORA */}
-                                <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4">
+                                <div className="bg-[#111827] border border-[#1F2937] rounded-lg p-4">
                                   <div className="flex items-center gap-2 mb-3">
                                     <Clock className="w-3.5 h-3.5 text-success" />
                                     <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Performance por Hora</h4>
@@ -1534,7 +1534,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                 </div>
 
                                 {/* BLOCO 4 — EVOLUÇÃO DIÁRIA */}
-                                <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg p-4">
+                                <div className="bg-[#111827] border border-[#1F2937] rounded-lg p-4">
                                   <div className="flex items-center gap-2 mb-3">
                                     <LineChart className="w-3.5 h-3.5 text-primary" />
                                     <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Evolução Diária</h4>
@@ -1615,7 +1615,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
 
       {/* Bulk Actions Floating Bar */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1C2538] border border-[#2D3F5E] rounded-xl shadow-2xl px-5 py-3 flex items-center gap-4 animate-fade-up">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1F2937] border border-[#374151] rounded-xl shadow-2xl px-5 py-3 flex items-center gap-4 animate-fade-up">
           <span className="text-xs font-semibold text-text-primary">{selectedIds.size} campanha{selectedIds.size > 1 ? 's' : ''} selecionada{selectedIds.size > 1 ? 's' : ''}</span>
           <div className="flex items-center gap-2">
             <Button
@@ -1623,7 +1623,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
               variant="outline"
               disabled={bulkLoading}
               onClick={() => executeBulkAction('ACTIVE')}
-              className="h-7 text-[11px] gap-1 border-[#34D399]/30 text-[#34D399] hover:bg-[#34D399]/10"
+              className="h-7 text-[11px] gap-1 border-[#10B981]/30 text-[#10B981] hover:bg-[#10B981]/10"
             >
               {bulkLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : '▶'} Ativar
             </Button>
@@ -1632,7 +1632,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
               variant="outline"
               disabled={bulkLoading}
               onClick={() => executeBulkAction('PAUSED')}
-              className="h-7 text-[11px] gap-1 border-[#FBBF24]/30 text-[#FBBF24] hover:bg-[#FBBF24]/10"
+              className="h-7 text-[11px] gap-1 border-[#FBBF24]/30 text-[#F59E0B] hover:bg-[#F59E0B]/10"
             >
               {bulkLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : '⏸'} Pausar
             </Button>
@@ -1834,29 +1834,29 @@ function CampaignsTableSkeleton() {
     <div className="space-y-4 animate-fade-in">
       {/* Filter skeleton */}
       <div className="flex items-center gap-2">
-        <div className="h-8 w-64 bg-[#1C2538] rounded-md animate-pulse" />
-        <div className="h-8 w-36 bg-[#1C2538] rounded-md animate-pulse" />
-        <div className="h-8 w-24 bg-[#1C2538] rounded-md animate-pulse" />
+        <div className="h-8 w-64 bg-[#1F2937] rounded-md animate-pulse" />
+        <div className="h-8 w-36 bg-[#1F2937] rounded-md animate-pulse" />
+        <div className="h-8 w-24 bg-[#1F2937] rounded-md animate-pulse" />
       </div>
       {/* Table skeleton */}
-      <div className="bg-[#0E1420] border border-[#1E2D4A] rounded-lg overflow-hidden">
+      <div className="bg-[#111827] border border-[#1F2937] rounded-lg overflow-hidden">
         {/* Header */}
-        <div className="flex items-center gap-2 px-3 py-2.5 bg-[#0D1121] border-b border-[#1C2538]">
+        <div className="flex items-center gap-2 px-3 py-2.5 bg-[#0D1117] border-b border-[#1F2937]">
           {colWidths.map((w, i) => (
-            <div key={i} className="h-3 bg-[#2A3850] rounded" style={{ width: w, flexShrink: 0 }} />
+            <div key={i} className="h-3 bg-[#1F2937] rounded" style={{ width: w, flexShrink: 0 }} />
           ))}
         </div>
         {/* Rows */}
         {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
-            className="flex items-center gap-2 px-3 border-b border-[#1C2538] animate-pulse"
+            className="flex items-center gap-2 px-3 border-b border-[#1F2937] animate-pulse"
             style={{ height: 52, animationDelay: `${i * 60}ms` }}
           >
             {colWidths.map((w, j) => (
               <div
                 key={j}
-                className="h-3.5 bg-[#1C2538] rounded"
+                className="h-3.5 bg-[#1F2937] rounded"
                 style={{ width: w + Math.random() * 20, flexShrink: 0 }}
               />
             ))}

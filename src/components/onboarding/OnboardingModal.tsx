@@ -66,7 +66,7 @@ export default function OnboardingModal() {
     <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="hex-grad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#3B82F6" />
+          <stop stopColor="#6366F1" />
           <stop offset="1" stopColor="#8B5CF6" />
         </linearGradient>
       </defs>
@@ -76,7 +76,7 @@ export default function OnboardingModal() {
   );
 
   const BackButton = () => (
-    <button onClick={goBack} className="self-start text-[#64748B] hover:text-[#94A3B8] text-xs flex items-center gap-1 transition-colors">
+    <button onClick={goBack} className="self-start text-[#6B7280] hover:text-[#94A3B8] text-xs flex items-center gap-1 transition-colors">
       <ChevronLeft className="w-3 h-3" /> Voltar
     </button>
   );
@@ -85,14 +85,14 @@ export default function OnboardingModal() {
     <button
       onClick={onClick}
       disabled={disabled}
-      className="w-full py-3 rounded-xl bg-gradient-to-r from-[#3B82F6] to-[#8B5CF6] text-white font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
+      className="w-full py-3 rounded-xl bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] text-white font-semibold text-sm hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-50"
     >
       {disabled ? <Loader2 className="w-4 h-4 animate-spin" /> : children}
     </button>
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#080B14]/95 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0A0F1E]/95 backdrop-blur-sm">
       {/* Progress dots */}
       <div className="absolute top-8 left-1/2 -translate-x-1/2 flex gap-3">
         {Array.from({ length: totalSteps }).map((_, i) => (
@@ -100,10 +100,10 @@ export default function OnboardingModal() {
             key={i}
             className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
               i === step
-                ? 'bg-[#3B82F6] scale-125'
+                ? 'bg-[#6366F1] scale-125'
                 : i < step
-                ? 'bg-[#3B82F6]/40'
-                : 'border border-[#1E2D4A] bg-transparent'
+                ? 'bg-[#6366F1]/40'
+                : 'border border-[#1F2937] bg-transparent'
             }`}
           />
         ))}
@@ -111,14 +111,14 @@ export default function OnboardingModal() {
 
       <div
         key={step}
-        className="bg-[#0E1420] border border-[#1E2D4A] rounded-2xl p-8 max-w-md w-full mx-4 animate-fade-up"
+        className="bg-[#111827] border border-[#1F2937] rounded-2xl p-8 max-w-md w-full mx-4 animate-fade-up"
       >
         {/* Step 0: Welcome */}
         {step === 0 && (
           <div className="flex flex-col items-center text-center gap-6">
             <HexLogo />
             <div>
-              <h1 className="text-[28px] font-bold text-[#F0F4FF]" style={{ fontFamily: 'Syne, sans-serif' }}>
+              <h1 className="text-[28px] font-bold text-[#F9FAFB]" style={{ fontFamily: 'Syne, sans-serif' }}>
                 Bem-vindo ao CortexAds
               </h1>
               <p className="text-[#94A3B8] mt-2 text-sm">
@@ -136,19 +136,19 @@ export default function OnboardingModal() {
           <div className="flex flex-col gap-5">
             <BackButton />
             <div className="text-center">
-              <h2 className="text-xl font-bold text-[#F0F4FF]">Conecte a IA</h2>
+              <h2 className="text-xl font-bold text-[#F9FAFB]">Conecte a IA</h2>
               <p className="text-[#94A3B8] mt-1 text-sm">
                 A Claude API Key permite análises inteligentes das suas campanhas.
               </p>
             </div>
             <div>
-              <label className="text-xs text-[#64748B] mb-1.5 block">Claude API Key</label>
+              <label className="text-xs text-[#6B7280] mb-1.5 block">Claude API Key</label>
               <input
                 type="password"
                 value={claudeKey}
                 onChange={(e) => { setClaudeKey(e.target.value); setKeyError(''); }}
                 placeholder="sk-ant-..."
-                className="w-full bg-[#080B14] border border-[#1E2D4A] rounded-lg px-4 py-3 text-sm text-[#F0F4FF] placeholder:text-[#64748B]/50 focus:outline-none focus:border-[#3B82F6] transition-colors"
+                className="w-full bg-[#0A0F1E] border border-[#1F2937] rounded-lg px-4 py-3 text-sm text-[#F9FAFB] placeholder:text-[#6B7280]/50 focus:outline-none focus:border-[#6366F1] transition-colors"
               />
               {keyError && <p className="text-[#EF4444] text-xs mt-1.5">{keyError}</p>}
             </div>
@@ -156,7 +156,7 @@ export default function OnboardingModal() {
               href="https://console.anthropic.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-[#3B82F6] hover:text-[#60A5FA] flex items-center gap-1 transition-colors"
+              className="text-xs text-[#6366F1] hover:text-[#818CF8] flex items-center gap-1 transition-colors"
             >
               Obter minha key <ExternalLink className="w-3 h-3" />
             </a>
@@ -171,7 +171,7 @@ export default function OnboardingModal() {
           <div className="flex flex-col gap-5">
             <BackButton />
             <div className="text-center">
-              <h2 className="text-xl font-bold text-[#F0F4FF]">Conecte sua conta Meta</h2>
+              <h2 className="text-xl font-bold text-[#F9FAFB]">Conecte sua conta Meta</h2>
               <p className="text-[#94A3B8] mt-1 text-sm">
                 Autorize o acesso para carregar suas campanhas automaticamente.
               </p>
@@ -182,12 +182,12 @@ export default function OnboardingModal() {
             >
               Conectar com Meta <ChevronRight className="w-4 h-4" />
             </button>
-            <p className="text-[10px] text-[#64748B] text-center">
+            <p className="text-[10px] text-[#6B7280] text-center">
               Ou cole um token manualmente na aba Config após o onboarding
             </p>
             <button
               onClick={goNext}
-              className="text-xs text-[#64748B] hover:text-[#94A3B8] transition-colors mx-auto"
+              className="text-xs text-[#6B7280] hover:text-[#94A3B8] transition-colors mx-auto"
             >
               Pular por agora
             </button>
@@ -200,7 +200,7 @@ export default function OnboardingModal() {
             <BackButton />
             <CheckCircle2 className="w-16 h-16 text-[#10B981] animate-bounce" />
             <div>
-              <h2 className="text-xl font-bold text-[#F0F4FF]">Tudo configurado!</h2>
+              <h2 className="text-xl font-bold text-[#F9FAFB]">Tudo configurado!</h2>
                <p className="text-[#94A3B8] mt-1 text-sm">
                  Ative as contas na sidebar e clique em Atualizar
                </p>

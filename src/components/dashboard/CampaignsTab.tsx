@@ -1632,7 +1632,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
               variant="outline"
               disabled={bulkLoading}
               onClick={() => executeBulkAction('PAUSED')}
-              className="h-7 text-[11px] gap-1 border-[#FBBF24]/30 text-[#F59E0B] hover:bg-[#F59E0B]/10"
+              className="h-7 text-[11px] gap-1 border-[#F59E0B]/30 text-[#F59E0B] hover:bg-[#F59E0B]/10"
             >
               {bulkLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : '⏸'} Pausar
             </Button>

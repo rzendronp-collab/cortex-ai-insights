@@ -31,7 +31,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
     selectedAccountId, setSelectedAccountId,
     dateRange, setDateRange,
     analysisData, isFromCache, cacheTimestamp, currencySymbol,
-    activeTab, activeAccountIds,
+    activeTab, activeAccountIds, selectedAccountName,
   } = useDashboard();
   const { isTokenExpired, isTokenExpiringSoon, daysUntilExpiry, connectMeta, adAccounts } = useMetaConnection();
   const { analyze, loading, roasTarget } = useMetaData();
@@ -75,9 +75,9 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
   const lastTime = ad?.lastUpdated ? new Date(ad.lastUpdated).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
   const isCustomActive = selectedPeriod === 'custom' && !!dateRange;
 
-  // Account name
+  // Account name — use selectedAccountName from context, or look up from adAccounts
   const selectedAccount = adAccounts.find(a => a.account_id === selectedAccountId);
-  const accountName = selectedAccount?.name || 'Selecione uma conta';
+  const accountName = selectedAccountName || selectedAccount?.account_name || (selectedAccountId ? `act_${selectedAccountId}` : 'Selecione uma conta');
 
   // Period pills
   const periodPills = (

@@ -1,3 +1,4 @@
+// Dashboard — CortexAds AI
 import { useState, useEffect } from 'react';
 import { DashboardProvider, useDashboard } from '@/context/DashboardContext';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';

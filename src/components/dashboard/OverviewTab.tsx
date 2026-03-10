@@ -293,7 +293,7 @@ export default function OverviewTab() {
       {staleWarning}
 
       {/* ─── KPIs ─── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
         {[
           { label: `ROAS Médio ${roasSemaphore}`, value: `${avgRoas.toFixed(1)}x`, subtitle: "Retorno sobre investimento", delta: calcDelta(avgRoas, prevRoas), valueClassName: roasValueClass, isHero: true },
           { label: "Gasto Total", value: formatCurrency(totalSpend, currency), subtitle: "Período selecionado", delta: calcDelta(totalSpend, prevSpend) },
@@ -726,7 +726,7 @@ export default function OverviewTab() {
 function OverviewSkeleton() {
   return (
     <div className="space-y-4 animate-fade-in">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}

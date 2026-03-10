@@ -163,7 +163,7 @@ export default function CampaignsTab() {
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused'>('all');
-  const [activeTodayFilter, setActiveTodayFilter] = useState(false);
+  const [activeTodayFilter, setActiveTodayFilter] = useState(true);
   const [roasFilter, setRoasFilter] = useState<'all' | 'above' | 'near' | 'below' | 'scaling'>('all');
   const [countryFilter, setCountryFilter] = useState<'all' | 'PT' | 'ES' | 'GR' | 'BR'>('all');
   const [roasDropdownOpen, setRoasDropdownOpen] = useState(false);
@@ -831,7 +831,10 @@ Responda SOMENTE com o JSON, sem markdown.`;
             onClick={() => setActiveTodayFilter(!activeTodayFilter)}
             className={`px-3 py-1.5 text-xs font-medium border rounded-md transition-colors ${activeTodayFilter ? 'bg-primary/15 text-primary border-primary/40' : 'bg-card border-border text-muted-foreground hover:text-foreground'}`}
           >
-            Ativas hoje
+            {activeTodayFilter ? 'Com dados' : 'Todas'}
+            <span className="ml-1 text-[10px] opacity-60">
+              ({activeTodayFilter ? filteredCampaigns.length : rawCampaigns.length})
+            </span>
           </button>
 
           {/* ROAS Filter Dropdown */}

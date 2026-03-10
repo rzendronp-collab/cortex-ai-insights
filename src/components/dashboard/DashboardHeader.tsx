@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Loader2, Clock, AlertTriangle, RefreshCw, Menu, X as XIcon, Calendar } from 'lucide-react';
+import { Loader2, Clock, AlertTriangle, RefreshCw, Menu, X as XIcon, Calendar, ChevronDown } from 'lucide-react';
 import AlertsPanel from './AlertsPanel';
 import DateRangePicker from '@/components/ui/DateRangePicker';
 import { getRoasColor } from '@/lib/mockData';
@@ -32,12 +32,24 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
     dateRange, setDateRange,
     analysisData, isFromCache, cacheTimestamp, currencySymbol,
     activeTab, activeAccountIds, selectedAccountName,
+    setSelectedAccountName, setSelectedAccountCurrency,
   } = useDashboard();
   const { isTokenExpired, isTokenExpiringSoon, daysUntilExpiry, connectMeta, adAccounts } = useMetaConnection();
   const { analyze, loading, roasTarget } = useMetaData();
   const isMobile = useIsMobile();
 
   const [isStale, setIsStale] = useState(false);
+  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setAccountDropdownOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const handleAtualizar = useCallback(async () => {
     if (activeAccountIds.length === 0) return;
@@ -61,6 +73,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
   const ad = analysisData;
   const totalSpend = ad?.campaigns.reduce((s, c) => s + c.spend, 0) || 0;
   const totalRevenue = ad?.campaigns.reduce((s, c) => s + c.revenue, 0) || 0;
+  const totalSales = ad?.campaigns.reduce((s, c) => s + c.purchases, 0) || 0;
   const avgRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
   const delta: number | null = ad && ad.campaignsPrev.length > 0
     ? (() => {
@@ -75,9 +88,16 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
   const lastTime = ad?.lastUpdated ? new Date(ad.lastUpdated).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
   const isCustomActive = selectedPeriod === 'custom' && !!dateRange;
 
-  // Account name — use selectedAccountName from context, or look up from adAccounts
+  // Account name
   const selectedAccount = adAccounts.find(a => a.account_id === selectedAccountId);
   const accountName = selectedAccountName || selectedAccount?.account_name || (selectedAccountId ? `act_${selectedAccountId}` : 'Selecione uma conta');
+
+  const handleSelectAccount = (account: typeof adAccounts[0]) => {
+    setSelectedAccountId(account.account_id!);
+    setSelectedAccountName(account.account_name || account.account_id!);
+    setSelectedAccountCurrency(account.currency || null);
+    setAccountDropdownOpen(false);
+  };
 
   // Period pills
   const periodPills = (
@@ -134,19 +154,41 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
               <Menu className="w-4.5 h-4.5" />
             </button>
           )}
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="text-[13px] font-semibold text-[#F9FAFB] truncate">{accountName}</h1>
-              {lastTime && !isMobile && (
-                <span className="flex items-center gap-1 text-[9px] text-[#6B7280]">
-                  <Clock className="w-2.5 h-2.5" /> {lastTime}
-                </span>
-              )}
-            </div>
-            {!isMobile && (
-              <p className="text-[10px] text-[#6B7280] mt-0.5">{tabLabels[activeTab] || 'Dashboard'}</p>
+
+          {/* Account dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => adAccounts.length > 1 && setAccountDropdownOpen(!accountDropdownOpen)}
+              className="flex items-center gap-1.5 min-w-0"
+            >
+              <h1 className="text-[13px] font-semibold text-[#F9FAFB] truncate max-w-[180px]">{accountName}</h1>
+              {adAccounts.length > 1 && <ChevronDown className={`w-3 h-3 text-[#6B7280] shrink-0 transition-transform ${accountDropdownOpen ? 'rotate-180' : ''}`} />}
+            </button>
+
+            {accountDropdownOpen && adAccounts.length > 1 && (
+              <div className="absolute top-full left-0 mt-1 w-[240px] bg-[#111827] border border-[#1F2937] rounded-lg shadow-xl z-50 py-1 max-h-[300px] overflow-y-auto">
+                {adAccounts.map(a => (
+                  <button
+                    key={a.id}
+                    onClick={() => handleSelectAccount(a)}
+                    className={`w-full text-left px-3 py-2 text-[11px] transition-colors truncate ${
+                      a.account_id === selectedAccountId
+                        ? 'bg-[#6366F1]/10 text-[#818CF8] font-medium'
+                        : 'text-[#E5E7EB] hover:bg-[#1F2937]'
+                    }`}
+                  >
+                    {a.account_name || `act_${a.account_id}`}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
+
+          {lastTime && !isMobile && (
+            <span className="flex items-center gap-1 text-[9px] text-[#6B7280]">
+              <Clock className="w-2.5 h-2.5" /> {lastTime}
+            </span>
+          )}
         </div>
 
         {/* Desktop controls */}
@@ -215,22 +257,18 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
         </div>
       )}
 
-      {/* Metrics bar — compact */}
+      {/* Metrics bar — compact, no heavy borders */}
       {ad && (
-        <div className="h-7 flex items-center gap-3 px-4 md:px-5 bg-[#0D1117] border-t border-[#1F2937]/40 text-[10px] overflow-x-auto hide-scrollbar">
+        <div className="h-7 flex items-center gap-4 px-4 md:px-5 bg-[#0A0F1E]/60 text-[10px] overflow-x-auto hide-scrollbar">
           <span className={`font-bold whitespace-nowrap ${getRoasColor(avgRoas, roasTarget)}`}>
             ROAS {avgRoas.toFixed(1)}x
             {delta !== null && delta !== 0 && <span className="opacity-60 ml-1">{delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(0)}%</span>}
           </span>
-          <span className="text-[#1F2937]">·</span>
           <span className="text-[#9CA3AF] whitespace-nowrap">Gasto <span className="font-semibold text-[#F9FAFB]">{currencySymbol} {(totalSpend / 1000).toFixed(1)}k</span></span>
-          <span className="text-[#1F2937] hidden sm:inline">·</span>
           <span className="text-[#9CA3AF] whitespace-nowrap hidden sm:inline">Receita <span className="font-semibold text-[#10B981]">{currencySymbol} {(totalRevenue / 1000).toFixed(1)}k</span></span>
+          <span className="text-[#9CA3AF] whitespace-nowrap hidden md:inline">Vendas <span className="font-semibold text-[#F9FAFB]">{totalSales}</span></span>
           {isFromCache && (
-            <>
-              <span className="text-[#1F2937] hidden md:inline">·</span>
-              <span className="text-[#6366F1]/60 hidden md:inline whitespace-nowrap">cache</span>
-            </>
+            <span className="text-[#6366F1]/50 hidden md:inline whitespace-nowrap">cache</span>
           )}
         </div>
       )}

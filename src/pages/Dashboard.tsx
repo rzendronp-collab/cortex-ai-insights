@@ -56,7 +56,7 @@ function DashboardContent() {
       {isMobile ? (
         <div
           className={`fixed inset-y-0 left-0 z-50 transition-transform duration-250 ease-out ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-[220px]'
+            sidebarOpen ? 'translate-x-0' : '-translate-x-[200px]'
           }`}
         >
           <DashboardSidebar onCloseMobile={() => setSidebarOpen(false)} />

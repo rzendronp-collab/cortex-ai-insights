@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["'Plus Jakarta Sans'", "sans-serif"],
+        sans: ["'Inter'", "'Plus Jakarta Sans'", "sans-serif"],
       },
       colors: {
         /* New design system tokens */

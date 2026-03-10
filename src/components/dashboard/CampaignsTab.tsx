@@ -1616,6 +1616,59 @@ Responda SOMENTE com o JSON, sem markdown.`;
         <PaginationBar />
       </div>
 
+      {/* ─── Análise de Criativos ─── */}
+      {analysisData?.adCreatives && analysisData.adCreatives.length > 0 && (
+        <div className="bg-[#111827] border border-[#1F2937] rounded-lg overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#1F2937]">
+            <h3 className="text-xs font-semibold text-text-primary">Análise de Criativos</h3>
+            <span className="text-[10px] text-text-muted">{analysisData.adCreatives.length} criativos com gasto</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-[#1F2937] bg-[#0D1117]">
+                  <th className="text-left px-3 py-2 text-text-muted font-semibold">Criativo</th>
+                  <th className="text-right px-3 py-2 text-text-muted font-semibold">Gasto</th>
+                  <th className="text-right px-3 py-2 text-text-muted font-semibold">Impr.</th>
+                  <th className="text-right px-3 py-2 text-text-muted font-semibold">CTR</th>
+                  <th className="text-right px-3 py-2 text-text-muted font-semibold">Conv.</th>
+                  <th className="text-right px-3 py-2 text-text-muted font-semibold">ROAS</th>
+                  <th className="text-center px-3 py-2 text-text-muted font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analysisData.adCreatives.slice(0, 20).map((ad, i) => {
+                  const isTop = i === 0 && ad.roas > 0;
+                  const shouldPause = ad.ctr < 1 && ad.spend > 10;
+                  return (
+                    <tr key={ad.id} className="border-b border-[#1F2937]/50 hover:bg-[#1F2937]/30 transition-colors">
+                      <td className="px-3 py-2.5">
+                        <p className="text-text-primary font-medium truncate max-w-[220px]">{ad.name}</p>
+                        {ad.campaignName && <p className="text-[10px] text-text-muted truncate max-w-[220px]">{ad.campaignName}</p>}
+                      </td>
+                      <td className="text-right px-3 py-2.5 text-text-primary">{currency} {ad.spend.toFixed(0)}</td>
+                      <td className="text-right px-3 py-2.5 text-text-primary">{ad.impressions.toLocaleString()}</td>
+                      <td className="text-right px-3 py-2.5 text-text-primary">{ad.ctr.toFixed(1)}%</td>
+                      <td className="text-right px-3 py-2.5 text-text-primary">{ad.purchases}</td>
+                      <td className={`text-right px-3 py-2.5 font-bold ${getRoasColor(ad.roas, roasTarget)}`}>{ad.roas.toFixed(1)}x</td>
+                      <td className="text-center px-3 py-2.5">
+                        {isTop ? (
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/25">Top</span>
+                        ) : shouldPause ? (
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/25">Pausar</span>
+                        ) : (
+                          <span className="text-[9px] text-text-muted">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Bulk Actions Floating Bar */}
       {selectedIds.size > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1F2937] border border-[#374151] rounded-xl shadow-2xl px-5 py-3 flex items-center gap-4 animate-fade-up">

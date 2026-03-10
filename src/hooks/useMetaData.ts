@@ -84,6 +84,28 @@ export interface DemoAgeAgg {
   roas: number;
 }
 
+export interface AdCreative {
+  id: string;
+  name: string;
+  status: string;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  purchases: number;
+  revenue: number;
+  roas: number;
+  campaignName?: string;
+}
+
+export interface RegionData {
+  region: string;
+  impressions: number;
+  clicks: number;
+  spend: number;
+  ctr: number;
+}
+
 export interface AnalysisData {
   campaigns: ProcessedCampaign[];
   campaignsPrev: ProcessedCampaign[];
@@ -96,6 +118,8 @@ export interface AnalysisData {
   demoByGender?: DemoGenderAgg[];
   demoByAge?: DemoAgeAgg[];
   budgetByCampaignId: Record<string, number>;
+  adCreatives?: AdCreative[];
+  regionData?: RegionData[];
   lastUpdated: string;
 }
 
@@ -287,7 +311,7 @@ export function useMetaData() {
       };
 
       // Feature 6: Use fetchAllPages for campaigns and insights (cursor pagination)
-      const [campaignsAllData, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes, adsetsRes] = await Promise.all([
+      const [campaignsAllData, campaignsPrevRes, hourlyRes, platformRes, dailyRes, demoRes, adsetsRes, adsRes, regionRes] = await Promise.all([
         fetchAllPages(callMetaApiWithRetry, `${acctPath}/campaigns`, {
           fields: 'id,name,status,daily_budget,lifetime_budget',
           limit: '50',
@@ -322,6 +346,17 @@ export function useMetaData() {
           filtering: JSON.stringify([{"field":"effective_status","operator":"IN","value":["ACTIVE","PAUSED"]}]),
           limit: '200',
         }),
+        // Ads/creatives with insights
+        callMetaApiWithRetry(`${acctPath}/ads`, withDateFilter({
+          fields: 'id,name,status,campaign{name},insights{spend,impressions,clicks,ctr,actions,action_values}',
+          limit: '100',
+        })).catch(() => ({ data: [] })),
+        // Region breakdown
+        callMetaApiWithRetry(`${acctPath}/insights`, withDateFilter({
+          breakdowns: 'region',
+          fields: 'impressions,clicks,spend,ctr',
+          limit: '50',
+        })).catch(() => ({ data: [] })),
       ]);
 
       // Wrap paginated results back into { data: [...] } format for compatibility
@@ -513,6 +548,43 @@ export function useMetaData() {
         }
       });
 
+      // Process ad creatives
+      const rawAds = adsRes?.data || [];
+      const adCreatives: AdCreative[] = rawAds.map((ad: any) => {
+        const ins = ad.insights?.data?.[0] || {};
+        const spend = parseFloat(ins.spend || '0');
+        const purchases = extractPurchases(ins.actions);
+        const revenue = extractRevenue(ins.action_values);
+        return {
+          id: ad.id,
+          name: ad.name || 'Sem nome',
+          status: ad.status || 'UNKNOWN',
+          spend,
+          impressions: parseInt(ins.impressions || '0', 10),
+          clicks: parseInt(ins.clicks || '0', 10),
+          ctr: parseFloat(ins.ctr || '0'),
+          purchases,
+          revenue,
+          roas: spend > 0 ? revenue / spend : 0,
+          campaignName: ad.campaign?.name || '',
+        };
+      }).filter((a: AdCreative) => a.spend > 0)
+        .sort((a: AdCreative, b: AdCreative) => b.roas - a.roas);
+
+      // Process region data
+      const rawRegions = regionRes?.data || [];
+      const regionData: RegionData[] = rawRegions
+        .map((r: any) => ({
+          region: r.region || 'Desconhecido',
+          impressions: parseInt(r.impressions || '0', 10),
+          clicks: parseInt(r.clicks || '0', 10),
+          spend: parseFloat(r.spend || '0'),
+          ctr: parseFloat(r.ctr || '0'),
+        }))
+        .filter((r: RegionData) => r.impressions > 0)
+        .sort((a: RegionData, b: RegionData) => b.impressions - a.impressions)
+        .slice(0, 15);
+
       const now = new Date().toISOString();
       const analysisResult: AnalysisData = {
         campaigns,
@@ -526,6 +598,8 @@ export function useMetaData() {
         demoByGender,
         demoByAge,
         budgetByCampaignId,
+        adCreatives,
+        regionData,
         lastUpdated: now,
       };
 

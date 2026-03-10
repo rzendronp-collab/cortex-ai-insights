@@ -572,6 +572,50 @@ export default function OverviewTab() {
         <HourlyBarChart data={hourlyData} currency={currency} />
       </div>
 
+      {/* ─── Alcance por Região ─── */}
+      {effectiveData?.regionData && effectiveData.regionData.length > 0 && (
+        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
+          <h3 className="text-xs font-semibold text-text-primary mb-4">Alcance por Região</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-[#1F2937]">
+                  <th className="text-left py-2 text-text-muted font-semibold">Região</th>
+                  <th className="text-left py-2 text-text-muted font-semibold pl-4" style={{ width: '30%' }}>Alcance</th>
+                  <th className="text-right py-2 text-text-muted font-semibold">Impressões</th>
+                  <th className="text-right py-2 text-text-muted font-semibold">Cliques</th>
+                  <th className="text-right py-2 text-text-muted font-semibold">CTR</th>
+                  <th className="text-right py-2 text-text-muted font-semibold">Gasto</th>
+                </tr>
+              </thead>
+              <tbody>
+                {effectiveData.regionData.slice(0, 10).map((r, i) => {
+                  const maxImpr = effectiveData.regionData![0].impressions || 1;
+                  const barWidth = Math.max((r.impressions / maxImpr) * 100, 5);
+                  return (
+                    <tr key={r.region} className="border-b border-[#1F2937]/50">
+                      <td className="py-2 text-text-primary font-medium truncate max-w-[160px]">{r.region}</td>
+                      <td className="py-2 pl-4">
+                        <div className="h-2 bg-[#0A0F1E] rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${barWidth}%`, background: `linear-gradient(90deg, #6366F1, #818CF8)` }}
+                          />
+                        </div>
+                      </td>
+                      <td className="text-right py-2 text-text-primary">{r.impressions.toLocaleString()}</td>
+                      <td className="text-right py-2 text-text-primary">{r.clicks.toLocaleString()}</td>
+                      <td className="text-right py-2 text-text-primary">{r.ctr.toFixed(1)}%</td>
+                      <td className="text-right py-2 text-text-primary">{currency} {r.spend.toFixed(0)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* ─── Demographics Section ─── */}
       <div>
         <h3 className="text-sm font-semibold text-text-primary mb-3">👥 Demográficos</h3>

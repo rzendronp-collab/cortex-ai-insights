@@ -737,6 +737,79 @@ export default function OverviewTab() {
             </div>
           </div>
         )}
+
+        {/* Audience Insights: Top Regiões + Melhores Horários */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+          {/* Top 5 Regiões */}
+          {effectiveData?.regionData && effectiveData.regionData.length > 0 && (
+            <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
+              <h4 className="text-xs font-semibold text-text-primary mb-3">Top 5 Regiões</h4>
+              <div className="space-y-2.5">
+                {effectiveData.regionData.slice(0, 5).map((r, i) => {
+                  const maxImpr = effectiveData.regionData![0].impressions || 1;
+                  const pct = (r.impressions / maxImpr) * 100;
+                  const medals = ['🥇', '🥈', '🥉'];
+                  return (
+                    <div key={r.region} className="flex items-center gap-2">
+                      <span className="text-[11px] w-5 text-center">{i < 3 ? medals[i] : `${i + 1}.`}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-[11px] text-text-primary font-medium truncate">{r.region}</span>
+                          <span className="text-[10px] text-text-muted ml-2">{r.impressions.toLocaleString()} impr</span>
+                        </div>
+                        <div className="h-1.5 bg-[#0A0F1E] rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ width: `${pct}%`, background: `linear-gradient(90deg, #6366F1, #818CF8)` }}
+                          />
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-[#818CF8] font-semibold w-12 text-right">{r.ctr.toFixed(1)}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Melhores 3 Horários */}
+          {hourlyData.length > 0 && (
+            <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
+              <h4 className="text-xs font-semibold text-text-primary mb-3">Melhores Horários</h4>
+              <div className="space-y-3">
+                {[...hourlyData]
+                  .sort((a, b) => b.sales - a.sales || b.spend - a.spend)
+                  .slice(0, 3)
+                  .map((h, i) => {
+                    const medals = ['🥇', '🥈', '🥉'];
+                    const maxSales = Math.max(...hourlyData.map(x => x.sales), 1);
+                    const pct = (h.sales / maxSales) * 100;
+                    return (
+                      <div key={h.hour} className="flex items-center gap-3">
+                        <span className="text-lg">{medals[i]}</span>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[13px] font-bold text-text-primary">{h.hour}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-[10px] text-text-muted">{currency} {h.spend.toFixed(0)} gasto</span>
+                              <span className="text-[11px] font-bold text-[#10B981]">{h.sales} vendas</span>
+                            </div>
+                          </div>
+                          <div className="h-2 bg-[#0A0F1E] rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-500"
+                              style={{ width: `${pct}%`, background: `linear-gradient(90deg, #10B981, #34D399)` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                <p className="text-[9px] text-text-muted mt-1">Horários com mais conversões no período selecionado</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ─── Gasto vs Receita Pie ─── */}

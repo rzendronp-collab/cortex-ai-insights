@@ -64,6 +64,13 @@ export default function CortexHistory({ history, loading }: Props) {
         </div>
       </div>
 
+      {/* localStorage fallback indicator */}
+      {history.length > 0 && !history[0].id?.includes('-') && (
+        <div className="px-5 py-1.5 bg-amber-500/5 border-b border-amber-500/20">
+          <p className="text-[10px] text-amber-400">Dados salvos localmente. Execute a migration SQL no Supabase para persistência permanente.</p>
+        </div>
+      )}
+
       {filtered.length === 0 ? (
         <div className="px-5 py-10 text-center">
           <p className="text-[12px] text-text-muted">

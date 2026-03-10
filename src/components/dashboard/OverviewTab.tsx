@@ -203,10 +203,17 @@ export default function OverviewTab() {
     fill: c.roas >= roasTarget ? DATA_GREEN : DATA_RED,
   }));
 
+  const totalImpressions = activeCampaigns.reduce((s, c) => s + c.impressions, 0);
+  const totalClicks = activeCampaigns.reduce((s, c) => s + c.clicks, 0);
+  const estPageViews = Math.round(totalClicks * 0.85);
+  const estCheckouts = Math.round(totalSales * 3.5);
+
   const funnelData = [
-    { name: 'Impressões', value: activeCampaigns.reduce((s, c) => s + c.impressions, 0), color: DATA_BLUE },
-    { name: 'Cliques', value: activeCampaigns.reduce((s, c) => s + c.clicks, 0), color: DATA_PURPLE },
-    { name: 'Vendas', value: totalSales, color: DATA_GREEN },
+    { name: 'Impressões', value: totalImpressions, color: '#818CF8' },
+    { name: 'Cliques', value: totalClicks, color: '#6366F1' },
+    { name: 'Page Views', value: estPageViews, color: '#4F46E5' },
+    { name: 'Checkouts', value: estCheckouts, color: '#4338CA' },
+    { name: 'Compras', value: totalSales, color: DATA_GREEN },
   ];
 
   const actions = (() => {
@@ -412,30 +419,38 @@ export default function OverviewTab() {
           </ResponsiveContainer>
         </div>
 
-        {/* Funil de Conversão */}
+        {/* Funil de Conversão Detalhado */}
         <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up" style={{ minHeight: 180 }}>
-          <h3 className="text-xs font-semibold text-text-primary mb-3">Funil de Conversão</h3>
-          <div className="space-y-3">
+          <h3 className="text-xs font-semibold text-text-primary mb-4">Funil de Conversão</h3>
+          <div className="flex flex-col items-center gap-1">
             {funnelData.map((item, i) => {
               const maxVal = funnelData[0].value || 1;
-              const width = Math.max((item.value / maxVal) * 100, 15);
-              const rate = i > 0 ? ((item.value / (funnelData[i - 1].value || 1)) * 100).toFixed(1) : null;
+              const widthPct = Math.max((item.value / maxVal) * 100, 20);
+              const rate = i > 0 ? ((item.value / (funnelData[i - 1].value || 1)) * 100) : null;
+              const rateLabels = ['', 'CTR', 'Connect', 'Checkout', 'CVR'];
+              const isLast = i === funnelData.length - 1;
               return (
-                <div key={item.name} className="animate-fade-up" style={{ animationDelay: `${i * 100}ms` }}>
-                  <div className="flex justify-between text-[11px] mb-1">
-                    <span className="text-text-secondary">{item.name}</span>
-                    <span className="text-[14px] text-text-primary font-bold">{item.value.toLocaleString()}</span>
+                <div key={item.name} className="w-full flex flex-col items-center animate-fade-up" style={{ animationDelay: `${i * 80}ms` }}>
+                  {rate !== null && (
+                    <div className="text-[9px] text-[#9CA3AF] font-medium py-0.5">
+                      {rateLabels[i]} {rate.toFixed(1)}% ↓
+                    </div>
+                  )}
+                  <div
+                    className="relative rounded-md overflow-hidden transition-all duration-500"
+                    style={{
+                      width: `${widthPct}%`,
+                      height: 32,
+                      background: isLast
+                        ? `linear-gradient(90deg, ${DATA_GREEN}, ${DATA_GREEN}cc)`
+                        : `linear-gradient(90deg, ${item.color}, ${item.color}88)`,
+                    }}
+                  >
+                    <div className="absolute inset-0 flex items-center justify-between px-3">
+                      <span className="text-[10px] font-medium text-white/90">{item.name}</span>
+                      <span className="text-[11px] font-bold text-white">{item.value.toLocaleString()}</span>
+                    </div>
                   </div>
-                  <div className="h-7 bg-bg-base rounded-lg overflow-hidden relative">
-                    <div
-                      className="h-full rounded-lg transition-all duration-500 absolute left-0 top-0"
-                      style={{
-                        width: `${width}%`,
-                        background: `linear-gradient(90deg, ${item.color}, ${item.color}88)`,
-                      }}
-                    />
-                  </div>
-                  {rate && <p className="text-[10px] mt-0.5 font-medium" style={{ color: item.color }}>{i === 1 ? 'CTR' : 'CVR'}: {rate}%</p>}
                 </div>
               );
             })}

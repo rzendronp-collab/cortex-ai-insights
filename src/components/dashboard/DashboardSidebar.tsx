@@ -91,10 +91,10 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
   const navItems = [
     { id: 'overview', label: 'Resumo', icon: LayoutDashboard },
     { id: 'campaigns', label: 'Campanhas', icon: BarChart2 },
-    { id: 'comparison', label: 'Comparacao', icon: Calendar },
+    { id: 'comparison', label: 'Comparação', icon: Calendar },
     { id: 'rules', label: 'Regras', icon: Shield },
-    { id: 'consolidated', label: 'Relatorios', icon: FileText },
-    { id: 'report', label: 'Notificacoes', icon: Bell },
+    { id: 'consolidated', label: 'Relatórios', icon: FileText },
+    { id: 'report', label: 'Notificações', icon: Bell },
     { id: 'action-plan', label: 'CORTEX', icon: Zap },
     { id: 'chat', label: 'Chat IA', icon: MessageSquare },
   ];

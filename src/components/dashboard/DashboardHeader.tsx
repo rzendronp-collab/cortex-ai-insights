@@ -3,7 +3,8 @@ import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Loader2, Clock, AlertTriangle, RefreshCw, Menu, X as XIcon, Calendar, ChevronDown } from 'lucide-react';
+import { Loader2, Clock, AlertTriangle, RefreshCw, Menu, X as XIcon, Calendar, ChevronDown, ShoppingCart, MessageSquare, Users } from 'lucide-react';
+import { AccountObjective } from '@/context/DashboardContext';
 import AlertsPanel from './AlertsPanel';
 import DateRangePicker from '@/components/ui/DateRangePicker';
 import { getRoasColor } from '@/lib/mockData';
@@ -33,6 +34,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
     analysisData, isFromCache, cacheTimestamp, currencySymbol,
     activeTab, activeAccountIds, selectedAccountName,
     setSelectedAccountName, setSelectedAccountCurrency,
+    accountObjective, setAccountObjective,
   } = useDashboard();
   const { isTokenExpired, isTokenExpiringSoon, daysUntilExpiry, connectMeta, adAccounts } = useMetaConnection();
   const { analyze, loading, roasTarget } = useMetaData();
@@ -182,6 +184,28 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Objective toggle */}
+          <div className="flex items-center gap-0.5 bg-[#0A0F1E]/60 rounded-md p-0.5">
+            {([
+              { key: 'ecommerce' as AccountObjective, icon: ShoppingCart, label: 'E-com' },
+              { key: 'leads' as AccountObjective, icon: Users, label: 'Leads' },
+              { key: 'messages' as AccountObjective, icon: MessageSquare, label: 'Msgs' },
+            ]).map(({ key, icon: Icon, label }) => (
+              <button
+                key={key}
+                onClick={() => setAccountObjective(key)}
+                className={`flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded transition-all duration-150 ${
+                  accountObjective === key
+                    ? 'bg-[#6366F1]/15 text-[#818CF8] border border-[#6366F1]/30'
+                    : 'text-[#6B7280] hover:text-[#F9FAFB]'
+                }`}
+              >
+                <Icon className="w-3 h-3" />
+                {!isMobile && label}
+              </button>
+            ))}
           </div>
 
           {lastTime && !isMobile && (

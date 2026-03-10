@@ -55,6 +55,7 @@ export default function OverviewTab() {
     analysisData, isStale, selectedAccountId, currencySymbol, setActiveTab, analyzeRef,
     activeAccountIds, consolidatedData, analysisCache, selectedPeriod, dateRange,
     setSelectedAccountId, setSelectedAccountName, setSelectedAccountCurrency,
+    accountObjective,
   } = useDashboard();
   const { isConnected, connectMeta, adAccounts } = useMetaConnection();
   const { analyze, loading } = useMetaData();
@@ -301,14 +302,21 @@ export default function OverviewTab() {
 
       {/* ─── KPIs ─── */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
-        {[
-          { label: `ROAS Médio ${roasSemaphore}`, value: `${avgRoas.toFixed(1)}x`, subtitle: "Retorno sobre investimento", delta: calcDelta(avgRoas, prevRoas), valueClassName: roasValueClass, isHero: true },
-          { label: "Gasto Total", value: formatCurrency(totalSpend, currency), subtitle: "Período selecionado", delta: calcDelta(totalSpend, prevSpend) },
-          { label: "Receita Total", value: formatCurrency(totalRevenue, currency), subtitle: "Total gerado", delta: calcDelta(totalRevenue, prevRevenue), valueClassName: "text-data-green" },
-          { label: "Vendas Total", value: totalSales.toString(), subtitle: "Conversões", delta: calcDelta(totalSales, prevSales) },
-          { label: "CTR Médio", value: `${avgCtr.toFixed(1)}%`, subtitle: "Taxa de cliques", delta: calcDelta(avgCtr, prevCtr) },
-          { label: "CPV Médio", value: `${currency} ${costPerSale.toFixed(2)}`, subtitle: "Custo por venda", delta: calcDelta(costPerSale, prevCpv), valueClassName: "text-data-yellow" },
-        ].map((kpi, i) => (
+        {(() => {
+          const conversionLabel = accountObjective === 'leads' ? 'Leads' : accountObjective === 'messages' ? 'Mensagens' : 'Vendas Total';
+          const conversionSubtitle = accountObjective === 'leads' ? 'Formulários preenchidos' : accountObjective === 'messages' ? 'Conversas iniciadas' : 'Conversões';
+          const costLabel = accountObjective === 'leads' ? 'CPL Médio' : accountObjective === 'messages' ? 'CPM Conv.' : 'CPV Médio';
+          const costSubtitle = accountObjective === 'leads' ? 'Custo por lead' : accountObjective === 'messages' ? 'Custo por mensagem' : 'Custo por venda';
+          const revenueLabel = accountObjective === 'leads' ? 'Valor Pipeline' : accountObjective === 'messages' ? 'Valor Estimado' : 'Receita Total';
+          return [
+            { label: `ROAS Médio ${roasSemaphore}`, value: `${avgRoas.toFixed(1)}x`, subtitle: "Retorno sobre investimento", delta: calcDelta(avgRoas, prevRoas), valueClassName: roasValueClass, isHero: true },
+            { label: "Gasto Total", value: formatCurrency(totalSpend, currency), subtitle: "Período selecionado", delta: calcDelta(totalSpend, prevSpend) },
+            { label: revenueLabel, value: formatCurrency(totalRevenue, currency), subtitle: "Total gerado", delta: calcDelta(totalRevenue, prevRevenue), valueClassName: "text-data-green" },
+            { label: conversionLabel, value: totalSales.toString(), subtitle: conversionSubtitle, delta: calcDelta(totalSales, prevSales) },
+            { label: "CTR Médio", value: `${avgCtr.toFixed(1)}%`, subtitle: "Taxa de cliques", delta: calcDelta(avgCtr, prevCtr) },
+            { label: costLabel, value: `${currency} ${costPerSale.toFixed(2)}`, subtitle: costSubtitle, delta: calcDelta(costPerSale, prevCpv), valueClassName: "text-data-yellow" },
+          ];
+        })().map((kpi, i) => (
           <div key={kpi.label} style={{ animationDelay: `${i * 50}ms` }} className="animate-fade-in opacity-0 [animation-fill-mode:forwards]">
             <KPICard {...kpi} />
           </div>

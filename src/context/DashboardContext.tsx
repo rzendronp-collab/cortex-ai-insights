@@ -13,6 +13,8 @@ export interface DateRange {
   to: string;
 }
 
+export type AccountObjective = 'ecommerce' | 'leads' | 'messages';
+
 interface DashboardContextType {
   selectedAccountId: string | null;
   setSelectedAccountId: (id: string | null) => void;
@@ -39,6 +41,9 @@ interface DashboardContextType {
   toggleActiveAccount: (id: string) => void;
   consolidatedData: AnalysisData | null;
   analysisCache: Record<string, CachedAnalysis>;
+  // Account objective
+  accountObjective: AccountObjective;
+  setAccountObjective: (obj: AccountObjective) => void;
 }
 
 const DashboardContext = createContext<DashboardContextType | null>(null);
@@ -59,6 +64,15 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [analysisCache, setAnalysisCache] = useState<Record<string, CachedAnalysis>>({});
   const [accountCurrency, setAccountCurrency] = useState<string | null>(null);
   const analyzeRef = useRef<((overrideAccountId?: string) => void) | null>(null);
+
+  // Account objective
+  const [accountObjective, setAccountObjectiveRaw] = useState<AccountObjective>(() => {
+    return (localStorage.getItem('cortexads_objective') as AccountObjective) || 'ecommerce';
+  });
+  const setAccountObjective = useCallback((obj: AccountObjective) => {
+    setAccountObjectiveRaw(obj);
+    localStorage.setItem('cortexads_objective', obj);
+  }, []);
 
   // Multi-account active list
   const [activeAccountIds, setActiveAccountIds] = useState<string[]>(() => {
@@ -175,6 +189,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       analyzeRef,
       activeAccountIds, setActiveAccountIds, toggleActiveAccount, consolidatedData,
       analysisCache,
+      accountObjective, setAccountObjective,
     }}>
       {children}
     </DashboardContext.Provider>

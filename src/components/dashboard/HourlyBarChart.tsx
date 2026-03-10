@@ -14,10 +14,10 @@ function parseHourToNumber(hour: string): number {
 }
 
 const BAR_COLORS = {
-  peak: '#34D399',
-  high: '#60A5FA',
-  normal: '#A78BFA',
-  low: '#232D45',
+  peak: '#10B981',
+  high: '#6366F1',
+  normal: '#8B5CF6',
+  low: '#1F2937',
 };
 
 export function HourlyBarChart({ data, emptyMessage, currency = '€' }: HourlyBarChartProps) {
@@ -108,7 +108,7 @@ export function HourlyBarChart({ data, emptyMessage, currency = '€' }: HourlyB
                     Vendas: <span className="text-text-primary font-medium">{item.sales} vendas</span>
                   </p>
                   <p className="text-[10px] text-text-secondary">
-                    ROAS: <span className="font-medium" style={{ color: roas >= 1 ? BAR_COLORS.peak : '#F87171' }}>{roas.toFixed(2)}x</span>
+                    ROAS: <span className="font-medium" style={{ color: roas >= 1 ? BAR_COLORS.peak : '#EF4444' }}>{roas.toFixed(2)}x</span>
                   </p>
                 </div>
               )}

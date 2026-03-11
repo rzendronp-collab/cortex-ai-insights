@@ -22,7 +22,7 @@ export default function CortexHistory({ history, loading }: Props) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16 gap-3">
-        <Loader2 className="w-5 h-5 animate-spin text-[#6366F1]" />
+        <Loader2 className="w-5 h-5 animate-spin text-[#6C63FF]" />
         <span className="text-sm text-text-muted">Carregando histórico...</span>
       </div>
     );
@@ -32,8 +32,8 @@ export default function CortexHistory({ history, loading }: Props) {
   const actionTypes = [...new Set(history.map(h => h.action_type))];
 
   return (
-    <div className="bg-[#111827] border border-[#1F2937] rounded-xl overflow-hidden">
-      <div className="px-5 py-3 border-b border-[#1F2937] flex items-center justify-between">
+    <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl overflow-hidden">
+      <div className="px-5 py-3 border-b border-[#1E2A42] flex items-center justify-between">
         <h4 className="text-[11px] uppercase tracking-wider text-text-muted font-semibold">
           Histórico de Otimizações ({history.length})
         </h4>
@@ -42,7 +42,7 @@ export default function CortexHistory({ history, loading }: Props) {
           <button
             onClick={() => setFilter('all')}
             className={`text-[10px] px-2 py-0.5 rounded-full transition-colors ${
-              filter === 'all' ? 'bg-[#6366F1]/20 text-[#6366F1]' : 'text-text-muted hover:text-text-primary'
+              filter === 'all' ? 'bg-[#6C63FF]/20 text-[#6C63FF]' : 'text-text-muted hover:text-text-primary'
             }`}
           >
             Todos
@@ -54,7 +54,7 @@ export default function CortexHistory({ history, loading }: Props) {
                 key={type}
                 onClick={() => setFilter(type)}
                 className={`text-[10px] px-2 py-0.5 rounded-full transition-colors ${
-                  filter === type ? 'bg-[#6366F1]/20 text-[#6366F1]' : 'text-text-muted hover:text-text-primary'
+                  filter === type ? 'bg-[#6C63FF]/20 text-[#6C63FF]' : 'text-text-muted hover:text-text-primary'
                 }`}
               >
                 {badge.label}
@@ -78,7 +78,7 @@ export default function CortexHistory({ history, loading }: Props) {
           </p>
         </div>
       ) : (
-        <div className="divide-y divide-[#1F2937]">
+        <div className="divide-y divide-[#1E2A42]">
           {filtered.map(h => {
             const badge = TYPE_BADGES[h.action_type] || { label: h.action_type, color: 'bg-slate-500/10 text-slate-400' };
             const isExpanded = expanded === h.id;
@@ -108,7 +108,7 @@ export default function CortexHistory({ history, loading }: Props) {
                 </div>
 
                 {isExpanded && (
-                  <div className="mt-3 ml-24 bg-[#0A0F1E] rounded-lg p-3 space-y-2 animate-fade-up">
+                  <div className="mt-3 ml-24 bg-[#080B14] rounded-lg p-3 space-y-2 animate-fade-up">
                     {h.reasoning && (
                       <div>
                         <p className="text-[10px] text-text-muted uppercase mb-0.5">Motivo</p>

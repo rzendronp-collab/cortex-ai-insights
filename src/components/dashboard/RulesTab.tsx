@@ -161,7 +161,7 @@ function actionColor(action: string) {
     case 'Sugerir Pausa': return 'bg-red-500/15 text-red-400';
     case 'Sugerir Escala': return 'bg-emerald-500/15 text-emerald-400';
     case 'Notificar': return 'bg-blue-500/15 text-blue-400';
-    default: return 'bg-[#6366F1]/15 text-[#6366F1]';
+    default: return 'bg-[#6C63FF]/15 text-[#6C63FF]';
   }
 }
 
@@ -251,9 +251,9 @@ export default function RulesTab() {
       {/* ================================================================ */}
       {/* LEFT — Rule Builder                                              */}
       {/* ================================================================ */}
-      <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
+      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
         <h3 className="text-[12px] font-semibold text-white mb-4 flex items-center gap-2">
-          <Plus className="w-4 h-4 text-[#6366F1]" />
+          <Plus className="w-4 h-4 text-[#6C63FF]" />
           Criar Regra
         </h3>
 
@@ -262,7 +262,7 @@ export default function RulesTab() {
           value={ruleName}
           onChange={e => setRuleName(e.target.value)}
           placeholder="Nome da regra (opcional)"
-          className="h-8 text-[12px] bg-[#0A0F1E] border-[#1F2937] text-white placeholder:text-gray-500 mb-3 rounded-lg"
+          className="h-8 text-[12px] bg-[#080B14] border-[#1E2A42] text-white placeholder:text-gray-500 mb-3 rounded-lg"
         />
 
         {/* Conditions */}
@@ -271,10 +271,10 @@ export default function RulesTab() {
             <div key={idx} className="flex items-center gap-2">
               {/* Metric */}
               <Select value={cond.metric} onValueChange={v => updateCondition(idx, { metric: v })}>
-                <SelectTrigger className="h-8 w-[110px] text-[12px] bg-[#0A0F1E] border-[#1F2937] text-white">
+                <SelectTrigger className="h-8 w-[110px] text-[12px] bg-[#080B14] border-[#1E2A42] text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#111827] border-[#1F2937]">
+                <SelectContent className="bg-[#0E1420] border-[#1E2A42]">
                   {METRICS.map(m => (
                     <SelectItem key={m} value={m} className="text-[12px] text-white">{m}</SelectItem>
                   ))}
@@ -283,10 +283,10 @@ export default function RulesTab() {
 
               {/* Operator */}
               <Select value={cond.operator} onValueChange={v => updateCondition(idx, { operator: v as RuleCondition['operator'] })}>
-                <SelectTrigger className="h-8 w-[130px] text-[12px] bg-[#0A0F1E] border-[#1F2937] text-white">
+                <SelectTrigger className="h-8 w-[130px] text-[12px] bg-[#080B14] border-[#1E2A42] text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#111827] border-[#1F2937]">
+                <SelectContent className="bg-[#0E1420] border-[#1E2A42]">
                   {OPERATORS.map(o => (
                     <SelectItem key={o.value} value={o.value} className="text-[12px] text-white">{o.label}</SelectItem>
                   ))}
@@ -299,7 +299,7 @@ export default function RulesTab() {
                 value={cond.value || ''}
                 onChange={e => updateCondition(idx, { value: parseFloat(e.target.value) || 0 })}
                 placeholder="Valor"
-                className="h-8 w-[80px] text-[12px] bg-[#0A0F1E] border-[#1F2937] text-white placeholder:text-gray-500 rounded-lg"
+                className="h-8 w-[80px] text-[12px] bg-[#080B14] border-[#1E2A42] text-white placeholder:text-gray-500 rounded-lg"
               />
 
               {/* Remove condition */}
@@ -321,19 +321,19 @@ export default function RulesTab() {
             variant="outline"
             size="sm"
             onClick={addCondition}
-            className="h-7 text-[10px] border-[#1F2937] bg-[#0A0F1E] text-gray-400 hover:text-white hover:border-[#6366F1]"
+            className="h-7 text-[10px] border-[#1E2A42] bg-[#080B14] text-gray-400 hover:text-white hover:border-[#6C63FF]"
           >
             <Plus className="w-3 h-3 mr-1" />
             Condição
           </Button>
 
           {conditions.length > 1 && (
-            <div className="flex items-center bg-[#0A0F1E] border border-[#1F2937] rounded-lg overflow-hidden ml-auto">
+            <div className="flex items-center bg-[#080B14] border border-[#1E2A42] rounded-lg overflow-hidden ml-auto">
               <button
                 onClick={() => setLogic('AND')}
                 className={`px-3 py-1 text-[10px] font-semibold transition-colors ${
                   logic === 'AND'
-                    ? 'bg-[#6366F1] text-white'
+                    ? 'bg-[#6C63FF] text-white'
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
@@ -343,7 +343,7 @@ export default function RulesTab() {
                 onClick={() => setLogic('OR')}
                 className={`px-3 py-1 text-[10px] font-semibold transition-colors ${
                   logic === 'OR'
-                    ? 'bg-[#6366F1] text-white'
+                    ? 'bg-[#6C63FF] text-white'
                     : 'text-gray-400 hover:text-white'
                 }`}
               >
@@ -357,10 +357,10 @@ export default function RulesTab() {
         <div className="mb-4">
           <label className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 block">Ação</label>
           <Select value={action} onValueChange={v => setAction(v as Rule['action'])}>
-            <SelectTrigger className="h-8 text-[12px] bg-[#0A0F1E] border-[#1F2937] text-white">
+            <SelectTrigger className="h-8 text-[12px] bg-[#080B14] border-[#1E2A42] text-white">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-[#111827] border-[#1F2937]">
+            <SelectContent className="bg-[#0E1420] border-[#1E2A42]">
               {ACTIONS.map(a => (
                 <SelectItem key={a} value={a} className="text-[12px] text-white">{a}</SelectItem>
               ))}
@@ -372,7 +372,7 @@ export default function RulesTab() {
         <Button
           onClick={createRule}
           disabled={!canCreate}
-          className="w-full h-9 text-[12px] font-semibold bg-[#6366F1] hover:bg-[#5558e6] text-white rounded-lg"
+          className="w-full h-9 text-[12px] font-semibold bg-[#6C63FF] hover:bg-[#5558e6] text-white rounded-lg"
         >
           <Plus className="w-3.5 h-3.5 mr-1" />
           Criar Regra
@@ -382,9 +382,9 @@ export default function RulesTab() {
       {/* ================================================================ */}
       {/* RIGHT — Active Rules                                             */}
       {/* ================================================================ */}
-      <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
+      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
         <h3 className="text-[12px] font-semibold text-white mb-3 flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-[#6366F1]" />
+          <ShieldCheck className="w-4 h-4 text-[#6C63FF]" />
           Regras Ativas ({rules.filter(r => r.active).length}/{rules.length})
         </h3>
 
@@ -395,8 +395,8 @@ export default function RulesTab() {
             {rules.map(rule => (
               <div
                 key={rule.id}
-                className={`bg-[#0A0F1E] border rounded-lg p-3 transition-all ${
-                  rule.active ? 'border-[#6366F1]/30' : 'border-[#1F2937] opacity-50'
+                className={`bg-[#080B14] border rounded-lg p-3 transition-all ${
+                  rule.active ? 'border-[#6C63FF]/30' : 'border-[#1E2A42] opacity-50'
                 }`}
               >
                 {/* Header row */}
@@ -411,11 +411,11 @@ export default function RulesTab() {
                 <div className="flex flex-wrap gap-1 mb-2">
                   {rule.conditions.map((c, ci) => (
                     <span key={ci} className="inline-flex items-center">
-                      <span className="text-[10px] bg-[#111827] text-gray-300 px-2 py-0.5 rounded">
+                      <span className="text-[10px] bg-[#0E1420] text-gray-300 px-2 py-0.5 rounded">
                         {c.metric} {operatorSymbol(c.operator)} {c.value}
                       </span>
                       {ci < rule.conditions.length - 1 && (
-                        <span className="text-[10px] text-[#6366F1] font-semibold mx-1">{rule.logic}</span>
+                        <span className="text-[10px] text-[#6C63FF] font-semibold mx-1">{rule.logic}</span>
                       )}
                     </span>
                   ))}
@@ -426,7 +426,7 @@ export default function RulesTab() {
                   <Switch
                     checked={rule.active}
                     onCheckedChange={() => toggleRule(rule.id)}
-                    className="data-[state=checked]:bg-[#6366F1] scale-75 origin-left"
+                    className="data-[state=checked]:bg-[#6C63FF] scale-75 origin-left"
                   />
                   <span className="text-[10px] text-gray-500 flex-1">
                     {rule.active ? 'Ativa' : 'Inativa'}
@@ -447,9 +447,9 @@ export default function RulesTab() {
       {/* ================================================================ */}
       {/* BOTTOM — Suggested Rules (full width)                            */}
       {/* ================================================================ */}
-      <div className="lg:col-span-2 bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
+      <div className="lg:col-span-2 bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
         <h3 className="text-[12px] font-semibold text-white mb-3 flex items-center gap-2">
-          <Zap className="w-4 h-4 text-[#6366F1]" />
+          <Zap className="w-4 h-4 text-[#6C63FF]" />
           Regras Sugeridas
         </h3>
 
@@ -458,7 +458,7 @@ export default function RulesTab() {
             <button
               key={i}
               onClick={() => adoptSuggested(suggested)}
-              className="bg-[#0A0F1E] hover:bg-[#1F2937] border border-[#1F2937] hover:border-[#6366F1]/40 rounded-lg p-3 text-left transition-all group"
+              className="bg-[#080B14] hover:bg-[#1E2A42] border border-[#1E2A42] hover:border-[#6C63FF]/40 rounded-lg p-3 text-left transition-all group"
             >
               <p className="text-[12px] font-semibold text-white mb-1 truncate">{suggested.name}</p>
               <div className="space-y-0.5 mb-2">
@@ -466,7 +466,7 @@ export default function RulesTab() {
                   <p key={ci} className="text-[10px] text-gray-400">
                     {c.metric} {operatorSymbol(c.operator)} {c.value}
                     {ci < suggested.conditions.length - 1 && (
-                      <span className="text-[#6366F1] font-semibold ml-1">{suggested.logic}</span>
+                      <span className="text-[#6C63FF] font-semibold ml-1">{suggested.logic}</span>
                     )}
                   </p>
                 ))}

@@ -46,7 +46,7 @@ export default function CortexFatigue({ results, loading }: Props) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16 gap-3">
-        <Loader2 className="w-5 h-5 animate-spin text-[#6366F1]" />
+        <Loader2 className="w-5 h-5 animate-spin text-[#6C63FF]" />
         <span className="text-sm text-text-muted">Analisando fadiga criativa...</span>
       </div>
     );
@@ -70,9 +70,9 @@ export default function CortexFatigue({ results, loading }: Props) {
   return (
     <div className="space-y-4">
       {/* Summary bar */}
-      <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-4 flex items-center gap-6">
+      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-4 flex items-center gap-6">
         <div className="flex items-center gap-2">
-          <Flame className="w-4 h-4 text-[#6366F1]" />
+          <Flame className="w-4 h-4 text-[#6C63FF]" />
           <span className="text-[12px] font-semibold text-text-primary">Fadiga Criativa</span>
         </div>
         <div className="flex gap-4 text-[11px]">
@@ -96,12 +96,12 @@ export default function CortexFatigue({ results, loading }: Props) {
           const offset = circumference - (r.fatigueScore / 100) * circumference;
 
           return (
-            <div key={r.adId} className="bg-[#111827] border border-[#1F2937] rounded-xl p-4 hover:border-[#374151] transition-colors">
+            <div key={r.adId} className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-4 hover:border-[#2A3A5C] transition-colors">
               <div className="flex items-start gap-3">
                 {/* Score ring */}
                 <div className="relative flex-shrink-0">
                   <svg width="52" height="52" className="-rotate-90">
-                    <circle cx="26" cy="26" r={radius} fill="none" stroke="#1F2937" strokeWidth="3" />
+                    <circle cx="26" cy="26" r={radius} fill="none" stroke="#1E2A42" strokeWidth="3" />
                     <circle
                       cx="26" cy="26" r={radius}
                       fill="none"
@@ -140,13 +140,13 @@ export default function CortexFatigue({ results, loading }: Props) {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[9px] text-text-muted">CPM</span>
-                    <MiniSparkline data={r.cpmTrend} color="#6366F1" />
+                    <MiniSparkline data={r.cpmTrend} color="#6C63FF" />
                   </div>
                 </div>
               </div>
 
               {/* Details row */}
-              <div className="mt-3 pt-2 border-t border-[#1F2937] flex items-center gap-4 text-[10px]">
+              <div className="mt-3 pt-2 border-t border-[#1E2A42] flex items-center gap-4 text-[10px]">
                 <span className="text-text-muted">Dias: <b className="text-text-primary">{r.daysRunning}</b></span>
                 <span className="text-text-muted">Freq: <b className="text-text-primary">{r.frequencyAvg.toFixed(1)}x</b></span>
                 <span className="text-text-muted flex-1 truncate">{r.reasoning}</span>

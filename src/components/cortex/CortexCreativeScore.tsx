@@ -20,7 +20,7 @@ function ScoreCircle({ score }: { score: number }) {
   return (
     <div className="relative w-20 h-20 flex-shrink-0">
       <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-        <circle cx="40" cy="40" r={radius} fill="none" stroke="#1F2937" strokeWidth="5" />
+        <circle cx="40" cy="40" r={radius} fill="none" stroke="#1E2A42" strokeWidth="5" />
         <circle
           cx="40" cy="40" r={radius} fill="none"
           stroke={color} strokeWidth="5" strokeLinecap="round"
@@ -55,13 +55,13 @@ function GeneratedAdsSection({ ads, generating, onGenerate }: { ads: GeneratedAd
     <div className="mt-6">
       <div className="flex items-center justify-between mb-3">
         <h4 className="text-[11px] uppercase tracking-wider text-text-muted font-semibold flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-[#6366F1]" />
+          <Sparkles className="w-3.5 h-3.5 text-[#6C63FF]" />
           AI Ad Generator
         </h4>
         <button
           onClick={onGenerate}
           disabled={generating}
-          className="text-[10px] font-semibold px-3 py-1.5 rounded-lg bg-[#6366F1]/15 text-[#818CF8] hover:bg-[#6366F1]/25 transition-colors disabled:opacity-40 flex items-center gap-1.5"
+          className="text-[10px] font-semibold px-3 py-1.5 rounded-lg bg-[#6C63FF]/15 text-[#8B85FF] hover:bg-[#6C63FF]/25 transition-colors disabled:opacity-40 flex items-center gap-1.5"
         >
           {generating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
           {generating ? 'Gerando...' : 'Gerar Anúncios'}
@@ -71,10 +71,10 @@ function GeneratedAdsSection({ ads, generating, onGenerate }: { ads: GeneratedAd
       {ads.length > 0 && (
         <div className="space-y-3">
           {ads.map((ad, i) => (
-            <div key={i} className="bg-[#111827] border border-[#1F2937] rounded-xl p-4 hover:border-[#374151] transition-colors">
+            <div key={i} className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-4 hover:border-[#2A3A5C] transition-colors">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-semibold text-[#818CF8] bg-[#6366F1]/10 px-2 py-0.5 rounded">Anúncio {i + 1}</span>
-                <span className="text-[9px] text-text-muted bg-[#0A0F1E] px-2 py-0.5 rounded">{ad.angulo}</span>
+                <span className="text-[10px] font-semibold text-[#8B85FF] bg-[#6C63FF]/10 px-2 py-0.5 rounded">Anúncio {i + 1}</span>
+                <span className="text-[9px] text-text-muted bg-[#080B14] px-2 py-0.5 rounded">{ad.angulo}</span>
               </div>
               <div className="space-y-2">
                 <div className="flex items-start gap-2">
@@ -98,7 +98,7 @@ function GeneratedAdsSection({ ads, generating, onGenerate }: { ads: GeneratedAd
                   <CopyButton text={ad.cta} />
                 </div>
                 {ad.copy_b && (
-                  <div className="mt-2 pt-2 border-t border-[#1F2937]">
+                  <div className="mt-2 pt-2 border-t border-[#1E2A42]">
                     <div className="flex items-start gap-2">
                       <span className="text-[9px] text-text-muted uppercase w-16 flex-shrink-0 pt-0.5">Copy B</span>
                       <p className="text-[11px] text-text-muted flex-1">{ad.copy_b}</p>
@@ -106,7 +106,7 @@ function GeneratedAdsSection({ ads, generating, onGenerate }: { ads: GeneratedAd
                     </div>
                     <div className="flex items-start gap-2 mt-1">
                       <span className="text-[9px] text-text-muted uppercase w-16 flex-shrink-0 pt-0.5">Teste</span>
-                      <p className="text-[10px] text-[#818CF8] flex-1">{ad.teste}</p>
+                      <p className="text-[10px] text-[#8B85FF] flex-1">{ad.teste}</p>
                     </div>
                   </div>
                 )}
@@ -134,7 +134,7 @@ export default function CortexCreativeScore({ creatives, loading, onAction, gene
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16 gap-3">
-        <Loader2 className="w-5 h-5 animate-spin text-[#6366F1]" />
+        <Loader2 className="w-5 h-5 animate-spin text-[#6C63FF]" />
         <span className="text-sm text-text-muted">Calculando scores de criativos...</span>
       </div>
     );
@@ -158,7 +158,7 @@ export default function CortexCreativeScore({ creatives, loading, onAction, gene
         return (
           <div
             key={c.id}
-            className="bg-[#111827] border border-[#1F2937] rounded-xl p-4 flex gap-4 animate-fade-up hover:border-[#374151] transition-colors"
+            className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-4 flex gap-4 animate-fade-up hover:border-[#2A3A5C] transition-colors"
             style={{ animationDelay: `${i * 50}ms` }}
           >
             <ScoreCircle score={c.score} />

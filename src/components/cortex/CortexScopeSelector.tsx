@@ -43,10 +43,10 @@ export default function CortexScopeSelector({ open, onClose, onConfirm, selected
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-[#111827] border border-[#1F2937] rounded-xl w-full max-w-md p-6 shadow-2xl">
+      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl w-full max-w-md p-6 shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
-            <Settings2 className="w-4 h-4 text-[#6366F1]" />
+            <Settings2 className="w-4 h-4 text-[#6C63FF]" />
             Configurar Escopo de Análise
           </h3>
           <button onClick={onClose} className="text-text-muted hover:text-text-primary">
@@ -62,8 +62,8 @@ export default function CortexScopeSelector({ open, onClose, onConfirm, selected
               key={account.id}
               className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                 selected.has(account.account_id || '')
-                  ? 'border-[#6366F1]/40 bg-[#6366F1]/5'
-                  : 'border-[#1F2937] hover:border-[#374151]'
+                  ? 'border-[#6C63FF]/40 bg-[#6C63FF]/5'
+                  : 'border-[#1E2A42] hover:border-[#2A3A5C]'
               }`}
             >
               <Checkbox
@@ -83,17 +83,17 @@ export default function CortexScopeSelector({ open, onClose, onConfirm, selected
           )}
         </div>
 
-        <div className="flex items-center justify-between mt-5 pt-4 border-t border-[#1F2937]">
+        <div className="flex items-center justify-between mt-5 pt-4 border-t border-[#1E2A42]">
           <span className="text-[11px] text-text-muted">{selected.size} conta(s) selecionada(s)</span>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={onClose} className="text-[11px] border-[#1F2937]">
+            <Button variant="outline" size="sm" onClick={onClose} className="text-[11px] border-[#1E2A42]">
               Cancelar
             </Button>
             <Button
               size="sm"
               onClick={handleConfirm}
               disabled={selected.size === 0}
-              className="text-[11px] bg-[#6366F1] hover:bg-[#5558E6] text-white"
+              className="text-[11px] bg-[#6C63FF] hover:bg-[#5558E6] text-white"
             >
               Analisar {selected.size} conta(s)
             </Button>

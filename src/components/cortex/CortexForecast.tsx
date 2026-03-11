@@ -3,11 +3,11 @@ import { useDashboard } from '@/context/DashboardContext';
 import { Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const CHART_GRID = '#1F2937';
+const CHART_GRID = '#1E2A42';
 const CHART_AXIS = '#6B7280';
 const chartTooltipStyle = {
-  background: '#111827',
-  border: '1px solid #6366F1',
+  background: '#0E1420',
+  border: '1px solid #6C63FF',
   borderRadius: 8,
   fontSize: 11,
   color: '#F9FAFB',
@@ -39,7 +39,7 @@ export default function CortexForecast({ forecast, loading, historicalData }: Pr
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16 gap-3">
-        <Loader2 className="w-5 h-5 animate-spin text-[#6366F1]" />
+        <Loader2 className="w-5 h-5 animate-spin text-[#6C63FF]" />
         <span className="text-sm text-text-muted">Gerando previsão de ROAS...</span>
       </div>
     );
@@ -95,14 +95,14 @@ export default function CortexForecast({ forecast, loading, historicalData }: Pr
   return (
     <div className="space-y-4">
       {/* Chart */}
-      <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5">
+      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5">
         <h4 className="text-xs font-semibold text-text-primary mb-4">Previsão ROAS — Próximos 7 Dias</h4>
         <ResponsiveContainer width="100%" height={260}>
           <ComposedChart data={chartData}>
             <defs>
               <linearGradient id="forecastBand" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#6366F1" stopOpacity={0.15} />
-                <stop offset="95%" stopColor="#6366F1" stopOpacity={0.02} />
+                <stop offset="5%" stopColor="#6C63FF" stopOpacity={0.15} />
+                <stop offset="95%" stopColor="#6C63FF" stopOpacity={0.02} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="4 4" stroke={CHART_GRID} />
@@ -111,46 +111,46 @@ export default function CortexForecast({ forecast, loading, historicalData }: Pr
             <Tooltip contentStyle={chartTooltipStyle} />
             {/* Confidence band */}
             <Area type="monotone" dataKey="roas_max" stroke="none" fill="url(#forecastBand)" />
-            <Area type="monotone" dataKey="roas_min" stroke="none" fill="#111827" />
+            <Area type="monotone" dataKey="roas_min" stroke="none" fill="#0E1420" />
             {/* Historical line */}
             <Line type="monotone" dataKey="roas" stroke="#10B981" strokeWidth={2} dot={{ r: 3, fill: '#10B981' }} connectNulls={false} />
             {/* Forecast line */}
-            <Line type="monotone" dataKey="roas_expected" stroke="#6366F1" strokeWidth={2} strokeDasharray="6 3" dot={{ r: 3, fill: '#6366F1' }} connectNulls={false} />
+            <Line type="monotone" dataKey="roas_expected" stroke="#6C63FF" strokeWidth={2} strokeDasharray="6 3" dot={{ r: 3, fill: '#6C63FF' }} connectNulls={false} />
           </ComposedChart>
         </ResponsiveContainer>
         <div className="flex justify-center gap-6 mt-2 text-[10px] text-text-muted">
           <span className="flex items-center gap-1.5"><span className="w-4 h-[2px] bg-[#10B981] rounded inline-block" /> Histórico</span>
-          <span className="flex items-center gap-1.5"><span className="w-4 h-[2px] bg-[#6366F1] rounded inline-block" style={{ borderTop: '2px dashed #6366F1' }} /> Previsão</span>
-          <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-[#6366F1]/15 rounded inline-block" /> Banda de confiança</span>
+          <span className="flex items-center gap-1.5"><span className="w-4 h-[2px] bg-[#6C63FF] rounded inline-block" style={{ borderTop: '2px dashed #6C63FF' }} /> Previsão</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-[#6C63FF]/15 rounded inline-block" /> Banda de confiança</span>
         </div>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-4">
+        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-4">
           <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">ROAS Esperado</p>
-          <p className="text-xl font-bold text-[#6366F1]">{avgExpectedRoas.toFixed(1)}x</p>
+          <p className="text-xl font-bold text-[#6C63FF]">{avgExpectedRoas.toFixed(1)}x</p>
         </div>
-        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-4">
+        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-4">
           <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Receita Projetada</p>
           <p className="text-xl font-bold text-emerald-400">{currencySymbol} {(totalExpectedRevenue / 1000).toFixed(1)}k</p>
         </div>
-        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-4">
+        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-4">
           <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Tendência</p>
           <div className={`flex items-center gap-1.5 ${trend.color}`}>
             <TrendIcon className="w-4 h-4" />
             <span className="text-sm font-bold">{trend.label}</span>
           </div>
         </div>
-        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-4">
+        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-4">
           <p className="text-[10px] text-text-muted uppercase tracking-wider mb-1">Confiança</p>
           <span className={`text-sm font-bold ${confidence.color}`}>{forecast.confidence.charAt(0).toUpperCase() + forecast.confidence.slice(1)}</span>
         </div>
       </div>
 
       {/* Reasoning */}
-      <div className="bg-[#6366F1]/5 border border-[#6366F1]/20 rounded-xl p-4">
-        <p className="text-[11px] text-[#818CF8] font-medium mb-1">Análise da IA</p>
+      <div className="bg-[#6C63FF]/5 border border-[#6C63FF]/20 rounded-xl p-4">
+        <p className="text-[11px] text-[#8B85FF] font-medium mb-1">Análise da IA</p>
         <p className="text-[12px] text-text-primary leading-relaxed">{forecast.reasoning}</p>
       </div>
     </div>

@@ -63,7 +63,7 @@ function saveToLocalHistory(entry: Omit<CortexOptimization, 'id'>) {
 
 async function saveToSupabase(userId: string, data: Record<string, unknown>): Promise<boolean> {
   try {
-    const { error } = await supabase.from('cortex_optimizations').insert({
+    const { error } = await (supabase as any).from('cortex_optimizations').insert({
       user_id: userId,
       ...data,
     });
@@ -151,7 +151,7 @@ export function useCortexActions() {
 
     try {
       // Try Supabase first
-      let query = supabase
+      let query = (supabase as any)
         .from('cortex_optimizations')
         .select('*')
         .eq('user_id', user.id)

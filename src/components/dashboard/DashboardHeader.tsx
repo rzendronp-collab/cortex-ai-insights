@@ -1,22 +1,37 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useProfile } from '@/hooks/useProfile';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Loader2, RefreshCw, Menu, Circle, Calendar } from 'lucide-react';
+import { Loader2, RefreshCw, Menu, Bell } from 'lucide-react';
 import AlertsPanel from './AlertsPanel';
 import PeriodSelector from '@/components/ui/PeriodSelector';
 
+const C = {
+  bg:            '#FFFFFF',
+  border:        '#E4E7EF',
+  accent:        '#2563EB',
+  accentHover:   '#1D4ED8',
+  accentSubtle:  '#EFF4FF',
+  accentBorder:  '#C7D7FD',
+  textPrimary:   '#0F1523',
+  textSecondary: '#5A6478',
+  textMuted:     '#9BA5B7',
+  bgHover:       '#F1F3F8',
+  green:         '#16A34A',
+  red:           '#DC2626',
+} as const;
+
 const tabLabels: Record<string, string> = {
-  overview: 'Visão Geral',
-  campaigns: 'Campanhas',
+  overview:      'Visão Geral',
+  campaigns:     'Campanhas',
   'action-plan': 'CORTEX IA',
-  comparison: 'Comparação',
-  consolidated: 'Relatórios',
-  rules: 'Regras',
-  chat: 'Chat',
-  report: 'Notificações',
+  comparison:    'Comparação',
+  consolidated:  'Relatórios',
+  rules:         'Regras',
+  chat:          'Chat',
+  report:        'Notificações',
 };
 
 interface DashboardHeaderProps {
@@ -33,41 +48,59 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
   const isMobile = useIsMobile();
   const { profile } = useProfile();
 
+  const [lastUpdatedText, setLastUpdatedText] = useState<string | null>(null);
+
+  useEffect(() => {
+    const compute = () => {
+      if (!cacheTimestamp) { setLastUpdatedText(null); return; }
+      const diffMs  = Date.now() - cacheTimestamp;
+      const diffMin = Math.floor(diffMs / 60000);
+      if (diffMin < 1)  setLastUpdatedText('Agora');
+      else if (diffMin < 60) setLastUpdatedText(`${diffMin}min atrás`);
+      else setLastUpdatedText(`${Math.floor(diffMin / 60)}h atrás`);
+    };
+    compute();
+    const interval = setInterval(compute, 30000);
+    return () => clearInterval(interval);
+  }, [cacheTimestamp]);
+
   const handleAtualizar = useCallback(async () => {
     if (activeAccountIds.length === 0) return;
     await Promise.all(activeAccountIds.map(id => analyze(id)));
   }, [activeAccountIds, analyze]);
 
-  const initials = profile?.name
-    ? profile.name.trim().split(/\s+/).map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
-    : 'U';
-
-  const lastUpdatedText = cacheTimestamp
-    ? (() => {
-        const diffMs = Date.now() - cacheTimestamp;
-        const diffMin = Math.floor(diffMs / 60000);
-        if (diffMin < 1) return 'Agora';
-        if (diffMin < 60) return `${diffMin}min atrás`;
-        return `${Math.floor(diffMin / 60)}h atrás`;
-      })()
-    : null;
-
   return (
-    <div className="sticky top-0 z-30 h-14 bg-[#080B14] border-b border-[#1E2A42] flex items-center justify-between px-6">
-      {/* Left: section title */}
+    <div
+      className="sticky top-0 z-30 flex items-center justify-between px-6"
+      style={{ height: 52, background: C.bg, borderBottom: `1px solid ${C.border}` }}
+    >
+      {/* ── Left ──────────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
         {isMobile && onOpenSidebar && (
-          <button onClick={onOpenSidebar} className="p-1 text-[#4A5F7A] hover:text-[#F0F4FF] transition-colors">
+          <button
+            onClick={onOpenSidebar}
+            className="p-1 rounded"
+            style={{ color: C.textMuted }}
+            onMouseEnter={e => (e.currentTarget.style.background = C.bgHover)}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          >
             <Menu className="w-5 h-5" />
           </button>
         )}
-        <h1 className="font-display font-semibold text-[16px] text-[#F0F4FF] tracking-tight">
+
+        <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 16, color: C.textPrimary, letterSpacing: '-0.3px' }}>
           {tabLabels[activeTab] || 'Dashboard'}
         </h1>
+
         {(selectedAccountName || activeAccountIds.length > 0) && (
           <span
-            className="text-[11px] text-[#7A8FAD] hidden md:inline-block px-2 py-0.5 rounded-full"
-            style={{ background: '#0E1420', border: '1px solid #1E2A42' }}
+            className="hidden md:inline-block"
+            style={{
+              fontSize: 11, fontWeight: 600, color: C.textSecondary,
+              background: C.bgHover, border: `1px solid ${C.border}`,
+              borderRadius: 6, padding: '3px 10px',
+              fontFamily: "'DM Sans', sans-serif",
+            }}
           >
             {activeAccountIds.length > 1
               ? `${activeAccountIds.length} contas`
@@ -76,60 +109,70 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
         )}
       </div>
 
-      {/* Right: status + period + alerts + refresh */}
-      <div className="flex items-center gap-3">
-        {/* Connection status */}
-        <div className="flex items-center gap-1.5">
-          <Circle className={`w-2 h-2 flex-shrink-0 ${
-            isTokenExpired
-              ? 'fill-[#F05252] text-[#F05252] animate-pulse-dot'
-              : isConnected
-                ? 'fill-[#22D07A] text-[#22D07A] animate-pulse-dot'
-                : 'fill-[#4A5F7A] text-[#4A5F7A]'
-          }`} />
-          {isTokenExpired ? (
-            <button onClick={() => connectMeta()} className="text-[11px] text-[#F05252] font-medium hover:underline">
-              Reconectar
-            </button>
-          ) : isConnected ? (
-            <span className="text-[11px] text-[#7A8FAD] hidden sm:inline">Conectado</span>
-          ) : (
-            <span className="text-[11px] text-[#4A5F7A] hidden sm:inline">Desconectado</span>
-          )}
-        </div>
-
-        <div className="w-px h-5 bg-[#1E2A42]" />
+      {/* ── Right ─────────────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-2">
 
         {/* Period Selector */}
         <PeriodSelector value={selectedPeriod} onChange={setSelectedPeriod} />
 
-        <div className="w-px h-5 bg-[#1E2A42]" />
+        <div className="w-px h-4 hidden sm:block" style={{ background: C.border }} />
 
-        <AlertsPanel />
-
-        {/* Last Updated Text */}
+        {/* Last updated */}
         {lastUpdatedText && (
-          <span className="text-[11px] text-[#4A5F7A] hidden sm:inline">Atualizado: {lastUpdatedText}</span>
+          <span className="hidden sm:inline" style={{ fontSize: 11, color: C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
+            Atualizado {lastUpdatedText}
+          </span>
         )}
 
-        {/* Refresh button — PRIMARY BLUE */}
+        {/* Refresh button — PRIMARY */}
         <button
-          className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-white rounded-lg transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none"
-          style={{
-            backgroundColor: loading ? '#3A7AD9' : '#4F8EF7',
-          }}
           onClick={handleAtualizar}
           disabled={loading || (activeAccountIds.length === 0 && !selectedAccountId)}
-          onMouseEnter={(e) => !loading && (e.currentTarget.style.backgroundColor = '#4080E0')}
-          onMouseLeave={(e) => !loading && (e.currentTarget.style.backgroundColor = '#4F8EF7')}
+          className="flex items-center gap-1.5 rounded-md transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none"
+          style={{
+            background: loading ? '#1D4ED8' : C.accent,
+            color: '#FFFFFF',
+            fontSize: 13, fontWeight: 600,
+            padding: '6px 12px',
+            fontFamily: "'DM Sans', sans-serif",
+            boxShadow: '0 1px 2px rgba(37,99,235,0.2)',
+          }}
+          onMouseEnter={e => !loading && ((e.currentTarget as HTMLElement).style.background = C.accentHover)}
+          onMouseLeave={e => !loading && ((e.currentTarget as HTMLElement).style.background = C.accent)}
         >
-          {loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <RefreshCw className="w-4 h-4" />
-          )}
-          {!isMobile && (loading ? 'Atualizando' : 'Atualizar')}
+          {loading
+            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            : <RefreshCw className="w-3.5 h-3.5" />
+          }
+          {!isMobile && <span>{loading ? 'Atualizando' : 'Atualizar'}</span>}
         </button>
+
+        <div className="w-px h-4 hidden sm:block" style={{ background: C.border }} />
+
+        {/* Alerts */}
+        <AlertsPanel />
+
+        {/* Connection status */}
+        <div className="flex items-center gap-1.5 hidden sm:flex">
+          <div
+            className="w-1.5 h-1.5 rounded-full animate-pulse-dot"
+            style={{ background: isTokenExpired ? '#D97706' : isConnected ? C.green : C.textMuted }}
+          />
+          {isTokenExpired ? (
+            <button
+              onClick={() => connectMeta()}
+              style={{ fontSize: 11, color: C.red, fontWeight: 500 }}
+              onMouseEnter={e => ((e.currentTarget as HTMLElement).style.textDecoration = 'underline')}
+              onMouseLeave={e => ((e.currentTarget as HTMLElement).style.textDecoration = 'none')}
+            >
+              Reconectar
+            </button>
+          ) : isConnected ? (
+            <span style={{ fontSize: 11, color: C.green, fontFamily: "'DM Sans', sans-serif" }}>Conectado</span>
+          ) : (
+            <span style={{ fontSize: 11, color: C.textMuted }}>Desconectado</span>
+          )}
+        </div>
       </div>
     </div>
   );

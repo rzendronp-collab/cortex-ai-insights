@@ -179,11 +179,11 @@ export default function CortexTab() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#6C63FF]/10 to-[#0E1420] border border-[#6C63FF]/20 rounded-xl p-5">
+      <div className="bg-gradient-to-r from-[#7C3AED]/10 to-[#FFFFFF] border border-[#7C3AED]/20 rounded-xl p-5">
         <div className="flex items-start justify-between">
           <div>
             <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
-              <Zap className="w-5 h-5 text-[#6C63FF]" />
+              <Zap className="w-5 h-5 text-[#7C3AED]" />
               CORTEX Intelligence
             </h2>
             <p className="text-[11px] text-text-muted mt-1">
@@ -202,7 +202,7 @@ export default function CortexTab() {
         <div className="flex items-center gap-3 mt-4">
           <button
             onClick={() => setScopeOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium text-text-muted bg-[#080B14] border border-[#1E2A42] rounded-lg hover:text-text-primary hover:border-[#2A3A5C] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-medium text-text-muted bg-[#F8F9FC] border border-[#E4E7EF] rounded-lg hover:text-text-primary hover:border-[#C9D0E0] transition-colors"
           >
             <Settings2 className="w-3.5 h-3.5" />
             Contas selecionadas: {scopeIds.length}
@@ -210,7 +210,7 @@ export default function CortexTab() {
           <Button
             onClick={handleFullAnalysis}
             disabled={analyzing || scopeIds.length === 0}
-            className="px-5 py-2 text-[12px] font-bold bg-gradient-to-r from-[#6C63FF] to-[#4F8EF7] text-white hover:opacity-90 rounded-lg gap-2"
+            className="px-5 py-2 text-[12px] font-bold bg-gradient-to-r from-[#7C3AED] to-[#2563EB] text-white hover:opacity-90 rounded-lg gap-2"
           >
             {analyzing ? (
               <><Loader2 className="w-4 h-4 animate-spin" />{progress || 'Analisando...'}</>
@@ -223,8 +223,8 @@ export default function CortexTab() {
         {/* Progress bar */}
         {analyzing && (
           <div className="mt-3">
-            <div className="h-1 bg-[#1E2A42] rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#6C63FF] to-[#8B85FF] rounded-full animate-pulse" style={{ width: '60%' }} />
+            <div className="h-1 bg-[#E4E7EF] rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-[#7C3AED] to-[#8B85FF] rounded-full animate-pulse" style={{ width: '60%' }} />
             </div>
             <p className="text-[10px] text-[#8B85FF] mt-1">{progress}</p>
           </div>
@@ -232,7 +232,7 @@ export default function CortexTab() {
       </div>
 
       {/* Sub-tabs */}
-      <div className="flex items-center gap-1 bg-[#080B14] border border-[#1E2A42] rounded-lg p-1">
+      <div className="flex items-center gap-1 bg-[#F8F9FC] border border-[#E4E7EF] rounded-lg p-1">
         {SUB_TABS.map(tab => {
           const Icon = tab.icon;
           return (
@@ -241,7 +241,7 @@ export default function CortexTab() {
               onClick={() => setActiveSubTab(tab.key)}
               className={`flex items-center gap-1.5 px-4 py-2 text-[11px] font-medium rounded-md transition-all duration-150 ${
                 activeSubTab === tab.key
-                  ? 'bg-[#6C63FF]/15 text-[#8B85FF] border border-[#6C63FF]/30'
+                  ? 'bg-[#7C3AED]/15 text-[#8B85FF] border border-[#7C3AED]/30'
                   : 'text-text-muted hover:text-text-primary'
               }`}
             >
@@ -373,7 +373,7 @@ function ActionPlanSection({
   if (isGenerating) {
     return (
       <div className="flex items-center justify-center py-16 gap-3">
-        <Loader2 className="w-5 h-5 animate-spin text-[#6C63FF]" />
+        <Loader2 className="w-5 h-5 animate-spin text-[#7C3AED]" />
         <span className="text-sm text-text-muted">Gerando plano de ação...</span>
       </div>
     );
@@ -387,7 +387,7 @@ function ActionPlanSection({
         {campaigns.length > 0 && (
           <Button
             onClick={() => generatePlan(campaigns)}
-            className="text-[12px] bg-[#6C63FF] hover:bg-[#5558E6] text-white gap-2"
+            className="text-[12px] bg-[#7C3AED] hover:bg-[#5558E6] text-white gap-2"
           >
             <Zap className="w-4 h-4" />
             Gerar Plano CORTEX
@@ -406,12 +406,12 @@ function ActionPlanSection({
   return (
     <div className="space-y-4">
       {/* Summary */}
-      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-4 flex items-center gap-4">
+      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-4 flex items-center gap-4">
         <div className="text-center">
           <p className="text-3xl font-bold text-text-primary">{plan.score_conta}</p>
           <p className="text-[9px] text-text-muted uppercase">Score</p>
         </div>
-        <div className="h-12 w-px bg-[#1E2A42]" />
+        <div className="h-12 w-px bg-[#E4E7EF]" />
         <div className="flex-1">
           <p className="text-[12px] text-text-muted">{plan.resumo}</p>
         </div>
@@ -440,7 +440,7 @@ function ActionPlanSection({
               {actions.map((a: any) => {
                 const conf = calculateConfidence(a, campaigns);
                 return (
-                  <div key={a.campaign_id} className="bg-[#0E1420] border border-[#1E2A42] rounded-lg p-3 flex items-center gap-3 hover:border-[#2A3A5C] transition-colors">
+                  <div key={a.campaign_id} className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-lg p-3 flex items-center gap-3 hover:border-[#C9D0E0] transition-colors">
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] font-medium text-text-primary truncate">{a.campaign_name}</p>
                       <p className="text-[10px] text-text-muted">{a.motivo}</p>
@@ -456,7 +456,7 @@ function ActionPlanSection({
                       size="sm"
                       variant="outline"
                       onClick={() => applyAction(a)}
-                      className="h-7 px-3 text-[10px] font-semibold border-[#1E2A42] text-text-muted hover:text-text-primary flex-shrink-0"
+                      className="h-7 px-3 text-[10px] font-semibold border-[#E4E7EF] text-text-muted hover:text-text-primary flex-shrink-0"
                     >
                       {a.tipo === 'pause' ? '⏸ Pausar' : a.tipo === 'increase_budget' ? '🚀 Escalar' : 'Aplicar'}
                     </Button>

@@ -15,25 +15,25 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // ─── Chart theme constants (V5.2 DashCortex palette) ───
-const CHART_GRID = '#1E2A42';
-const CHART_AXIS = '#7A8FAD';
-const TOOLTIP_BG = '#0E1420';
-const TOOLTIP_BORDER = '#2A3A5C';
+const CHART_GRID = '#E4E7EF';
+const CHART_AXIS = '#9BA5B7';
+const TOOLTIP_BG = '#FFFFFF';
+const TOOLTIP_BORDER = '#C9D0E0';
 
-const DATA_BLUE = '#4F8EF7';
-const DATA_GREEN = '#22D07A';
-const DATA_RED = '#F05252';
-const DATA_YELLOW = '#F5A623';
-const DATA_PURPLE = '#6C63FF';
-const MUTED = '#4A5F7A';
+const DATA_BLUE = '#2563EB';
+const DATA_GREEN = '#16A34A';
+const DATA_RED = '#DC2626';
+const DATA_YELLOW = '#D97706';
+const DATA_PURPLE = '#7C3AED';
+const MUTED = '#5A6478';
 
 const chartTooltipStyle = {
   backgroundColor: TOOLTIP_BG,
   border: `1px solid ${TOOLTIP_BORDER}`,
   borderRadius: 8,
-  boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
   fontSize: 11,
-  color: '#F0F4FF',
+  color: '#0F1523',
   fontFamily: "'Inter', sans-serif",
   padding: '10px 12px',
 };
@@ -47,7 +47,7 @@ const dailyMetricConfig: Record<string, { label: string; color: string; type: 'l
   cpm: { label: 'CPM', color: DATA_RED, type: 'line', yAxisId: 'right' },
 };
 
-const ACCOUNT_COLORS = [DATA_BLUE, DATA_GREEN, DATA_PURPLE, DATA_YELLOW, DATA_RED, '#F472B6', '#38BDF8', '#22D07A'];
+const ACCOUNT_COLORS = [DATA_BLUE, DATA_GREEN, DATA_PURPLE, DATA_YELLOW, DATA_RED, '#F472B6', '#38BDF8', '#16A34A'];
 
 export default function OverviewTab() {
   const [visibleMetrics, setVisibleMetrics] = useState<Set<string>>(new Set(['roas', 'spend']));
@@ -236,7 +236,7 @@ export default function OverviewTab() {
       .filter(c => c.spend === 0 && normalizeStatus((c as any).status ?? (c as any).effective_status) === 'ACTIVE')
       .map(c => ({
         ...c,
-        recommendation: { label: '👻 Sem gasto', color: 'text-[#7A8FAD]', bg: 'bg-[#0E1420]/50 border-[#1E2A42]/30' },
+        recommendation: { label: '👻 Sem gasto', color: 'text-[#9BA5B7]', bg: 'bg-[#FFFFFF]/50 border-[#E4E7EF]/30' },
         purchases: 0,
       }));
     return [...withSpend, ...zeroSpendActive].sort((a, b) => {
@@ -317,11 +317,11 @@ export default function OverviewTab() {
           const salesSparkline = dailyData.map((d: any) => d.sales ?? d.purchases ?? 0);
           const ctrSparkline = dailyData.map((d: any) => d.ctr ?? 0);
           return [
-            { label: `ROAS Médio ${roasSemaphore}`, value: `${avgRoas.toFixed(1)}x`, subtitle: "Retorno sobre investimento", delta: calcDelta(avgRoas, prevRoas), valueClassName: roasValueClass, isHero: true, sparklineData: roasSparkline, sparklineColor: '#4F8EF7' },
-            { label: "Gasto Total", value: formatCurrency(totalSpend, currency), subtitle: "Período selecionado", delta: calcDelta(totalSpend, prevSpend), sparklineData: spendSparkline, sparklineColor: '#F5A623' },
-            { label: revenueLabel, value: formatCurrency(totalRevenue, currency), subtitle: "Total gerado", delta: calcDelta(totalRevenue, prevRevenue), valueClassName: "text-data-green", sparklineData: revenueSparkline, sparklineColor: '#22D07A' },
-            { label: conversionLabel, value: totalSales.toString(), subtitle: conversionSubtitle, delta: calcDelta(totalSales, prevSales), sparklineData: salesSparkline, sparklineColor: '#6C63FF' },
-            { label: "CTR Médio", value: `${avgCtr.toFixed(1)}%`, subtitle: "Taxa de cliques", delta: calcDelta(avgCtr, prevCtr), sparklineData: ctrSparkline, sparklineColor: '#4F8EF7' },
+            { label: `ROAS Médio ${roasSemaphore}`, value: `${avgRoas.toFixed(1)}x`, subtitle: "Retorno sobre investimento", delta: calcDelta(avgRoas, prevRoas), valueClassName: roasValueClass, isHero: true, sparklineData: roasSparkline, sparklineColor: '#2563EB' },
+            { label: "Gasto Total", value: formatCurrency(totalSpend, currency), subtitle: "Período selecionado", delta: calcDelta(totalSpend, prevSpend), sparklineData: spendSparkline, sparklineColor: '#D97706' },
+            { label: revenueLabel, value: formatCurrency(totalRevenue, currency), subtitle: "Total gerado", delta: calcDelta(totalRevenue, prevRevenue), valueClassName: "text-data-green", sparklineData: revenueSparkline, sparklineColor: '#16A34A' },
+            { label: conversionLabel, value: totalSales.toString(), subtitle: conversionSubtitle, delta: calcDelta(totalSales, prevSales), sparklineData: salesSparkline, sparklineColor: '#7C3AED' },
+            { label: "CTR Médio", value: `${avgCtr.toFixed(1)}%`, subtitle: "Taxa de cliques", delta: calcDelta(avgCtr, prevCtr), sparklineData: ctrSparkline, sparklineColor: '#2563EB' },
             { label: costLabel, value: `${currency} ${costPerSale.toFixed(2)}`, subtitle: costSubtitle, delta: calcDelta(costPerSale, prevCpv), valueClassName: "text-data-yellow" },
           ];
         })().map((kpi, i) => (
@@ -333,17 +333,17 @@ export default function OverviewTab() {
 
       {/* ─── Accounts Table (multi-account) ─── */}
       {accountSummaries.length > 0 && (
-        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl overflow-hidden animate-fade-up">
-          <div className="px-4 py-3 border-b border-[#1E2A42] flex items-center justify-between">
-            <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF]">Contas Ativas</h3>
-            <span className="text-[10px] text-[#4A5F7A]">{accountSummaries.filter(a => a.hasData).length} com dados</span>
+        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl overflow-hidden animate-fade-up">
+          <div className="px-4 py-3 border-b border-[#E4E7EF] flex items-center justify-between">
+            <h3 className="font-display font-semibold text-[14px] text-[#0F1523]">Contas Ativas</h3>
+            <span className="text-[10px] text-[#5A6478]">{accountSummaries.filter(a => a.hasData).length} com dados</span>
           </div>
           <div className="p-4">
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-[#080B14]">
-                  <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#4A5F7A] uppercase tracking-wider">Conta</th>
+                <tr className="bg-[#F8F9FC]">
+                  <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#5A6478] uppercase tracking-wider">Conta</th>
                   {[
                     { key: 'roas', label: 'ROAS' },
                     { key: 'spend', label: 'Gasto' },
@@ -354,7 +354,7 @@ export default function OverviewTab() {
                     <th
                       key={col.key}
                       onClick={() => handleSort(col.key)}
-                      className="text-right px-4 py-2.5 text-[10px] font-semibold text-[#4A5F7A] uppercase tracking-wider cursor-pointer hover:text-[#F0F4FF] transition-colors"
+                      className="text-right px-4 py-2.5 text-[10px] font-semibold text-[#5A6478] uppercase tracking-wider cursor-pointer hover:text-[#0F1523] transition-colors"
                     >
                       <span className="inline-flex items-center gap-1">
                         {col.label}
@@ -362,7 +362,7 @@ export default function OverviewTab() {
                       </span>
                     </th>
                   ))}
-                  <th className="text-right px-4 py-2.5 text-[10px] font-semibold text-[#4A5F7A] uppercase tracking-wider">Status</th>
+                  <th className="text-right px-4 py-2.5 text-[10px] font-semibold text-[#5A6478] uppercase tracking-wider">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -377,7 +377,7 @@ export default function OverviewTab() {
                     <tr
                       key={a.id}
                       onClick={() => handleAccountClick(a.id)}
-                      className={`border-t border-[#1E2A42] hover:bg-[#141B2D] cursor-pointer transition-colors`}
+                      className={`border-t border-[#E4E7EF] hover:bg-[#F1F3F8] cursor-pointer transition-colors`}
                     >
                       <td className="py-2.5 text-text-primary font-medium truncate max-w-[200px]">{a.name}</td>
                       <td className={`py-2.5 text-right font-bold ${a.hasData ? getRoasColor(a.roas, roasTarget) : 'text-text-muted'}`}>
@@ -409,8 +409,8 @@ export default function OverviewTab() {
       {/* ─── Charts Row 1 ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* ROAS por Campanha */}
-        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '200ms' }}>
-          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">ROAS por Campanha <span className="text-text-muted font-normal">(top 10)</span></h3>
+        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '200ms' }}>
+          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">ROAS por Campanha <span className="text-text-muted font-normal">(top 10)</span></h3>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={roasCampaignData} layout="vertical" barSize={28}>
               <defs>
@@ -428,7 +428,7 @@ export default function OverviewTab() {
               <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: CHART_AXIS }} width={85} axisLine={false} tickLine={false} />
               <Tooltip content={<RoasTooltip />} />
               <ReferenceLine x={roasTarget} stroke={MUTED} strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 9, fill: MUTED }} />
-              <Bar dataKey="roas" radius={[0, 6, 6, 0]} animationDuration={800} label={{ position: 'right', fontSize: 10, fill: '#F0F4FF', formatter: (v: number) => `${v}x` }}>
+              <Bar dataKey="roas" radius={[0, 6, 6, 0]} animationDuration={800} label={{ position: 'right', fontSize: 10, fill: '#0F1523', formatter: (v: number) => `${v}x` }}>
                 {roasCampaignData.map((entry, i) => (
                   <Cell key={i} fill={entry.roas >= roasTarget ? 'url(#barGreen)' : 'url(#barRed)'} />
                 ))}
@@ -438,8 +438,8 @@ export default function OverviewTab() {
         </div>
 
         {/* Funil de Conversão — V5 */}
-        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up" style={{ minHeight: 180 }}>
-          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-5">Funil de Conversão</h3>
+        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up" style={{ minHeight: 180 }}>
+          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-5">Funil de Conversão</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left: visual funnel — 4 níveis com largura decrescente */}
             {(() => {
@@ -458,7 +458,7 @@ export default function OverviewTab() {
                         key={`bar-${item.name}`}
                         style={{
                           width: widths[i],
-                          background: 'linear-gradient(135deg, #4F8EF7, #6C63FF)',
+                          background: 'linear-gradient(135deg, #2563EB, #7C3AED)',
                           borderRadius: 6,
                           padding: '8px 0',
                           display: 'flex',
@@ -467,17 +467,17 @@ export default function OverviewTab() {
                           transition: 'width 0.5s ease',
                         }}
                       >
-                        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: '#F0F4FF', fontSize: 15, lineHeight: 1 }}>
+                        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: '#0F1523', fontSize: 15, lineHeight: 1 }}>
                           {item.value.toLocaleString()}
                         </span>
-                        <span style={{ color: '#7A8FAD', fontSize: 10, marginTop: 3 }}>
+                        <span style={{ color: '#9BA5B7', fontSize: 10, marginTop: 3 }}>
                           {item.name}
                         </span>
                       </div>
                     );
                     if (i < displayFunnel.length - 1) {
                       return [bar, (
-                        <span key={`arrow-${i}`} style={{ color: '#4A5F7A', fontSize: 12, lineHeight: 1, userSelect: 'none' }}>▼</span>
+                        <span key={`arrow-${i}`} style={{ color: '#5A6478', fontSize: 12, lineHeight: 1, userSelect: 'none' }}>▼</span>
                       )];
                     }
                     return [bar];
@@ -495,13 +495,13 @@ export default function OverviewTab() {
                 return (
                   <div key={item.name}>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[11px] text-[#7A8FAD]">{item.name}</span>
-                      <span className="text-[11px] font-semibold text-[#F0F4FF]">{rate.toFixed(1)}%</span>
+                      <span className="text-[11px] text-[#9BA5B7]">{item.name}</span>
+                      <span className="text-[11px] font-semibold text-[#0F1523]">{rate.toFixed(1)}%</span>
                     </div>
-                    <div className="h-1.5 bg-[#1E2A42] rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-[#E4E7EF] rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-700"
-                        style={{ width: `${pct}%`, background: i === funnelData.length - 1 ? '#22D07A' : '#4F8EF7' }}
+                        style={{ width: `${pct}%`, background: i === funnelData.length - 1 ? '#16A34A' : '#2563EB' }}
                       />
                     </div>
                   </div>
@@ -512,8 +512,8 @@ export default function OverviewTab() {
         </div>
 
         {/* Origem tráfego */}
-        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
-          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Origem do Tráfego</h3>
+        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
+          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Origem do Tráfego</h3>
           <div className="space-y-3 mt-2">
             {platformData.map((p, i) => {
               const colors = [DATA_BLUE, DATA_PURPLE, DATA_YELLOW, MUTED];
@@ -534,8 +534,8 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Gasto vs Receita (Area Chart) ─── */}
-      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
-        <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Gasto vs Receita</h3>
+      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
+        <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Gasto vs Receita</h3>
         <ResponsiveContainer width="100%" height={180}>
           <AreaChart data={dailyData}>
             <defs>
@@ -552,8 +552,8 @@ export default function OverviewTab() {
             <XAxis dataKey="date" tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} />
             <YAxis domain={[0, 'auto']} tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v < 1 ? v.toFixed(2) : String(Math.round(v))} />
             <Tooltip contentStyle={chartTooltipStyle} />
-            <Area type="monotone" dataKey="spend" stroke={DATA_BLUE} strokeWidth={2} fill="url(#gradSpendArea)" dot={{ r: 3, fill: DATA_BLUE, strokeWidth: 2, stroke: '#0E1420' }} />
-            <Area type="monotone" dataKey="revenue" stroke={DATA_GREEN} strokeWidth={2} fill="url(#gradRevenueArea)" dot={{ r: 3, fill: DATA_GREEN, strokeWidth: 2, stroke: '#0E1420' }} />
+            <Area type="monotone" dataKey="spend" stroke={DATA_BLUE} strokeWidth={2} fill="url(#gradSpendArea)" dot={{ r: 3, fill: DATA_BLUE, strokeWidth: 2, stroke: '#FFFFFF' }} />
+            <Area type="monotone" dataKey="revenue" stroke={DATA_GREEN} strokeWidth={2} fill="url(#gradRevenueArea)" dot={{ r: 3, fill: DATA_GREEN, strokeWidth: 2, stroke: '#FFFFFF' }} />
           </AreaChart>
         </ResponsiveContainer>
         <div className="flex justify-center gap-6 mt-2">
@@ -563,9 +563,9 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Daily Evolution ─── */}
-      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up" style={{ minHeight: 320 }}>
+      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up" style={{ minHeight: 320 }}>
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF]">Evolução Diária</h3>
+          <h3 className="font-display font-semibold text-[14px] text-[#0F1523]">Evolução Diária</h3>
           <div className="flex gap-3 flex-wrap">
             {Object.entries(dailyMetricConfig).map(([key, cfg]) => (
               <label key={key} className="flex items-center gap-1.5 cursor-pointer select-none">
@@ -611,8 +611,8 @@ export default function OverviewTab() {
                   yAxisId={cfg.yAxisId}
                   stroke={cfg.color}
                   strokeWidth={2}
-                  dot={{ r: 4, fill: cfg.color, strokeWidth: 2, stroke: '#0E1420' }}
-                  activeDot={{ r: 6, fill: cfg.color, strokeWidth: 2, stroke: '#0E1420' }}
+                  dot={{ r: 4, fill: cfg.color, strokeWidth: 2, stroke: '#FFFFFF' }}
+                  activeDot={{ r: 6, fill: cfg.color, strokeWidth: 2, stroke: '#FFFFFF' }}
                 />
               );
             })}
@@ -622,8 +622,8 @@ export default function OverviewTab() {
 
       {/* ─── Budget Distribution ─── */}
       {activeCampaigns.length > 0 && (
-        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '350ms' }}>
-          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Distribuição de Investimento</h3>
+        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '350ms' }}>
+          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Distribuição de Investimento</h3>
           <div className="flex items-center gap-6">
             <ResponsiveContainer width={160} height={160}>
               <PieChart>
@@ -633,7 +633,7 @@ export default function OverviewTab() {
                     const top5 = sorted.slice(0, 5);
                     const othersSpend = sorted.slice(5).reduce((s, c) => s + c.spend, 0);
                     const slices = top5.map((c, i) => ({ name: c.name.slice(0, 20), value: c.spend, fill: ACCOUNT_COLORS[i] }));
-                    if (othersSpend > 0) slices.push({ name: 'Outros', value: othersSpend, fill: '#2A3A5C' });
+                    if (othersSpend > 0) slices.push({ name: 'Outros', value: othersSpend, fill: '#C9D0E0' });
                     return slices;
                   })()}
                   cx="50%"
@@ -648,7 +648,7 @@ export default function OverviewTab() {
                     const top5 = sorted.slice(0, 5);
                     const othersSpend = sorted.slice(5).reduce((s, c) => s + c.spend, 0);
                     const slices = top5.map((c, i) => ({ fill: ACCOUNT_COLORS[i] }));
-                    if (othersSpend > 0) slices.push({ fill: '#2A3A5C' });
+                    if (othersSpend > 0) slices.push({ fill: '#C9D0E0' });
                     return slices.map((s, i) => <Cell key={i} fill={s.fill} />);
                   })()}
                 </Pie>
@@ -660,13 +660,13 @@ export default function OverviewTab() {
                 const sorted = [...activeCampaigns].sort((a, b) => b.spend - a.spend);
                 const top5 = sorted.slice(0, 5);
                 const othersSpend = sorted.slice(5).reduce((s, c) => s + c.spend, 0);
-                const slices = [...top5.map((c, i) => ({ name: c.name, spend: c.spend, fill: ACCOUNT_COLORS[i] })), ...(othersSpend > 0 ? [{ name: 'Outros', spend: othersSpend, fill: '#2A3A5C' }] : [])];
+                const slices = [...top5.map((c, i) => ({ name: c.name, spend: c.spend, fill: ACCOUNT_COLORS[i] })), ...(othersSpend > 0 ? [{ name: 'Outros', spend: othersSpend, fill: '#C9D0E0' }] : [])];
                 const maxSpend = slices.length > 0 ? slices[0].spend : 1;
                 return slices.map((s, i) => (
                   <div key={i} className="flex items-center gap-2 min-w-0">
                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: s.fill }} />
-                    <p className="text-[11px] text-[#7A8FAD] truncate flex-1">{s.name.slice(0, 22)}</p>
-                    <span className="text-[11px] font-medium text-[#F0F4FF] tabular-nums flex-shrink-0">{currency}{s.spend.toFixed(0)}</span>
+                    <p className="text-[11px] text-[#9BA5B7] truncate flex-1">{s.name.slice(0, 22)}</p>
+                    <span className="text-[11px] font-medium text-[#0F1523] tabular-nums flex-shrink-0">{currency}{s.spend.toFixed(0)}</span>
                   </div>
                 ));
               })()}
@@ -676,19 +676,19 @@ export default function OverviewTab() {
       )}
 
       {/* ─── Hourly ─── */}
-      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
-        <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Desempenho por Hora</h3>
+      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
+        <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Desempenho por Hora</h3>
         <HourlyBarChart data={hourlyData} currency={currency} />
       </div>
 
       {/* ─── Alcance por Região ─── */}
       {effectiveData?.regionData && effectiveData.regionData.length > 0 && (
-        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
-          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Alcance por Região</h3>
+        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
+          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Alcance por Região</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[#1E2A42]">
+                <tr className="border-b border-[#E4E7EF]">
                   <th className="text-left py-2 text-text-muted font-semibold">Região</th>
                   <th className="text-left py-2 text-text-muted font-semibold pl-4" style={{ width: '30%' }}>Alcance</th>
                   <th className="text-right py-2 text-text-muted font-semibold">Impressões</th>
@@ -702,13 +702,13 @@ export default function OverviewTab() {
                   const maxImpr = effectiveData.regionData![0].impressions || 1;
                   const barWidth = Math.max((r.impressions / maxImpr) * 100, 5);
                   return (
-                    <tr key={r.region} className="border-b border-[#1E2A42]/50">
+                    <tr key={r.region} className="border-b border-[#E4E7EF]/50">
                       <td className="py-2 text-text-primary font-medium truncate max-w-[160px]">{r.region}</td>
                       <td className="py-2 pl-4">
-                        <div className="h-2 bg-[#080B14] rounded-full overflow-hidden">
+                        <div className="h-2 bg-[#F8F9FC] rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-500"
-                            style={{ width: `${barWidth}%`, background: `linear-gradient(90deg, #4F8EF7, #4F8EF7)` }}
+                            style={{ width: `${barWidth}%`, background: `linear-gradient(90deg, #2563EB, #2563EB)` }}
                           />
                         </div>
                       </td>
@@ -730,18 +730,18 @@ export default function OverviewTab() {
         <h3 className="text-sm font-semibold text-text-primary mb-3">👥 Demográficos</h3>
         {demoByGender.length === 0 && demoByAge.length === 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
+            <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
               <p className="text-xs text-muted-foreground text-center">Dados demográficos não disponíveis para esta conta</p>
             </div>
-            <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
+            <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
               <p className="text-xs text-muted-foreground text-center">Dados demográficos não disponíveis para esta conta</p>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* CARD 1 — Por Gênero */}
-            <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
-              <h4 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Por Gênero</h4>
+            <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
+              <h4 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Por Gênero</h4>
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0" style={{ width: 140, height: 140 }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -770,7 +770,7 @@ export default function OverviewTab() {
                 </div>
               </div>
               {/* Gender table */}
-              <div className="mt-4 border-t border-[#1E2A42] pt-3">
+              <div className="mt-4 border-t border-[#E4E7EF] pt-3">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-[10px] text-text-muted uppercase">
@@ -782,7 +782,7 @@ export default function OverviewTab() {
                   </thead>
                   <tbody>
                     {demoByGender.map(g => (
-                      <tr key={g.name} className="border-t border-[#1E2A42]/50">
+                      <tr key={g.name} className="border-t border-[#E4E7EF]/50">
                         <td className="py-1.5 text-text-primary font-medium flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: g.fill }} />
                           {g.name}
@@ -802,13 +802,13 @@ export default function OverviewTab() {
             </div>
 
             {/* CARD 2 — Por Faixa Etária */}
-            <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
-              <h4 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Por Faixa Etária</h4>
+            <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
+              <h4 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Por Faixa Etária</h4>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={demoByAge} layout="vertical" margin={{ top: 0, right: 5, left: 5, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} horizontal={false} />
                   <XAxis type="number" tick={{ fontSize: 9, fill: CHART_AXIS }} tickFormatter={(v) => formatCurrency(v, currency)} />
-                  <YAxis type="category" dataKey="age" tick={{ fontSize: 10, fill: '#7A8FAD' }} width={45} />
+                  <YAxis type="category" dataKey="age" tick={{ fontSize: 10, fill: '#9BA5B7' }} width={45} />
                   <Tooltip
                     contentStyle={chartTooltipStyle}
                     formatter={(value: number, name: string) => [formatCurrency(value, currency), 'Gasto']}
@@ -843,8 +843,8 @@ export default function OverviewTab() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
           {/* Top 5 Regiões */}
           {effectiveData?.regionData && effectiveData.regionData.length > 0 && (
-            <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
-              <h4 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-3">Top 5 Regiões</h4>
+            <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
+              <h4 className="font-display font-semibold text-[14px] text-[#0F1523] mb-3">Top 5 Regiões</h4>
               <div className="space-y-2.5">
                 {effectiveData.regionData.slice(0, 5).map((r, i) => {
                   const maxImpr = effectiveData.regionData![0].impressions || 1;
@@ -858,14 +858,14 @@ export default function OverviewTab() {
                           <span className="text-[11px] text-text-primary font-medium truncate">{r.region}</span>
                           <span className="text-[10px] text-text-muted ml-2">{r.impressions.toLocaleString()} impr</span>
                         </div>
-                        <div className="h-1.5 bg-[#080B14] rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-[#F8F9FC] rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-500"
-                            style={{ width: `${pct}%`, background: `linear-gradient(90deg, #4F8EF7, #4F8EF7)` }}
+                            style={{ width: `${pct}%`, background: `linear-gradient(90deg, #2563EB, #2563EB)` }}
                           />
                         </div>
                       </div>
-                      <span className="text-[10px] text-[#4F8EF7] font-semibold w-12 text-right">{r.ctr.toFixed(1)}%</span>
+                      <span className="text-[10px] text-[#2563EB] font-semibold w-12 text-right">{r.ctr.toFixed(1)}%</span>
                     </div>
                   );
                 })}
@@ -875,8 +875,8 @@ export default function OverviewTab() {
 
           {/* Melhores 3 Horários */}
           {hourlyData.length > 0 && (
-            <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
-              <h4 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-3">Melhores Horários</h4>
+            <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
+              <h4 className="font-display font-semibold text-[14px] text-[#0F1523] mb-3">Melhores Horários</h4>
               <div className="space-y-3">
                 {[...hourlyData]
                   .sort((a, b) => b.sales - a.sales || b.spend - a.spend)
@@ -893,13 +893,13 @@ export default function OverviewTab() {
                             <span className="text-[13px] font-bold text-text-primary">{h.hour}</span>
                             <div className="flex items-center gap-3">
                               <span className="text-[10px] text-text-muted">{currency} {h.spend.toFixed(0)} gasto</span>
-                              <span className="text-[11px] font-bold text-[#22D07A]">{h.sales} vendas</span>
+                              <span className="text-[11px] font-bold text-[#16A34A]">{h.sales} vendas</span>
                             </div>
                           </div>
-                          <div className="h-2 bg-[#080B14] rounded-full overflow-hidden">
+                          <div className="h-2 bg-[#F8F9FC] rounded-full overflow-hidden">
                             <div
                               className="h-full rounded-full transition-all duration-500"
-                              style={{ width: `${pct}%`, background: `linear-gradient(90deg, #22D07A, #1AB06A)` }}
+                              style={{ width: `${pct}%`, background: `linear-gradient(90deg, #16A34A, #1AB06A)` }}
                             />
                           </div>
                         </div>
@@ -915,8 +915,8 @@ export default function OverviewTab() {
 
       {/* ─── Gasto vs Receita Pie ─── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
-          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Gasto vs Receita</h3>
+        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
+          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Gasto vs Receita</h3>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie data={[{ name: 'Gasto', value: totalSpend }, { name: 'Receita', value: totalRevenue }]} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={0}>
@@ -934,9 +934,9 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Action Plan Summary (top 3) ─── */}
-      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
+      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF]">🎯 Plano de Ação</h3>
+          <h3 className="font-display font-semibold text-[14px] text-[#0F1523]">🎯 Plano de Ação</h3>
           <button onClick={() => setActiveTab('action-plan')} className="text-[11px] text-data-blue hover:underline cursor-pointer font-medium">
             Ver todas →
           </button>
@@ -977,12 +977,12 @@ function OverviewSkeleton() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="bg-[#0E1420] border border-[#1E2A42] rounded-xl py-5 px-6 animate-pulse"
+            className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl py-5 px-6 animate-pulse"
             style={{ animationDelay: `${i * 80}ms`, minHeight: 100 }}
           >
-            <div className="h-2.5 w-16 bg-[#1E2A42] rounded mb-3" />
-            <div className="h-7 w-24 bg-[#1E2A42] rounded mb-2" />
-            <div className="h-2 w-20 bg-[#1E2A42] rounded" />
+            <div className="h-2.5 w-16 bg-[#E4E7EF] rounded mb-3" />
+            <div className="h-7 w-24 bg-[#E4E7EF] rounded mb-2" />
+            <div className="h-2 w-20 bg-[#E4E7EF] rounded" />
           </div>
         ))}
       </div>
@@ -991,15 +991,15 @@ function OverviewSkeleton() {
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-pulse"
+            className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-pulse"
             style={{ animationDelay: `${(i + 6) * 80}ms`, minHeight: 260 }}
           >
-            <div className="h-3 w-32 bg-[#1E2A42] rounded mb-6" />
+            <div className="h-3 w-32 bg-[#E4E7EF] rounded mb-6" />
             <div className="space-y-3">
               {Array.from({ length: 5 }).map((_, j) => (
                 <div key={j} className="flex items-center gap-3">
-                  <div className="h-3 bg-[#1E2A42] rounded flex-1" style={{ maxWidth: `${60 - j * 8}%` }} />
-                  <div className="h-3 w-8 bg-[#1E2A42] rounded" />
+                  <div className="h-3 bg-[#E4E7EF] rounded flex-1" style={{ maxWidth: `${60 - j * 8}%` }} />
+                  <div className="h-3 w-8 bg-[#E4E7EF] rounded" />
                 </div>
               ))}
             </div>
@@ -1007,13 +1007,13 @@ function OverviewSkeleton() {
         ))}
       </div>
 
-      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-pulse" style={{ minHeight: 240 }}>
-        <div className="h-3 w-28 bg-[#1E2A42] rounded mb-6" />
+      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-pulse" style={{ minHeight: 240 }}>
+        <div className="h-3 w-28 bg-[#E4E7EF] rounded mb-6" />
         <div className="flex items-end gap-2 h-[180px] pb-4">
           {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
-              className="flex-1 bg-[#1E2A42] rounded-t"
+              className="flex-1 bg-[#E4E7EF] rounded-t"
               style={{ height: `${30 + Math.sin(i * 0.8) * 40 + 30}%` }}
             />
           ))}

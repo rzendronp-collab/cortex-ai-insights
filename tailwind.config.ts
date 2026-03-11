@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["'Inter'", "system-ui", "sans-serif"],
-        display: ["'Space Grotesk'", "'Inter'", "sans-serif"],
+        sans: ["'DM Sans'", "system-ui", "sans-serif"],
+        display: ["'DM Sans'", "system-ui", "sans-serif"],
+        mono: ["'DM Mono'", "monospace"],
       },
       colors: {
         /* New design system tokens */

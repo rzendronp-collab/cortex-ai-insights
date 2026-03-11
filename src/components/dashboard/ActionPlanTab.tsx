@@ -27,28 +27,28 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 const ACTION_BORDER_COLORS: Record<string, string> = {
-  pause: '#F05252',
-  resume: '#4F8EF7',
-  increase_budget: '#22D07A',
-  decrease_budget: '#F5A623',
+  pause: '#DC2626',
+  resume: '#2563EB',
+  increase_budget: '#16A34A',
+  decrease_budget: '#D97706',
 };
 
 const PRIORITY_BADGES: Record<number, { emoji: string; bg: string; text: string }> = {
-  1: { emoji: '🔴', bg: 'rgba(240,82,82,0.12)', text: '#F05252' },
-  2: { emoji: '🟡', bg: 'rgba(245,166,35,0.12)', text: '#F5A623' },
-  3: { emoji: '🟢', bg: 'rgba(34,208,122,0.12)', text: '#22D07A' },
+  1: { emoji: '🔴', bg: 'rgba(220,38,38,0.12)', text: '#DC2626' },
+  2: { emoji: '🟡', bg: 'rgba(217,119,6,0.12)', text: '#D97706' },
+  3: { emoji: '🟢', bg: 'rgba(22,163,74,0.12)', text: '#16A34A' },
 };
 
 function ScoreCircle({ score }: { score: number }) {
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
   const progress = (score / 100) * circumference;
-  const color = score >= 70 ? '#22D07A' : score >= 40 ? '#F5A623' : '#F05252';
+  const color = score >= 70 ? '#16A34A' : score >= 40 ? '#D97706' : '#DC2626';
 
   return (
     <div className="relative w-24 h-24 flex-shrink-0">
       <svg className="w-24 h-24 -rotate-90" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r={radius} fill="none" stroke="#1E2A42" strokeWidth="6" />
+        <circle cx="50" cy="50" r={radius} fill="none" stroke="#E4E7EF" strokeWidth="6" />
         <circle
           cx="50" cy="50" r={radius} fill="none"
           stroke={color} strokeWidth="6" strokeLinecap="round"
@@ -231,7 +231,7 @@ export default function ActionPlanTab() {
             <Button
               variant="outline"
               onClick={() => setShowContext(!showContext)}
-              className="h-9 px-4 text-[12px] border-[#1E2A42] text-text-muted hover:text-text-primary gap-2"
+              className="h-9 px-4 text-[12px] border-[#E4E7EF] text-text-muted hover:text-text-primary gap-2"
             >
               <Settings2 className="w-3.5 h-3.5" />
               Contexto
@@ -240,7 +240,7 @@ export default function ActionPlanTab() {
 
           {showContext && <ContextPanel context={context} setContext={setContext} />}
 
-          <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl flex flex-col items-center justify-center py-20 text-center">
+          <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl flex flex-col items-center justify-center py-20 text-center">
             <div className="text-6xl mb-5">⚡</div>
             <h2 className="text-xl font-bold text-text-primary mb-2">⚡ CORTEX Mode — Plano IA Executável</h2>
             <p className="text-[13px] text-text-muted mb-6 max-w-md">
@@ -253,7 +253,7 @@ export default function ActionPlanTab() {
                 'Aplica regras de segurança: não pausa campanhas em aprendizado',
               ].map((text, i) => (
                 <div key={i} className="flex items-start gap-2.5 text-[13px] text-text-muted">
-                  <span className="text-[#4F8EF7] mt-0.5">•</span>
+                  <span className="text-[#2563EB] mt-0.5">•</span>
                   <span>{text}</span>
                 </div>
               ))}
@@ -261,7 +261,7 @@ export default function ActionPlanTab() {
             <Button
               onClick={handleGenerate}
               disabled={isGenerating || campaigns.length === 0}
-              className="h-11 px-8 text-sm font-bold bg-gradient-to-r from-[#4F8EF7] to-[#4F8EF7] text-white hover:opacity-90 rounded-lg gap-2"
+              className="h-11 px-8 text-sm font-bold bg-gradient-to-r from-[#2563EB] to-[#2563EB] text-white hover:opacity-90 rounded-lg gap-2"
             >
               <Zap className="w-4 h-4" />
               ⚡ Gerar Plano CORTEX
@@ -290,7 +290,7 @@ export default function ActionPlanTab() {
     <TooltipProvider>
       <div className="space-y-5">
         {/* ═══ HEADER ═══ */}
-        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5">
+        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5">
           <div className="flex items-start gap-5">
             <div className="flex flex-col items-center gap-1 flex-shrink-0">
               {plan ? (
@@ -299,13 +299,13 @@ export default function ActionPlanTab() {
                   <span className="text-[10px] text-text-muted font-medium tracking-wide uppercase">Saúde da Conta</span>
                   {/* Score legend */}
                   <div className="flex gap-1.5 mt-1">
-                    <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(240,82,82,0.12)', color: '#F05252' }}>0-39 Crítico</span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,166,35,0.12)', color: '#F5A623' }}>40-69 Médio</span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(34,208,122,0.12)', color: '#22D07A' }}>70+ Bom</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(220,38,38,0.12)', color: '#DC2626' }}>0-39 Crítico</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(217,119,6,0.12)', color: '#D97706' }}>40-69 Médio</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(22,163,74,0.12)', color: '#16A34A' }}>70+ Bom</span>
                   </div>
                 </>
               ) : (
-                <div className="w-24 h-24 rounded-full bg-[#1E2A42] animate-pulse flex-shrink-0" />
+                <div className="w-24 h-24 rounded-full bg-[#E4E7EF] animate-pulse flex-shrink-0" />
               )}
             </div>
 
@@ -319,24 +319,24 @@ export default function ActionPlanTab() {
                       <span className="text-text-muted text-[12px]">ROAS</span>
                       <span className="font-bold text-text-primary">{plan.roas_atual.toFixed(1)}x</span>
                       <ChevronRight className="w-3.5 h-3.5 text-text-muted" />
-                      <span className="font-bold text-[#22D07A]">{plan.roas_estimado.toFixed(1)}x</span>
+                      <span className="font-bold text-[#16A34A]">{plan.roas_estimado.toFixed(1)}x</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <span className="text-text-muted text-[12px]">Receita</span>
                       <span className="font-semibold text-text-primary">{fmt(plan.receita_atual)}</span>
                       <ChevronRight className="w-3.5 h-3.5 text-text-muted" />
-                      <span className="font-semibold text-[#22D07A]">{fmt(plan.receita_estimada)}</span>
+                      <span className="font-semibold text-[#16A34A]">{fmt(plan.receita_estimada)}</span>
                     </div>
                   </div>
                   <p className="text-[13px] text-text-muted leading-relaxed line-clamp-3">{plan.resumo}</p>
                 </>
               ) : (
                 <div className="space-y-2.5 py-2 animate-pulse">
-                  <div className="h-3 bg-[#1E2A42] rounded w-48" />
-                  <div className="h-4 bg-[#1E2A42] rounded w-64" />
-                  <div className="h-4 bg-[#1E2A42] rounded w-56" />
-                  <div className="h-3 bg-[#1E2A42] rounded w-full" />
-                  <div className="h-3 bg-[#1E2A42] rounded w-4/5" />
+                  <div className="h-3 bg-[#E4E7EF] rounded w-48" />
+                  <div className="h-4 bg-[#E4E7EF] rounded w-64" />
+                  <div className="h-4 bg-[#E4E7EF] rounded w-56" />
+                  <div className="h-3 bg-[#E4E7EF] rounded w-full" />
+                  <div className="h-3 bg-[#E4E7EF] rounded w-4/5" />
                 </div>
               )}
             </div>
@@ -345,7 +345,7 @@ export default function ActionPlanTab() {
               <Button
                 onClick={handleGenerate}
                 disabled={isGenerating || campaigns.length === 0}
-                className="h-10 px-5 text-[13px] font-bold bg-gradient-to-r from-[#4F8EF7] to-[#4F8EF7] text-white hover:opacity-90 rounded-lg gap-2"
+                className="h-10 px-5 text-[13px] font-bold bg-gradient-to-r from-[#2563EB] to-[#2563EB] text-white hover:opacity-90 rounded-lg gap-2"
               >
                 {isGenerating ? (
                   <><Loader2 className="w-4 h-4 animate-spin" />Gerando...</>
@@ -356,7 +356,7 @@ export default function ActionPlanTab() {
               <Button
                 variant="outline"
                 onClick={() => setShowContext(!showContext)}
-                className="h-10 px-4 text-[13px] border-[#1E2A42] text-text-muted hover:text-text-primary gap-2"
+                className="h-10 px-4 text-[13px] border-[#E4E7EF] text-text-muted hover:text-text-primary gap-2"
               >
                 <Settings2 className="w-4 h-4" />
                 Contexto
@@ -365,7 +365,7 @@ export default function ActionPlanTab() {
                 onClick={handleApply}
                 disabled={!plan || selectedActions.length === 0 || isApplying}
                 variant="outline"
-                className="h-10 px-5 text-[13px] font-bold border-[#22D07A]/30 text-[#22D07A] hover:bg-[#22D07A]/10 rounded-lg gap-2"
+                className="h-10 px-5 text-[13px] font-bold border-[#16A34A]/30 text-[#16A34A] hover:bg-[#16A34A]/10 rounded-lg gap-2"
               >
                 {isApplying ? (
                   <><Loader2 className="w-4 h-4 animate-spin" />{appliedCount}/{selectedActions.length}</>
@@ -381,16 +381,16 @@ export default function ActionPlanTab() {
 
         {/* ═══ SIMULATION BANNER ═══ */}
         {plan && selectedActions.length > 0 && simulation.ganho !== 0 && (
-          <div className="bg-[#4F8EF7]/10 border border-[#4F8EF7]/30 rounded-xl p-4 flex items-center gap-4">
+          <div className="bg-[#2563EB]/10 border border-[#2563EB]/30 rounded-xl p-4 flex items-center gap-4">
             <span className="text-2xl">📊</span>
             <div className="flex-1 flex items-center gap-3 flex-wrap">
-              <span className="bg-[#0E1420] border border-[#1E2A42] rounded-full px-3 py-1 text-[12px] text-text-primary font-medium">
+              <span className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-full px-3 py-1 text-[12px] text-text-primary font-medium">
                 {selectedActions.length} ações selecionadas
               </span>
-              <span className="bg-[#22D07A]/10 border border-[#22D07A]/30 rounded-full px-3 py-1 text-[12px] text-[#22D07A] font-medium">
+              <span className="bg-[#16A34A]/10 border border-[#16A34A]/30 rounded-full px-3 py-1 text-[12px] text-[#16A34A] font-medium">
                 +{fmt(Math.abs(simulation.ganho))}
               </span>
-              <span className="bg-[#22D07A]/10 border border-[#22D07A]/30 rounded-full px-3 py-1 text-[12px] text-[#22D07A] font-medium">
+              <span className="bg-[#16A34A]/10 border border-[#16A34A]/30 rounded-full px-3 py-1 text-[12px] text-[#16A34A] font-medium">
                 +{Math.abs(simulation.ganho_pct).toFixed(0)}% receita
               </span>
             </div>
@@ -399,9 +399,9 @@ export default function ActionPlanTab() {
 
         {/* ═══ CRITICAL ALERTS ═══ */}
         {plan && plan.alertas_criticos && plan.alertas_criticos.length > 0 && (
-          <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-4 space-y-2">
+          <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-4 space-y-2">
             {(showAllAlerts ? plan.alertas_criticos : plan.alertas_criticos.slice(0, 2)).map((alerta, i) => (
-              <div key={i} className="bg-[#F5A623]/10 border border-[#F5A623]/30 rounded-lg px-4 py-2 text-[12px] text-[#F5A623] flex items-center gap-2">
+              <div key={i} className="bg-[#D97706]/10 border border-[#D97706]/30 rounded-lg px-4 py-2 text-[12px] text-[#D97706] flex items-center gap-2">
                 <span className="text-base flex-shrink-0">⚠</span>
                 <span>{alerta}</span>
               </div>
@@ -423,8 +423,8 @@ export default function ActionPlanTab() {
 
         {/* ═══ ACTIONS LIST ═══ */}
         {plan && plan.acoes.length > 0 && (
-          <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl overflow-hidden">
-            <div className="flex items-center gap-3 px-5 py-3 border-b border-[#1E2A42]">
+          <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-3 border-b border-[#E4E7EF]">
               <Checkbox
                 checked={selectedIds.size === plan.acoes.length}
                 onCheckedChange={toggleAll}
@@ -433,13 +433,13 @@ export default function ActionPlanTab() {
                 Selecionar todas ({plan.acoes.length})
               </span>
               {urgentCount > 0 && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full ml-auto" style={{ background: 'rgba(240,82,82,0.12)', color: '#F05252' }}>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full ml-auto" style={{ background: 'rgba(220,38,38,0.12)', color: '#DC2626' }}>
                   🔴 {urgentCount} urgente(s)
                 </span>
               )}
             </div>
 
-            <div className="divide-y divide-[#1E2A42]">
+            <div className="divide-y divide-[#E4E7EF]">
               {plan.acoes.map((action, actionIdx) => {
                 const Icon = ACTION_ICONS[action.tipo] || TrendingUp;
                 const borderColor = ACTION_BORDER_COLORS[action.tipo] || 'border-l-muted';
@@ -454,9 +454,9 @@ export default function ActionPlanTab() {
                   <div
                     key={action.campaign_id}
                     className={`px-5 py-3 border-l-4 transition-colors animate-slide-in-left opacity-0 [animation-fill-mode:forwards] ${
-                      isSelected ? 'bg-[#4F8EF7]/5' : ''
+                      isSelected ? 'bg-[#2563EB]/5' : ''
                     } ${actionState === 'success' ? 'opacity-50' : ''}`}
-                    style={{ animationDelay: `${actionIdx * 60}ms`, borderLeftColor: ACTION_BORDER_COLORS[action.tipo] || '#4A5F7A' }}
+                    style={{ animationDelay: `${actionIdx * 60}ms`, borderLeftColor: ACTION_BORDER_COLORS[action.tipo] || '#5A6478' }}
                   >
                     {/* LINE 1 */}
                     <div className="flex items-center gap-3">
@@ -468,8 +468,8 @@ export default function ActionPlanTab() {
                       <span
                         className="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded flex-shrink-0"
                         style={{
-                          background: ACTION_BORDER_COLORS[action.tipo] ? `${ACTION_BORDER_COLORS[action.tipo]}1F` : 'rgba(79,142,247,0.12)',
-                          color: ACTION_BORDER_COLORS[action.tipo] || '#4F8EF7',
+                          background: ACTION_BORDER_COLORS[action.tipo] ? `${ACTION_BORDER_COLORS[action.tipo]}1F` : 'rgba(37,99,235,0.12)',
+                          color: ACTION_BORDER_COLORS[action.tipo] || '#2563EB',
                         }}
                       >
                         <Icon className="w-3 h-3" />
@@ -506,7 +506,7 @@ export default function ActionPlanTab() {
                         )}
                       </div>
 
-                      <span className="text-[11px] text-[#22D07A] font-medium flex-shrink-0 min-w-[80px] text-right">
+                      <span className="text-[11px] text-[#16A34A] font-medium flex-shrink-0 min-w-[80px] text-right">
                         {action.impacto_estimado}
                       </span>
 
@@ -525,10 +525,10 @@ export default function ActionPlanTab() {
                         onClick={() => handleApplySingle(action)}
                         className={`h-7 px-3 text-[10px] font-semibold ml-2 flex-shrink-0 ${
                           actionState === 'success' 
-                            ? 'border-[#22D07A]/30 text-[#22D07A] bg-[#22D07A]/10' 
+                            ? 'border-[#16A34A]/30 text-[#16A34A] bg-[#16A34A]/10' 
                             : actionState === 'error'
                             ? 'border-destructive/30 text-destructive bg-destructive/10'
-                            : 'border-[#1E2A42] text-text-muted hover:text-text-primary'
+                            : 'border-[#E4E7EF] text-text-muted hover:text-text-primary'
                         }`}
                       >
                         {actionState === 'loading' ? (
@@ -561,7 +561,7 @@ export default function ActionPlanTab() {
                                 setEditedBudgets(prev => ({ ...prev, [action.campaign_id]: val }));
                               }
                             }}
-                            className="w-20 h-6 bg-[#080B14] border border-[#1E2A42] rounded px-2 text-[11px] text-white focus:border-[#4F8EF7] outline-none"
+                            className="w-20 h-6 bg-[#F8F9FC] border border-[#E4E7EF] rounded px-2 text-[11px] text-white focus:border-[#2563EB] outline-none"
                           />
                           <span className="text-[11px] text-text-muted">/dia</span>
                         </div>
@@ -571,37 +571,37 @@ export default function ActionPlanTab() {
                     {/* LINE 3: Pills + Confidence */}
                     <div className="ml-[30px] mt-1.5 flex items-center gap-2 flex-wrap">
                       {action.dias_ativo != null && (
-                        <span className="bg-[#080B14] border border-[#1E2A42] rounded-full px-2 py-0.5 text-[10px] text-text-muted">
+                        <span className="bg-[#F8F9FC] border border-[#E4E7EF] rounded-full px-2 py-0.5 text-[10px] text-text-muted">
                           📅 {action.dias_ativo}d ativo
                         </span>
                       )}
                       {action.frequency != null && (
-                        <span className={`bg-[#080B14] border border-[#1E2A42] rounded-full px-2 py-0.5 text-[10px] ${
-                          action.frequency > 3.5 ? 'text-[#F5A623] border-[#F5A623]/30' : 'text-text-muted'
+                        <span className={`bg-[#F8F9FC] border border-[#E4E7EF] rounded-full px-2 py-0.5 text-[10px] ${
+                          action.frequency > 3.5 ? 'text-[#D97706] border-[#D97706]/30' : 'text-text-muted'
                         }`}>
                           👁 freq. {action.frequency.toFixed(1)}
                         </span>
                       )}
                       {action.tipo_budget && (
-                        <span className="bg-[#080B14] border border-[#1E2A42] rounded-full px-2 py-0.5 text-[10px] text-text-muted">
+                        <span className="bg-[#F8F9FC] border border-[#E4E7EF] rounded-full px-2 py-0.5 text-[10px] text-text-muted">
                           💰 {action.tipo_budget}
                         </span>
                       )}
                       {action.regra_aplicada && (
-                        <span className="bg-[#080B14] border border-[#1E2A42] rounded-full px-2 py-0.5 text-[10px] text-[#4F8EF7]">
+                        <span className="bg-[#F8F9FC] border border-[#E4E7EF] rounded-full px-2 py-0.5 text-[10px] text-[#2563EB]">
                           📏 {action.regra_aplicada}
                         </span>
                       )}
                       {/* Confidence bar */}
                       <div className="flex items-center gap-2 ml-auto">
-                        <span className="text-[10px] text-[#4A5F7A]">Confiança:</span>
-                        <div className="w-16 h-1 bg-[#0E1420] rounded-full overflow-hidden">
+                        <span className="text-[10px] text-[#5A6478]">Confiança:</span>
+                        <div className="w-16 h-1 bg-[#FFFFFF] rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full bg-blue-500 transition-all duration-700"
                             style={{ width: `${confidence * 100}%` }}
                           />
                         </div>
-                        <span className="text-[10px] text-[#7A8FAD]">{Math.round(confidence * 100)}%</span>
+                        <span className="text-[10px] text-[#9BA5B7]">{Math.round(confidence * 100)}%</span>
                       </div>
                     </div>
                   </div>
@@ -613,9 +613,9 @@ export default function ActionPlanTab() {
 
         {/* ═══ EXECUTE ALL URGENT ═══ */}
         {plan && plan.acoes.filter(a => a.prioridade === 1).length > 0 && (
-          <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ background: 'rgba(240,82,82,0.06)', border: '1px solid rgba(240,82,82,0.20)' }}>
+          <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.20)' }}>
             <div>
-              <span className="text-[13px] font-semibold" style={{ color: '#F05252' }}>
+              <span className="text-[13px] font-semibold" style={{ color: '#DC2626' }}>
                 🔴 {plan.acoes.filter(a => a.prioridade === 1).length} acção(ões) urgente(s) pendente(s)
               </span>
               <p className="text-[11px] text-text-muted mt-0.5">
@@ -626,7 +626,7 @@ export default function ActionPlanTab() {
               onClick={handleExecuteAllUrgent}
               disabled={isApplying}
               className="h-9 px-5 text-[12px] font-bold text-white rounded-lg gap-2 flex-shrink-0"
-              style={{ background: '#F05252' }}
+              style={{ background: '#DC2626' }}
             >
               {isApplying ? (
                 <><Loader2 className="w-3.5 h-3.5 animate-spin" />A executar...</>
@@ -678,10 +678,10 @@ export default function ActionPlanTab() {
 
         {/* ═══ GENERIC CONFIRM DIALOG ═══ */}
         <Dialog open={confirmDialog.open} onOpenChange={(open) => !open && setConfirmDialog(d => ({ ...d, open: false }))}>
-          <DialogContent className="sm:max-w-md" style={{ background: '#0E1420', border: '1px solid #2A3A5C' }}>
+          <DialogContent className="sm:max-w-md" style={{ background: '#FFFFFF', border: '1px solid #C9D0E0' }}>
             <DialogHeader>
-              <DialogTitle className="text-base text-[#F0F4FF]">{confirmDialog.title}</DialogTitle>
-              <DialogDescription className="text-sm" style={{ color: '#7A8FAD' }}>
+              <DialogTitle className="text-base text-[#0F1523]">{confirmDialog.title}</DialogTitle>
+              <DialogDescription className="text-sm" style={{ color: '#9BA5B7' }}>
                 {confirmDialog.description}
               </DialogDescription>
             </DialogHeader>
@@ -709,10 +709,10 @@ function ContextPanel({
   setContext: React.Dispatch<React.SetStateAction<{ margin: string; objective: string; niche: string; total_budget: string }>>;
 }) {
   return (
-    <div className="bg-[#080B14] border border-[#1E2A42] rounded-xl p-4 animate-fade-up">
+    <div className="bg-[#F8F9FC] border border-[#E4E7EF] rounded-xl p-4 animate-fade-up">
       <div className="mb-3">
         <h3 className="text-[11px] uppercase tracking-wider text-text-muted font-semibold">🎯 Contexto da Conta</h3>
-        <div className="h-px bg-[#1E2A42] mt-2 mb-2" />
+        <div className="h-px bg-[#E4E7EF] mt-2 mb-2" />
         <p className="text-[11px] text-text-muted">Opcional — melhora a qualidade da análise</p>
       </div>
       <div className="grid grid-cols-2 gap-4">
@@ -722,7 +722,7 @@ function ContextPanel({
             value={context.niche}
             onChange={e => setContext(p => ({ ...p, niche: e.target.value }))}
             placeholder="ex: mármore, joias, moda..."
-            className="h-9 text-[12px] bg-[#0E1420] border-[#1E2A42] rounded-lg focus:border-[#4F8EF7]"
+            className="h-9 text-[12px] bg-[#FFFFFF] border-[#E4E7EF] rounded-lg focus:border-[#2563EB]"
           />
         </div>
         <div className="space-y-1.5">
@@ -732,13 +732,13 @@ function ContextPanel({
             value={context.margin}
             onChange={e => setContext(p => ({ ...p, margin: e.target.value }))}
             placeholder="ex: 35 — opcional"
-            className="h-9 text-[12px] bg-[#0E1420] border-[#1E2A42] rounded-lg focus:border-[#4F8EF7]"
+            className="h-9 text-[12px] bg-[#FFFFFF] border-[#E4E7EF] rounded-lg focus:border-[#2563EB]"
           />
         </div>
         <div className="space-y-1.5">
           <Label className="text-[10px] text-text-muted uppercase tracking-[1px]">Objetivo</Label>
           <Select value={context.objective} onValueChange={v => setContext(p => ({ ...p, objective: v }))}>
-            <SelectTrigger className="h-9 text-[12px] bg-[#0E1420] border-[#1E2A42] rounded-lg">
+            <SelectTrigger className="h-9 text-[12px] bg-[#FFFFFF] border-[#E4E7EF] rounded-lg">
               <SelectValue placeholder="Não sei / Deixar a IA decidir" />
             </SelectTrigger>
             <SelectContent>
@@ -756,7 +756,7 @@ function ContextPanel({
             value={context.total_budget}
             onChange={e => setContext(p => ({ ...p, total_budget: e.target.value }))}
             placeholder="ex: 100 — opcional"
-            className="h-9 text-[12px] bg-[#0E1420] border-[#1E2A42] rounded-lg focus:border-[#4F8EF7]"
+            className="h-9 text-[12px] bg-[#FFFFFF] border-[#E4E7EF] rounded-lg focus:border-[#2563EB]"
           />
         </div>
       </div>
@@ -782,12 +782,12 @@ function HistorySection({
   fmt: (v: number) => string;
 }) {
   return (
-    <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl overflow-hidden">
-      <div className="px-5 py-3 border-b border-[#1E2A42] flex items-center justify-between">
+    <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl overflow-hidden">
+      <div className="px-5 py-3 border-b border-[#E4E7EF] flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h3 className="text-[11px] uppercase tracking-wider text-text-muted font-semibold">Histórico de Ações</h3>
           {weekActions > 0 && (
-            <span className="bg-[#4F8EF7]/10 text-[#4F8EF7] text-[10px] font-medium px-2 py-0.5 rounded-full">
+            <span className="bg-[#2563EB]/10 text-[#2563EB] text-[10px] font-medium px-2 py-0.5 rounded-full">
               {weekActions} esta semana
             </span>
           )}
@@ -800,7 +800,7 @@ function HistorySection({
               onClick={() => setHistoryFilter(f)}
               className={`text-[10px] px-2 py-0.5 rounded-full transition-colors ${
                 historyFilter === f
-                  ? 'bg-[#4F8EF7]/20 text-[#4F8EF7]'
+                  ? 'bg-[#2563EB]/20 text-[#2563EB]'
                   : 'text-text-muted hover:text-text-primary'
               }`}
             >
@@ -813,7 +813,7 @@ function HistorySection({
       {filteredHistory.length > 0 ? (
         <Table>
           <TableHeader>
-            <TableRow className="border-[#1E2A42] hover:bg-transparent">
+            <TableRow className="border-[#E4E7EF] hover:bg-transparent">
               <TableHead className="text-[11px] text-text-muted uppercase tracking-wider">Data</TableHead>
               <TableHead className="text-[11px] text-text-muted uppercase tracking-wider">Campanha</TableHead>
               <TableHead className="text-[11px] text-text-muted uppercase tracking-wider">Ação</TableHead>
@@ -823,7 +823,7 @@ function HistorySection({
           </TableHeader>
           <TableBody>
             {filteredHistory.map((h) => (
-              <TableRow key={h.id} className="border-[#1E2A42]">
+              <TableRow key={h.id} className="border-[#E4E7EF]">
                 <TableCell className="text-[12px] text-text-muted">
                   {new Date(h.applied_at).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                 </TableCell>
@@ -837,10 +837,10 @@ function HistorySection({
                       background: ACTION_BORDER_COLORS[h.action_type]
                         ? `${ACTION_BORDER_COLORS[h.action_type]}1F`
                         : h.action_type.includes('increase')
-                          ? 'rgba(34,208,122,0.12)'
-                          : 'rgba(245,166,35,0.12)',
+                          ? 'rgba(22,163,74,0.12)'
+                          : 'rgba(217,119,6,0.12)',
                       color: ACTION_BORDER_COLORS[h.action_type]
-                        || (h.action_type.includes('increase') ? '#22D07A' : '#F5A623'),
+                        || (h.action_type.includes('increase') ? '#16A34A' : '#D97706'),
                     }}
                   >
                     {ACTION_LABELS[h.action_type] || h.action_type}
@@ -851,11 +851,11 @@ function HistorySection({
                 </TableCell>
                 <TableCell className="text-center">
                   {h.success ? (
-                    <Check className="w-4 h-4 text-[#22D07A] mx-auto" />
+                    <Check className="w-4 h-4 text-[#16A34A] mx-auto" />
                   ) : (
                     <Tooltip>
                       <TooltipTrigger>
-                        <X className="w-4 h-4 text-[#F05252] mx-auto" />
+                        <X className="w-4 h-4 text-[#DC2626] mx-auto" />
                       </TooltipTrigger>
                       <TooltipContent>{h.error_message}</TooltipContent>
                     </Tooltip>

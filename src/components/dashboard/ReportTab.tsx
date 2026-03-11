@@ -139,9 +139,9 @@ export default function ReportTab() {
   // No data state
   if (!analysisData) {
     return (
-      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl flex flex-col items-center justify-center py-24 text-center animate-fade-up">
-        <div className="w-20 h-20 rounded-2xl bg-[#4F8EF7]/10 flex items-center justify-center mb-6">
-          <FileText className="w-10 h-10 text-[#4F8EF7]" />
+      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl flex flex-col items-center justify-center py-24 text-center animate-fade-up">
+        <div className="w-20 h-20 rounded-2xl bg-[#2563EB]/10 flex items-center justify-center mb-6">
+          <FileText className="w-10 h-10 text-[#2563EB]" />
         </div>
         <h3 className="text-base font-semibold text-text-primary mb-2">Relatório Inteligente</h3>
         <p className="text-sm text-text-muted mb-6 max-w-xs">
@@ -152,11 +152,11 @@ export default function ReportTab() {
   }
 
   return (
-    <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl animate-fade-up">
+    <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl animate-fade-up">
       {/* Header */}
-      <div className="flex items-center justify-between p-6 border-b border-[#1E2A42]">
+      <div className="flex items-center justify-between p-6 border-b border-[#E4E7EF]">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#4F8EF7] to-[#4F8EF7] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2563EB] to-[#2563EB] flex items-center justify-center">
             <Bot className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -200,7 +200,7 @@ export default function ReportTab() {
           <Button
             onClick={generateReport}
             disabled={loading}
-            className="h-9 px-4 text-xs bg-gradient-to-r from-[#4F8EF7] to-[#4F8EF7] text-white hover:opacity-90 rounded-lg font-semibold gap-2"
+            className="h-9 px-4 text-xs bg-gradient-to-r from-[#2563EB] to-[#2563EB] text-white hover:opacity-90 rounded-lg font-semibold gap-2"
           >
             {loading ? (
               <><Loader2 className="w-3.5 h-3.5 animate-spin" />Gerando...</>
@@ -219,15 +219,15 @@ export default function ReportTab() {
           <div className="space-y-6">
             {[0, 1, 2, 3, 4].map(i => (
               <div key={i} className="space-y-3">
-                <Skeleton className="h-5 w-48 bg-[#1E2A42]" />
-                <Skeleton className="h-4 w-full bg-[#1E2A42]" />
-                <Skeleton className="h-4 w-3/4 bg-[#1E2A42]" />
-                <Skeleton className="h-4 w-5/6 bg-[#1E2A42]" />
+                <Skeleton className="h-5 w-48 bg-[#E4E7EF]" />
+                <Skeleton className="h-4 w-full bg-[#E4E7EF]" />
+                <Skeleton className="h-4 w-3/4 bg-[#E4E7EF]" />
+                <Skeleton className="h-4 w-5/6 bg-[#E4E7EF]" />
               </div>
             ))}
           </div>
         ) : report ? (
-          <div className="prose prose-sm prose-invert max-w-none [&_h2]:text-[#4F8EF7] [&_h2]:text-sm [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-2 [&_h2]:uppercase [&_h2]:tracking-wide [&_h3]:text-xs [&_h3]:font-bold [&_h3]:mt-4 [&_h3]:mb-1 [&_h3]:text-[#4F8EF7] [&_p]:text-[13px] [&_p]:text-text-primary/80 [&_p]:leading-[1.8] [&_li]:text-[13px] [&_li]:text-text-primary/80 [&_li]:leading-[1.8] [&_strong]:text-text-primary [&_table]:text-[12px] [&_th]:text-text-muted [&_th]:text-left [&_th]:py-1 [&_th]:pr-4 [&_td]:py-1 [&_td]:pr-4">
+          <div className="prose prose-sm prose-invert max-w-none [&_h2]:text-[#2563EB] [&_h2]:text-sm [&_h2]:font-bold [&_h2]:mt-6 [&_h2]:mb-2 [&_h2]:uppercase [&_h2]:tracking-wide [&_h3]:text-xs [&_h3]:font-bold [&_h3]:mt-4 [&_h3]:mb-1 [&_h3]:text-[#2563EB] [&_p]:text-[13px] [&_p]:text-text-primary/80 [&_p]:leading-[1.8] [&_li]:text-[13px] [&_li]:text-text-primary/80 [&_li]:leading-[1.8] [&_strong]:text-text-primary [&_table]:text-[12px] [&_th]:text-text-muted [&_th]:text-left [&_th]:py-1 [&_th]:pr-4 [&_td]:py-1 [&_td]:pr-4">
             <ReactMarkdown>{report}</ReactMarkdown>
           </div>
         ) : (

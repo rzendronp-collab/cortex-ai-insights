@@ -14,14 +14,14 @@ const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen bg-[#080B14] flex items-center justify-center"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center" style={{ background: '#F8F9FC' }}><div className="w-5 h-5 rounded-full animate-spin" style={{ border: '2px solid #E4E7EF', borderTopColor: '#2563EB' }} /></div>;
   if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return <div className="min-h-screen bg-[#080B14] flex items-center justify-center"><div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center" style={{ background: '#F8F9FC' }}><div className="w-5 h-5 rounded-full animate-spin" style={{ border: '2px solid #E4E7EF', borderTopColor: '#2563EB' }} /></div>;
   if (user) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }

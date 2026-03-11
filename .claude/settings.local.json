@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git revert:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node_modules/.bin/tsc --noEmit 2>&1 | head -40)",
+      "Bash(find . -path \"*/supabase/functions/claude-proxy*\" -type f 2>/dev/null; find . -path \"*/supabase/migrations*\" -type f 2>/dev/null | head -10)",
+      "Bash(ls src/components/cortex/ 2>/dev/null || echo \"dir not found\"; ls src/hooks/useCortex* 2>/dev/null || echo \"no cortex hooks\")",
+      "Bash(git commit:*)",
+      "Bash(supabase --version 2>&1)",
+      "Bash(grep -r \"SERVICE_ROLE\\\\|service_role\" . --include=\"*.env*\" --include=\"*.toml\" --include=\"*.local\" 2>/dev/null | head -5; cat supabase/config.toml 2>/dev/null | head -20)",
+      "Bash(ls /Users/robertozendron/Downloads/cortex_mode_prompt.md 2>/dev/null; ls /Users/robertozendron/Downloads/*cortex* /Users/robertozendron/Downloads/*v4* 2>/dev/null)",
+      "Bash(grep -o '\"content\":\"[^\"]*v4[^\"]*\"' /Users/robertozendron/.claude/projects/-Users-robertozendron-cortex-temp/b4b16cac-a5f7-49ce-b1f9-fc35c74a9224.jsonl 2>/dev/null | head -5)"
+    ]
+  }
+}

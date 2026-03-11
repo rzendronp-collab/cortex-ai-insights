@@ -143,14 +143,14 @@ export default function ConsolidatedTab() {
           <h3 className="text-xs font-semibold text-foreground mb-3">ROAS por Conta</h3>
           <ResponsiveContainer width="100%" height={Math.max(200, allAccounts.length * 40)}>
             <BarChart data={chartData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="#1E2A42" />
-              <XAxis type="number" tick={{ fontSize: 10, fill: '#7A8FAD' }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#7A8FAD' }} width={120} axisLine={false} tickLine={false} />
-              <Tooltip contentStyle={{ backgroundColor: '#0E1420', border: '1px solid #2A3A5C', borderRadius: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.4)', fontSize: 11, color: '#F0F4FF', fontFamily: "'Inter', sans-serif", padding: '10px 12px' }} />
-              <ReferenceLine x={roasTarget} stroke="#4A5F7A" strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 10, fill: '#7A8FAD' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E4E7EF" />
+              <XAxis type="number" tick={{ fontSize: 10, fill: '#9BA5B7' }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#9BA5B7' }} width={120} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid #C9D0E0', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.08)', fontSize: 11, color: '#0F1523', fontFamily: "'Inter', sans-serif", padding: '10px 12px' }} />
+              <ReferenceLine x={roasTarget} stroke="#5A6478" strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 10, fill: '#9BA5B7' }} />
               <Bar dataKey="roas" radius={[0, 4, 4, 0]}>
                 {chartData.map((a, i) => {
-                  const fill = a.roas >= roasTarget * 1.2 ? '#22D07A' : a.roas >= roasTarget ? '#4F8EF7' : '#F05252';
+                  const fill = a.roas >= roasTarget * 1.2 ? '#16A34A' : a.roas >= roasTarget ? '#2563EB' : '#DC2626';
                   return <Cell key={i} fill={fill} />;
                 })}
               </Bar>
@@ -230,13 +230,13 @@ export default function ConsolidatedTab() {
         <ResponsiveContainer width="100%" height={Math.max(250, chartData.length * 30)}>
           <BarChart data={chartData} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(30,42,66,0.8)" />
-            <XAxis type="number" tick={{ fontSize: 10, fill: '#4A5F7A' }} />
-            <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#4A5F7A' }} width={120} />
-            <Tooltip contentStyle={{ backgroundColor: '#0E1420', border: '1px solid #2A3A5C', borderRadius: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.4)', fontSize: 11, color: '#F0F4FF', fontFamily: "'Inter', sans-serif", padding: '10px 12px' }} />
-            <ReferenceLine x={roasTarget} stroke="#4A5F7A" strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 10, fill: '#4A5F7A' }} />
+            <XAxis type="number" tick={{ fontSize: 10, fill: '#5A6478' }} />
+            <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#5A6478' }} width={120} />
+            <Tooltip contentStyle={{ backgroundColor: '#FFFFFF', border: '1px solid #C9D0E0', borderRadius: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.08)', fontSize: 11, color: '#0F1523', fontFamily: "'Inter', sans-serif", padding: '10px 12px' }} />
+            <ReferenceLine x={roasTarget} stroke="#5A6478" strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 10, fill: '#5A6478' }} />
             <Bar dataKey="roas" radius={[0, 4, 4, 0]}>
               {chartData.map((a, i) => {
-                const fill = a.roas >= roasTarget * 1.2 ? '#22D07A' : a.roas >= roasTarget ? '#4F8EF7' : '#F05252';
+                const fill = a.roas >= roasTarget * 1.2 ? '#16A34A' : a.roas >= roasTarget ? '#2563EB' : '#DC2626';
                 return <Cell key={i} fill={fill} />;
               })}
             </Bar>

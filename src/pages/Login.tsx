@@ -45,7 +45,7 @@ export default function Login() {
             <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
               <Brain className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#F0F4FF', letterSpacing: '-0.02em' }}>CORTEX</span>
+            <span className="text-2xl font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#0F1523', letterSpacing: '-0.02em' }}>CORTEX</span>
           </div>
           <p className="text-center text-sm text-muted-foreground -mt-4 mb-4">Dados inteligentes. Decisões mais rápidas.</p>
 

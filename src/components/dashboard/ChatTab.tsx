@@ -153,11 +153,11 @@ export default function ChatTab() {
   };
 
   return (
-    <div className="bg-[#111827] border border-[#1F2937] rounded-xl flex flex-col h-[600px] animate-fade-up">
+    <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl flex flex-col h-[600px] animate-fade-up">
       {/* Context banner */}
       {analysisData && (
-        <div className="px-4 py-2 border-b border-[#1F2937] bg-[#6366F1]/5 flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+        <div className="px-4 py-2 border-b border-[#1E2A42] bg-[#4F8EF7]/5 flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-[#22D07A] animate-pulse" />
           <span className="text-[10px] text-text-muted">
             IA com contexto de <strong className="text-text-primary">{selectedAccountName || 'conta selecionada'}</strong> — {analysisData.campaigns.filter(c => c.spend > 0).length} campanhas ativas
           </span>
@@ -169,15 +169,15 @@ export default function ChatTab() {
         {messages.map((m, i) => (
           <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'justify-end' : ''}`}>
             {m.role === 'assistant' && (
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6366F1] to-[#818CF8] flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#4F8EF7] to-[#4F8EF7] flex items-center justify-center flex-shrink-0">
                 <Bot className="w-4 h-4 text-white" />
               </div>
             )}
             <div
               className={`max-w-[75%] px-4 py-3 text-[13px] leading-relaxed ${
                 m.role === 'user'
-                  ? 'bg-gradient-to-br from-[#6366F1] to-[#4F46E5] text-white'
-                  : 'bg-[#111827] border border-[#1F2937] text-text-primary'
+                  ? 'bg-gradient-to-br from-[#4F8EF7] to-[#4F8EF7] text-white'
+                  : 'bg-[#0E1420] border border-[#1E2A42] text-text-primary'
               }`}
               style={{
                 borderRadius: m.role === 'user' ? '12px 4px 12px 12px' : '4px 12px 12px 12px',
@@ -192,7 +192,7 @@ export default function ChatTab() {
               )}
             </div>
             {m.role === 'user' && (
-              <div className="w-8 h-8 rounded-full bg-[#1F2937] flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[#1E2A42] flex items-center justify-center flex-shrink-0">
                 <User className="w-4 h-4 text-text-muted" />
               </div>
             )}
@@ -200,10 +200,10 @@ export default function ChatTab() {
         ))}
         {loading && (
           <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6366F1] to-[#818CF8] flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#4F8EF7] to-[#4F8EF7] flex items-center justify-center flex-shrink-0">
               <Bot className="w-4 h-4 text-white" />
             </div>
-            <div className="bg-[#111827] border border-[#1F2937] rounded-xl px-4 py-3">
+            <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl px-4 py-3">
               <Loader2 className="w-4 h-4 animate-spin text-text-muted" />
             </div>
           </div>
@@ -218,7 +218,7 @@ export default function ChatTab() {
             <button
               key={s}
               onClick={() => sendMessage(s)}
-              className="text-[11px] px-3 py-1.5 rounded-full border border-[#1F2937] text-text-muted hover:text-[#6366F1] hover:border-[#6366F1] transition-all duration-200"
+              className="text-[11px] px-3 py-1.5 rounded-full border border-[#1E2A42] text-text-muted hover:text-[#4F8EF7] hover:border-[#4F8EF7] transition-all duration-200"
             >
               {s}
             </button>
@@ -227,13 +227,13 @@ export default function ChatTab() {
       )}
 
       {/* Input */}
-      <div className="border-t border-[#1F2937] p-3 flex gap-2">
+      <div className="border-t border-[#1E2A42] p-3 flex gap-2">
         <textarea
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input); } }}
           placeholder="Pergunte sobre suas campanhas..."
-          className="flex-1 bg-[#111827] border border-[#1F2937] rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-muted resize-none focus:outline-none focus:border-[#6366F1] min-h-[40px] max-h-[100px] transition-colors duration-200"
+          className="flex-1 bg-[#0E1420] border border-[#1E2A42] rounded-lg px-3 py-2 text-sm text-text-primary placeholder:text-text-muted resize-none focus:outline-none focus:border-[#4F8EF7] min-h-[40px] max-h-[100px] transition-colors duration-200"
           rows={1}
           disabled={loading}
         />
@@ -241,7 +241,7 @@ export default function ChatTab() {
           onClick={() => sendMessage(input)}
           disabled={!input.trim() || loading}
           size="icon"
-          className="h-10 w-10 bg-gradient-to-r from-[#6366F1] to-[#4F46E5] text-white hover:opacity-90 rounded-lg"
+          className="h-10 w-10 bg-gradient-to-r from-[#4F8EF7] to-[#4F8EF7] text-white hover:opacity-90 rounded-lg"
         >
           <Send className="w-4 h-4" />
         </Button>

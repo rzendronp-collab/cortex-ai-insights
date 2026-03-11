@@ -16,9 +16,9 @@ function timeAgo(dateStr: string | null): string {
 }
 
 const severityConfig: Record<string, { icon: typeof AlertCircle; borderClass: string; iconClass: string }> = {
-  critical: { icon: AlertCircle, borderClass: 'border-l-[#EF4444]', iconClass: 'text-[#EF4444]' },
-  warning: { icon: AlertTriangle, borderClass: 'border-l-[#F59E0B]', iconClass: 'text-[#F59E0B]' },
-  info: { icon: Info, borderClass: 'border-l-[#6366F1]', iconClass: 'text-[#6366F1]' },
+  critical: { icon: AlertCircle, borderClass: 'border-l-[#F05252]', iconClass: 'text-[#F05252]' },
+  warning: { icon: AlertTriangle, borderClass: 'border-l-[#F5A623]', iconClass: 'text-[#F5A623]' },
+  info: { icon: Info, borderClass: 'border-l-[#4F8EF7]', iconClass: 'text-[#4F8EF7]' },
 };
 
 export default function AlertsPanel() {
@@ -49,15 +49,15 @@ export default function AlertsPanel() {
       >
         <Bell className="w-4.5 h-4.5 text-muted-foreground" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#EF4444] text-[10px] font-bold text-white px-1">
+          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-[#F05252] text-[10px] font-bold text-white px-1">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-[380px] bg-[#111827] border border-[#1F2937] rounded-xl shadow-xl z-50 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#1F2937]">
+        <div className="absolute right-0 top-full mt-2 w-[380px] bg-[#0E1420] border border-[#1E2A42] rounded-xl shadow-xl z-50 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#1E2A42]">
             <h3 className="text-sm font-semibold text-foreground">Notificações</h3>
             <div className="flex items-center gap-2">
               {unreadCount > 0 && (
@@ -88,7 +88,7 @@ export default function AlertsPanel() {
                   <button
                     key={alert.id}
                     onClick={() => handleAlertClick(alert)}
-                    className={`w-full text-left px-4 py-3 border-l-4 ${sev.borderClass} hover:bg-[#1F2937] transition-colors border-b border-[#1F2937] last:border-b-0`}
+                    className={`w-full text-left px-4 py-3 border-l-4 ${sev.borderClass} hover:bg-[#1E2A42] transition-colors border-b border-[#1E2A42] last:border-b-0`}
                   >
                     <div className="flex items-start gap-3">
                       <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${sev.iconClass}`} />

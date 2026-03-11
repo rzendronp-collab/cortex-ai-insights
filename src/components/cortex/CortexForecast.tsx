@@ -4,20 +4,20 @@ import { Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const CHART_GRID = '#1E2A42';
-const CHART_AXIS = '#6B7280';
+const CHART_AXIS = '#4A5F7A';
 const chartTooltipStyle = {
   background: '#0E1420',
   border: '1px solid #6C63FF',
   borderRadius: 8,
   fontSize: 11,
-  color: '#F9FAFB',
+  color: '#F0F4FF',
   fontFamily: "'Inter', sans-serif",
   padding: '10px 12px',
 };
 
 const TREND_CONFIG = {
   crescente: { icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10', label: 'Crescente' },
-  estavel: { icon: Minus, color: 'text-slate-400', bg: 'bg-slate-500/10', label: 'Estável' },
+  estavel: { icon: Minus, color: 'text-[#7A8FAD]', bg: 'bg-[#4A5F7A]/10', label: 'Estável' },
   decrescente: { icon: TrendingDown, color: 'text-red-400', bg: 'bg-red-500/10', label: 'Decrescente' },
 };
 
@@ -113,13 +113,13 @@ export default function CortexForecast({ forecast, loading, historicalData }: Pr
             <Area type="monotone" dataKey="roas_max" stroke="none" fill="url(#forecastBand)" />
             <Area type="monotone" dataKey="roas_min" stroke="none" fill="#0E1420" />
             {/* Historical line */}
-            <Line type="monotone" dataKey="roas" stroke="#10B981" strokeWidth={2} dot={{ r: 3, fill: '#10B981' }} connectNulls={false} />
+            <Line type="monotone" dataKey="roas" stroke="#22D07A" strokeWidth={2} dot={{ r: 3, fill: '#22D07A' }} connectNulls={false} />
             {/* Forecast line */}
             <Line type="monotone" dataKey="roas_expected" stroke="#6C63FF" strokeWidth={2} strokeDasharray="6 3" dot={{ r: 3, fill: '#6C63FF' }} connectNulls={false} />
           </ComposedChart>
         </ResponsiveContainer>
         <div className="flex justify-center gap-6 mt-2 text-[10px] text-text-muted">
-          <span className="flex items-center gap-1.5"><span className="w-4 h-[2px] bg-[#10B981] rounded inline-block" /> Histórico</span>
+          <span className="flex items-center gap-1.5"><span className="w-4 h-[2px] bg-[#22D07A] rounded inline-block" /> Histórico</span>
           <span className="flex items-center gap-1.5"><span className="w-4 h-[2px] bg-[#6C63FF] rounded inline-block" style={{ borderTop: '2px dashed #6C63FF' }} /> Previsão</span>
           <span className="flex items-center gap-1.5"><span className="w-3 h-3 bg-[#6C63FF]/15 rounded inline-block" /> Banda de confiança</span>
         </div>

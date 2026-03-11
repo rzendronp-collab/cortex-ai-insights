@@ -210,7 +210,7 @@ export default function CortexTab() {
           <Button
             onClick={handleFullAnalysis}
             disabled={analyzing || scopeIds.length === 0}
-            className="px-5 py-2 text-[12px] font-bold bg-gradient-to-r from-[#6C63FF] to-[#4F46E5] text-white hover:opacity-90 rounded-lg gap-2"
+            className="px-5 py-2 text-[12px] font-bold bg-gradient-to-r from-[#6C63FF] to-[#4F8EF7] text-white hover:opacity-90 rounded-lg gap-2"
           >
             {analyzing ? (
               <><Loader2 className="w-4 h-4 animate-spin" />{progress || 'Analisando...'}</>

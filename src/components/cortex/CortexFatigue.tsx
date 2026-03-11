@@ -136,7 +136,7 @@ export default function CortexFatigue({ results, loading }: Props) {
                 <div className="flex flex-col items-end gap-1 flex-shrink-0">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[9px] text-text-muted">CTR</span>
-                    <MiniSparkline data={r.ctrTrend} color={r.status === 'healthy' ? '#10B981' : r.status === 'warning' ? '#F59E0B' : '#EF4444'} />
+                    <MiniSparkline data={r.ctrTrend} color={r.status === 'healthy' ? '#22D07A' : r.status === 'warning' ? '#F5A623' : '#F05252'} />
                   </div>
                   <div className="flex items-center gap-1.5">
                     <span className="text-[9px] text-text-muted">CPM</span>

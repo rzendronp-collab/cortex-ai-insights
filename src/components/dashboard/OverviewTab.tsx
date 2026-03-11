@@ -14,25 +14,26 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-// ─── Chart theme constants ───
-const CHART_GRID = '#1F2937';
-const CHART_AXIS = '#6B7280';
-const TOOLTIP_BG = '#111827';
-const TOOLTIP_BORDER = '#6366F1';
+// ─── Chart theme constants (V5.2 DashCortex palette) ───
+const CHART_GRID = '#1E2A42';
+const CHART_AXIS = '#4A5F7A';
+const TOOLTIP_BG = '#0E1420';
+const TOOLTIP_BORDER = '#2A3A5C';
 
-const DATA_BLUE = '#6366F1';
-const DATA_GREEN = '#10B981';
-const DATA_RED = '#EF4444';
-const DATA_YELLOW = '#F59E0B';
-const DATA_PURPLE = '#8B5CF6';
-const MUTED = '#6B7280';
+const DATA_BLUE = '#4F8EF7';
+const DATA_GREEN = '#22D07A';
+const DATA_RED = '#F05252';
+const DATA_YELLOW = '#F5A623';
+const DATA_PURPLE = '#6C63FF';
+const MUTED = '#4A5F7A';
 
 const chartTooltipStyle = {
-  background: TOOLTIP_BG,
+  backgroundColor: TOOLTIP_BG,
   border: `1px solid ${TOOLTIP_BORDER}`,
   borderRadius: 8,
+  boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
   fontSize: 11,
-  color: '#F9FAFB',
+  color: '#F0F4FF',
   fontFamily: "'Inter', sans-serif",
   padding: '10px 12px',
 };
@@ -46,7 +47,7 @@ const dailyMetricConfig: Record<string, { label: string; color: string; type: 'l
   cpm: { label: 'CPM', color: DATA_RED, type: 'line', yAxisId: 'right' },
 };
 
-const ACCOUNT_COLORS = [DATA_BLUE, DATA_GREEN, DATA_PURPLE, DATA_YELLOW, DATA_RED, '#F472B6', '#38BDF8', '#A3E635'];
+const ACCOUNT_COLORS = [DATA_BLUE, DATA_GREEN, DATA_PURPLE, DATA_YELLOW, DATA_RED, '#F472B6', '#38BDF8', '#22D07A'];
 
 export default function OverviewTab() {
   const [visibleMetrics, setVisibleMetrics] = useState<Set<string>>(new Set(['roas', 'spend']));
@@ -212,11 +213,11 @@ export default function OverviewTab() {
   const estCheckouts = Math.round(totalSales * 3.5);
 
   const funnelData = [
-    { name: 'Impressões', value: totalImpressions, color: '#818CF8' },
-    { name: 'Cliques', value: totalClicks, color: '#6366F1' },
-    { name: 'Page Views', value: estPageViews, color: '#4F46E5' },
-    { name: 'Checkouts', value: estCheckouts, color: '#4338CA' },
-    { name: 'Compras', value: totalSales, color: DATA_GREEN },
+    { name: 'Impressões', value: totalImpressions },
+    { name: 'Cliques', value: totalClicks },
+    { name: 'Page Views', value: estPageViews },
+    { name: 'Checkouts', value: estCheckouts },
+    { name: 'Compras', value: totalSales },
   ];
 
   const actions = (() => {
@@ -235,7 +236,7 @@ export default function OverviewTab() {
       .filter(c => c.spend === 0 && normalizeStatus((c as any).status ?? (c as any).effective_status) === 'ACTIVE')
       .map(c => ({
         ...c,
-        recommendation: { label: '👻 Sem gasto', color: 'text-slate-400', bg: 'bg-slate-800/50 border-slate-600/30' },
+        recommendation: { label: '👻 Sem gasto', color: 'text-[#7A8FAD]', bg: 'bg-[#0E1420]/50 border-[#1E2A42]/30' },
         purchases: 0,
       }));
     return [...withSpend, ...zeroSpendActive].sort((a, b) => {
@@ -310,12 +311,17 @@ export default function OverviewTab() {
           const costLabel = accountObjective === 'leads' ? 'CPL Médio' : accountObjective === 'messages' ? 'CPM Conv.' : 'CPV Médio';
           const costSubtitle = accountObjective === 'leads' ? 'Custo por lead' : accountObjective === 'messages' ? 'Custo por mensagem' : 'Custo por venda';
           const revenueLabel = accountObjective === 'leads' ? 'Valor Pipeline' : accountObjective === 'messages' ? 'Valor Estimado' : 'Receita Total';
+          const roasSparkline = dailyData.map((d: any) => d.roas ?? 0);
+          const spendSparkline = dailyData.map((d: any) => d.spend ?? 0);
+          const revenueSparkline = dailyData.map((d: any) => d.revenue ?? 0);
+          const salesSparkline = dailyData.map((d: any) => d.sales ?? d.purchases ?? 0);
+          const ctrSparkline = dailyData.map((d: any) => d.ctr ?? 0);
           return [
-            { label: `ROAS Médio ${roasSemaphore}`, value: `${avgRoas.toFixed(1)}x`, subtitle: "Retorno sobre investimento", delta: calcDelta(avgRoas, prevRoas), valueClassName: roasValueClass, isHero: true },
-            { label: "Gasto Total", value: formatCurrency(totalSpend, currency), subtitle: "Período selecionado", delta: calcDelta(totalSpend, prevSpend) },
-            { label: revenueLabel, value: formatCurrency(totalRevenue, currency), subtitle: "Total gerado", delta: calcDelta(totalRevenue, prevRevenue), valueClassName: "text-data-green" },
-            { label: conversionLabel, value: totalSales.toString(), subtitle: conversionSubtitle, delta: calcDelta(totalSales, prevSales) },
-            { label: "CTR Médio", value: `${avgCtr.toFixed(1)}%`, subtitle: "Taxa de cliques", delta: calcDelta(avgCtr, prevCtr) },
+            { label: `ROAS Médio ${roasSemaphore}`, value: `${avgRoas.toFixed(1)}x`, subtitle: "Retorno sobre investimento", delta: calcDelta(avgRoas, prevRoas), valueClassName: roasValueClass, isHero: true, sparklineData: roasSparkline, sparklineColor: '#4F8EF7' },
+            { label: "Gasto Total", value: formatCurrency(totalSpend, currency), subtitle: "Período selecionado", delta: calcDelta(totalSpend, prevSpend), sparklineData: spendSparkline, sparklineColor: '#F5A623' },
+            { label: revenueLabel, value: formatCurrency(totalRevenue, currency), subtitle: "Total gerado", delta: calcDelta(totalRevenue, prevRevenue), valueClassName: "text-data-green", sparklineData: revenueSparkline, sparklineColor: '#22D07A' },
+            { label: conversionLabel, value: totalSales.toString(), subtitle: conversionSubtitle, delta: calcDelta(totalSales, prevSales), sparklineData: salesSparkline, sparklineColor: '#6C63FF' },
+            { label: "CTR Médio", value: `${avgCtr.toFixed(1)}%`, subtitle: "Taxa de cliques", delta: calcDelta(avgCtr, prevCtr), sparklineData: ctrSparkline, sparklineColor: '#4F8EF7' },
             { label: costLabel, value: `${currency} ${costPerSale.toFixed(2)}`, subtitle: costSubtitle, delta: calcDelta(costPerSale, prevCpv), valueClassName: "text-data-yellow" },
           ];
         })().map((kpi, i) => (
@@ -327,16 +333,17 @@ export default function OverviewTab() {
 
       {/* ─── Accounts Table (multi-account) ─── */}
       {accountSummaries.length > 0 && (
-        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
-          <h3 className="text-xs font-semibold text-text-primary mb-4">
-            📊 Contas Ativas
-            <span className="text-text-muted font-normal ml-2">({accountSummaries.filter(a => a.hasData).length} com dados)</span>
-          </h3>
+        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl overflow-hidden animate-fade-up">
+          <div className="px-4 py-3 border-b border-[#1E2A42] flex items-center justify-between">
+            <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF]">Contas Ativas</h3>
+            <span className="text-[10px] text-[#4A5F7A]">{accountSummaries.filter(a => a.hasData).length} com dados</span>
+          </div>
+          <div className="p-4">
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[#1F2937]">
-                  <th className="text-left py-2 text-text-muted font-semibold">Conta</th>
+                <tr className="bg-[#080B14]">
+                  <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#4A5F7A] uppercase tracking-wider">Conta</th>
                   {[
                     { key: 'roas', label: 'ROAS' },
                     { key: 'spend', label: 'Gasto' },
@@ -347,7 +354,7 @@ export default function OverviewTab() {
                     <th
                       key={col.key}
                       onClick={() => handleSort(col.key)}
-                      className="text-right py-2 text-text-muted font-semibold cursor-pointer hover:text-text-primary transition-colors"
+                      className="text-right px-4 py-2.5 text-[10px] font-semibold text-[#4A5F7A] uppercase tracking-wider cursor-pointer hover:text-[#F0F4FF] transition-colors"
                     >
                       <span className="inline-flex items-center gap-1">
                         {col.label}
@@ -355,7 +362,7 @@ export default function OverviewTab() {
                       </span>
                     </th>
                   ))}
-                  <th className="text-right py-2 text-text-muted font-semibold">Status</th>
+                  <th className="text-right px-4 py-2.5 text-[10px] font-semibold text-[#4A5F7A] uppercase tracking-wider">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -370,7 +377,7 @@ export default function OverviewTab() {
                     <tr
                       key={a.id}
                       onClick={() => handleAccountClick(a.id)}
-                      className={`border-b border-[#1F2937]/50 cursor-pointer transition-colors ${bgClass}`}
+                      className={`border-t border-[#1E2A42] hover:bg-[#141B2D] cursor-pointer transition-colors`}
                     >
                       <td className="py-2.5 text-text-primary font-medium truncate max-w-[200px]">{a.name}</td>
                       <td className={`py-2.5 text-right font-bold ${a.hasData ? getRoasColor(a.roas, roasTarget) : 'text-text-muted'}`}>
@@ -395,14 +402,15 @@ export default function OverviewTab() {
               </tbody>
             </table>
           </div>
+          </div>
         </div>
       )}
 
       {/* ─── Charts Row 1 ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* ROAS por Campanha */}
-        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '200ms' }}>
-          <h3 className="text-xs font-semibold text-text-primary mb-4">ROAS por Campanha <span className="text-text-muted font-normal">(top 10)</span></h3>
+        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '200ms' }}>
+          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">ROAS por Campanha <span className="text-text-muted font-normal">(top 10)</span></h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={roasCampaignData} layout="vertical" barSize={28}>
               <defs>
@@ -420,7 +428,7 @@ export default function OverviewTab() {
               <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: CHART_AXIS }} width={85} axisLine={false} tickLine={false} />
               <Tooltip content={<RoasTooltip />} />
               <ReferenceLine x={roasTarget} stroke={MUTED} strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 9, fill: MUTED }} />
-              <Bar dataKey="roas" radius={[0, 6, 6, 0]} animationDuration={800} label={{ position: 'right', fontSize: 10, fill: '#F9FAFB', formatter: (v: number) => `${v}x` }}>
+              <Bar dataKey="roas" radius={[0, 6, 6, 0]} animationDuration={800} label={{ position: 'right', fontSize: 10, fill: '#F0F4FF', formatter: (v: number) => `${v}x` }}>
                 {roasCampaignData.map((entry, i) => (
                   <Cell key={i} fill={entry.roas >= roasTarget ? 'url(#barGreen)' : 'url(#barRed)'} />
                 ))}
@@ -429,47 +437,73 @@ export default function OverviewTab() {
           </ResponsiveContainer>
         </div>
 
-        {/* Funil de Conversão Detalhado */}
-        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up" style={{ minHeight: 180 }}>
-          <h3 className="text-xs font-semibold text-text-primary mb-4">Funil de Conversão</h3>
-          <div className="flex flex-col items-center gap-1">
-            {funnelData.map((item, i) => {
-              const maxVal = funnelData[0].value || 1;
-              const widthPct = Math.max((item.value / maxVal) * 100, 20);
-              const rate = i > 0 ? ((item.value / (funnelData[i - 1].value || 1)) * 100) : null;
-              const rateLabels = ['', 'CTR', 'Connect', 'Checkout', 'CVR'];
-              const isLast = i === funnelData.length - 1;
-              return (
-                <div key={item.name} className="w-full flex flex-col items-center animate-fade-up" style={{ animationDelay: `${i * 80}ms` }}>
-                  {rate !== null && (
-                    <div className="text-[9px] text-[#9CA3AF] font-medium py-0.5">
-                      {rateLabels[i]} {rate.toFixed(1)}% ↓
-                    </div>
-                  )}
+        {/* Funil de Conversão — DashCortex style */}
+        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up" style={{ minHeight: 180 }}>
+          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-5">Funil de Conversão</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left: visual funnel with trapezoids */}
+            <div className="flex flex-col items-center gap-1.5">
+              {funnelData.map((item, i) => {
+                const maxVal = funnelData[0].value || 1;
+                const topPct = Math.max((i === 0 ? 100 : (funnelData[i - 1].value / maxVal) * 100), 30);
+                const bottomPct = Math.max((item.value / maxVal) * 100, 20);
+                const leftTop = (100 - topPct) / 2;
+                const rightTop = 100 - leftTop;
+                const leftBottom = (100 - bottomPct) / 2;
+                const rightBottom = 100 - leftBottom;
+                const opacity = [1.0, 0.85, 0.70, 0.55, 0.40][i] || 0.4;
+                const isLast = i === funnelData.length - 1;
+                return (
                   <div
-                    className="relative rounded-md overflow-hidden transition-all duration-500"
+                    key={item.name}
+                    className="relative w-full flex items-center justify-center animate-fade-up"
                     style={{
-                      width: `${widthPct}%`,
-                      height: 32,
+                      height: 44,
+                      clipPath: `polygon(${leftTop}% 0%, ${rightTop}% 0%, ${rightBottom}% 100%, ${leftBottom}% 100%)`,
                       background: isLast
-                        ? `linear-gradient(90deg, ${DATA_GREEN}, ${DATA_GREEN}cc)`
-                        : `linear-gradient(90deg, ${item.color}, ${item.color}88)`,
+                        ? `linear-gradient(180deg, #22D07A, #1AB06A)`
+                        : `linear-gradient(180deg, #4F8EF7, #2563EB)`,
+                      opacity,
+                      animationDelay: `${i * 80}ms`,
                     }}
                   >
-                    <div className="absolute inset-0 flex items-center justify-between px-3">
-                      <span className="text-[10px] font-medium text-white/90">{item.name}</span>
-                      <span className="text-[11px] font-bold text-white">{item.value.toLocaleString()}</span>
+                    <div className="flex flex-col items-center z-10">
+                      <span className="font-display font-bold text-white text-[18px] leading-none">{item.value.toLocaleString()}</span>
+                      <span className="text-white/70 text-[10px] mt-0.5">{item.name}</span>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+            {/* Right: metrics breakdown */}
+            <div className="flex flex-col justify-center gap-3">
+              {funnelData.map((item, i) => {
+                const maxVal = funnelData[0].value || 1;
+                const pct = (item.value / maxVal) * 100;
+                const rate = i > 0 ? ((item.value / (funnelData[i - 1].value || 1)) * 100) : 100;
+                const rateLabels = ['Base', 'CTR', 'Connect', 'Checkout', 'CVR'];
+                return (
+                  <div key={item.name}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[11px] text-[#7A8FAD]">{item.name}</span>
+                      <span className="text-[11px] font-semibold text-[#F0F4FF]">{rate.toFixed(1)}%</span>
+                    </div>
+                    <div className="h-1.5 bg-[#1E2A42] rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{ width: `${pct}%`, background: i === funnelData.length - 1 ? '#22D07A' : '#4F8EF7' }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
         {/* Origem tráfego */}
-        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
-          <h3 className="text-xs font-semibold text-text-primary mb-4">Origem do Tráfego</h3>
+        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
+          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Origem do Tráfego</h3>
           <div className="space-y-3 mt-2">
             {platformData.map((p, i) => {
               const colors = [DATA_BLUE, DATA_PURPLE, DATA_YELLOW, MUTED];
@@ -490,8 +524,8 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Gasto vs Receita (Area Chart) ─── */}
-      <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
-        <h3 className="text-xs font-semibold text-text-primary mb-4">Gasto vs Receita</h3>
+      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
+        <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Gasto vs Receita</h3>
         <ResponsiveContainer width="100%" height={180}>
           <AreaChart data={dailyData}>
             <defs>
@@ -508,8 +542,8 @@ export default function OverviewTab() {
             <XAxis dataKey="date" tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} />
             <YAxis domain={[0, 'auto']} tick={{ fontSize: 10, fill: CHART_AXIS }} axisLine={false} tickLine={false} tickFormatter={(v: number) => v >= 1000 ? `${(v/1000).toFixed(1)}k` : v < 1 ? v.toFixed(2) : String(Math.round(v))} />
             <Tooltip contentStyle={chartTooltipStyle} />
-            <Area type="monotone" dataKey="spend" stroke={DATA_BLUE} strokeWidth={2} fill="url(#gradSpendArea)" dot={{ r: 3, fill: DATA_BLUE, strokeWidth: 2, stroke: '#111827' }} />
-            <Area type="monotone" dataKey="revenue" stroke={DATA_GREEN} strokeWidth={2} fill="url(#gradRevenueArea)" dot={{ r: 3, fill: DATA_GREEN, strokeWidth: 2, stroke: '#111827' }} />
+            <Area type="monotone" dataKey="spend" stroke={DATA_BLUE} strokeWidth={2} fill="url(#gradSpendArea)" dot={{ r: 3, fill: DATA_BLUE, strokeWidth: 2, stroke: '#0E1420' }} />
+            <Area type="monotone" dataKey="revenue" stroke={DATA_GREEN} strokeWidth={2} fill="url(#gradRevenueArea)" dot={{ r: 3, fill: DATA_GREEN, strokeWidth: 2, stroke: '#0E1420' }} />
           </AreaChart>
         </ResponsiveContainer>
         <div className="flex justify-center gap-6 mt-2">
@@ -519,9 +553,9 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Daily Evolution ─── */}
-      <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up" style={{ minHeight: 320 }}>
+      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up" style={{ minHeight: 320 }}>
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <h3 className="text-xs font-semibold text-text-primary">Evolução Diária</h3>
+          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF]">Evolução Diária</h3>
           <div className="flex gap-3 flex-wrap">
             {Object.entries(dailyMetricConfig).map(([key, cfg]) => (
               <label key={key} className="flex items-center gap-1.5 cursor-pointer select-none">
@@ -567,8 +601,8 @@ export default function OverviewTab() {
                   yAxisId={cfg.yAxisId}
                   stroke={cfg.color}
                   strokeWidth={2}
-                  dot={{ r: 4, fill: cfg.color, strokeWidth: 2, stroke: '#111827' }}
-                  activeDot={{ r: 6, fill: cfg.color, strokeWidth: 2, stroke: '#111827' }}
+                  dot={{ r: 4, fill: cfg.color, strokeWidth: 2, stroke: '#0E1420' }}
+                  activeDot={{ r: 6, fill: cfg.color, strokeWidth: 2, stroke: '#0E1420' }}
                 />
               );
             })}
@@ -577,19 +611,19 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Hourly ─── */}
-      <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
-        <h3 className="text-xs font-semibold text-text-primary mb-4">Desempenho por Hora</h3>
+      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
+        <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Desempenho por Hora</h3>
         <HourlyBarChart data={hourlyData} currency={currency} />
       </div>
 
       {/* ─── Alcance por Região ─── */}
       {effectiveData?.regionData && effectiveData.regionData.length > 0 && (
-        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
-          <h3 className="text-xs font-semibold text-text-primary mb-4">Alcance por Região</h3>
+        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
+          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Alcance por Região</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[#1F2937]">
+                <tr className="border-b border-[#1E2A42]">
                   <th className="text-left py-2 text-text-muted font-semibold">Região</th>
                   <th className="text-left py-2 text-text-muted font-semibold pl-4" style={{ width: '30%' }}>Alcance</th>
                   <th className="text-right py-2 text-text-muted font-semibold">Impressões</th>
@@ -603,13 +637,13 @@ export default function OverviewTab() {
                   const maxImpr = effectiveData.regionData![0].impressions || 1;
                   const barWidth = Math.max((r.impressions / maxImpr) * 100, 5);
                   return (
-                    <tr key={r.region} className="border-b border-[#1F2937]/50">
+                    <tr key={r.region} className="border-b border-[#1E2A42]/50">
                       <td className="py-2 text-text-primary font-medium truncate max-w-[160px]">{r.region}</td>
                       <td className="py-2 pl-4">
-                        <div className="h-2 bg-[#0A0F1E] rounded-full overflow-hidden">
+                        <div className="h-2 bg-[#080B14] rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-500"
-                            style={{ width: `${barWidth}%`, background: `linear-gradient(90deg, #6366F1, #818CF8)` }}
+                            style={{ width: `${barWidth}%`, background: `linear-gradient(90deg, #4F8EF7, #4F8EF7)` }}
                           />
                         </div>
                       </td>
@@ -631,18 +665,18 @@ export default function OverviewTab() {
         <h3 className="text-sm font-semibold text-text-primary mb-3">👥 Demográficos</h3>
         {demoByGender.length === 0 && demoByAge.length === 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
+            <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
               <p className="text-xs text-muted-foreground text-center">Dados demográficos não disponíveis para esta conta</p>
             </div>
-            <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
+            <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
               <p className="text-xs text-muted-foreground text-center">Dados demográficos não disponíveis para esta conta</p>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* CARD 1 — Por Gênero */}
-            <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
-              <h4 className="text-xs font-semibold text-text-primary mb-4">Por Gênero</h4>
+            <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
+              <h4 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Por Gênero</h4>
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0" style={{ width: 140, height: 140 }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -671,7 +705,7 @@ export default function OverviewTab() {
                 </div>
               </div>
               {/* Gender table */}
-              <div className="mt-4 border-t border-[#1F2937] pt-3">
+              <div className="mt-4 border-t border-[#1E2A42] pt-3">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="text-[10px] text-text-muted uppercase">
@@ -683,7 +717,7 @@ export default function OverviewTab() {
                   </thead>
                   <tbody>
                     {demoByGender.map(g => (
-                      <tr key={g.name} className="border-t border-[#1F2937]/50">
+                      <tr key={g.name} className="border-t border-[#1E2A42]/50">
                         <td className="py-1.5 text-text-primary font-medium flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: g.fill }} />
                           {g.name}
@@ -703,13 +737,13 @@ export default function OverviewTab() {
             </div>
 
             {/* CARD 2 — Por Faixa Etária */}
-            <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
-              <h4 className="text-xs font-semibold text-text-primary mb-4">Por Faixa Etária</h4>
+            <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
+              <h4 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Por Faixa Etária</h4>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={demoByAge} layout="vertical" margin={{ top: 0, right: 5, left: 5, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} horizontal={false} />
                   <XAxis type="number" tick={{ fontSize: 9, fill: CHART_AXIS }} tickFormatter={(v) => formatCurrency(v, currency)} />
-                  <YAxis type="category" dataKey="age" tick={{ fontSize: 10, fill: '#9CA3AF' }} width={45} />
+                  <YAxis type="category" dataKey="age" tick={{ fontSize: 10, fill: '#7A8FAD' }} width={45} />
                   <Tooltip
                     contentStyle={chartTooltipStyle}
                     formatter={(value: number, name: string) => [formatCurrency(value, currency), 'Gasto']}
@@ -744,8 +778,8 @@ export default function OverviewTab() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
           {/* Top 5 Regiões */}
           {effectiveData?.regionData && effectiveData.regionData.length > 0 && (
-            <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
-              <h4 className="text-xs font-semibold text-text-primary mb-3">Top 5 Regiões</h4>
+            <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
+              <h4 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-3">Top 5 Regiões</h4>
               <div className="space-y-2.5">
                 {effectiveData.regionData.slice(0, 5).map((r, i) => {
                   const maxImpr = effectiveData.regionData![0].impressions || 1;
@@ -759,14 +793,14 @@ export default function OverviewTab() {
                           <span className="text-[11px] text-text-primary font-medium truncate">{r.region}</span>
                           <span className="text-[10px] text-text-muted ml-2">{r.impressions.toLocaleString()} impr</span>
                         </div>
-                        <div className="h-1.5 bg-[#0A0F1E] rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-[#080B14] rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-500"
-                            style={{ width: `${pct}%`, background: `linear-gradient(90deg, #6366F1, #818CF8)` }}
+                            style={{ width: `${pct}%`, background: `linear-gradient(90deg, #4F8EF7, #4F8EF7)` }}
                           />
                         </div>
                       </div>
-                      <span className="text-[10px] text-[#818CF8] font-semibold w-12 text-right">{r.ctr.toFixed(1)}%</span>
+                      <span className="text-[10px] text-[#4F8EF7] font-semibold w-12 text-right">{r.ctr.toFixed(1)}%</span>
                     </div>
                   );
                 })}
@@ -776,8 +810,8 @@ export default function OverviewTab() {
 
           {/* Melhores 3 Horários */}
           {hourlyData.length > 0 && (
-            <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
-              <h4 className="text-xs font-semibold text-text-primary mb-3">Melhores Horários</h4>
+            <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
+              <h4 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-3">Melhores Horários</h4>
               <div className="space-y-3">
                 {[...hourlyData]
                   .sort((a, b) => b.sales - a.sales || b.spend - a.spend)
@@ -794,13 +828,13 @@ export default function OverviewTab() {
                             <span className="text-[13px] font-bold text-text-primary">{h.hour}</span>
                             <div className="flex items-center gap-3">
                               <span className="text-[10px] text-text-muted">{currency} {h.spend.toFixed(0)} gasto</span>
-                              <span className="text-[11px] font-bold text-[#10B981]">{h.sales} vendas</span>
+                              <span className="text-[11px] font-bold text-[#22D07A]">{h.sales} vendas</span>
                             </div>
                           </div>
-                          <div className="h-2 bg-[#0A0F1E] rounded-full overflow-hidden">
+                          <div className="h-2 bg-[#080B14] rounded-full overflow-hidden">
                             <div
                               className="h-full rounded-full transition-all duration-500"
-                              style={{ width: `${pct}%`, background: `linear-gradient(90deg, #10B981, #34D399)` }}
+                              style={{ width: `${pct}%`, background: `linear-gradient(90deg, #22D07A, #1AB06A)` }}
                             />
                           </div>
                         </div>
@@ -816,8 +850,8 @@ export default function OverviewTab() {
 
       {/* ─── Gasto vs Receita Pie ─── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
-          <h3 className="text-xs font-semibold text-text-primary mb-4">Gasto vs Receita</h3>
+        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
+          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Gasto vs Receita</h3>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie data={[{ name: 'Gasto', value: totalSpend }, { name: 'Receita', value: totalRevenue }]} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={0}>
@@ -835,9 +869,9 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Action Plan Summary (top 3) ─── */}
-      <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-fade-up">
+      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-semibold text-text-primary">🎯 Plano de Ação</h3>
+          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF]">🎯 Plano de Ação</h3>
           <button onClick={() => setActiveTab('action-plan')} className="text-[11px] text-data-blue hover:underline cursor-pointer font-medium">
             Ver todas →
           </button>
@@ -878,12 +912,12 @@ function OverviewSkeleton() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="bg-[#111827] border border-[#1F2937] rounded-xl py-5 px-6 animate-pulse"
+            className="bg-[#0E1420] border border-[#1E2A42] rounded-xl py-5 px-6 animate-pulse"
             style={{ animationDelay: `${i * 80}ms`, minHeight: 100 }}
           >
-            <div className="h-2.5 w-16 bg-[#1F2937] rounded mb-3" />
-            <div className="h-7 w-24 bg-[#1F2937] rounded mb-2" />
-            <div className="h-2 w-20 bg-[#1F2937] rounded" />
+            <div className="h-2.5 w-16 bg-[#1E2A42] rounded mb-3" />
+            <div className="h-7 w-24 bg-[#1E2A42] rounded mb-2" />
+            <div className="h-2 w-20 bg-[#1E2A42] rounded" />
           </div>
         ))}
       </div>
@@ -892,15 +926,15 @@ function OverviewSkeleton() {
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-pulse"
+            className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-pulse"
             style={{ animationDelay: `${(i + 6) * 80}ms`, minHeight: 260 }}
           >
-            <div className="h-3 w-32 bg-[#1F2937] rounded mb-6" />
+            <div className="h-3 w-32 bg-[#1E2A42] rounded mb-6" />
             <div className="space-y-3">
               {Array.from({ length: 5 }).map((_, j) => (
                 <div key={j} className="flex items-center gap-3">
-                  <div className="h-3 bg-[#1F2937] rounded flex-1" style={{ maxWidth: `${60 - j * 8}%` }} />
-                  <div className="h-3 w-8 bg-[#1F2937] rounded" />
+                  <div className="h-3 bg-[#1E2A42] rounded flex-1" style={{ maxWidth: `${60 - j * 8}%` }} />
+                  <div className="h-3 w-8 bg-[#1E2A42] rounded" />
                 </div>
               ))}
             </div>
@@ -908,13 +942,13 @@ function OverviewSkeleton() {
         ))}
       </div>
 
-      <div className="bg-[#111827] border border-[#1F2937] rounded-xl p-5 animate-pulse" style={{ minHeight: 240 }}>
-        <div className="h-3 w-28 bg-[#1F2937] rounded mb-6" />
+      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-pulse" style={{ minHeight: 240 }}>
+        <div className="h-3 w-28 bg-[#1E2A42] rounded mb-6" />
         <div className="flex items-end gap-2 h-[180px] pb-4">
           {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
-              className="flex-1 bg-[#1F2937] rounded-t"
+              className="flex-1 bg-[#1E2A42] rounded-t"
               style={{ height: `${30 + Math.sin(i * 0.8) * 40 + 30}%` }}
             />
           ))}

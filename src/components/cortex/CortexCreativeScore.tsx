@@ -6,7 +6,7 @@ import { useState } from 'react';
 const STATUS_BADGES: Record<string, { label: string; color: string }> = {
   top_performer: { label: 'Top Performer', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
   escalavel: { label: 'Escalável', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-  monitorar: { label: 'Monitorar', color: 'bg-slate-500/10 text-slate-400 border-slate-500/20' },
+  monitorar: { label: 'Monitorar', color: 'bg-[#4A5F7A]/10 text-[#7A8FAD] border-[#4A5F7A]/20' },
   otimizar: { label: 'Otimizar', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
   pausar: { label: 'Pausar', color: 'bg-red-500/10 text-red-400 border-red-500/20' },
 };
@@ -15,7 +15,7 @@ function ScoreCircle({ score }: { score: number }) {
   const radius = 32;
   const circumference = 2 * Math.PI * radius;
   const progress = (score / 100) * circumference;
-  const color = score >= 80 ? '#10B981' : score >= 50 ? '#F59E0B' : '#EF4444';
+  const color = score >= 80 ? '#22D07A' : score >= 50 ? '#F5A623' : '#F05252';
 
   return (
     <div className="relative w-20 h-20 flex-shrink-0">

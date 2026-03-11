@@ -80,10 +80,10 @@ export default function CortexHistory({ history, loading }: Props) {
       ) : (
         <div className="divide-y divide-[#1E2A42]">
           {filtered.map(h => {
-            const badge = TYPE_BADGES[h.action_type] || { label: h.action_type, color: 'bg-slate-500/10 text-slate-400' };
+            const badge = TYPE_BADGES[h.action_type] || { label: h.action_type, color: 'bg-[#4A5F7A]/10 text-[#7A8FAD]' };
             const isExpanded = expanded === h.id;
             return (
-              <div key={h.id} className="px-5 py-3 hover:bg-[#0D1117]/50 transition-colors">
+              <div key={h.id} className="px-5 py-3 hover:bg-[#080B14]/50 transition-colors">
                 <div
                   className="flex items-center gap-3 cursor-pointer"
                   onClick={() => setExpanded(isExpanded ? null : h.id)}

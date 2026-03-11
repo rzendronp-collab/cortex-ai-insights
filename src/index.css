@@ -55,7 +55,7 @@
     --primary-foreground: 0 0% 100%;
     --primary-dark: 217 85% 55%;
 
-    --secondary: 243 59% 63%;      /* accent-ai violet */
+    --secondary: 220 22% 14%;      /* #141B2D */
     --secondary-foreground: 0 0% 100%;
 
     --muted: 220 28% 13%;
@@ -79,6 +79,12 @@
     --ring: 217 92% 64%;
 
     --radius: 0.75rem;
+
+    /* Custom extras */
+    --accent-ai: #6C63FF;
+    --green: #22D07A;
+    --yellow: #F5A623;
+    --red: #F05252;
 
     --gradient-primary: linear-gradient(135deg, hsl(217 92% 64%), hsl(243 59% 63%));
     --gradient-subtle: linear-gradient(135deg, hsl(217 92% 64% / 0.12), hsl(243 59% 63% / 0.12));

@@ -738,9 +738,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
   const getRecommendation = (campaign: ProcessedCampaign) => {
     // Campaigns with zero spend show a neutral "no data" badge
     if (campaign.spend === 0) return { label: 'Sem dados', bg: 'rgba(100,116,139,0.12)', text: '#94A3B8', border: 'rgba(100,116,139,0.25)' };
-    if (campaign.roas >= roasTarget * 1.3) return { label: 'Escalar', bg: 'rgba(16,185,129,0.1)', text: '#10B981', border: 'rgba(16,185,129,0.25)' };
-    if (campaign.roas < roasTarget * 0.5 && campaign.spend > 10) return { label: 'Pausar', bg: 'rgba(239,68,68,0.1)', text: '#EF4444', border: 'rgba(239,68,68,0.25)' };
-    return { label: 'Otimizar', bg: 'rgba(99,102,241,0.1)', text: '#6366F1', border: 'rgba(99,102,241,0.25)' };
+    if (campaign.roas >= roasTarget * 1.3) return { label: 'Escalar', bg: 'rgba(34,208,122,0.1)', text: '#22D07A', border: 'rgba(34,208,122,0.25)' };
+    if (campaign.roas < roasTarget * 0.5 && campaign.spend > 10) return { label: 'Pausar', bg: 'rgba(240,82,82,0.1)', text: '#F05252', border: 'rgba(240,82,82,0.25)' };
+    return { label: 'Otimizar', bg: 'rgba(79,142,247,0.1)', text: '#4F8EF7', border: 'rgba(79,142,247,0.25)' };
   };
 
   // Column ID → sort key mapping
@@ -817,7 +817,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
       pages.push(totalPages);
     }
     return (
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 py-3 border-t border-[#1F2937]">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 py-3 border-t border-[#1E2A42]">
         <span className="text-[11px] text-text-muted">Mostrando {start}-{end} de {sortedCampaigns.length} campanhas</span>
         <div className="flex items-center gap-1">
           <button
@@ -865,9 +865,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
             placeholder="Buscar campanha..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full sm:w-64 h-8 text-xs bg-[#111827]"
+            className="w-full sm:w-64 h-8 text-xs bg-[#0E1420]"
           />
-          <div className="flex items-center bg-[#111827] border border-[#1F2937] rounded-md">
+          <div className="flex items-center bg-[#0E1420] border border-[#1E2A42] rounded-md">
             <button
               onClick={() => setStatusFilter('all')}
               className={`px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
@@ -932,7 +932,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
 
           {/* Country Filter */}
           {availableCountries.length > 0 && (
-            <div className="flex items-center bg-[#111827] border border-[#1F2937] rounded-md">
+            <div className="flex items-center bg-[#0E1420] border border-[#1E2A42] rounded-md">
               <button
                 onClick={() => setCountryFilter('all')}
                 className={`px-2 py-1.5 text-xs font-medium transition-colors ${countryFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
@@ -943,7 +943,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 <button
                   key={c}
                   onClick={() => setCountryFilter(c as any)}
-                  className={`px-2 py-1.5 text-xs font-medium border-l border-[#1F2937] transition-colors ${countryFilter === c ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`px-2 py-1.5 text-xs font-medium border-l border-[#1E2A42] transition-colors ${countryFilter === c ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                   {{ PT: '🇵🇹', ES: '🇪🇸', GR: '🇬🇷', BR: '🇧🇷' }[c]}
                 </button>
@@ -1010,17 +1010,17 @@ Responda SOMENTE com o JSON, sem markdown.`;
 
             let badgeBg: string, badgeText: string, badgeBorder: string;
             if (c.roas >= roasTarget) {
-              badgeBg = 'rgba(16,185,129,0.12)'; badgeText = '#10B981'; badgeBorder = 'rgba(16,185,129,0.25)';
+              badgeBg = 'rgba(34,208,122,0.12)'; badgeText = '#22D07A'; badgeBorder = 'rgba(34,208,122,0.25)';
             } else if (c.roas >= roasTarget * 0.7) {
-              badgeBg = 'rgba(245,158,11,0.12)'; badgeText = '#F59E0B'; badgeBorder = 'rgba(245,158,11,0.25)';
+              badgeBg = 'rgba(245,166,35,0.12)'; badgeText = '#F5A623'; badgeBorder = 'rgba(245,166,35,0.25)';
             } else {
-              badgeBg = 'rgba(239,68,68,0.12)'; badgeText = '#EF4444'; badgeBorder = 'rgba(239,68,68,0.25)';
+              badgeBg = 'rgba(240,82,82,0.12)'; badgeText = '#F05252'; badgeBorder = 'rgba(240,82,82,0.25)';
             }
 
             return (
               <div
                 key={c.id}
-                className={`bg-[#111827] border border-[#1F2937] rounded-lg p-4 animate-fade-in opacity-0 [animation-fill-mode:forwards] ${!isActive ? 'opacity-60' : ''}`}
+                className={`bg-[#0E1420] border border-[#1E2A42] rounded-lg p-4 animate-fade-in opacity-0 [animation-fill-mode:forwards] ${!isActive ? 'opacity-60' : ''}`}
                 style={{ animationDelay: `${idx * 30}ms` }}
               >
                 {/* Header: name + toggle */}
@@ -1053,7 +1053,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       >
                         <span
                           className="block w-full h-full rounded-[10px] transition-colors duration-200 ease-in-out"
-                          style={{ backgroundColor: isActive ? '#10B981' : '#374151' }}
+                          style={{ backgroundColor: isActive ? '#22D07A' : '#2A3A5C' }}
                         />
                         <span
                           className="absolute block w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out"
@@ -1087,8 +1087,8 @@ Responda SOMENTE com o JSON, sem markdown.`;
       <div className="md:hidden"><PaginationBar /></div>
 
       {/* Sort indicator badge */}
-      <div className="hidden md:block bg-[#111827] border border-[#1F2937] rounded-lg overflow-x-auto">
-        <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#1F2937]">
+      <div className="hidden md:block bg-[#0E1420] border border-[#1E2A42] rounded-lg overflow-x-auto">
+        <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#1E2A42]">
           <span className="text-[10px] text-text-muted">
             Ordenado por: <span className="font-semibold text-text-secondary">{
               { status: 'Status', name: 'Nome', spend: 'Gasto', budget: 'Orçamento', revenue: 'Receita', profit: 'Lucro', roas: 'ROAS', purchases: 'Vendas', cpa: 'CPA', ctr: 'CTR', cpm: 'CPM', impressions: 'Impressões', clicks: 'Cliques' }[sortColumn]
@@ -1098,7 +1098,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
         </div>
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
-            <tr className="border-b border-[#1F2937] bg-[#0D1117] sticky top-0 z-10">
+            <tr className="border-b border-[#1E2A42] bg-[#080B14] sticky top-0 z-10">
               {/* Checkbox column */}
               <th className="px-2 py-2.5 w-8" onClick={e => e.stopPropagation()}>
                 <Checkbox
@@ -1114,7 +1114,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                   <th
                     key={col.id}
                     onClick={() => sortKey ? handleSort(sortKey) : undefined}
-                    className={`px-3 py-2.5 text-[11px] font-semibold text-text-muted uppercase tracking-wider ${sortKey ? 'cursor-pointer hover:bg-[#111827]' : ''} transition-colors select-none ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'}`}
+                    className={`px-3 py-2.5 text-[11px] font-semibold text-text-muted uppercase tracking-wider ${sortKey ? 'cursor-pointer hover:bg-[#0E1420]' : ''} transition-colors select-none ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'}`}
                   >
                     <div className={`flex items-center gap-1.5 ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start'}`}>
                       {col.label}
@@ -1173,7 +1173,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     case 'status': {
                       const flash = toggleFlash[c.id];
                       const hasPop = togglePop.has(c.id);
-                      const flashBg = flash === 'active' ? 'bg-[#10B981]/20' : flash === 'paused' ? 'bg-[#F59E0B]/20' : '';
+                      const flashBg = flash === 'active' ? 'bg-[#22D07A]/20' : flash === 'paused' ? 'bg-[#F5A623]/20' : '';
                       return (
                         <td key={colId} className={`px-3 transition-colors duration-100 ${flashBg}`} onClick={e => e.stopPropagation()}>
                           <div className="flex items-center gap-1.5">
@@ -1199,7 +1199,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                   transition: 'transform 200ms ease-out',
                                 }}
                               >
-                                <span className="block w-full h-full rounded-[10px] transition-colors duration-200 ease-in-out" style={{ backgroundColor: isActive ? '#10B981' : '#374151' }} />
+                                <span className="block w-full h-full rounded-[10px] transition-colors duration-200 ease-in-out" style={{ backgroundColor: isActive ? '#22D07A' : '#2A3A5C' }} />
                                 <span className="absolute block w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out" style={{ top: 2, left: isActive ? 18 : 2 }} />
                               </button>
                             )}
@@ -1212,7 +1212,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       const isEditingName = editingNameId === c.id;
                       const isSavingName = savingNameId === c.id;
                       const nFeedback = nameFeedback[c.id];
-                      const feedbackBorder = nFeedback === 'success' ? 'border-[#10B981]' : nFeedback === 'error' ? 'border-[#EF4444]' : '';
+                      const feedbackBorder = nFeedback === 'success' ? 'border-[#22D07A]' : nFeedback === 'error' ? 'border-[#F05252]' : '';
                       return (
                         <td key={colId} className="px-3" onClick={e => e.stopPropagation()}>
                           {isEditingName ? (
@@ -1250,7 +1250,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       const isEditingBgt = editingBudgetId === c.id;
                       const isSavingBgt = savingBudgetId === c.id;
                       const bFeedback = budgetFeedback[c.id];
-                      const feedbackBorderB = bFeedback === 'success' ? 'border-[#10B981]' : bFeedback === 'error' ? 'border-[#EF4444]' : '';
+                      const feedbackBorderB = bFeedback === 'success' ? 'border-[#22D07A]' : bFeedback === 'error' ? 'border-[#F05252]' : '';
                       return (
                         <td key={colId} className="px-3 text-right" onClick={e => e.stopPropagation()}>
                           {isEditingBgt ? (
@@ -1294,7 +1294,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                           {c.spend === 0 ? (
                             <span className="text-[13px] text-text-muted">—</span>
                           ) : (
-                            <span className={`text-[13px] font-medium inline-flex items-center gap-0.5 ${profit >= 0 ? 'text-[#10B981]' : 'text-[#EF4444]'}`}>
+                            <span className={`text-[13px] font-medium inline-flex items-center gap-0.5 ${profit >= 0 ? 'text-[#22D07A]' : 'text-[#F05252]'}`}>
                               {profit >= 0 ? '↑' : '↓'}{profit > 0 ? '+' : ''}{formatCurrency(profit, currency)}
                             </span>
                           )}
@@ -1307,9 +1307,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
                             <span className="text-[13px] text-text-muted">—</span>
                           ) : (() => {
                             let badgeBg: string, badgeText: string, badgeBorder: string;
-                            if (c.roas >= roasTarget) { badgeBg = 'rgba(16,185,129,0.12)'; badgeText = '#10B981'; badgeBorder = 'rgba(16,185,129,0.25)'; }
-                            else if (c.roas >= roasTarget * 0.7) { badgeBg = 'rgba(245,158,11,0.12)'; badgeText = '#F59E0B'; badgeBorder = 'rgba(245,158,11,0.25)'; }
-                            else { badgeBg = 'rgba(239,68,68,0.12)'; badgeText = '#EF4444'; badgeBorder = 'rgba(239,68,68,0.25)'; }
+                            if (c.roas >= roasTarget) { badgeBg = 'rgba(34,208,122,0.12)'; badgeText = '#22D07A'; badgeBorder = 'rgba(34,208,122,0.25)'; }
+                            else if (c.roas >= roasTarget * 0.7) { badgeBg = 'rgba(245,166,35,0.12)'; badgeText = '#F5A623'; badgeBorder = 'rgba(245,166,35,0.25)'; }
+                            else { badgeBg = 'rgba(240,82,82,0.12)'; badgeText = '#F05252'; badgeBorder = 'rgba(240,82,82,0.25)'; }
                             return <span className="text-[13px] font-bold inline-block" style={{ background: badgeBg, color: badgeText, border: `1px solid ${badgeBorder}`, borderRadius: 6, padding: '3px 8px' }}>{c.roas.toFixed(2)}x</span>;
                           })()}
                         </td>
@@ -1343,9 +1343,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
                   <React.Fragment key={c.id}>
                     <tr 
                       onClick={() => setExpandedId(expanded ? null : c.id)}
-                      className={`border-b border-[#1F2937] bg-[#111827] cursor-pointer transition-all duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#111827]' : ''} ${isEditing ? 'opacity-60 cursor-wait border-l-2 border-l-primary animate-pulse pointer-events-none' : ''} animate-fade-in [animation-fill-mode:forwards]`}
+                      className={`border-b border-[#1E2A42] bg-[#0E1420] cursor-pointer transition-all duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#0E1420]' : ''} ${isEditing ? 'opacity-60 cursor-wait border-l-2 border-l-primary animate-pulse pointer-events-none' : ''} animate-fade-in [animation-fill-mode:forwards]`}
                       style={{ height: 52, animationDelay: `${rowIndex * 30}ms` }}
-                      onMouseEnter={e => { if (!expanded && !isEditing) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(99,102,241,0.04)'; }}
+                      onMouseEnter={e => { if (!expanded && !isEditing) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(79,142,247,0.04)'; }}
                       onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = ''; }}
                     >
                       {/* Checkbox */}
@@ -1394,7 +1394,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       const campaignAdsets = adsets.get(c.id);
                       const isAdsetLoading = adsetsLoading.has(c.id);
                       return (
-                        <tr className="bg-[#0A0F1E] border-b border-[#1F2937]">
+                        <tr className="bg-[#080B14] border-b border-[#1E2A42]">
                           <td colSpan={activeColumns.length + 3} className="p-0">
                             <div className="pl-10 pr-4 py-3 border-l-2 border-l-data-blue/40 animate-fade-up">
                               <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider mb-2">Conjuntos de Anúncios</p>
@@ -1418,7 +1418,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                               ) : (
                                 <table className="w-full text-left text-xs">
                                   <thead>
-                                    <tr className="border-b border-[#1F2937]/50">
+                                    <tr className="border-b border-[#1E2A42]/50">
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase w-10"></th>
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase w-10">Status</th>
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase">Nome</th>
@@ -1440,14 +1440,14 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                       const adsetAds = ads.get(adset.id);
                                       const isAdsLoading = adsLoading.has(adset.id);
                                       let abBg: string, abText: string, abBorder: string;
-                                      if (adset.roas >= roasTarget) { abBg = 'rgba(16,185,129,0.12)'; abText = '#10B981'; abBorder = 'rgba(16,185,129,0.25)'; }
-                                      else if (adset.roas >= roasTarget * 0.7) { abBg = 'rgba(245,158,11,0.12)'; abText = '#F59E0B'; abBorder = 'rgba(245,158,11,0.25)'; }
-                                      else { abBg = 'rgba(239,68,68,0.12)'; abText = '#EF4444'; abBorder = 'rgba(239,68,68,0.25)'; }
+                                      if (adset.roas >= roasTarget) { abBg = 'rgba(34,208,122,0.12)'; abText = '#22D07A'; abBorder = 'rgba(34,208,122,0.25)'; }
+                                      else if (adset.roas >= roasTarget * 0.7) { abBg = 'rgba(245,166,35,0.12)'; abText = '#F5A623'; abBorder = 'rgba(245,166,35,0.25)'; }
+                                      else { abBg = 'rgba(240,82,82,0.12)'; abText = '#F05252'; abBorder = 'rgba(240,82,82,0.25)'; }
                                       const isEditingAdsetBgt = editingAdsetBudgetId === adset.id;
                                       const isSavingAdsetBgt = savingAdsetBudgetId === adset.id;
                                       return (
                                         <React.Fragment key={adset.id}>
-                                          <tr className={`border-b border-[#1F2937]/30 hover:bg-[#111827]/50 transition-colors ${!adsetActive ? 'opacity-50' : ''}`}>
+                                          <tr className={`border-b border-[#1E2A42]/30 hover:bg-[#0E1420]/50 transition-colors ${!adsetActive ? 'opacity-50' : ''}`}>
                                             {/* Expand chevron */}
                                             <td className="py-2 px-2">
                                               <button
@@ -1471,7 +1471,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                   className="relative inline-flex items-center cursor-pointer"
                                                   style={{ width: 32, height: 18, borderRadius: 9 }}
                                                 >
-                                                  <span className="block w-full h-full rounded-[9px] transition-colors duration-200" style={{ backgroundColor: adsetActive ? '#10B981' : '#374151' }} />
+                                                  <span className="block w-full h-full rounded-[9px] transition-colors duration-200" style={{ backgroundColor: adsetActive ? '#22D07A' : '#2A3A5C' }} />
                                                   <span className="absolute block w-3.5 h-3.5 bg-white rounded-full shadow transition-transform duration-200" style={{ top: 2, left: adsetActive ? 15 : 2 }} />
                                                 </button>
                                               )}
@@ -1529,7 +1529,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                           </tr>
                                           {/* ADS SUB-SUB-TABLE (3rd level) */}
                                           {isAdsOpen && (
-                                            <tr className="bg-[#080B14] border-b border-[#1F2937]/20">
+                                            <tr className="bg-[#080B14] border-b border-[#1E2A42]/20">
                                               <td colSpan={10} className="p-0">
                                                 <div className="pl-16 pr-4 py-2 border-l-2 border-l-[#6C63FF]/30 animate-fade-up">
                                                   <p className="text-[9px] uppercase text-muted-foreground font-semibold tracking-wider mb-1.5">Anúncios</p>
@@ -1551,7 +1551,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                   ) : (
                                                     <table className="w-full text-left text-[11px]">
                                                       <thead>
-                                                        <tr className="border-b border-[#1F2937]/30">
+                                                        <tr className="border-b border-[#1E2A42]/30">
                                                           <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase w-8">St</th>
                                                           <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase w-10"></th>
                                                           <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase">Nome</th>
@@ -1568,11 +1568,11 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                           const adActive = effAdStatus === 'ACTIVE';
                                                           const isAdToggling = togglingSubIds.has(ad.id);
                                                           let adRBg: string, adRText: string, adRBorder: string;
-                                                          if (ad.roas >= roasTarget) { adRBg = 'rgba(16,185,129,0.12)'; adRText = '#10B981'; adRBorder = 'rgba(16,185,129,0.25)'; }
-                                                          else if (ad.roas >= roasTarget * 0.7) { adRBg = 'rgba(245,158,11,0.12)'; adRText = '#F59E0B'; adRBorder = 'rgba(245,158,11,0.25)'; }
-                                                          else { adRBg = 'rgba(239,68,68,0.12)'; adRText = '#EF4444'; adRBorder = 'rgba(239,68,68,0.25)'; }
+                                                          if (ad.roas >= roasTarget) { adRBg = 'rgba(34,208,122,0.12)'; adRText = '#22D07A'; adRBorder = 'rgba(34,208,122,0.25)'; }
+                                                          else if (ad.roas >= roasTarget * 0.7) { adRBg = 'rgba(245,166,35,0.12)'; adRText = '#F5A623'; adRBorder = 'rgba(245,166,35,0.25)'; }
+                                                          else { adRBg = 'rgba(240,82,82,0.12)'; adRText = '#F05252'; adRBorder = 'rgba(240,82,82,0.25)'; }
                                                           return (
-                                                            <tr key={ad.id} className={`border-b border-[#1F2937]/20 hover:bg-[#0E1420]/50 transition-colors ${!adActive ? 'opacity-50' : ''}`}>
+                                                            <tr key={ad.id} className={`border-b border-[#1E2A42]/20 hover:bg-[#0E1420]/50 transition-colors ${!adActive ? 'opacity-50' : ''}`}>
                                                               {/* Toggle */}
                                                               <td className="py-1.5 px-1.5" onClick={e => e.stopPropagation()}>
                                                                 {isAdToggling ? (
@@ -1583,7 +1583,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                                     className="relative inline-flex items-center cursor-pointer"
                                                                     style={{ width: 28, height: 16, borderRadius: 8 }}
                                                                   >
-                                                                    <span className="block w-full h-full rounded-[8px] transition-colors duration-200" style={{ backgroundColor: adActive ? '#10B981' : '#374151' }} />
+                                                                    <span className="block w-full h-full rounded-[8px] transition-colors duration-200" style={{ backgroundColor: adActive ? '#22D07A' : '#2A3A5C' }} />
                                                                     <span className="absolute block w-3 h-3 bg-white rounded-full shadow transition-transform duration-200" style={{ top: 1.5, left: adActive ? 13 : 1.5 }} />
                                                                   </button>
                                                                 )}
@@ -1591,11 +1591,11 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                               {/* Thumbnail */}
                                                               <td className="py-1.5 px-1.5">
                                                                 {ad.thumbnailUrl ? (
-                                                                  <button onClick={() => setPreviewAd(ad)} className="w-8 h-8 rounded overflow-hidden border border-[#1F2937] hover:border-[#4F8EF7] transition-colors">
+                                                                  <button onClick={() => setPreviewAd(ad)} className="w-8 h-8 rounded overflow-hidden border border-[#1E2A42] hover:border-[#4F8EF7] transition-colors">
                                                                     <img src={ad.thumbnailUrl} alt="" className="w-full h-full object-cover" />
                                                                   </button>
                                                                 ) : (
-                                                                  <div className="w-8 h-8 rounded bg-[#1F2937] flex items-center justify-center">
+                                                                  <div className="w-8 h-8 rounded bg-[#1E2A42] flex items-center justify-center">
                                                                     <Image className="w-3 h-3 text-muted-foreground" />
                                                                   </div>
                                                                 )}
@@ -1653,13 +1653,13 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     
                     {/* EXPANDED CONTENT */}
                     {expanded && (
-                      <tr className="bg-[#0A0F1E] border-b border-[#1F2937]">
+                      <tr className="bg-[#080B14] border-b border-[#1E2A42]">
                         <td colSpan={activeColumns.length + 3} className="p-0">
                           <div className="p-4 border-l-2 border-l-primary/50 animate-fade-up">
                             {aiLoading ? (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {[0,1,2,3].map(i => (
-                                  <div key={i} className="bg-[#111827] border border-[#1F2937] rounded-lg p-4 space-y-3">
+                                  <div key={i} className="bg-[#0E1420] border border-[#1E2A42] rounded-lg p-4 space-y-3">
                                     <Skeleton className="h-3 w-32" />
                                     <Skeleton className="h-4 w-full" />
                                     <Skeleton className="h-4 w-3/4" />
@@ -1670,7 +1670,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                             ) : (
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* BLOCO 1 — MÉTRICAS COMPLETAS */}
-                                <div className="bg-[#111827] border border-[#1F2937] rounded-lg p-4">
+                                <div className="bg-[#0E1420] border border-[#1E2A42] rounded-lg p-4">
                                   <div className="flex items-center gap-2 mb-3">
                                     <BarChart3 className="w-3.5 h-3.5 text-primary" />
                                     <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Métricas Completas</h4>
@@ -1721,7 +1721,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                 </div>
 
                                 {/* BLOCO 2 — ANÁLISE IA */}
-                                <div className="bg-[#111827] border border-[#1F2937] rounded-lg p-4">
+                                <div className="bg-[#0E1420] border border-[#1E2A42] rounded-lg p-4">
                                   <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
                                       <Sparkles className="w-3.5 h-3.5 text-secondary" />
@@ -1776,7 +1776,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                 </div>
 
                                 {/* BLOCO 3 — PERFORMANCE POR HORA */}
-                                <div className="bg-[#111827] border border-[#1F2937] rounded-lg p-4">
+                                <div className="bg-[#0E1420] border border-[#1E2A42] rounded-lg p-4">
                                   <div className="flex items-center gap-2 mb-3">
                                     <Clock className="w-3.5 h-3.5 text-success" />
                                     <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Performance por Hora</h4>
@@ -1788,7 +1788,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                 </div>
 
                                 {/* BLOCO 4 — EVOLUÇÃO DIÁRIA */}
-                                <div className="bg-[#111827] border border-[#1F2937] rounded-lg p-4">
+                                <div className="bg-[#0E1420] border border-[#1E2A42] rounded-lg p-4">
                                   <div className="flex items-center gap-2 mb-3">
                                     <LineChart className="w-3.5 h-3.5 text-primary" />
                                     <h4 className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider">Evolução Diária</h4>
@@ -1869,15 +1869,15 @@ Responda SOMENTE com o JSON, sem markdown.`;
 
       {/* ─── Análise de Criativos ─── */}
       {analysisData?.adCreatives && analysisData.adCreatives.length > 0 && (
-        <div className="bg-[#111827] border border-[#1F2937] rounded-lg overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#1F2937]">
+        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-lg overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#1E2A42]">
             <h3 className="text-xs font-semibold text-text-primary">Análise de Criativos</h3>
             <span className="text-[10px] text-text-muted">{analysisData.adCreatives.length} criativos com gasto</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[#1F2937] bg-[#0D1117]">
+                <tr className="border-b border-[#1E2A42] bg-[#080B14]">
                   <th className="text-left px-3 py-2 text-text-muted font-semibold">Criativo</th>
                   <th className="text-right px-3 py-2 text-text-muted font-semibold">Gasto</th>
                   <th className="text-right px-3 py-2 text-text-muted font-semibold">Impr.</th>
@@ -1892,7 +1892,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                   const isTop = i === 0 && ad.roas > 0;
                   const shouldPause = ad.ctr < 1 && ad.spend > 10;
                   return (
-                    <tr key={ad.id} className="border-b border-[#1F2937]/50 hover:bg-[#1F2937]/30 transition-colors">
+                    <tr key={ad.id} className="border-b border-[#1E2A42]/50 hover:bg-[#1E2A42]/30 transition-colors">
                       <td className="px-3 py-2.5">
                         <p className="text-text-primary font-medium truncate max-w-[220px]">{ad.name}</p>
                         {ad.campaignName && <p className="text-[10px] text-text-muted truncate max-w-[220px]">{ad.campaignName}</p>}
@@ -1904,9 +1904,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       <td className={`text-right px-3 py-2.5 font-bold ${getRoasColor(ad.roas, roasTarget)}`}>{ad.roas.toFixed(1)}x</td>
                       <td className="text-center px-3 py-2.5">
                         {isTop ? (
-                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#10B981]/10 text-[#10B981] border border-[#10B981]/25">Top</span>
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#22D07A]/10 text-[#22D07A] border border-[#22D07A]/25">Top</span>
                         ) : shouldPause ? (
-                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/25">Pausar</span>
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#F05252]/10 text-[#F05252] border border-[#F05252]/25">Pausar</span>
                         ) : (
                           <span className="text-[9px] text-text-muted">—</span>
                         )}
@@ -1922,7 +1922,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
 
       {/* Bulk Actions Floating Bar */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1F2937] border border-[#374151] rounded-xl shadow-2xl px-5 py-3 flex items-center gap-4 animate-fade-up">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1E2A42] border border-[#2A3A5C] rounded-xl shadow-2xl px-5 py-3 flex items-center gap-4 animate-fade-up">
           <span className="text-xs font-semibold text-text-primary">{selectedIds.size} campanha{selectedIds.size > 1 ? 's' : ''} selecionada{selectedIds.size > 1 ? 's' : ''}</span>
           <div className="flex items-center gap-2">
             <Button
@@ -1930,7 +1930,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
               variant="outline"
               disabled={bulkLoading}
               onClick={() => executeBulkAction('ACTIVE')}
-              className="h-7 text-[11px] gap-1 border-[#10B981]/30 text-[#10B981] hover:bg-[#10B981]/10"
+              className="h-7 text-[11px] gap-1 border-[#22D07A]/30 text-[#22D07A] hover:bg-[#22D07A]/10"
             >
               {bulkLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : '▶'} Ativar
             </Button>
@@ -1939,7 +1939,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
               variant="outline"
               disabled={bulkLoading}
               onClick={() => executeBulkAction('PAUSED')}
-              className="h-7 text-[11px] gap-1 border-[#F59E0B]/30 text-[#F59E0B] hover:bg-[#F59E0B]/10"
+              className="h-7 text-[11px] gap-1 border-[#F5A623]/30 text-[#F5A623] hover:bg-[#F5A623]/10"
             >
               {bulkLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : '⏸'} Pausar
             </Button>
@@ -2181,7 +2181,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { label: 'Gasto', value: formatCurrency(previewAd.spend, currency) },
-                    { label: 'ROAS', value: `${previewAd.roas.toFixed(2)}x`, color: previewAd.roas >= roasTarget ? '#10B981' : previewAd.roas >= roasTarget * 0.7 ? '#F59E0B' : '#EF4444' },
+                    { label: 'ROAS', value: `${previewAd.roas.toFixed(2)}x`, color: previewAd.roas >= roasTarget ? '#22D07A' : previewAd.roas >= roasTarget * 0.7 ? '#F5A623' : '#F05252' },
                     { label: 'CTR', value: `${previewAd.ctr.toFixed(2)}%` },
                     { label: 'CPM', value: formatCurrency(previewAd.cpm, currency) },
                     { label: 'Impressões', value: formatNumber(previewAd.impressions) },
@@ -2235,29 +2235,29 @@ function CampaignsTableSkeleton() {
     <div className="space-y-4 animate-fade-in">
       {/* Filter skeleton */}
       <div className="flex items-center gap-2">
-        <div className="h-8 w-64 bg-[#1F2937] rounded-md animate-pulse" />
-        <div className="h-8 w-36 bg-[#1F2937] rounded-md animate-pulse" />
-        <div className="h-8 w-24 bg-[#1F2937] rounded-md animate-pulse" />
+        <div className="h-8 w-64 bg-[#1E2A42] rounded-md animate-pulse" />
+        <div className="h-8 w-36 bg-[#1E2A42] rounded-md animate-pulse" />
+        <div className="h-8 w-24 bg-[#1E2A42] rounded-md animate-pulse" />
       </div>
       {/* Table skeleton */}
-      <div className="bg-[#111827] border border-[#1F2937] rounded-lg overflow-hidden">
+      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-lg overflow-hidden">
         {/* Header */}
-        <div className="flex items-center gap-2 px-3 py-2.5 bg-[#0D1117] border-b border-[#1F2937]">
+        <div className="flex items-center gap-2 px-3 py-2.5 bg-[#080B14] border-b border-[#1E2A42]">
           {colWidths.map((w, i) => (
-            <div key={i} className="h-3 bg-[#1F2937] rounded" style={{ width: w, flexShrink: 0 }} />
+            <div key={i} className="h-3 bg-[#1E2A42] rounded" style={{ width: w, flexShrink: 0 }} />
           ))}
         </div>
         {/* Rows */}
         {Array.from({ length: 8 }).map((_, i) => (
           <div
             key={i}
-            className="flex items-center gap-2 px-3 border-b border-[#1F2937] animate-pulse"
+            className="flex items-center gap-2 px-3 border-b border-[#1E2A42] animate-pulse"
             style={{ height: 52, animationDelay: `${i * 60}ms` }}
           >
             {colWidths.map((w, j) => (
               <div
                 key={j}
-                className="h-3.5 bg-[#1F2937] rounded"
+                className="h-3.5 bg-[#1E2A42] rounded"
                 style={{ width: w + Math.random() * 20, flexShrink: 0 }}
               />
             ))}

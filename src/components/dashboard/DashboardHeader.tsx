@@ -40,7 +40,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
   const initials = 'U';
 
   return (
-    <div className="sticky top-0 z-30 h-14 bg-[#0E1420] border-b border-[#1E2A42] flex items-center justify-between px-5">
+    <div className="sticky top-0 z-30 h-14 bg-[#080B14] border-b border-[#1E2A42] flex items-center justify-between px-6">
       {/* Left: section title */}
       <div className="flex items-center gap-3">
         {isMobile && onOpenSidebar && (
@@ -81,7 +81,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
 
         {/* Refresh button */}
         <button
-          className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#7A8FAD] rounded-lg hover:bg-white/[0.04] hover:text-[#F0F4FF] transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#7A8FAD] rounded-lg hover:bg-[#0E1420] hover:text-[#F0F4FF] transition-all duration-150 border border-[#1E2A42] disabled:opacity-40 disabled:pointer-events-none"
           onClick={handleAtualizar}
           disabled={loading || (activeAccountIds.length === 0 && !selectedAccountId)}
         >

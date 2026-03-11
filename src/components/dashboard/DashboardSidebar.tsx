@@ -127,17 +127,17 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
   };
 
   return (
-    <aside className="flex flex-col h-screen w-[240px] min-w-[240px] bg-[#0E1420] border-r border-[#1E2A42] overflow-hidden">
+    <aside className="flex flex-col h-screen w-[220px] min-w-[220px] bg-[#080B14] border-r border-[#1E2A42] overflow-hidden">
 
       {/* Logo — Zone 1 */}
-      <div className="flex-shrink-0 h-16 px-5 flex items-center gap-3 border-b border-[#1E2A42]">
+      <div className="flex-shrink-0 h-14 px-4 flex items-center gap-3 border-b border-[#1E2A42]">
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none" className="flex-shrink-0">
           <path d="M14 2L25.5 8.5V19.5L14 26L2.5 19.5V8.5L14 2Z" fill="url(#hex-gradient)" fillOpacity="0.15" stroke="url(#hex-gradient)" strokeWidth="1.5"/>
           <text x="14" y="17" textAnchor="middle" fill="#4F8EF7" fontSize="11" fontWeight="700" fontFamily="Space Grotesk, sans-serif">C</text>
           <defs><linearGradient id="hex-gradient" x1="2.5" y1="2" x2="25.5" y2="26"><stop stopColor="#4F8EF7"/><stop offset="1" stopColor="#6C63FF"/></linearGradient></defs>
         </svg>
         <div className="flex-1 min-w-0">
-          <span className="font-display font-bold text-[#F0F4FF] text-[18px] tracking-[-0.5px] leading-none">CORTEX</span>
+          <span className="font-display font-bold text-[#F0F4FF] text-[17px] tracking-[-0.5px] leading-none">CORTEX</span>
           <p className="text-[11px] text-[#4A5F7A] font-medium mt-0.5">Meta Intelligence</p>
         </div>
         {onCloseMobile && (

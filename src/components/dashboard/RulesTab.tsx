@@ -262,7 +262,7 @@ export default function RulesTab() {
           value={ruleName}
           onChange={e => setRuleName(e.target.value)}
           placeholder="Nome da regra (opcional)"
-          className="h-8 text-[12px] bg-[#080B14] border-[#1E2A42] text-white placeholder:text-gray-500 mb-3 rounded-lg"
+          className="h-8 text-[12px] bg-[#080B14] border-[#1E2A42] text-white placeholder:text-[#4A5F7A] mb-3 rounded-lg"
         />
 
         {/* Conditions */}
@@ -299,14 +299,14 @@ export default function RulesTab() {
                 value={cond.value || ''}
                 onChange={e => updateCondition(idx, { value: parseFloat(e.target.value) || 0 })}
                 placeholder="Valor"
-                className="h-8 w-[80px] text-[12px] bg-[#080B14] border-[#1E2A42] text-white placeholder:text-gray-500 rounded-lg"
+                className="h-8 w-[80px] text-[12px] bg-[#080B14] border-[#1E2A42] text-white placeholder:text-[#4A5F7A] rounded-lg"
               />
 
               {/* Remove condition */}
               {conditions.length > 1 && (
                 <button
                   onClick={() => removeCondition(idx)}
-                  className="text-gray-500 hover:text-red-400 transition-colors"
+                  className="text-[#4A5F7A] hover:text-[#F05252] transition-colors"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -321,7 +321,7 @@ export default function RulesTab() {
             variant="outline"
             size="sm"
             onClick={addCondition}
-            className="h-7 text-[10px] border-[#1E2A42] bg-[#080B14] text-gray-400 hover:text-white hover:border-[#6C63FF]"
+            className="h-7 text-[10px] border-[#1E2A42] bg-[#080B14] text-[#7A8FAD] hover:text-white hover:border-[#6C63FF]"
           >
             <Plus className="w-3 h-3 mr-1" />
             Condição
@@ -334,7 +334,7 @@ export default function RulesTab() {
                 className={`px-3 py-1 text-[10px] font-semibold transition-colors ${
                   logic === 'AND'
                     ? 'bg-[#6C63FF] text-white'
-                    : 'text-gray-400 hover:text-white'
+                    : 'text-[#7A8FAD] hover:text-white'
                 }`}
               >
                 AND
@@ -344,7 +344,7 @@ export default function RulesTab() {
                 className={`px-3 py-1 text-[10px] font-semibold transition-colors ${
                   logic === 'OR'
                     ? 'bg-[#6C63FF] text-white'
-                    : 'text-gray-400 hover:text-white'
+                    : 'text-[#7A8FAD] hover:text-white'
                 }`}
               >
                 OR
@@ -355,7 +355,7 @@ export default function RulesTab() {
 
         {/* Action */}
         <div className="mb-4">
-          <label className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 block">Ação</label>
+          <label className="text-[10px] text-[#4A5F7A] uppercase tracking-wider mb-1 block">Ação</label>
           <Select value={action} onValueChange={v => setAction(v as Rule['action'])}>
             <SelectTrigger className="h-8 text-[12px] bg-[#080B14] border-[#1E2A42] text-white">
               <SelectValue />
@@ -389,7 +389,7 @@ export default function RulesTab() {
         </h3>
 
         {rules.length === 0 ? (
-          <p className="text-[12px] text-gray-500 text-center py-10">Nenhuma regra criada ainda</p>
+          <p className="text-[12px] text-[#4A5F7A] text-center py-10">Nenhuma regra criada ainda</p>
         ) : (
           <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
             {rules.map(rule => (
@@ -411,7 +411,7 @@ export default function RulesTab() {
                 <div className="flex flex-wrap gap-1 mb-2">
                   {rule.conditions.map((c, ci) => (
                     <span key={ci} className="inline-flex items-center">
-                      <span className="text-[10px] bg-[#0E1420] text-gray-300 px-2 py-0.5 rounded">
+                      <span className="text-[10px] bg-[#0E1420] text-[#F0F4FF] px-2 py-0.5 rounded">
                         {c.metric} {operatorSymbol(c.operator)} {c.value}
                       </span>
                       {ci < rule.conditions.length - 1 && (
@@ -428,12 +428,12 @@ export default function RulesTab() {
                     onCheckedChange={() => toggleRule(rule.id)}
                     className="data-[state=checked]:bg-[#6C63FF] scale-75 origin-left"
                   />
-                  <span className="text-[10px] text-gray-500 flex-1">
+                  <span className="text-[10px] text-[#4A5F7A] flex-1">
                     {rule.active ? 'Ativa' : 'Inativa'}
                   </span>
                   <button
                     onClick={() => deleteRule(rule.id)}
-                    className="text-gray-500 hover:text-red-400 transition-colors"
+                    className="text-[#4A5F7A] hover:text-[#F05252] transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -463,7 +463,7 @@ export default function RulesTab() {
               <p className="text-[12px] font-semibold text-white mb-1 truncate">{suggested.name}</p>
               <div className="space-y-0.5 mb-2">
                 {suggested.conditions.map((c, ci) => (
-                  <p key={ci} className="text-[10px] text-gray-400">
+                  <p key={ci} className="text-[10px] text-[#7A8FAD]">
                     {c.metric} {operatorSymbol(c.operator)} {c.value}
                     {ci < suggested.conditions.length - 1 && (
                       <span className="text-[#6C63FF] font-semibold ml-1">{suggested.logic}</span>

@@ -206,4 +206,13 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* V5 Input/Select focus styles */
+  input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+  textarea:focus-visible,
+  [data-radix-select-trigger]:focus-visible {
+    outline: none;
+    border-color: #4F8EF7 !important;
+    box-shadow: 0 0 0 2px rgba(79,142,247,0.15) !important;
+  }
 }

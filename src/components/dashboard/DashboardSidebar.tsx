@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { LogOut, ChevronRight, ChevronDown, Circle, LayoutDashboard, TrendingUp, Zap, Calendar, Shield, MessageSquare, FileText, X, Bell, Brain } from 'lucide-react';
+import { LogOut, ChevronRight, ChevronDown, Circle, LayoutDashboard, TrendingUp, Zap, Calendar, Shield, MessageSquare, FileText, X, Bell, Brain, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import SettingsDialog from './SettingsDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';

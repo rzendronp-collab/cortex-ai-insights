@@ -1,4 +1,4 @@
-// Dashboard — CortexAds AI
+// Dashboard — CORTEX
 import { useState, useEffect } from 'react';
 import { DashboardProvider, useDashboard } from '@/context/DashboardContext';
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
@@ -54,7 +54,7 @@ function DashboardContent() {
       {isMobile ? (
         <div
           className={`fixed inset-y-0 left-0 z-50 transition-transform duration-250 ease-out ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-[220px]'
+            sidebarOpen ? 'translate-x-0' : '-translate-x-[240px]'
           }`}
         >
           <DashboardSidebar onCloseMobile={() => setSidebarOpen(false)} />
@@ -66,7 +66,9 @@ function DashboardContent() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <DashboardHeader onOpenSidebar={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto p-5 md:p-6">
-          {renderTab()}
+          <div key={activeTab} className="animate-fade-up h-full">
+            {renderTab()}
+          </div>
         </main>
       </div>
     </div>

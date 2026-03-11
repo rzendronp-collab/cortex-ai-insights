@@ -143,11 +143,11 @@ export default function ConsolidatedTab() {
           <h3 className="text-xs font-semibold text-foreground mb-3">ROAS por Conta</h3>
           <ResponsiveContainer width="100%" height={Math.max(200, allAccounts.length * 40)}>
             <BarChart data={chartData} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(30,42,66,0.8)" />
-              <XAxis type="number" tick={{ fontSize: 10, fill: '#4A5F7A' }} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#4A5F7A' }} width={120} />
-              <Tooltip contentStyle={{ background: '#0E1420', border: '1px solid #1E2A42', borderRadius: 8, fontSize: 11, color: '#F0F4FF' }} />
-              <ReferenceLine x={roasTarget} stroke="#4A5F7A" strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 10, fill: '#4A5F7A' }} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#1E2A42" />
+              <XAxis type="number" tick={{ fontSize: 10, fill: '#7A8FAD' }} axisLine={false} tickLine={false} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#7A8FAD' }} width={120} axisLine={false} tickLine={false} />
+              <Tooltip contentStyle={{ backgroundColor: '#0E1420', border: '1px solid #2A3A5C', borderRadius: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.4)', fontSize: 11, color: '#F0F4FF', fontFamily: "'Inter', sans-serif", padding: '10px 12px' }} />
+              <ReferenceLine x={roasTarget} stroke="#4A5F7A" strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 10, fill: '#7A8FAD' }} />
               <Bar dataKey="roas" radius={[0, 4, 4, 0]}>
                 {chartData.map((a, i) => {
                   const fill = a.roas >= roasTarget * 1.2 ? '#22D07A' : a.roas >= roasTarget ? '#4F8EF7' : '#F05252';
@@ -232,7 +232,7 @@ export default function ConsolidatedTab() {
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(30,42,66,0.8)" />
             <XAxis type="number" tick={{ fontSize: 10, fill: '#4A5F7A' }} />
             <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: '#4A5F7A' }} width={120} />
-            <Tooltip contentStyle={{ background: '#0E1420', border: '1px solid #1E2A42', borderRadius: 8, fontSize: 11, color: '#F0F4FF' }} />
+            <Tooltip contentStyle={{ backgroundColor: '#0E1420', border: '1px solid #2A3A5C', borderRadius: 8, boxShadow: '0 4px 24px rgba(0,0,0,0.4)', fontSize: 11, color: '#F0F4FF', fontFamily: "'Inter', sans-serif", padding: '10px 12px' }} />
             <ReferenceLine x={roasTarget} stroke="#4A5F7A" strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 10, fill: '#4A5F7A' }} />
             <Bar dataKey="roas" radius={[0, 4, 4, 0]}>
               {chartData.map((a, i) => {

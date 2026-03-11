@@ -27,6 +27,9 @@ export default function TopBottomCards({ campaigns, currencySymbol }: Props) {
 
   if (campaigns.length === 0) return null;
 
+  const maxTopRoas = top3.length > 0 ? top3[0].roas! : 1;
+  const maxBottomRoas = bottom3.length > 0 ? bottom3[0].roas! : 1;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Top 3 */}
@@ -37,11 +40,16 @@ export default function TopBottomCards({ campaigns, currencySymbol }: Props) {
         </div>
         <div className="space-y-2.5">
           {top3.map((c, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <span className="text-[12px] font-display font-bold text-[#4A5F7A] w-5">#{i + 1}</span>
-              <span className="text-[12px] text-[#F0F4FF] font-medium truncate flex-1">{c.name.slice(0, 25)}</span>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-[#22D07A]/10 text-[#22D07A]">{c.roas!.toFixed(1)}x</span>
-              <span className="text-[10px] text-[#4A5F7A]">{currencySymbol}{c.spend.toFixed(0)}</span>
+            <div key={i} className="flex flex-col gap-0">
+              <div className="flex items-center gap-3">
+                <span className="text-[12px] font-display font-bold text-[#4A5F7A] w-5">#{i + 1}</span>
+                <span className="text-[12px] text-[#F0F4FF] font-medium truncate flex-1">{c.name.slice(0, 25)}</span>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-[#22D07A]/10 text-[#22D07A]">{c.roas!.toFixed(1)}x</span>
+                <span className="text-[10px] text-[#4A5F7A]">{currencySymbol}{c.spend.toFixed(0)}</span>
+              </div>
+              <div className="w-full h-[3px] rounded-full mt-1.5" style={{ background: '#1E2A42' }}>
+                <div className="h-full rounded-full" style={{ width: `${Math.min((c.roas! / maxTopRoas) * 100, 100)}%`, background: '#22D07A' }} />
+              </div>
             </div>
           ))}
         </div>
@@ -55,11 +63,16 @@ export default function TopBottomCards({ campaigns, currencySymbol }: Props) {
         </div>
         <div className="space-y-2.5">
           {bottom3.map((c, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <span className="text-[12px] font-display font-bold text-[#4A5F7A] w-5">#{i + 1}</span>
-              <span className="text-[12px] text-[#F0F4FF] font-medium truncate flex-1">{c.name.slice(0, 25)}</span>
-              <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-[#F05252]/10 text-[#F05252]">{c.roas!.toFixed(1)}x</span>
-              <span className="text-[10px] text-[#4A5F7A]">{currencySymbol}{c.spend.toFixed(0)}</span>
+            <div key={i} className="flex flex-col gap-0">
+              <div className="flex items-center gap-3">
+                <span className="text-[12px] font-display font-bold text-[#4A5F7A] w-5">#{i + 1}</span>
+                <span className="text-[12px] text-[#F0F4FF] font-medium truncate flex-1">{c.name.slice(0, 25)}</span>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-[#F05252]/10 text-[#F05252]">{c.roas!.toFixed(1)}x</span>
+                <span className="text-[10px] text-[#4A5F7A]">{currencySymbol}{c.spend.toFixed(0)}</span>
+              </div>
+              <div className="w-full h-[3px] rounded-full mt-1.5" style={{ background: '#1E2A42' }}>
+                <div className="h-full rounded-full" style={{ width: `${Math.min((c.roas! / maxBottomRoas) * 100, 100)}%`, background: '#F05252' }} />
+              </div>
             </div>
           ))}
         </div>

@@ -8,15 +8,16 @@ const DATA_BLUE = '#4F8EF7';
 const DATA_GREEN = '#22D07A';
 const DATA_PURPLE = '#6C63FF';
 const CHART_GRID = '#1E2A42';
-const CHART_AXIS = '#4A5F7A';
+const CHART_AXIS = '#7A8FAD';
 const chartTooltipStyle: React.CSSProperties = {
-  background: '#0E1420',
-  border: '1px solid #4F8EF7',
+  backgroundColor: '#0E1420',
+  border: '1px solid #2A3A5C',
   borderRadius: 8,
+  boxShadow: '0 4px 24px rgba(0,0,0,0.4)',
   fontSize: 11,
   color: '#F0F4FF',
-  fontFamily: 'Inter, sans-serif',
-  padding: '10px',
+  fontFamily: "'Inter', sans-serif",
+  padding: '10px 12px',
 };
 
 export default function ComparisonTab() {

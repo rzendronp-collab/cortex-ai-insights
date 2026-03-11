@@ -1,16 +1,10 @@
 import { useState, useEffect } from 'react';
-import { LogOut, Settings, ChevronRight, ChevronDown, Circle, Save, Loader2, LayoutDashboard, TrendingUp, Zap, Calendar, Shield, MessageSquare, FileText, X, Bell, Brain } from 'lucide-react';
+import { LogOut, ChevronRight, ChevronDown, Circle, LayoutDashboard, TrendingUp, Zap, Calendar, Shield, MessageSquare, FileText, X, Bell, Brain } from 'lucide-react';
 import SettingsDialog from './SettingsDialog';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useDashboard } from '@/context/DashboardContext';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
 
 interface DashboardSidebarProps {
@@ -19,20 +13,11 @@ interface DashboardSidebarProps {
 
 export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
   const { user, signOut } = useAuth();
-  const { profile, updateProfile } = useProfile();
+  const { profile } = useProfile();
   const { adAccounts, isConnected, isTokenExpired, connectMeta } = useMetaConnection();
   const { activeTab: currentTab, setActiveTab, activeAccountIds, toggleActiveAccount, setActiveAccountIds, analysisCache, analyzeRef, setSelectedAccountId, setSelectedAccountName, setSelectedAccountCurrency } = useDashboard();
-  const [configOpen, setConfigOpen] = useState(false);
   const [openBMs, setOpenBMs] = useState<Record<string, boolean>>({});
-  const [saving, setSaving] = useState(false);
   const [connecting, setConnecting] = useState(false);
-
-  const [apiKey, setApiKey] = useState('');
-  const [roasTarget, setRoasTarget] = useState(profile?.roas_target?.toString() || '3.0');
-  const [currency, setCurrency] = useState(profile?.currency || 'R$');
-  const [niche, setNiche] = useState(profile?.niche || '');
-  const [apiKeyError, setApiKeyError] = useState<string | null>(null);
-  const [apiKeyValid, setApiKeyValid] = useState(false);
 
   const accountsByBm = adAccounts.reduce((acc, a) => {
     const bm = a.business_name || 'Pessoais';
@@ -48,31 +33,6 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
       setOpenBMs({ [bmKeys[0]]: true });
     }
   }, [bmKeys.length]);
-
-  const handleSaveConfig = async () => {
-    setSaving(true);
-    setApiKeyError(null);
-    setApiKeyValid(false);
-    try {
-      if (apiKey.trim()) {
-        if (!apiKey.trim().startsWith('sk-ant-')) {
-          setApiKeyError('Chave invalida');
-          setSaving(false);
-          return;
-        }
-        const { error: keyError } = await supabase
-          .from('profiles')
-          .update({ claude_api_key: apiKey, updated_at: new Date().toISOString() })
-          .eq('id', user!.id);
-        if (keyError) throw keyError;
-        setApiKeyValid(true);
-      }
-      await updateProfile.mutateAsync({ roas_target: parseFloat(roasTarget), currency, niche });
-      toast.success('Salvo!');
-      setApiKey('');
-    } catch { toast.error('Erro ao salvar'); }
-    setSaving(false);
-  };
 
   const handleConnectMeta = async () => {
     setConnecting(true);
@@ -127,11 +87,11 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
   };
 
   return (
-    <aside className="flex flex-col h-screen w-[220px] min-w-[220px] bg-[#080B14] border-r border-[#1E2A42] overflow-hidden">
+    <aside className="flex flex-col h-screen w-[240px] min-w-[240px] bg-[#080B14] border-r border-[#1E2A42] overflow-hidden">
 
       {/* Logo — Zone 1 */}
       <div className="flex-shrink-0 h-14 px-4 flex items-center gap-3 border-b border-[#1E2A42]">
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" className="flex-shrink-0">
+        <svg width="30" height="30" viewBox="0 0 28 28" fill="none" className="flex-shrink-0">
           <path d="M14 2L25.5 8.5V19.5L14 26L2.5 19.5V8.5L14 2Z" fill="url(#hex-gradient)" fillOpacity="0.15" stroke="url(#hex-gradient)" strokeWidth="1.5"/>
           <text x="14" y="17" textAnchor="middle" fill="#4F8EF7" fontSize="11" fontWeight="700" fontFamily="Space Grotesk, sans-serif">C</text>
           <defs><linearGradient id="hex-gradient" x1="2.5" y1="2" x2="25.5" y2="26"><stop stopColor="#4F8EF7"/><stop offset="1" stopColor="#6C63FF"/></linearGradient></defs>
@@ -171,14 +131,23 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
             <button
               key={item.id}
               onClick={() => handleNavClick(item.id)}
-              className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-lg transition-all duration-150 text-[13px] relative ${
+              className={`flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg transition-colors duration-150 text-[13px] ${
                 isActive
-                  ? 'bg-[#4F8EF7]/10 text-[#F0F4FF] font-medium'
-                  : 'text-[#7A8FAD] hover:bg-white/[0.04] hover:text-[#F0F4FF]'
+                  ? 'text-[#F0F4FF] font-medium'
+                  : 'text-[#7A8FAD] hover:text-[#F0F4FF]'
               }`}
+              style={{
+                borderLeft: isActive ? '2px solid #4F8EF7' : '2px solid transparent',
+                backgroundColor: isActive ? 'rgba(79,142,247,0.08)' : undefined,
+              }}
+              onMouseEnter={e => {
+                if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(79,142,247,0.05)';
+              }}
+              onMouseLeave={e => {
+                if (!isActive) (e.currentTarget as HTMLElement).style.backgroundColor = '';
+              }}
             >
-              {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 bg-[#4F8EF7] rounded-r" />}
-              <item.icon className={`w-4 h-4 flex-shrink-0 ${isActive ? 'text-[#4F8EF7]' : 'text-[#4A5F7A]'}`} />
+              <item.icon className={`w-[17px] h-[17px] flex-shrink-0 ${isActive ? 'text-[#4F8EF7]' : 'text-[#4A5F7A]'}`} />
               <span className="flex-1 text-left">{item.label}</span>
               {isAI && (
                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#6C63FF]/15 text-[#6C63FF]">AI</span>
@@ -265,46 +234,6 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
       {/* Footer — Zone 4 */}
       <div className="flex-shrink-0 border-t border-[#1E2A42]">
         <SettingsDialog />
-        <Collapsible open={configOpen} onOpenChange={setConfigOpen}>
-          <CollapsibleTrigger className="flex items-center gap-2 w-full px-4 py-2 hover:bg-white/[0.03] transition-colors">
-            <Settings className="w-3.5 h-3.5 text-[#4A5F7A]" />
-            <span className="text-[11px] text-[#7A8FAD]">Configurações</span>
-            <ChevronRight className={`w-3 h-3 ml-auto text-[#4A5F7A] transition-transform duration-150 ${configOpen ? 'rotate-90' : ''}`} />
-          </CollapsibleTrigger>
-
-          <CollapsibleContent className="px-4 pb-2">
-            <div className="space-y-2 pt-1">
-              <div className="space-y-1">
-                <Label className="text-[9px] text-[#4A5F7A] uppercase tracking-[0.08em]">API Key Claude</Label>
-                <Input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="sk-ant-..." className="h-7 text-[10px] bg-[#080B14] border-[#1E2A42] rounded-md" />
-                {apiKeyError && <p className="text-[9px] text-[#F05252]">{apiKeyError}</p>}
-                {apiKeyValid && <p className="text-[9px] text-[#22D07A]">Valida</p>}
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[9px] text-[#4A5F7A] uppercase tracking-[0.08em]">ROAS Target</Label>
-                <Input type="number" step="0.1" value={roasTarget} onChange={(e) => setRoasTarget(e.target.value)} className="h-7 text-[10px] bg-[#080B14] border-[#1E2A42] rounded-md" />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[9px] text-[#4A5F7A] uppercase tracking-[0.08em]">Moeda</Label>
-                <Select value={currency} onValueChange={setCurrency}>
-                  <SelectTrigger className="h-7 text-[10px] bg-[#080B14] border-[#1E2A42] rounded-md"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="R$">BRL</SelectItem>
-                    <SelectItem value="$">USD</SelectItem>
-                    <SelectItem value="€">EUR</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-[9px] text-[#4A5F7A] uppercase tracking-[0.08em]">Nicho</Label>
-                <Input value={niche} onChange={(e) => setNiche(e.target.value)} placeholder="E-commerce, SaaS..." className="h-7 text-[10px] bg-[#080B14] border-[#1E2A42] rounded-md" />
-              </div>
-              <Button onClick={handleSaveConfig} disabled={saving} size="sm" className="w-full h-7 text-[10px] bg-[#4F8EF7] hover:bg-[#4080E0] text-white rounded-md">
-                {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Save className="w-3 h-3 mr-1" />Salvar</>}
-              </Button>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
 
         {/* User */}
         <div className="px-4 py-3 border-t border-[#1E2A42]">

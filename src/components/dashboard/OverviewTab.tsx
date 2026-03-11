@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 // ─── Chart theme constants (V5.2 DashCortex palette) ───
 const CHART_GRID = '#1E2A42';
-const CHART_AXIS = '#4A5F7A';
+const CHART_AXIS = '#7A8FAD';
 const TOOLTIP_BG = '#0E1420';
 const TOOLTIP_BORDER = '#2A3A5C';
 
@@ -411,7 +411,7 @@ export default function OverviewTab() {
         {/* ROAS por Campanha */}
         <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '200ms' }}>
           <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">ROAS por Campanha <span className="text-text-muted font-normal">(top 10)</span></h3>
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={240}>
             <BarChart data={roasCampaignData} layout="vertical" barSize={28}>
               <defs>
                 <linearGradient id="barGreen" x1="0" y1="0" x2="1" y2="0">
@@ -437,44 +437,54 @@ export default function OverviewTab() {
           </ResponsiveContainer>
         </div>
 
-        {/* Funil de Conversão — DashCortex style */}
+        {/* Funil de Conversão — V5 */}
         <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up" style={{ minHeight: 180 }}>
           <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-5">Funil de Conversão</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left: visual funnel with trapezoids */}
-            <div className="flex flex-col items-center gap-1.5">
-              {funnelData.map((item, i) => {
-                const maxVal = funnelData[0].value || 1;
-                const topPct = Math.max((i === 0 ? 100 : (funnelData[i - 1].value / maxVal) * 100), 30);
-                const bottomPct = Math.max((item.value / maxVal) * 100, 20);
-                const leftTop = (100 - topPct) / 2;
-                const rightTop = 100 - leftTop;
-                const leftBottom = (100 - bottomPct) / 2;
-                const rightBottom = 100 - leftBottom;
-                const opacity = [1.0, 0.85, 0.70, 0.55, 0.40][i] || 0.4;
-                const isLast = i === funnelData.length - 1;
-                return (
-                  <div
-                    key={item.name}
-                    className="relative w-full flex items-center justify-center animate-fade-up"
-                    style={{
-                      height: 44,
-                      clipPath: `polygon(${leftTop}% 0%, ${rightTop}% 0%, ${rightBottom}% 100%, ${leftBottom}% 100%)`,
-                      background: isLast
-                        ? `linear-gradient(180deg, #22D07A, #1AB06A)`
-                        : `linear-gradient(180deg, #4F8EF7, #2563EB)`,
-                      opacity,
-                      animationDelay: `${i * 80}ms`,
-                    }}
-                  >
-                    <div className="flex flex-col items-center z-10">
-                      <span className="font-display font-bold text-white text-[18px] leading-none">{item.value.toLocaleString()}</span>
-                      <span className="text-white/70 text-[10px] mt-0.5">{item.name}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            {/* Left: visual funnel — 4 níveis com largura decrescente */}
+            {(() => {
+              const displayFunnel = [
+                { name: 'Impressões',      value: funnelData[0].value },
+                { name: 'Cliques',         value: funnelData[1].value },
+                { name: 'Iniciou Checkout', value: funnelData[3].value },
+                { name: 'Compras',         value: funnelData[4].value },
+              ];
+              const widths = ['100%', '75%', '50%', '30%'];
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                  {displayFunnel.flatMap((item, i) => {
+                    const bar = (
+                      <div
+                        key={`bar-${item.name}`}
+                        style={{
+                          width: widths[i],
+                          background: 'linear-gradient(135deg, #4F8EF7, #6C63FF)',
+                          borderRadius: 6,
+                          padding: '8px 0',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          transition: 'width 0.5s ease',
+                        }}
+                      >
+                        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: '#F0F4FF', fontSize: 15, lineHeight: 1 }}>
+                          {item.value.toLocaleString()}
+                        </span>
+                        <span style={{ color: '#7A8FAD', fontSize: 10, marginTop: 3 }}>
+                          {item.name}
+                        </span>
+                      </div>
+                    );
+                    if (i < displayFunnel.length - 1) {
+                      return [bar, (
+                        <span key={`arrow-${i}`} style={{ color: '#4A5F7A', fontSize: 12, lineHeight: 1, userSelect: 'none' }}>▼</span>
+                      )];
+                    }
+                    return [bar];
+                  })}
+                </div>
+              );
+            })()}
             {/* Right: metrics breakdown */}
             <div className="flex flex-col justify-center gap-3">
               {funnelData.map((item, i) => {
@@ -609,6 +619,61 @@ export default function OverviewTab() {
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+
+      {/* ─── Budget Distribution ─── */}
+      {activeCampaigns.length > 0 && (
+        <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '350ms' }}>
+          <h3 className="font-display font-semibold text-[14px] text-[#F0F4FF] mb-4">Distribuição de Investimento</h3>
+          <div className="flex items-center gap-6">
+            <ResponsiveContainer width={160} height={160}>
+              <PieChart>
+                <Pie
+                  data={(() => {
+                    const sorted = [...activeCampaigns].sort((a, b) => b.spend - a.spend);
+                    const top5 = sorted.slice(0, 5);
+                    const othersSpend = sorted.slice(5).reduce((s, c) => s + c.spend, 0);
+                    const slices = top5.map((c, i) => ({ name: c.name.slice(0, 20), value: c.spend, fill: ACCOUNT_COLORS[i] }));
+                    if (othersSpend > 0) slices.push({ name: 'Outros', value: othersSpend, fill: '#2A3A5C' });
+                    return slices;
+                  })()}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={45}
+                  outerRadius={70}
+                  dataKey="value"
+                  strokeWidth={0}
+                >
+                  {(() => {
+                    const sorted = [...activeCampaigns].sort((a, b) => b.spend - a.spend);
+                    const top5 = sorted.slice(0, 5);
+                    const othersSpend = sorted.slice(5).reduce((s, c) => s + c.spend, 0);
+                    const slices = top5.map((c, i) => ({ fill: ACCOUNT_COLORS[i] }));
+                    if (othersSpend > 0) slices.push({ fill: '#2A3A5C' });
+                    return slices.map((s, i) => <Cell key={i} fill={s.fill} />);
+                  })()}
+                </Pie>
+                <Tooltip contentStyle={chartTooltipStyle} formatter={(value: number) => [`${currency}${value.toFixed(0)}`, 'Gasto']} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="flex-1 space-y-1.5 min-w-0">
+              {(() => {
+                const sorted = [...activeCampaigns].sort((a, b) => b.spend - a.spend);
+                const top5 = sorted.slice(0, 5);
+                const othersSpend = sorted.slice(5).reduce((s, c) => s + c.spend, 0);
+                const slices = [...top5.map((c, i) => ({ name: c.name, spend: c.spend, fill: ACCOUNT_COLORS[i] })), ...(othersSpend > 0 ? [{ name: 'Outros', spend: othersSpend, fill: '#2A3A5C' }] : [])];
+                const maxSpend = slices.length > 0 ? slices[0].spend : 1;
+                return slices.map((s, i) => (
+                  <div key={i} className="flex items-center gap-2 min-w-0">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: s.fill }} />
+                    <p className="text-[11px] text-[#7A8FAD] truncate flex-1">{s.name.slice(0, 22)}</p>
+                    <span className="text-[11px] font-medium text-[#F0F4FF] tabular-nums flex-shrink-0">{currency}{s.spend.toFixed(0)}</span>
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ─── Hourly ─── */}
       <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-5 animate-fade-up">

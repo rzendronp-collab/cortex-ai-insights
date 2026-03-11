@@ -76,6 +76,13 @@ function Sparkline({ data, color = 'hsl(var(--primary))' }: { data: number[]; co
 
 type SortColumn = 'status' | 'name' | 'spend' | 'budget' | 'revenue' | 'profit' | 'roas' | 'purchases' | 'cpa' | 'ctr' | 'cpm' | 'impressions' | 'clicks';
 
+interface RawAdset {
+  id: string;
+  status: string;
+  daily_budget?: string;
+  lifetime_budget?: string;
+}
+
 function NotePopover({ campaignId, accountId, note, isSaving, onSave, onDelete }: {
   campaignId: string;
   accountId: string;
@@ -230,6 +237,9 @@ export default function CampaignsTab() {
   const [duplicateKeepActive, setDuplicateKeepActive] = useState(false);
   const [duplicateLoading, setDuplicateLoading] = useState(false);
 
+  // Compact mode state
+  const [compactMode, setCompactMode] = useState(false);
+
   const { analysisData, selectedAccountId, selectedPeriod, setSelectedPeriod, currencySymbol, setAnalysisForAccount } = useDashboard();
   const { profile } = useProfile();
   const { user } = useAuth();
@@ -350,7 +360,7 @@ export default function CampaignsTab() {
       const cpaA = a.purchases > 0 ? a.spend / a.purchases : 0;
       const cpaB = b.purchases > 0 ? b.spend / b.purchases : 0;
 
-      let valA: any, valB: any;
+      let valA: string | number, valB: string | number;
       switch (sortColumn) {
         case 'status': valA = effStatusA === 'ACTIVE' ? 1 : 0; valB = effStatusB === 'ACTIVE' ? 1 : 0; break;
         case 'name': valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); break;
@@ -473,11 +483,11 @@ export default function CampaignsTab() {
       // Check ABO vs CBO
       const adSetsRes = await callMetaApi(`${campaignId}/adsets`, { fields: 'id,daily_budget,status' });
       const adsetList = adSetsRes?.data || [];
-      const aboAdsets = adsetList.filter((a: any) => a.daily_budget);
+      const aboAdsets = (adsetList as RawAdset[]).filter(a => a.daily_budget);
       if (aboAdsets.length > 0) {
-        const activeAdsets = aboAdsets.filter((a: any) => a.status === 'ACTIVE');
+        const activeAdsets = aboAdsets.filter(a => a.status === 'ACTIVE');
         const targets = activeAdsets.length > 0 ? activeAdsets : aboAdsets;
-        await Promise.all(targets.map((a: any) => callMetaApi(a.id, { daily_budget: budgetCents, _method: 'POST' })));
+        await Promise.all(targets.map(a => callMetaApi(a.id, { daily_budget: budgetCents, _method: 'POST' })));
       } else {
         await callMetaApi(campaignId, { daily_budget: budgetCents, _method: 'POST' });
       }
@@ -659,7 +669,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
         fields: 'id,daily_budget,lifetime_budget',
       });
       const adsets = res?.data || [];
-      const withBudget = adsets.find((a: any) => a.daily_budget);
+      const withBudget = (adsets as RawAdset[]).find(a => a.daily_budget);
       if (withBudget) {
         setBudgetCache(prev => ({ ...prev, [campaignId]: parseInt(withBudget.daily_budget, 10) / 100 }));
       } else {
@@ -952,7 +962,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
           )}
         </div>
 
-        {/* Period + Export CSV + Columns */}
+        {/* Period + Export CSV + Columns + Compact */}
         <div className="flex items-center gap-2 shrink-0">
           <PeriodSelector value={selectedPeriod} onChange={setSelectedPeriod} />
           <Popover>
@@ -991,6 +1001,18 @@ Responda SOMENTE com o JSON, sem markdown.`;
           >
             <Download className="w-3.5 h-3.5" />
             CSV
+          </button>
+          <button
+            onClick={() => setCompactMode(!compactMode)}
+            title={compactMode ? 'Vista normal' : 'Vista compacta'}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium border rounded-md transition-colors"
+            style={{
+              background: compactMode ? 'rgba(79,142,247,0.10)' : 'transparent',
+              color: compactMode ? '#4F8EF7' : '#7A8FAD',
+              borderColor: compactMode ? 'rgba(79,142,247,0.30)' : '#1E2A42',
+            }}
+          >
+            <Columns3 className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -1098,7 +1120,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
         </div>
         <table className="w-full text-left border-collapse min-w-[1000px]">
           <thead>
-            <tr className="border-b border-[#1E2A42] bg-[#080B14] sticky top-0 z-10">
+            <tr className="border-b border-[#1E2A42] bg-[#141B2D] sticky top-0 z-10">
               {/* Checkbox column */}
               <th className="px-2 py-2.5 w-8" onClick={e => e.stopPropagation()}>
                 <Checkbox
@@ -1176,7 +1198,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       const flashBg = flash === 'active' ? 'bg-[#22D07A]/20' : flash === 'paused' ? 'bg-[#F5A623]/20' : '';
                       return (
                         <td key={colId} className={`px-3 transition-colors duration-100 ${flashBg}`} onClick={e => e.stopPropagation()}>
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-2">
                             <button
                               onClick={() => {
                                 const isOpen = adsetExpandedId === c.id;
@@ -1193,7 +1215,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                               <button
                                 onClick={() => handleToggleClick(c.id, c.name, effectiveStatus)}
                                 className="relative inline-flex items-center cursor-pointer"
-                                style={{ 
+                                style={{
                                   width: 36, height: 20, borderRadius: 10,
                                   transform: hasPop ? 'scale(1.2)' : 'scale(1)',
                                   transition: 'transform 200ms ease-out',
@@ -1203,6 +1225,18 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                 <span className="absolute block w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ease-in-out" style={{ top: 2, left: isActive ? 18 : 2 }} />
                               </button>
                             )}
+                            <span
+                              className="text-[10px] font-medium hidden lg:inline-block"
+                              style={{
+                                background: isActive ? 'rgba(34,208,122,0.10)' : 'rgba(74,95,122,0.15)',
+                                color: isActive ? '#22D07A' : '#7A8FAD',
+                                border: `1px solid ${isActive ? 'rgba(34,208,122,0.25)' : 'rgba(74,95,122,0.25)'}`,
+                                borderRadius: 20,
+                                padding: '1px 7px',
+                              }}
+                            >
+                              {isActive ? 'Ativo' : 'Pausado'}
+                            </span>
                           </div>
                         </td>
                       );
@@ -1243,7 +1277,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       );
                     }
                     case 'spend':
-                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatCurrency(c.spend, currency)}</p></td>;
+                      return <td key={colId} className="px-3 text-right tabular-nums"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatCurrency(c.spend, currency)}</p></td>;
                     case 'budget': {
                       const rawBudget = analysisData?.budgetByCampaignId?.[c.id];
                       const bVal = rawBudget != null && rawBudget > 0 ? rawBudget : null;
@@ -1252,7 +1286,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       const bFeedback = budgetFeedback[c.id];
                       const feedbackBorderB = bFeedback === 'success' ? 'border-[#22D07A]' : bFeedback === 'error' ? 'border-[#F05252]' : '';
                       return (
-                        <td key={colId} className="px-3 text-right" onClick={e => e.stopPropagation()}>
+                        <td key={colId} className="px-3 text-right tabular-nums" onClick={e => e.stopPropagation()}>
                           {isEditingBgt ? (
                             <input
                               autoFocus
@@ -1287,10 +1321,10 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       );
                     }
                     case 'revenue':
-                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatCurrency(c.revenue, currency)}</p></td>;
+                      return <td key={colId} className="px-3 text-right tabular-nums"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatCurrency(c.revenue, currency)}</p></td>;
                     case 'profit':
                       return (
-                        <td key={colId} className="px-3 text-right">
+                        <td key={colId} className="px-3 text-right tabular-nums">
                           {c.spend === 0 ? (
                             <span className="text-[13px] text-text-muted">—</span>
                           ) : (
@@ -1302,7 +1336,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       );
                     case 'roas':
                       return (
-                        <td key={colId} className="px-3 text-right">
+                        <td key={colId} className="px-3 text-right tabular-nums">
                           {c.spend === 0 ? (
                             <span className="text-[13px] text-text-muted">—</span>
                           ) : (() => {
@@ -1315,17 +1349,17 @@ Responda SOMENTE com o JSON, sem markdown.`;
                         </td>
                       );
                     case 'sales':
-                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : c.purchases}</p></td>;
+                      return <td key={colId} className="px-3 text-right tabular-nums"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : c.purchases}</p></td>;
                     case 'cpa':
-                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatCurrency(cpa, currency)}</p></td>;
+                      return <td key={colId} className="px-3 text-right tabular-nums"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatCurrency(cpa, currency)}</p></td>;
                     case 'ctr':
-                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : `${c.ctr.toFixed(2)}%`}</p></td>;
+                      return <td key={colId} className="px-3 text-right tabular-nums"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : `${c.ctr.toFixed(2)}%`}</p></td>;
                     case 'cpm':
-                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatCurrency(c.cpm, currency)}</p></td>;
+                      return <td key={colId} className="px-3 text-right tabular-nums"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatCurrency(c.cpm, currency)}</p></td>;
                     case 'impressions':
-                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatNumber(c.impressions)}</p></td>;
+                      return <td key={colId} className="px-3 text-right tabular-nums"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatNumber(c.impressions)}</p></td>;
                     case 'clicks':
-                      return <td key={colId} className="px-3 text-right"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatNumber(c.clicks)}</p></td>;
+                      return <td key={colId} className="px-3 text-right tabular-nums"><p className={`text-[13px] ${c.spend === 0 ? 'text-text-muted' : 'text-text-primary'}`}>{c.spend === 0 ? '—' : formatNumber(c.clicks)}</p></td>;
                     case 'notes':
                       return (
                         <td key={colId} className="px-3 text-center" onClick={e => e.stopPropagation()}>
@@ -1339,14 +1373,16 @@ Responda SOMENTE com o JSON, sem markdown.`;
 
                 const isEditing = editingCampaignId === c.id;
 
+                const rowBg = rowIndex % 2 === 0 ? '#0E1420' : '#0A0F1A';
+
                 return (
                   <React.Fragment key={c.id}>
-                    <tr 
+                    <tr
                       onClick={() => setExpandedId(expanded ? null : c.id)}
-                      className={`border-b border-[#1E2A42] bg-[#0E1420] cursor-pointer transition-all duration-150 ${!isActive ? 'opacity-60' : ''} ${expanded ? 'bg-[#0E1420]' : ''} ${isEditing ? 'opacity-60 cursor-wait border-l-2 border-l-primary animate-pulse pointer-events-none' : ''} animate-fade-in [animation-fill-mode:forwards]`}
-                      style={{ height: 52, animationDelay: `${rowIndex * 30}ms` }}
-                      onMouseEnter={e => { if (!expanded && !isEditing) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(79,142,247,0.04)'; }}
-                      onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = ''; }}
+                      className={`border-b border-[#1E2A42] cursor-pointer transition-all duration-150 ${!isActive ? 'opacity-60' : ''} ${isEditing ? 'opacity-60 cursor-wait border-l-2 border-l-primary animate-pulse pointer-events-none' : ''} animate-fade-in [animation-fill-mode:forwards] ${compactMode ? '[&_td]:py-0 [&_td]:text-xs' : ''}`}
+                      style={{ height: compactMode ? 38 : 52, animationDelay: `${rowIndex * 30}ms`, backgroundColor: rowBg }}
+                      onMouseEnter={e => { if (!expanded && !isEditing) (e.currentTarget as HTMLElement).style.backgroundColor = '#1E2A42'; }}
+                      onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = rowBg; }}
                     >
                       {/* Checkbox */}
                       <td className="px-2" onClick={e => e.stopPropagation()}>
@@ -1796,50 +1832,55 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                   {dailyData.length > 0 ? (
                                     <ResponsiveContainer width="100%" height={180}>
                                       <RechartsLineChart data={dailyData} margin={{ top: 5, right: 5, left: -10, bottom: 5 }}>
-                                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
-                                        <XAxis 
-                                          dataKey="date" 
-                                          tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#1E2A42" />
+                                        <XAxis
+                                          dataKey="date"
+                                          tick={{ fontSize: 9, fill: '#7A8FAD' }}
+                                          axisLine={false} tickLine={false}
                                           tickFormatter={(v) => new Date(v).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
                                         />
-                                        <YAxis 
+                                        <YAxis
                                           yAxisId="left"
-                                          tick={{ fontSize: 9, fill: 'hsl(var(--primary))' }}
+                                          tick={{ fontSize: 9, fill: '#7A8FAD' }}
+                                          axisLine={false} tickLine={false}
                                           tickFormatter={(v) => `${v.toFixed(1)}x`}
                                         />
-                                        <YAxis 
-                                          yAxisId="right" 
+                                        <YAxis
+                                          yAxisId="right"
                                           orientation="right"
-                                          tick={{ fontSize: 9, fill: 'hsl(var(--success))' }}
+                                          tick={{ fontSize: 9, fill: '#7A8FAD' }}
+                                          axisLine={false} tickLine={false}
                                           tickFormatter={(v) => `${currency}${v.toFixed(0)}`}
                                         />
-                                         <RechartsTooltip 
-                                           contentStyle={{ 
-                                             background: 'hsl(var(--card))', 
-                                             border: '1px solid hsl(var(--border))',
-                                             borderRadius: '6px',
-                                             fontSize: '10px'
-                                           }}
-                                           labelFormatter={(v) => new Date(v).toLocaleDateString('pt-BR')}
-                                         />
-                                        <Legend 
-                                          wrapperStyle={{ fontSize: '10px' }}
+                                        <RechartsTooltip
+                                          contentStyle={{
+                                            background: '#0E1420',
+                                            border: '1px solid #2A3A5C',
+                                            borderRadius: 8,
+                                            fontSize: 10,
+                                            color: '#F0F4FF',
+                                            fontFamily: 'Inter, sans-serif',
+                                          }}
+                                          labelFormatter={(v) => new Date(v).toLocaleDateString('pt-BR')}
+                                        />
+                                        <Legend
+                                          wrapperStyle={{ fontSize: '10px', color: '#7A8FAD' }}
                                           iconSize={8}
                                         />
-                                        <Line 
+                                        <Line
                                           yAxisId="left"
-                                          type="monotone" 
-                                          dataKey="roas" 
-                                          stroke="hsl(var(--primary))" 
+                                          type="monotone"
+                                          dataKey="roas"
+                                          stroke="#4F8EF7"
                                           strokeWidth={2}
                                           name="ROAS"
                                           dot={{ r: 2 }}
                                         />
-                                        <Line 
+                                        <Line
                                           yAxisId="right"
-                                          type="monotone" 
-                                          dataKey="spend" 
-                                          stroke="hsl(var(--success))" 
+                                          type="monotone"
+                                          dataKey="spend"
+                                          stroke="#6C63FF"
                                           strokeWidth={2}
                                           name="Gasto"
                                           dot={{ r: 2 }}
@@ -2049,11 +2090,11 @@ Responda SOMENTE com o JSON, sem markdown.`;
                   const budgetCents = String(Math.round(newBudget * 100));
 
                   // ABO: adsets have their own daily_budget
-                  const aboAdsets = adsets.filter((a: any) => a.daily_budget || a.lifetime_budget);
+                  const aboAdsets = (adsets as RawAdset[]).filter(a => a.daily_budget || a.lifetime_budget);
 
                   if (aboAdsets.length > 0) {
                     await Promise.all(
-                      aboAdsets.map((adset: any) =>
+                      aboAdsets.map(adset =>
                         callMetaApi(adset.id, { daily_budget: budgetCents, _method: 'POST' })
                       )
                     );

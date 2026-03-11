@@ -394,11 +394,11 @@ export default function CampaignsTab() {
   }, [dailyData]);
 
   const hourlySorted = useMemo(() => {
-    return [...hourlyData].sort((a, b) => b.spend - a.spend);
+    return [...hourlyData].filter(Boolean).sort((a, b) => (b?.spend || 0) - (a?.spend || 0));
   }, [hourlyData]);
   
   const topHours = useMemo(() => {
-    return hourlySorted.filter(h => h.spend > 0).slice(0, 3).map(h => h.hour);
+    return hourlySorted.filter(h => h && h.spend > 0).slice(0, 3).map(h => h.hour);
   }, [hourlySorted]);
 
   const executeToggle = useCallback(async (campaignId: string, currentStatus: string) => {

@@ -27,7 +27,8 @@ export function HourlyBarChart({ data, emptyMessage, currency = '€' }: HourlyB
   const hourSales = new Map<number, number>();
 
   if (data && data.length > 0) {
-    data.forEach(d => {
+    data.filter(Boolean).forEach(d => {
+      if (!d) return;
       const h = parseHourToNumber(d.hour);
       if (h >= 0 && h <= 23) {
         hourSpend.set(h, (hourSpend.get(h) || 0) + (d.spend || 0));

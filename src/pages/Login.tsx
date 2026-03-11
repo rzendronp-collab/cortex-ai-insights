@@ -14,7 +14,7 @@ export default function Login() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => { document.title = 'Login — CortexAds AI'; }, []);
+  useEffect(() => { document.title = 'Login — CORTEX'; }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +45,7 @@ export default function Login() {
             <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
               <Brain className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold text-foreground">CortexAds</span>
+            <span className="text-2xl font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#F0F4FF', letterSpacing: '-0.02em' }}>CORTEX</span>
           </div>
           <p className="text-center text-sm text-muted-foreground -mt-4 mb-4">Dados inteligentes. Decisões mais rápidas.</p>
 

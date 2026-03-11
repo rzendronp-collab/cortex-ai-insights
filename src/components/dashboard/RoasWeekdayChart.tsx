@@ -40,8 +40,8 @@ export default function RoasWeekdayChart({ dailyData, roasTarget }: Props) {
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
           <CartesianGrid strokeDasharray="4 4" stroke="#1E2A42" vertical={false} />
-          <XAxis dataKey="name" tick={{ fill: '#4A5F7A', fontSize: 11 }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fill: '#4A5F7A', fontSize: 11 }} axisLine={false} tickLine={false} />
+          <XAxis dataKey="name" tick={{ fill: '#7A8FAD', fontSize: 11 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: '#7A8FAD', fontSize: 11 }} axisLine={false} tickLine={false} />
           <Tooltip
             contentStyle={{ background: '#0E1420', border: '1px solid #2A3A5C', borderRadius: 8, fontSize: 11, color: '#F0F4FF' }}
             formatter={(value: number) => [`${value.toFixed(1)}x`, 'ROAS']}

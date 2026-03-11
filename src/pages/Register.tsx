@@ -49,7 +49,7 @@ export default function Register() {
             <div className="w-10 h-10 rounded-lg gradient-primary flex items-center justify-center">
               <Brain className="w-6 h-6 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold text-foreground">CortexAds</span>
+            <span className="text-2xl font-bold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#F0F4FF', letterSpacing: '-0.02em' }}>CORTEX</span>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

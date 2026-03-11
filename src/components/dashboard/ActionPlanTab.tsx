@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useActionPlan, ActionItem } from '@/hooks/useActionPlan';
+import { useActionPlan, ActionItem, HistoryEntry } from '@/hooks/useActionPlan';
 import { useDashboard } from '@/context/DashboardContext';
 import { Loader2, Pause, Play, TrendingUp, TrendingDown, Check, X, Bot, ChevronRight, ChevronDown, ChevronUp, Settings2, Filter, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,16 +27,16 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 const ACTION_BORDER_COLORS: Record<string, string> = {
-  pause: 'border-l-red-500',
-  resume: 'border-l-blue-500',
-  increase_budget: 'border-l-emerald-500',
-  decrease_budget: 'border-l-amber-500',
+  pause: '#F05252',
+  resume: '#4F8EF7',
+  increase_budget: '#22D07A',
+  decrease_budget: '#F5A623',
 };
 
-const PRIORITY_BADGES: Record<number, { emoji: string; color: string }> = {
-  1: { emoji: '🔴', color: 'bg-red-500/10 text-red-400' },
-  2: { emoji: '🟡', color: 'bg-amber-500/10 text-amber-400' },
-  3: { emoji: '🟢', color: 'bg-emerald-500/10 text-emerald-400' },
+const PRIORITY_BADGES: Record<number, { emoji: string; bg: string; text: string }> = {
+  1: { emoji: '🔴', bg: 'rgba(240,82,82,0.12)', text: '#F05252' },
+  2: { emoji: '🟡', bg: 'rgba(245,166,35,0.12)', text: '#F5A623' },
+  3: { emoji: '🟢', bg: 'rgba(34,208,122,0.12)', text: '#22D07A' },
 };
 
 function ScoreCircle({ score }: { score: number }) {
@@ -83,6 +83,10 @@ export default function ActionPlanTab() {
   const [actionStates, setActionStates] = useState<Record<string, 'loading' | 'success' | 'error'>>({});
   // Pause confirmation dialog
   const [pauseConfirm, setPauseConfirm] = useState<ActionItem | null>(null);
+  // Generic confirm dialog
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; description: string; onConfirm: () => void }>({
+    open: false, title: '', description: '', onConfirm: () => {},
+  });
 
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
@@ -190,22 +194,30 @@ export default function ActionPlanTab() {
 
   const handleApply = () => {
     if (selectedActions.length === 0) return;
-    const confirmed = window.confirm(
-      `Aplicar ${selectedActions.length} ação(ões) diretamente no Meta Ads?\n\nEsta operação é irreversível.`
-    );
-    if (!confirmed) return;
-    applyAllActions(selectedActions);
+    setConfirmDialog({
+      open: true,
+      title: 'Confirmar execução',
+      description: `Aplicar ${selectedActions.length} ação(ões) diretamente no Meta Ads? Esta operação é irreversível.`,
+      onConfirm: () => {
+        setConfirmDialog(d => ({ ...d, open: false }));
+        applyAllActions(selectedActions);
+      },
+    });
   };
 
-  const handleExecuteAllUrgent = async () => {
+  const handleExecuteAllUrgent = () => {
     if (!plan) return;
     const urgent = plan.acoes.filter(a => a.prioridade === 1);
-    const confirmed = window.confirm(
-      `Executar ${urgent.length} acção(ões) urgente(s) no Meta Ads? Esta operação é irreversível.`
-    );
-    if (!confirmed) return;
-    await applyAllActions(urgent);
-    await fetchHistory();
+    setConfirmDialog({
+      open: true,
+      title: 'Executar acções urgentes',
+      description: `Executar ${urgent.length} acção(ões) urgente(s) no Meta Ads? Esta operação é irreversível.`,
+      onConfirm: async () => {
+        setConfirmDialog(d => ({ ...d, open: false }));
+        await applyAllActions(urgent);
+        await fetchHistory();
+      },
+    });
   };
 
   const fmt = (v: number) => `${currencySymbol} ${v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -287,15 +299,13 @@ export default function ActionPlanTab() {
                   <span className="text-[10px] text-text-muted font-medium tracking-wide uppercase">Saúde da Conta</span>
                   {/* Score legend */}
                   <div className="flex gap-1.5 mt-1">
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/10 text-red-400">0-39 Crítico</span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400">40-69 Médio</span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400">70+ Bom</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(240,82,82,0.12)', color: '#F05252' }}>0-39 Crítico</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(245,166,35,0.12)', color: '#F5A623' }}>40-69 Médio</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(34,208,122,0.12)', color: '#22D07A' }}>70+ Bom</span>
                   </div>
                 </>
               ) : (
-                <div className="w-24 h-24 rounded-full border-2 border-[#1E2A42] flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-text-muted" />
-                </div>
+                <div className="w-24 h-24 rounded-full bg-[#1E2A42] animate-pulse flex-shrink-0" />
               )}
             </div>
 
@@ -321,9 +331,12 @@ export default function ActionPlanTab() {
                   <p className="text-[13px] text-text-muted leading-relaxed line-clamp-3">{plan.resumo}</p>
                 </>
               ) : (
-                <div className="flex items-center gap-3 py-6">
-                  <Loader2 className="w-5 h-5 animate-spin text-text-muted" />
-                  <p className="text-sm text-text-muted">Gerando plano de ação...</p>
+                <div className="space-y-2.5 py-2 animate-pulse">
+                  <div className="h-3 bg-[#1E2A42] rounded w-48" />
+                  <div className="h-4 bg-[#1E2A42] rounded w-64" />
+                  <div className="h-4 bg-[#1E2A42] rounded w-56" />
+                  <div className="h-3 bg-[#1E2A42] rounded w-full" />
+                  <div className="h-3 bg-[#1E2A42] rounded w-4/5" />
                 </div>
               )}
             </div>
@@ -420,7 +433,7 @@ export default function ActionPlanTab() {
                 Selecionar todas ({plan.acoes.length})
               </span>
               {urgentCount > 0 && (
-                <span className="bg-red-500/10 text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full ml-auto">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full ml-auto" style={{ background: 'rgba(240,82,82,0.12)', color: '#F05252' }}>
                   🔴 {urgentCount} urgente(s)
                 </span>
               )}
@@ -440,10 +453,10 @@ export default function ActionPlanTab() {
                 return (
                   <div
                     key={action.campaign_id}
-                    className={`px-5 py-3 border-l-4 ${borderColor} transition-colors animate-slide-in-left opacity-0 [animation-fill-mode:forwards] ${
+                    className={`px-5 py-3 border-l-4 transition-colors animate-slide-in-left opacity-0 [animation-fill-mode:forwards] ${
                       isSelected ? 'bg-[#4F8EF7]/5' : ''
                     } ${actionState === 'success' ? 'opacity-50' : ''}`}
-                    style={{ animationDelay: `${actionIdx * 60}ms` }}
+                    style={{ animationDelay: `${actionIdx * 60}ms`, borderLeftColor: ACTION_BORDER_COLORS[action.tipo] || '#4A5F7A' }}
                   >
                     {/* LINE 1 */}
                     <div className="flex items-center gap-3">
@@ -452,12 +465,13 @@ export default function ActionPlanTab() {
                         onCheckedChange={() => toggleSelect(action.campaign_id)}
                       />
 
-                      <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded flex-shrink-0 ${
-                        action.tipo === 'pause' ? 'bg-red-500/10 text-red-400' :
-                        action.tipo === 'resume' ? 'bg-blue-500/10 text-blue-400' :
-                        action.tipo === 'increase_budget' ? 'bg-emerald-500/10 text-emerald-400' :
-                        'bg-amber-500/10 text-amber-400'
-                      }`}>
+                      <span
+                        className="inline-flex items-center gap-1.5 text-[10px] font-semibold px-2 py-0.5 rounded flex-shrink-0"
+                        style={{
+                          background: ACTION_BORDER_COLORS[action.tipo] ? `${ACTION_BORDER_COLORS[action.tipo]}1F` : 'rgba(79,142,247,0.12)',
+                          color: ACTION_BORDER_COLORS[action.tipo] || '#4F8EF7',
+                        }}
+                      >
                         <Icon className="w-3 h-3" />
                         {ACTION_LABELS[action.tipo]}
                       </span>
@@ -496,7 +510,10 @@ export default function ActionPlanTab() {
                         {action.impacto_estimado}
                       </span>
 
-                      <span className={`text-[10px] px-2 py-0.5 rounded ${priority.color} flex-shrink-0`}>
+                      <span
+                        className="text-[10px] px-2 py-0.5 rounded flex-shrink-0"
+                        style={{ background: priority.bg, color: priority.text }}
+                      >
                         {priority.emoji} P{action.prioridade}
                       </span>
 
@@ -596,9 +613,9 @@ export default function ActionPlanTab() {
 
         {/* ═══ EXECUTE ALL URGENT ═══ */}
         {plan && plan.acoes.filter(a => a.prioridade === 1).length > 0 && (
-          <div className="flex items-center justify-between bg-red-500/5 border border-red-500/20 rounded-xl px-5 py-3">
+          <div className="flex items-center justify-between rounded-xl px-5 py-3" style={{ background: 'rgba(240,82,82,0.06)', border: '1px solid rgba(240,82,82,0.20)' }}>
             <div>
-              <span className="text-[13px] font-semibold text-red-400">
+              <span className="text-[13px] font-semibold" style={{ color: '#F05252' }}>
                 🔴 {plan.acoes.filter(a => a.prioridade === 1).length} acção(ões) urgente(s) pendente(s)
               </span>
               <p className="text-[11px] text-text-muted mt-0.5">
@@ -608,7 +625,8 @@ export default function ActionPlanTab() {
             <Button
               onClick={handleExecuteAllUrgent}
               disabled={isApplying}
-              className="h-9 px-5 text-[12px] font-bold bg-red-600 hover:bg-red-700 text-white rounded-lg gap-2 flex-shrink-0"
+              className="h-9 px-5 text-[12px] font-bold text-white rounded-lg gap-2 flex-shrink-0"
+              style={{ background: '#F05252' }}
             >
               {isApplying ? (
                 <><Loader2 className="w-3.5 h-3.5 animate-spin" />A executar...</>
@@ -653,6 +671,26 @@ export default function ActionPlanTab() {
                 }}
               >
                 Sim, pausar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* ═══ GENERIC CONFIRM DIALOG ═══ */}
+        <Dialog open={confirmDialog.open} onOpenChange={(open) => !open && setConfirmDialog(d => ({ ...d, open: false }))}>
+          <DialogContent className="sm:max-w-md" style={{ background: '#0E1420', border: '1px solid #2A3A5C' }}>
+            <DialogHeader>
+              <DialogTitle className="text-base text-[#F0F4FF]">{confirmDialog.title}</DialogTitle>
+              <DialogDescription className="text-sm" style={{ color: '#7A8FAD' }}>
+                {confirmDialog.description}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex gap-2 sm:justify-end">
+              <Button variant="outline" size="sm" onClick={() => setConfirmDialog(d => ({ ...d, open: false }))}>
+                Cancelar
+              </Button>
+              <Button size="sm" variant="destructive" onClick={confirmDialog.onConfirm}>
+                Confirmar
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -736,8 +774,8 @@ function HistorySection({
   weekActions,
   fmt,
 }: {
-  history: any[];
-  filteredHistory: any[];
+  history: HistoryEntry[];
+  filteredHistory: HistoryEntry[];
   historyFilter: string;
   setHistoryFilter: (v: string) => void;
   weekActions: number;
@@ -793,12 +831,18 @@ function HistorySection({
                   {h.campaign_name || h.campaign_id}
                 </TableCell>
                 <TableCell className="text-[12px]">
-                  <span className={`px-2 py-0.5 rounded text-[11px] font-medium ${
-                    h.action_type === 'pause' ? 'bg-red-500/10 text-red-400' :
-                    h.action_type === 'resume' ? 'bg-blue-500/10 text-blue-400' :
-                    h.action_type.includes('increase') ? 'bg-emerald-500/10 text-emerald-400' :
-                    'bg-amber-500/10 text-amber-400'
-                  }`}>
+                  <span
+                    className="px-2 py-0.5 rounded text-[11px] font-medium"
+                    style={{
+                      background: ACTION_BORDER_COLORS[h.action_type]
+                        ? `${ACTION_BORDER_COLORS[h.action_type]}1F`
+                        : h.action_type.includes('increase')
+                          ? 'rgba(34,208,122,0.12)'
+                          : 'rgba(245,166,35,0.12)',
+                      color: ACTION_BORDER_COLORS[h.action_type]
+                        || (h.action_type.includes('increase') ? '#22D07A' : '#F5A623'),
+                    }}
+                  >
                     {ACTION_LABELS[h.action_type] || h.action_type}
                   </span>
                 </TableCell>

@@ -4,7 +4,7 @@ import { Loader2, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const CHART_GRID = '#1E2A42';
-const CHART_AXIS = '#4A5F7A';
+const CHART_AXIS = '#7A8FAD';
 const chartTooltipStyle = {
   background: '#0E1420',
   border: '1px solid #6C63FF',

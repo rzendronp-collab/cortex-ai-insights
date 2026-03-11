@@ -8,6 +8,8 @@ import { HourlyBarChart } from './HourlyBarChart';
 import { mockCampaigns, mockDailyData, mockHourlyData, mockGenderData, mockAgeData, mockPlatformData, getRoasColor, formatCurrency, formatNumber } from '@/lib/mockData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, ReferenceLine, Line, ComposedChart, Legend, LineChart } from 'recharts';
 import { Inbox, Zap, Loader2, RefreshCw, ArrowUpDown, ChevronUp, ChevronDown } from 'lucide-react';
+import TopBottomCards from './TopBottomCards';
+import RoasWeekdayChart from './RoasWeekdayChart';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -858,6 +860,12 @@ export default function OverviewTab() {
            })}
          </div>
        </div>
+
+      {/* ─── Top / Bottom Campaigns ─── */}
+      <TopBottomCards campaigns={campaigns} currencySymbol={currency} />
+
+      {/* ─── ROAS by Weekday ─── */}
+      <RoasWeekdayChart dailyData={dailyData} roasTarget={roasTarget} />
     </div>
   );
 }

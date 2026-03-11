@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, ArrowUpDown, ArrowDown, ArrowUp, Pencil, Download, StickyNote, Columns3, GripVertical, ExternalLink, Check, X, Copy } from 'lucide-react';
+import { ChevronDown, ChevronRight, Inbox, Loader2, Sparkles, Clock, BarChart3, TrendingUp, TrendingDown, LineChart, ArrowUpDown, ArrowDown, ArrowUp, Pencil, Download, StickyNote, Columns3, GripVertical, ExternalLink, Check, X, Copy, Brain, Eye, Image } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useProfile } from '@/hooks/useProfile';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
@@ -7,6 +7,7 @@ import { useCampaignNotes } from '@/hooks/useCampaignNotes';
 import { useAuth } from '@/hooks/useAuth';
 import { useColumnPreferences, ALL_COLUMNS } from '@/hooks/useColumnPreferences';
 import { useAdsets, ProcessedAdset } from '@/hooks/useAdsets';
+import { useAds, ProcessedAd } from '@/hooks/useAds';
 import { useCampaignActions } from '@/hooks/useCampaignActions';
 import { getRoasColor, formatCurrency, formatNumber } from '@/lib/mockData';
 import { ProcessedCampaign } from '@/hooks/useMetaData';
@@ -25,6 +26,8 @@ import { HourlyBarChart } from './HourlyBarChart';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import AIAnalysisDrawer from './AIAnalysisDrawer';
+import PeriodSelector from '@/components/ui/PeriodSelector';
 
 function SortableColumnItem({ id, label, checked, onToggle }: { id: string; label: string; checked: boolean; onToggle: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
@@ -227,7 +230,7 @@ export default function CampaignsTab() {
   const [duplicateKeepActive, setDuplicateKeepActive] = useState(false);
   const [duplicateLoading, setDuplicateLoading] = useState(false);
 
-  const { analysisData, selectedAccountId, selectedPeriod, currencySymbol, setAnalysisForAccount } = useDashboard();
+  const { analysisData, selectedAccountId, selectedPeriod, setSelectedPeriod, currencySymbol, setAnalysisForAccount } = useDashboard();
   const { profile } = useProfile();
   const { user } = useAuth();
   const { callMetaApi, isConnected } = useMetaConnection();
@@ -244,6 +247,26 @@ export default function CampaignsTab() {
     }
   }, [orderedColumns, reorderColumns]);
   const { adsets, adsetsLoading, fetchAdsets } = useAdsets();
+  const { ads, adsLoading, fetchAds } = useAds();
+
+  // 3rd level: expanded ad set showing ads
+  const [adsExpandedId, setAdsExpandedId] = useState<string | null>(null);
+
+  // AI Analysis Drawer state
+  const [aiDrawer, setAiDrawer] = useState<{ open: boolean; level: 'campaign' | 'adset' | 'ad'; name: string; metrics: Record<string, number | string> }>({ open: false, level: 'campaign', name: '', metrics: {} });
+
+  // Creative Preview Sheet state
+  const [previewAd, setPreviewAd] = useState<ProcessedAd | null>(null);
+
+  // Adset/Ad toggle state
+  const [togglingSubIds, setTogglingSubIds] = useState<Set<string>>(new Set());
+  const [localSubStatuses, setLocalSubStatuses] = useState<Record<string, string>>({});
+
+  // Adset inline budget edit
+  const [editingAdsetBudgetId, setEditingAdsetBudgetId] = useState<string | null>(null);
+  const [editingAdsetBudgetValue, setEditingAdsetBudgetValue] = useState('');
+  const [savingAdsetBudgetId, setSavingAdsetBudgetId] = useState<string | null>(null);
+
   const roasTarget = profile?.roas_target || 3.0;
   const currency = currencySymbol;
 
@@ -535,6 +558,43 @@ export default function CampaignsTab() {
     setBulkLoading(false);
     toast.success(`${successCount}/${ids.length} campanhas ${action === 'ACTIVE' ? 'ativadas' : 'pausadas'} ✓`);
   }, [selectedIds, callMetaApi, analysisData, selectedAccountId, selectedPeriod, setAnalysisForAccount]);
+
+  // Toggle adset/ad status
+  const executeSubToggle = useCallback(async (entityId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+    setTogglingSubIds(prev => new Set(prev).add(entityId));
+    try {
+      await callMetaApi(entityId, { status: newStatus, _method: 'POST' });
+      setLocalSubStatuses(prev => ({ ...prev, [entityId]: newStatus }));
+      toast.success(newStatus === 'ACTIVE' ? 'Ativado ✓' : 'Pausado ✓');
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao alterar status.');
+    } finally {
+      setTogglingSubIds(prev => { const n = new Set(prev); n.delete(entityId); return n; });
+    }
+  }, [callMetaApi]);
+
+  // Save adset budget inline
+  const saveAdsetBudgetInline = useCallback(async (adsetId: string) => {
+    const val = parseFloat(editingAdsetBudgetValue);
+    if (isNaN(val) || val <= 0) { setEditingAdsetBudgetId(null); return; }
+    setSavingAdsetBudgetId(adsetId);
+    setEditingAdsetBudgetId(null);
+    try {
+      const budgetCents = String(Math.round(val * 100));
+      await callMetaApi(adsetId, { daily_budget: budgetCents, _method: 'POST' });
+      toast.success('Budget do adset atualizado ✓');
+    } catch (err: any) {
+      toast.error(err?.message || 'Erro ao atualizar budget do adset.');
+    } finally {
+      setSavingAdsetBudgetId(null);
+    }
+  }, [editingAdsetBudgetValue, callMetaApi]);
+
+  // Open AI Drawer for any level
+  const openAiDrawer = useCallback((level: 'campaign' | 'adset' | 'ad', name: string, metrics: Record<string, number | string>) => {
+    setAiDrawer({ open: true, level, name, metrics });
+  }, []);
 
   // Open in Meta Ads Manager
   const openInMeta = useCallback((campaignId: string) => {
@@ -892,8 +952,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
           )}
         </div>
 
-        {/* Export CSV + Columns */}
+        {/* Period + Export CSV + Columns */}
         <div className="flex items-center gap-2 shrink-0">
+          <PeriodSelector value={selectedPeriod} onChange={setSelectedPeriod} />
           <Popover>
             <PopoverTrigger asChild>
               <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-border-default rounded-md text-text-secondary hover:text-text-primary transition-colors">
@@ -1303,9 +1364,14 @@ Responda SOMENTE com o JSON, sem markdown.`;
                         />
                       </td>
                       {activeColumns.map(col => renderCell(col.id))}
-                      {/* Actions: expand + duplicate + open in meta */}
+                      {/* Actions: AI + duplicate + open in meta + expand */}
                       <td className="px-2" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-1">
+                          <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                            <button onClick={() => openAiDrawer('campaign', c.name, { Gasto: c.spend, Receita: c.revenue, ROAS: c.roas, Vendas: c.purchases, CTR: c.ctr, CPM: c.cpm })} className="p-1 text-[#6C63FF]/60 hover:text-[#6C63FF] transition-colors">
+                              <Brain className="w-3.5 h-3.5" />
+                            </button>
+                          </TooltipTrigger><TooltipContent><p className="text-xs">Analisar com IA</p></TooltipContent></Tooltip></TooltipProvider>
                           <TooltipProvider><Tooltip><TooltipTrigger asChild>
                             <button onClick={() => { setDuplicateName(`Cópia de ${localNames[c.id] || c.name}`); setDuplicateKeepActive(false); setDuplicateDialog({ id: c.id, name: localNames[c.id] || c.name }); }} className="p-1 text-muted-foreground hover:text-primary transition-colors">
                               <Copy className="w-3.5 h-3.5" />
@@ -1353,6 +1419,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                 <table className="w-full text-left text-xs">
                                   <thead>
                                     <tr className="border-b border-[#1F2937]/50">
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase w-10"></th>
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase w-10">Status</th>
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase">Nome</th>
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">Gasto</th>
@@ -1361,34 +1428,218 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">CTR</th>
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">CPM</th>
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-right">Budget</th>
+                                      <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase text-center w-12">Ações</th>
                                     </tr>
                                   </thead>
                                   <tbody>
                                     {campaignAdsets.map(adset => {
-                                      const adsetActive = adset.status === 'ACTIVE';
+                                      const effAdsetStatus = localSubStatuses[adset.id] || adset.status;
+                                      const adsetActive = effAdsetStatus === 'ACTIVE';
+                                      const isAdsetToggling = togglingSubIds.has(adset.id);
+                                      const isAdsOpen = adsExpandedId === adset.id;
+                                      const adsetAds = ads.get(adset.id);
+                                      const isAdsLoading = adsLoading.has(adset.id);
                                       let abBg: string, abText: string, abBorder: string;
                                       if (adset.roas >= roasTarget) { abBg = 'rgba(16,185,129,0.12)'; abText = '#10B981'; abBorder = 'rgba(16,185,129,0.25)'; }
                                       else if (adset.roas >= roasTarget * 0.7) { abBg = 'rgba(245,158,11,0.12)'; abText = '#F59E0B'; abBorder = 'rgba(245,158,11,0.25)'; }
                                       else { abBg = 'rgba(239,68,68,0.12)'; abText = '#EF4444'; abBorder = 'rgba(239,68,68,0.25)'; }
+                                      const isEditingAdsetBgt = editingAdsetBudgetId === adset.id;
+                                      const isSavingAdsetBgt = savingAdsetBudgetId === adset.id;
                                       return (
-                                        <tr key={adset.id} className={`border-b border-[#1F2937]/30 hover:bg-[#111827]/50 transition-colors ${!adsetActive ? 'opacity-50' : ''}`}>
-                                          <td className="py-2 px-2">
-                                            <span className={`inline-block w-2 h-2 rounded-full ${adsetActive ? 'bg-success' : 'bg-muted-foreground'}`} />
-                                          </td>
-                                          <td className="py-2 px-2">
-                                            <p className="text-[12px] text-text-primary truncate max-w-[180px]">{adset.name}</p>
-                                          </td>
-                                          <td className="py-2 px-2 text-right text-[12px] text-text-primary">{formatCurrency(adset.spend, currency)}</td>
-                                          <td className="py-2 px-2 text-right">
-                                            <span className="text-[11px] font-bold inline-block" style={{ background: abBg, color: abText, border: `1px solid ${abBorder}`, borderRadius: 5, padding: '1px 6px' }}>
-                                              {adset.roas.toFixed(2)}x
-                                            </span>
-                                          </td>
-                                          <td className="py-2 px-2 text-right text-[12px] text-text-primary">{adset.purchases}</td>
-                                          <td className="py-2 px-2 text-right text-[12px] text-text-primary">{adset.ctr.toFixed(2)}%</td>
-                                          <td className="py-2 px-2 text-right text-[12px] text-text-primary">{formatCurrency(adset.cpm, currency)}</td>
-                                          <td className="py-2 px-2 text-right text-[12px] text-text-primary">{adset.dailyBudget != null ? formatCurrency(adset.dailyBudget, currency) : '—'}</td>
-                                        </tr>
+                                        <React.Fragment key={adset.id}>
+                                          <tr className={`border-b border-[#1F2937]/30 hover:bg-[#111827]/50 transition-colors ${!adsetActive ? 'opacity-50' : ''}`}>
+                                            {/* Expand chevron */}
+                                            <td className="py-2 px-2">
+                                              <button
+                                                onClick={() => {
+                                                  const next = isAdsOpen ? null : adset.id;
+                                                  setAdsExpandedId(next);
+                                                  if (next) fetchAds(adset.id, selectedPeriod);
+                                                }}
+                                                className="p-0.5 text-muted-foreground hover:text-foreground"
+                                              >
+                                                <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${isAdsOpen ? 'rotate-90' : ''}`} />
+                                              </button>
+                                            </td>
+                                            {/* Toggle */}
+                                            <td className="py-2 px-2" onClick={e => e.stopPropagation()}>
+                                              {isAdsetToggling ? (
+                                                <div className="w-3.5 h-3.5 border-2 border-muted-foreground border-t-primary rounded-full animate-spin" />
+                                              ) : (
+                                                <button
+                                                  onClick={() => executeSubToggle(adset.id, effAdsetStatus)}
+                                                  className="relative inline-flex items-center cursor-pointer"
+                                                  style={{ width: 32, height: 18, borderRadius: 9 }}
+                                                >
+                                                  <span className="block w-full h-full rounded-[9px] transition-colors duration-200" style={{ backgroundColor: adsetActive ? '#10B981' : '#374151' }} />
+                                                  <span className="absolute block w-3.5 h-3.5 bg-white rounded-full shadow transition-transform duration-200" style={{ top: 2, left: adsetActive ? 15 : 2 }} />
+                                                </button>
+                                              )}
+                                            </td>
+                                            <td className="py-2 px-2">
+                                              <p className="text-[12px] text-text-primary truncate max-w-[180px]">{adset.name}</p>
+                                            </td>
+                                            <td className="py-2 px-2 text-right text-[12px] text-text-primary">{formatCurrency(adset.spend, currency)}</td>
+                                            <td className="py-2 px-2 text-right">
+                                              <span className="text-[11px] font-bold inline-block" style={{ background: abBg, color: abText, border: `1px solid ${abBorder}`, borderRadius: 5, padding: '1px 6px' }}>
+                                                {adset.roas.toFixed(2)}x
+                                              </span>
+                                            </td>
+                                            <td className="py-2 px-2 text-right text-[12px] text-text-primary">{adset.purchases}</td>
+                                            <td className="py-2 px-2 text-right text-[12px] text-text-primary">{adset.ctr.toFixed(2)}%</td>
+                                            <td className="py-2 px-2 text-right text-[12px] text-text-primary">{formatCurrency(adset.cpm, currency)}</td>
+                                            {/* Budget inline edit */}
+                                            <td className="py-2 px-2 text-right" onClick={e => e.stopPropagation()}>
+                                              {isEditingAdsetBgt ? (
+                                                <input
+                                                  autoFocus
+                                                  type="number"
+                                                  step="0.01"
+                                                  min="1"
+                                                  value={editingAdsetBudgetValue}
+                                                  onChange={e => setEditingAdsetBudgetValue(e.target.value)}
+                                                  onKeyDown={e => {
+                                                    if (e.key === 'Enter') saveAdsetBudgetInline(adset.id);
+                                                    if (e.key === 'Escape') setEditingAdsetBudgetId(null);
+                                                  }}
+                                                  onBlur={() => saveAdsetBudgetInline(adset.id)}
+                                                  className="w-20 text-[11px] text-right bg-transparent border border-primary/40 rounded px-1 py-0.5 text-text-primary outline-none focus:ring-1 focus:ring-primary"
+                                                />
+                                              ) : (
+                                                <div className="flex items-center justify-end gap-1 group/abgt">
+                                                  {isSavingAdsetBgt && <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />}
+                                                  <span className="text-[12px] text-text-primary">{adset.dailyBudget != null ? formatCurrency(adset.dailyBudget, currency) : '—'}</span>
+                                                  {adset.dailyBudget != null && (
+                                                    <Pencil className="w-2.5 h-2.5 shrink-0 text-muted-foreground/0 group-hover/abgt:text-muted-foreground cursor-pointer hover:text-primary transition-all" onClick={() => { setEditingAdsetBudgetId(adset.id); setEditingAdsetBudgetValue(adset.dailyBudget?.toFixed(2) || ''); }} />
+                                                  )}
+                                                </div>
+                                              )}
+                                            </td>
+                                            {/* Actions: AI analysis */}
+                                            <td className="py-2 px-2 text-center">
+                                              <TooltipProvider><Tooltip><TooltipTrigger asChild>
+                                                <button
+                                                  onClick={() => openAiDrawer('adset', adset.name, { Gasto: adset.spend, ROAS: adset.roas, Vendas: adset.purchases, CTR: adset.ctr, CPM: adset.cpm })}
+                                                  className="p-1 text-[#6C63FF]/60 hover:text-[#6C63FF] transition-colors"
+                                                >
+                                                  <Brain className="w-3.5 h-3.5" />
+                                                </button>
+                                              </TooltipTrigger><TooltipContent><p className="text-xs">Analisar com IA</p></TooltipContent></Tooltip></TooltipProvider>
+                                            </td>
+                                          </tr>
+                                          {/* ADS SUB-SUB-TABLE (3rd level) */}
+                                          {isAdsOpen && (
+                                            <tr className="bg-[#080B14] border-b border-[#1F2937]/20">
+                                              <td colSpan={10} className="p-0">
+                                                <div className="pl-16 pr-4 py-2 border-l-2 border-l-[#6C63FF]/30 animate-fade-up">
+                                                  <p className="text-[9px] uppercase text-muted-foreground font-semibold tracking-wider mb-1.5">Anúncios</p>
+                                                  {isAdsLoading ? (
+                                                    <div className="space-y-1.5">
+                                                      {[0,1,2].map(i => (
+                                                        <div key={i} className="flex items-center gap-3 py-1.5">
+                                                          <Skeleton className="h-3.5 w-6" />
+                                                          <Skeleton className="h-8 w-8 rounded" />
+                                                          <Skeleton className="h-3.5 w-32" />
+                                                          <Skeleton className="h-3.5 w-14" />
+                                                          <Skeleton className="h-3.5 w-14" />
+                                                          <Skeleton className="h-3.5 w-10" />
+                                                        </div>
+                                                      ))}
+                                                    </div>
+                                                  ) : !adsetAds || adsetAds.length === 0 ? (
+                                                    <p className="text-[11px] text-muted-foreground py-2">Nenhum anúncio encontrado</p>
+                                                  ) : (
+                                                    <table className="w-full text-left text-[11px]">
+                                                      <thead>
+                                                        <tr className="border-b border-[#1F2937]/30">
+                                                          <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase w-8">St</th>
+                                                          <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase w-10"></th>
+                                                          <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase">Nome</th>
+                                                          <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase text-right">Gasto</th>
+                                                          <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase text-right">ROAS</th>
+                                                          <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase text-right">CTR</th>
+                                                          <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase text-right">CPM</th>
+                                                          <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase text-center w-16">Ações</th>
+                                                        </tr>
+                                                      </thead>
+                                                      <tbody>
+                                                        {adsetAds.map(ad => {
+                                                          const effAdStatus = localSubStatuses[ad.id] || ad.status;
+                                                          const adActive = effAdStatus === 'ACTIVE';
+                                                          const isAdToggling = togglingSubIds.has(ad.id);
+                                                          let adRBg: string, adRText: string, adRBorder: string;
+                                                          if (ad.roas >= roasTarget) { adRBg = 'rgba(16,185,129,0.12)'; adRText = '#10B981'; adRBorder = 'rgba(16,185,129,0.25)'; }
+                                                          else if (ad.roas >= roasTarget * 0.7) { adRBg = 'rgba(245,158,11,0.12)'; adRText = '#F59E0B'; adRBorder = 'rgba(245,158,11,0.25)'; }
+                                                          else { adRBg = 'rgba(239,68,68,0.12)'; adRText = '#EF4444'; adRBorder = 'rgba(239,68,68,0.25)'; }
+                                                          return (
+                                                            <tr key={ad.id} className={`border-b border-[#1F2937]/20 hover:bg-[#0E1420]/50 transition-colors ${!adActive ? 'opacity-50' : ''}`}>
+                                                              {/* Toggle */}
+                                                              <td className="py-1.5 px-1.5" onClick={e => e.stopPropagation()}>
+                                                                {isAdToggling ? (
+                                                                  <div className="w-3 h-3 border-2 border-muted-foreground border-t-primary rounded-full animate-spin" />
+                                                                ) : (
+                                                                  <button
+                                                                    onClick={() => executeSubToggle(ad.id, effAdStatus)}
+                                                                    className="relative inline-flex items-center cursor-pointer"
+                                                                    style={{ width: 28, height: 16, borderRadius: 8 }}
+                                                                  >
+                                                                    <span className="block w-full h-full rounded-[8px] transition-colors duration-200" style={{ backgroundColor: adActive ? '#10B981' : '#374151' }} />
+                                                                    <span className="absolute block w-3 h-3 bg-white rounded-full shadow transition-transform duration-200" style={{ top: 1.5, left: adActive ? 13 : 1.5 }} />
+                                                                  </button>
+                                                                )}
+                                                              </td>
+                                                              {/* Thumbnail */}
+                                                              <td className="py-1.5 px-1.5">
+                                                                {ad.thumbnailUrl ? (
+                                                                  <button onClick={() => setPreviewAd(ad)} className="w-8 h-8 rounded overflow-hidden border border-[#1F2937] hover:border-[#4F8EF7] transition-colors">
+                                                                    <img src={ad.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                                                                  </button>
+                                                                ) : (
+                                                                  <div className="w-8 h-8 rounded bg-[#1F2937] flex items-center justify-center">
+                                                                    <Image className="w-3 h-3 text-muted-foreground" />
+                                                                  </div>
+                                                                )}
+                                                              </td>
+                                                              <td className="py-1.5 px-1.5">
+                                                                <p className="text-[11px] text-text-primary truncate max-w-[160px]">{ad.name}</p>
+                                                              </td>
+                                                              <td className="py-1.5 px-1.5 text-right text-text-primary">{formatCurrency(ad.spend, currency)}</td>
+                                                              <td className="py-1.5 px-1.5 text-right">
+                                                                {ad.spend > 0 ? (
+                                                                  <span className="text-[10px] font-bold inline-block" style={{ background: adRBg, color: adRText, border: `1px solid ${adRBorder}`, borderRadius: 4, padding: '0px 5px' }}>
+                                                                    {ad.roas.toFixed(2)}x
+                                                                  </span>
+                                                                ) : <span className="text-text-muted">—</span>}
+                                                              </td>
+                                                              <td className="py-1.5 px-1.5 text-right text-text-primary">{ad.ctr.toFixed(2)}%</td>
+                                                              <td className="py-1.5 px-1.5 text-right text-text-primary">{formatCurrency(ad.cpm, currency)}</td>
+                                                              {/* Actions */}
+                                                              <td className="py-1.5 px-1.5 text-center">
+                                                                <div className="flex items-center justify-center gap-1">
+                                                                  {ad.thumbnailUrl && (
+                                                                    <button onClick={() => setPreviewAd(ad)} className="p-0.5 text-muted-foreground hover:text-[#4F8EF7] transition-colors">
+                                                                      <Eye className="w-3 h-3" />
+                                                                    </button>
+                                                                  )}
+                                                                  <button
+                                                                    onClick={() => openAiDrawer('ad', ad.name, { Gasto: ad.spend, ROAS: ad.roas, CTR: ad.ctr, CPM: ad.cpm, Compras: ad.purchases })}
+                                                                    className="p-0.5 text-[#6C63FF]/60 hover:text-[#6C63FF] transition-colors"
+                                                                  >
+                                                                    <Brain className="w-3 h-3" />
+                                                                  </button>
+                                                                </div>
+                                                              </td>
+                                                            </tr>
+                                                          );
+                                                        })}
+                                                      </tbody>
+                                                    </table>
+                                                  )}
+                                                </div>
+                                              </td>
+                                            </tr>
+                                          )}
+                                        </React.Fragment>
                                       );
                                     })}
                                   </tbody>
@@ -1879,6 +2130,100 @@ Responda SOMENTE com o JSON, sem markdown.`;
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Creative Preview Sheet */}
+      {previewAd && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setPreviewAd(null)} />
+          <div className="relative w-[380px] max-w-full h-full bg-[#0E1420] border-l border-[#1E2A42] flex flex-col animate-slide-in-left">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#1E2A42]">
+              <div className="flex items-center gap-2">
+                <Image className="w-4 h-4 text-[#4F8EF7]" />
+                <h3 className="text-[14px] font-semibold text-[#F0F4FF]">Preview Criativo</h3>
+              </div>
+              <button onClick={() => setPreviewAd(null)} className="p-1 text-[#4A5F7A] hover:text-[#F0F4FF] transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {/* Thumbnail */}
+              {previewAd.thumbnailUrl && (
+                <div className="px-5 pt-4">
+                  <img src={previewAd.thumbnailUrl} alt={previewAd.name} className="w-full rounded-lg border border-[#1E2A42]" />
+                </div>
+              )}
+
+              {/* Ad Info */}
+              <div className="px-5 py-4 space-y-3">
+                <div>
+                  <p className="text-[10px] text-[#4A5F7A] uppercase mb-1">Nome</p>
+                  <p className="text-[13px] font-semibold text-[#F0F4FF]">{previewAd.name}</p>
+                </div>
+                {previewAd.headline && (
+                  <div>
+                    <p className="text-[10px] text-[#4A5F7A] uppercase mb-1">Headline</p>
+                    <p className="text-[12px] text-[#F0F4FF]">{previewAd.headline}</p>
+                  </div>
+                )}
+                {previewAd.body && (
+                  <div>
+                    <p className="text-[10px] text-[#4A5F7A] uppercase mb-1">Body</p>
+                    <p className="text-[12px] text-[#7A8FAD] leading-relaxed">{previewAd.body}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Metrics Grid */}
+              <div className="px-5 pb-4">
+                <p className="text-[10px] text-[#4A5F7A] uppercase mb-2 font-semibold">Métricas</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { label: 'Gasto', value: formatCurrency(previewAd.spend, currency) },
+                    { label: 'ROAS', value: `${previewAd.roas.toFixed(2)}x`, color: previewAd.roas >= roasTarget ? '#10B981' : previewAd.roas >= roasTarget * 0.7 ? '#F59E0B' : '#EF4444' },
+                    { label: 'CTR', value: `${previewAd.ctr.toFixed(2)}%` },
+                    { label: 'CPM', value: formatCurrency(previewAd.cpm, currency) },
+                    { label: 'Impressões', value: formatNumber(previewAd.impressions) },
+                    { label: 'Cliques', value: formatNumber(previewAd.clicks) },
+                    { label: 'Compras', value: String(previewAd.purchases) },
+                    { label: 'Receita', value: formatCurrency(previewAd.revenue, currency) },
+                  ].map(m => (
+                    <div key={m.label} className="bg-[#080B14] rounded-lg p-2.5 border border-[#1E2A42]">
+                      <p className="text-[9px] text-[#4A5F7A] uppercase">{m.label}</p>
+                      <p className="text-[13px] font-bold mt-0.5" style={{ color: m.color || '#F0F4FF' }}>{m.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Analyze with AI button */}
+              <div className="px-5 pb-5">
+                <button
+                  onClick={() => {
+                    setPreviewAd(null);
+                    openAiDrawer('ad', previewAd.name, { Gasto: previewAd.spend, ROAS: previewAd.roas, CTR: previewAd.ctr, CPM: previewAd.cpm, Compras: previewAd.purchases });
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-[12px] font-semibold bg-[#6C63FF] text-white rounded-lg hover:bg-[#5B53E6] transition-colors"
+                >
+                  <Brain className="w-4 h-4" />
+                  Analisar com IA
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Analysis Drawer */}
+      <AIAnalysisDrawer
+        open={aiDrawer.open}
+        onClose={() => setAiDrawer(prev => ({ ...prev, open: false }))}
+        level={aiDrawer.level}
+        name={aiDrawer.name}
+        metrics={aiDrawer.metrics}
+        roasTarget={roasTarget}
+      />
     </div>
   );
 }

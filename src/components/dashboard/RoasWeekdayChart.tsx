@@ -19,10 +19,11 @@ export default function RoasWeekdayChart({ dailyData, roasTarget }: Props) {
     const buckets: Record<number, { spend: number; revenue: number; count: number }> = {};
     for (let i = 0; i < 7; i++) buckets[i] = { spend: 0, revenue: 0, count: 0 };
 
-    dailyData.forEach(d => {
+    dailyData.filter(Boolean).forEach(d => {
+      if (!d) return;
       const dow = new Date(d.date).getDay();
-      buckets[dow].spend += d.spend;
-      buckets[dow].revenue += d.revenue;
+      buckets[dow].spend += d.spend || 0;
+      buckets[dow].revenue += d.revenue || 0;
       buckets[dow].count++;
     });
 

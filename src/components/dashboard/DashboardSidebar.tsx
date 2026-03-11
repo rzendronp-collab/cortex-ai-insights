@@ -88,15 +88,30 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
 
   const initials = profile?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 
-  const navItems = [
-    { id: 'overview', label: 'Resumo', icon: LayoutDashboard },
-    { id: 'campaigns', label: 'Campanhas', icon: BarChart2 },
-    { id: 'comparison', label: 'Comparação', icon: Calendar },
-    { id: 'rules', label: 'Regras', icon: Shield },
-    { id: 'consolidated', label: 'Relatórios', icon: FileText },
-    { id: 'report', label: 'Notificações', icon: Bell },
-    { id: 'action-plan', label: 'CORTEX', icon: Zap },
-    { id: 'chat', label: 'Chat IA', icon: MessageSquare },
+  const navSections = [
+    {
+      label: 'Analytics',
+      items: [
+        { id: 'overview', label: 'Resumo', icon: LayoutDashboard },
+        { id: 'campaigns', label: 'Campanhas', icon: BarChart2 },
+        { id: 'comparison', label: 'Comparação', icon: Calendar },
+        { id: 'consolidated', label: 'Relatórios', icon: FileText },
+      ],
+    },
+    {
+      label: 'Intelligence',
+      items: [
+        { id: 'action-plan', label: 'CORTEX', icon: Zap },
+        { id: 'rules', label: 'Regras', icon: Shield },
+        { id: 'chat', label: 'Chat IA', icon: MessageSquare },
+      ],
+    },
+    {
+      label: 'Sistema',
+      items: [
+        { id: 'report', label: 'Notificações', icon: Bell },
+      ],
+    },
   ];
 
   const getAccountStatus = (accountId: string | null) => {
@@ -159,23 +174,28 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
           </div>
         )}
 
-        {navItems.map(item => {
-          const isActive = currentTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => handleNavClick(item.id)}
-              className={`flex items-center gap-2 w-full px-3 py-[7px] rounded-md transition-all duration-150 text-[12px] ${
-                isActive
-                  ? 'bg-[#6366F1]/10 text-[#818CF8] font-medium'
-                  : 'text-[#9CA3AF] hover:bg-[#111827] hover:text-[#F9FAFB]'
-              }`}
-            >
-              <item.icon className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
+        {navSections.map(section => (
+          <div key={section.label} className="mb-1">
+            <p className="text-[8px] font-semibold text-[#4B5563] uppercase tracking-[0.12em] px-3 pt-2 pb-1">{section.label}</p>
+            {section.items.map(item => {
+              const isActive = currentTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleNavClick(item.id)}
+                  className={`flex items-center gap-2 w-full px-3 py-[7px] rounded-md transition-all duration-150 text-[12px] ${
+                    isActive
+                      ? item.id === 'action-plan' ? 'bg-[#6366F1]/15 text-[#818CF8] font-semibold' : 'bg-[#6366F1]/10 text-[#818CF8] font-medium'
+                      : 'text-[#9CA3AF] hover:bg-[#111827] hover:text-[#F9FAFB]'
+                  }`}
+                >
+                  <item.icon className={`w-3.5 h-3.5 flex-shrink-0 ${item.id === 'action-plan' && isActive ? 'text-[#6366F1]' : ''}`} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </div>
 
       {/* Accounts */}

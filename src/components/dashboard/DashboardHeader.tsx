@@ -283,16 +283,16 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
 
       {/* Metrics bar — compact, no heavy borders */}
       {ad && (
-        <div className="h-7 flex items-center gap-4 px-4 md:px-5 bg-[#0A0F1E]/60 text-[10px] overflow-x-auto hide-scrollbar">
-          <span className={`font-bold whitespace-nowrap ${getRoasColor(avgRoas, roasTarget)}`}>
+        <div className="h-7 flex items-center gap-5 px-4 md:px-5 bg-[#0A0F1E]/40 text-[10px] overflow-x-auto hide-scrollbar">
+          <span className={`font-semibold whitespace-nowrap ${getRoasColor(avgRoas, roasTarget)}`}>
             ROAS {avgRoas.toFixed(1)}x
-            {delta !== null && delta !== 0 && <span className="opacity-60 ml-1">{delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(0)}%</span>}
+            {delta !== null && delta !== 0 && <span className="opacity-50 ml-1 font-normal">{delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(0)}%</span>}
           </span>
-          <span className="text-[#9CA3AF] whitespace-nowrap">Gasto <span className="font-semibold text-[#F9FAFB]">{currencySymbol} {(totalSpend / 1000).toFixed(1)}k</span></span>
-          <span className="text-[#9CA3AF] whitespace-nowrap hidden sm:inline">Receita <span className="font-semibold text-[#10B981]">{currencySymbol} {(totalRevenue / 1000).toFixed(1)}k</span></span>
-          <span className="text-[#9CA3AF] whitespace-nowrap hidden md:inline">Vendas <span className="font-semibold text-[#F9FAFB]">{totalSales}</span></span>
+          <span className="text-[#6B7280] whitespace-nowrap">Gasto <span className="font-medium text-[#E5E7EB]">{currencySymbol} {(totalSpend / 1000).toFixed(1)}k</span></span>
+          <span className="text-[#6B7280] whitespace-nowrap hidden sm:inline">Receita <span className="font-medium text-[#10B981]/80">{currencySymbol} {(totalRevenue / 1000).toFixed(1)}k</span></span>
+          <span className="text-[#6B7280] whitespace-nowrap hidden md:inline">Vendas <span className="font-medium text-[#E5E7EB]">{totalSales}</span></span>
           {isFromCache && (
-            <span className="text-[#6366F1]/50 hidden md:inline whitespace-nowrap">cache</span>
+            <span className="text-[#6366F1]/30 hidden md:inline whitespace-nowrap">cache</span>
           )}
         </div>
       )}

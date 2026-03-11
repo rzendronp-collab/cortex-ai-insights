@@ -23,11 +23,23 @@ export interface CreativeScore {
   roas: number;
 }
 
+export interface GeneratedAd {
+  hook: string;
+  headline: string;
+  body: string;
+  cta: string;
+  angulo: string;
+  copy_b: string;
+  teste: string;
+}
+
 export function useCortexCreatives() {
   const { callMetaApi } = useMetaConnection();
   const { currencySymbol } = useDashboard();
   const [creatives, setCreatives] = useState<CreativeScore[]>([]);
   const [loading, setLoading] = useState(false);
+  const [generatedAds, setGeneratedAds] = useState<GeneratedAd[]>([]);
+  const [generating, setGenerating] = useState(false);
 
   const analyzeCreatives = useCallback(async (accountIds: string[]) => {
     setLoading(true);
@@ -129,7 +141,53 @@ Responde APENAS o array JSON, sem markdown.`;
     }
   }, [callMetaApi, currencySymbol]);
 
-  return { creatives, loading, analyzeCreatives };
+  const generateAdCopy = useCallback(async (topCreatives: CreativeScore[], niche: string) => {
+    setGenerating(true);
+    try {
+      const prompt = `Baseado nos top criativos abaixo de Meta Ads no nicho "${niche}", gere 3 novos anúncios.
+
+Top criativos para referência:
+${topCreatives.slice(0, 5).map(c => `- "${c.name}" (Score: ${c.score}, ROAS: ${c.roas.toFixed(1)}x, CTR: ${c.ctr.toFixed(2)}%)`).join('\n')}
+
+Para cada anúncio, gere no formato JSON array:
+[{
+  "hook": "Frase de abertura impactante (max 10 palavras)",
+  "headline": "Título principal do anúncio",
+  "body": "Corpo do anúncio (2-3 frases persuasivas)",
+  "cta": "Call to action direto",
+  "angulo": "Ângulo de persuasão usado (ex: escassez, prova social, autoridade)",
+  "copy_b": "Versão B alternativa do body para teste A/B",
+  "teste": "Hipótese do teste: o que estamos testando com essa variação"
+}]
+
+Responde APENAS o array JSON, sem markdown.`;
+
+      const { data, error } = await supabase.functions.invoke('claude-proxy', {
+        body: {
+          system: 'Você é um copywriter expert em anúncios de Meta Ads. Gere copies persuasivos e testáveis. Responda SOMENTE JSON válido.',
+          messages: [{ role: 'user', content: prompt }],
+          max_tokens: 4096,
+        },
+      });
+
+      if (error) throw error;
+
+      const content = data?.content || '';
+      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) throw new Error('Resposta da IA não contém JSON válido.');
+
+      const ads: GeneratedAd[] = JSON.parse(jsonMatch[0]);
+      setGeneratedAds(ads);
+      toast.success(`${ads.length} anúncios gerados!`);
+    } catch (err: any) {
+      console.error('generateAdCopy error:', err);
+      toast.error(err?.message || 'Erro ao gerar anúncios.');
+    } finally {
+      setGenerating(false);
+    }
+  }, []);
+
+  return { creatives, loading, analyzeCreatives, generatedAds, generating, generateAdCopy };
 }
 
 function extractPurchases(actions: any[]): number {

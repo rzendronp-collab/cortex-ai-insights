@@ -1,6 +1,7 @@
-import { CreativeScore } from '@/hooks/useCortexCreatives';
+import { CreativeScore, GeneratedAd } from '@/hooks/useCortexCreatives';
 import { useDashboard } from '@/context/DashboardContext';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sparkles, Copy, Check } from 'lucide-react';
+import { useState } from 'react';
 
 const STATUS_BADGES: Record<string, { label: string; color: string }> = {
   top_performer: { label: 'Top Performer', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
@@ -36,13 +37,98 @@ function ScoreCircle({ score }: { score: number }) {
   );
 }
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+      className="text-text-muted hover:text-text-primary transition-colors p-0.5"
+      title="Copiar"
+    >
+      {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+    </button>
+  );
+}
+
+function GeneratedAdsSection({ ads, generating, onGenerate }: { ads: GeneratedAd[]; generating: boolean; onGenerate: () => void }) {
+  return (
+    <div className="mt-6">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-[11px] uppercase tracking-wider text-text-muted font-semibold flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-[#6366F1]" />
+          AI Ad Generator
+        </h4>
+        <button
+          onClick={onGenerate}
+          disabled={generating}
+          className="text-[10px] font-semibold px-3 py-1.5 rounded-lg bg-[#6366F1]/15 text-[#818CF8] hover:bg-[#6366F1]/25 transition-colors disabled:opacity-40 flex items-center gap-1.5"
+        >
+          {generating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+          {generating ? 'Gerando...' : 'Gerar Anúncios'}
+        </button>
+      </div>
+
+      {ads.length > 0 && (
+        <div className="space-y-3">
+          {ads.map((ad, i) => (
+            <div key={i} className="bg-[#111827] border border-[#1F2937] rounded-xl p-4 hover:border-[#374151] transition-colors">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-semibold text-[#818CF8] bg-[#6366F1]/10 px-2 py-0.5 rounded">Anúncio {i + 1}</span>
+                <span className="text-[9px] text-text-muted bg-[#0A0F1E] px-2 py-0.5 rounded">{ad.angulo}</span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <span className="text-[9px] text-text-muted uppercase w-16 flex-shrink-0 pt-0.5">Hook</span>
+                  <p className="text-[12px] font-semibold text-text-primary flex-1">{ad.hook}</p>
+                  <CopyButton text={ad.hook} />
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-[9px] text-text-muted uppercase w-16 flex-shrink-0 pt-0.5">Título</span>
+                  <p className="text-[11px] text-text-primary flex-1">{ad.headline}</p>
+                  <CopyButton text={ad.headline} />
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-[9px] text-text-muted uppercase w-16 flex-shrink-0 pt-0.5">Body</span>
+                  <p className="text-[11px] text-text-muted flex-1">{ad.body}</p>
+                  <CopyButton text={ad.body} />
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="text-[9px] text-text-muted uppercase w-16 flex-shrink-0 pt-0.5">CTA</span>
+                  <p className="text-[11px] font-semibold text-emerald-400 flex-1">{ad.cta}</p>
+                  <CopyButton text={ad.cta} />
+                </div>
+                {ad.copy_b && (
+                  <div className="mt-2 pt-2 border-t border-[#1F2937]">
+                    <div className="flex items-start gap-2">
+                      <span className="text-[9px] text-text-muted uppercase w-16 flex-shrink-0 pt-0.5">Copy B</span>
+                      <p className="text-[11px] text-text-muted flex-1">{ad.copy_b}</p>
+                      <CopyButton text={ad.copy_b} />
+                    </div>
+                    <div className="flex items-start gap-2 mt-1">
+                      <span className="text-[9px] text-text-muted uppercase w-16 flex-shrink-0 pt-0.5">Teste</span>
+                      <p className="text-[10px] text-[#818CF8] flex-1">{ad.teste}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface Props {
   creatives: CreativeScore[];
   loading: boolean;
   onAction?: (creative: CreativeScore) => void;
+  generatedAds?: GeneratedAd[];
+  generating?: boolean;
+  onGenerateAds?: () => void;
 }
 
-export default function CortexCreativeScore({ creatives, loading, onAction }: Props) {
+export default function CortexCreativeScore({ creatives, loading, onAction, generatedAds = [], generating = false, onGenerateAds }: Props) {
   const { currencySymbol } = useDashboard();
 
   if (loading) {
@@ -64,6 +150,7 @@ export default function CortexCreativeScore({ creatives, loading, onAction }: Pr
   }
 
   return (
+    <div>
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       {creatives.map((c, i) => {
         const badge = STATUS_BADGES[c.status] || STATUS_BADGES.monitorar;
@@ -112,6 +199,12 @@ export default function CortexCreativeScore({ creatives, loading, onAction }: Pr
           </div>
         );
       })}
+    </div>
+
+    {/* AI Ad Generator */}
+    {onGenerateAds && (
+      <GeneratedAdsSection ads={generatedAds} generating={generating} onGenerate={onGenerateAds} />
+    )}
     </div>
   );
 }

@@ -4,31 +4,35 @@ import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useCortexCreatives, CreativeScore } from '@/hooks/useCortexCreatives';
 import { useCortexForecast } from '@/hooks/useCortexForecast';
 import { useCortexActions, CortexAction } from '@/hooks/useCortexActions';
+import { useCortexFatigue } from '@/hooks/useCortexFatigue';
 import { useActionPlan } from '@/hooks/useActionPlan';
 import CortexScopeSelector from '@/components/cortex/CortexScopeSelector';
 import CortexCreativeScorePanel from '@/components/cortex/CortexCreativeScore';
 import CortexForecastPanel from '@/components/cortex/CortexForecast';
 import CortexConfirmModal from '@/components/cortex/CortexConfirmModal';
 import CortexHistory from '@/components/cortex/CortexHistory';
+import CortexFatigue from '@/components/cortex/CortexFatigue';
 import { Button } from '@/components/ui/button';
-import { Loader2, Zap, Settings2, Clock, BarChart3, TrendingUp, History } from 'lucide-react';
+import { Loader2, Zap, Settings2, Clock, BarChart3, TrendingUp, History, Flame } from 'lucide-react';
 import { toast } from 'sonner';
 
-type SubTab = 'action-plan' | 'creatives' | 'forecast' | 'history';
+type SubTab = 'action-plan' | 'creatives' | 'forecast' | 'fatigue' | 'history';
 
 const SUB_TABS: { key: SubTab; label: string; icon: typeof Zap }[] = [
   { key: 'action-plan', label: 'Plano de Ação', icon: Zap },
   { key: 'creatives', label: 'Score Criativos', icon: BarChart3 },
   { key: 'forecast', label: 'Previsão', icon: TrendingUp },
+  { key: 'fatigue', label: 'Fadiga', icon: Flame },
   { key: 'history', label: 'Histórico', icon: History },
 ];
 
 export default function CortexTab() {
   const { analysisData, activeAccountIds, currencySymbol } = useDashboard();
   const { adAccounts } = useMetaConnection();
-  const { creatives, loading: creativesLoading, analyzeCreatives } = useCortexCreatives();
+  const { creatives, loading: creativesLoading, analyzeCreatives, generatedAds, generating: adGenerating, generateAdCopy } = useCortexCreatives();
   const { forecast, loading: forecastLoading, generateForecast } = useCortexForecast();
   const { executing, executeAction, history: cortexHistory, historyLoading, fetchHistory } = useCortexActions();
+  const { results: fatigueResults, loading: fatigueLoading, analyzeFatigue } = useCortexFatigue();
   const {
     plan, isGenerating, isApplying, appliedCount,
     generatePlan, applyAction, applyAllActions, simulatePlan, fetchHistory: fetchActionHistory,
@@ -86,17 +90,21 @@ export default function CortexTab() {
       setProgress('Buscando criativos...');
       await analyzeCreatives(scopeIds);
 
-      // Step 2: Forecast
+      // Step 2: Fatigue
+      setProgress('Detectando fadiga criativa...');
+      await analyzeFatigue(scopeIds);
+
+      // Step 3: Forecast
       setProgress('Gerando previsão...');
       await generateForecast();
 
-      // Step 3: Action Plan
+      // Step 4: Action Plan
       if (campaigns.length > 0) {
         setProgress('Gerando plano de ação...');
         await generatePlan(campaigns);
       }
 
-      // Step 4: History
+      // Step 5: History
       setProgress('Carregando histórico...');
       await fetchHistory(scopeIds);
 
@@ -109,7 +117,7 @@ export default function CortexTab() {
       setAnalyzing(false);
       setProgress('');
     }
-  }, [scopeIds, analyzeCreatives, generateForecast, generatePlan, campaigns, fetchHistory]);
+  }, [scopeIds, analyzeCreatives, analyzeFatigue, generateForecast, generatePlan, campaigns, fetchHistory]);
 
   const handleCreativeAction = (creative: CreativeScore) => {
     const isPause = creative.status === 'pausar';
@@ -261,6 +269,9 @@ export default function CortexTab() {
           creatives={creatives}
           loading={creativesLoading}
           onAction={handleCreativeAction}
+          generatedAds={generatedAds}
+          generating={adGenerating}
+          onGenerateAds={() => generateAdCopy(creatives.filter(c => c.score >= 60), 'Meta Ads')}
         />
       )}
 
@@ -275,6 +286,10 @@ export default function CortexTab() {
             revenue: d.revenue,
           }))}
         />
+      )}
+
+      {activeSubTab === 'fatigue' && (
+        <CortexFatigue results={fatigueResults} loading={fatigueLoading} />
       )}
 
       {activeSubTab === 'history' && (
@@ -303,6 +318,45 @@ export default function CortexTab() {
       />
     </div>
   );
+}
+
+/* ═══ CONFIDENCE SCORE (local, no API) ═══ */
+function calculateConfidence(action: any, campaigns: any[]): { score: number; label: string; color: string } {
+  let score = 50; // baseline
+
+  // Factor 1: data volume — more campaigns = more confidence
+  if (campaigns.length >= 5) score += 10;
+  else if (campaigns.length >= 3) score += 5;
+
+  // Factor 2: action has clear metrics
+  if (action.valor_atual && action.valor_novo) score += 10;
+  if (action.motivo && action.motivo.length > 20) score += 5;
+
+  // Factor 3: ROAS deviation from target
+  const campaign = campaigns.find((c: any) => c.id === action.campaign_id || c.name === action.campaign_name);
+  if (campaign) {
+    const spend = campaign.spend || 0;
+    const revenue = campaign.revenue || 0;
+    const roas = spend > 0 ? revenue / spend : 0;
+    // Strong signals (very low or very high ROAS) = more confidence
+    if (roas < 1 || roas > 5) score += 15;
+    else if (roas < 1.5 || roas > 4) score += 10;
+    // More spend = more data = more confidence
+    if (spend > 500) score += 10;
+    else if (spend > 100) score += 5;
+  }
+
+  // Factor 4: priority alignment
+  if (action.prioridade === 1) score += 5; // urgent = clearer signal
+
+  score = Math.min(99, Math.max(20, score));
+
+  let label = 'Baixa';
+  let color = 'text-red-400 bg-red-500/10';
+  if (score >= 80) { label = 'Alta'; color = 'text-emerald-400 bg-emerald-500/10'; }
+  else if (score >= 60) { label = 'Média'; color = 'text-amber-400 bg-amber-500/10'; }
+
+  return { score, label, color };
 }
 
 /* ═══ ACTION PLAN SECTION ═══ */
@@ -383,26 +437,32 @@ function ActionPlanSection({
               {p.emoji} {p.label} ({actions.length})
             </h4>
             <div className={`space-y-2 border-l-2 ${p.color} pl-4`}>
-              {actions.map((a: any) => (
-                <div key={a.campaign_id} className="bg-[#111827] border border-[#1F2937] rounded-lg p-3 flex items-center gap-3 hover:border-[#374151] transition-colors">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-medium text-text-primary truncate">{a.campaign_name}</p>
-                    <p className="text-[10px] text-text-muted">{a.motivo}</p>
+              {actions.map((a: any) => {
+                const conf = calculateConfidence(a, campaigns);
+                return (
+                  <div key={a.campaign_id} className="bg-[#111827] border border-[#1F2937] rounded-lg p-3 flex items-center gap-3 hover:border-[#374151] transition-colors">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[12px] font-medium text-text-primary truncate">{a.campaign_name}</p>
+                      <p className="text-[10px] text-text-muted">{a.motivo}</p>
+                    </div>
+                    <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${conf.color}`} title={`Confiança: ${conf.score}%`}>
+                      {conf.score}% {conf.label}
+                    </span>
+                    <span className="text-[10px] text-emerald-400 font-medium flex-shrink-0">{a.impacto_estimado}</span>
+                    <span className="text-[10px] text-text-muted flex-shrink-0">
+                      {currencySymbol} {a.valor_atual?.toFixed(0)} → {a.valor_novo?.toFixed(0)}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => applyAction(a)}
+                      className="h-7 px-3 text-[10px] font-semibold border-[#1F2937] text-text-muted hover:text-text-primary flex-shrink-0"
+                    >
+                      {a.tipo === 'pause' ? '⏸ Pausar' : a.tipo === 'increase_budget' ? '🚀 Escalar' : 'Aplicar'}
+                    </Button>
                   </div>
-                  <span className="text-[10px] text-emerald-400 font-medium flex-shrink-0">{a.impacto_estimado}</span>
-                  <span className="text-[10px] text-text-muted flex-shrink-0">
-                    {currencySymbol} {a.valor_atual?.toFixed(0)} → {a.valor_novo?.toFixed(0)}
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => applyAction(a)}
-                    className="h-7 px-3 text-[10px] font-semibold border-[#1F2937] text-text-muted hover:text-text-primary flex-shrink-0"
-                  >
-                    {a.tipo === 'pause' ? '⏸ Pausar' : a.tipo === 'increase_budget' ? '🚀 Escalar' : 'Aplicar'}
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         );

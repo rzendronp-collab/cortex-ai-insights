@@ -301,6 +301,60 @@ export type Database = {
           },
         ]
       }
+      cortex_optimizations: {
+        Row: {
+          account_id: string
+          account_name: string | null
+          action_type: string
+          ad_id: string | null
+          ad_name: string | null
+          campaign_id: string | null
+          campaign_name: string | null
+          created_at: string | null
+          expected_impact: string | null
+          id: string
+          metrics_after: Json | null
+          metrics_before: Json | null
+          reasoning: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          account_id: string
+          account_name?: string | null
+          action_type: string
+          ad_id?: string | null
+          ad_name?: string | null
+          campaign_id?: string | null
+          campaign_name?: string | null
+          created_at?: string | null
+          expected_impact?: string | null
+          id?: string
+          metrics_after?: Json | null
+          metrics_before?: Json | null
+          reasoning?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          account_id?: string
+          account_name?: string | null
+          action_type?: string
+          ad_id?: string | null
+          ad_name?: string | null
+          campaign_id?: string | null
+          campaign_name?: string | null
+          created_at?: string | null
+          expected_impact?: string | null
+          id?: string
+          metrics_after?: Json | null
+          metrics_before?: Json | null
+          reasoning?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       error_logs: {
         Row: {
           context: string | null

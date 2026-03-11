@@ -151,7 +151,7 @@ export function useCortexActions() {
 
     try {
       // Try Supabase first
-      let query = supabase
+      let query = (supabase as any)
         .from('cortex_optimizations')
         .select('*')
         .eq('user_id', user.id)

@@ -90,7 +90,17 @@ Deno.serve(async (req) => {
       graphRes = await fetch(`https://graph.facebook.com/v19.0/${path}?${qs.toString()}`);
     }
 
-    const graphData = await graphRes.json();
+    const responseText = await graphRes.text();
+    let graphData: any;
+    try {
+      graphData = responseText ? JSON.parse(responseText) : {};
+    } catch {
+      console.error("[meta-proxy] Failed to parse response:", responseText?.slice(0, 200));
+      return new Response(
+        JSON.stringify({ error: "Invalid response from Meta API", raw: responseText?.slice(0, 200) }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     if (!graphRes.ok) {
       console.error("[meta-proxy] error:", JSON.stringify(graphData));

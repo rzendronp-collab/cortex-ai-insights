@@ -3,22 +3,17 @@ import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Loader2, Clock, AlertTriangle, RefreshCw, Menu, X as XIcon, Calendar, ChevronDown, ShoppingCart, MessageSquare, Users } from 'lucide-react';
-import { AccountObjective } from '@/context/DashboardContext';
+import { Loader2, RefreshCw, Menu, Circle } from 'lucide-react';
 import AlertsPanel from './AlertsPanel';
-import DateRangePicker from '@/components/ui/DateRangePicker';
-import { getRoasColor } from '@/lib/mockData';
-
-const periods = ['Hoje', '3d', '7d', '14d', '30d'];
 
 const tabLabels: Record<string, string> = {
-  overview: 'Resumo',
+  overview: 'Visão Geral',
   campaigns: 'Campanhas',
-  'action-plan': 'CORTEX',
+  'action-plan': 'CORTEX IA',
   comparison: 'Comparação',
   consolidated: 'Relatórios',
   rules: 'Regras',
-  chat: 'Cortex Chat',
+  chat: 'Chat',
   report: 'Notificações',
 };
 
@@ -28,30 +23,12 @@ interface DashboardHeaderProps {
 
 export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps) {
   const {
-    selectedPeriod, setSelectedPeriod,
-    selectedAccountId, setSelectedAccountId,
-    dateRange, setDateRange,
-    analysisData, isFromCache, cacheTimestamp, currencySymbol,
-    activeTab, activeAccountIds, selectedAccountName,
-    setSelectedAccountName, setSelectedAccountCurrency,
-    accountObjective, setAccountObjective,
+    activeTab, activeAccountIds, selectedAccountId,
   } = useDashboard();
-  const { isTokenExpired, isTokenExpiringSoon, daysUntilExpiry, connectMeta, adAccounts } = useMetaConnection();
-  const { analyze, loading, roasTarget } = useMetaData();
+  const { isConnected, isTokenExpired, connectMeta } = useMetaConnection();
+  const { analyze, loading } = useMetaData();
   const isMobile = useIsMobile();
-
-  const [isStale, setIsStale] = useState(false);
-  const [accountDropdownOpen, setAccountDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setAccountDropdownOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+  const { profile } = useDashboard() as any;
 
   const handleAtualizar = useCallback(async () => {
     if (activeAccountIds.length === 0) return;
@@ -60,242 +37,62 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
     }
   }, [activeAccountIds, analyze]);
 
-  const checkStale = useCallback(() => {
-    if (!analysisData?.lastUpdated) { setIsStale(false); return; }
-    const age = Date.now() - new Date(analysisData.lastUpdated).getTime();
-    setIsStale(age > 60 * 60 * 1000);
-  }, [analysisData?.lastUpdated]);
-
-  useEffect(() => {
-    checkStale();
-    const interval = setInterval(checkStale, 60_000);
-    return () => clearInterval(interval);
-  }, [checkStale]);
-
-  const ad = analysisData;
-  const totalSpend = ad?.campaigns.reduce((s, c) => s + c.spend, 0) || 0;
-  const totalRevenue = ad?.campaigns.reduce((s, c) => s + c.revenue, 0) || 0;
-  const totalSales = ad?.campaigns.reduce((s, c) => s + c.purchases, 0) || 0;
-  const avgRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
-  const delta: number | null = ad && ad.campaignsPrev.length > 0
-    ? (() => {
-        const prevSpend = ad.campaignsPrev.reduce((s, c) => s + c.spend, 0);
-        const prevRevenue = ad.campaignsPrev.reduce((s, c) => s + c.revenue, 0);
-        const prevRoas = prevSpend > 0 ? prevRevenue / prevSpend : 0;
-        if (prevRoas === 0) return null;
-        return ((avgRoas - prevRoas) / prevRoas * 100);
-      })()
-    : null;
-
-  const lastTime = ad?.lastUpdated ? new Date(ad.lastUpdated).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : null;
-  const isCustomActive = selectedPeriod === 'custom' && !!dateRange;
-
-  // Account name
-  const selectedAccount = adAccounts.find(a => a.account_id === selectedAccountId);
-  const accountName = selectedAccountName || selectedAccount?.account_name || (selectedAccountId ? `act_${selectedAccountId}` : 'Selecione uma conta');
-
-  const handleSelectAccount = (account: typeof adAccounts[0]) => {
-    setSelectedAccountId(account.account_id!);
-    setSelectedAccountName(account.account_name || account.account_id!);
-    setSelectedAccountCurrency(account.currency || null);
-    setAccountDropdownOpen(false);
-  };
-
-  // Period pills
-  const periodPills = (
-    <div className="flex items-center gap-0.5">
-      {periods.map((p) => (
-        <button
-          key={p}
-          onClick={() => setSelectedPeriod(p)}
-          className={`px-2.5 py-1 text-[10px] font-medium rounded-md transition-all duration-150 ${
-            selectedPeriod === p && !isCustomActive
-              ? 'bg-[#6366F1]/15 text-[#818CF8] border border-[#6366F1]/30'
-              : 'text-[#9CA3AF] hover:text-[#F9FAFB] hover:bg-[#1F2937]/50'
-          }`}
-        >
-          {p}
-        </button>
-      ))}
-      <DateRangePicker
-        isActive={isCustomActive}
-        dateRange={dateRange}
-        onApply={(range) => setDateRange(range)}
-        onClear={() => setDateRange(null)}
-      />
-    </div>
-  );
+  const initials = 'U';
 
   return (
-    <div className="sticky top-0 z-30 bg-[#070B16]/95 backdrop-blur-xl border-b border-[#1F2937]/60">
-      {/* Token expired banner */}
-      {isTokenExpired && (
-        <div className="bg-[#EF4444]/8 border-b border-[#EF4444]/20 px-4 md:px-6 py-1.5 flex items-center gap-2">
-          <AlertTriangle className="w-3.5 h-3.5 text-[#EF4444] shrink-0" />
-          <span className="text-[10px] text-[#EF4444] font-medium truncate">Conexão Meta expirada</span>
-          <button onClick={() => connectMeta()} className="text-[10px] text-[#EF4444] underline font-semibold ml-1 shrink-0">Reconectar</button>
-        </div>
-      )}
-
-      {/* Token expiring soon banner */}
-      {!isTokenExpired && isTokenExpiringSoon && (
-        <div className="bg-[#F59E0B]/8 border-b border-[#F59E0B]/20 px-4 md:px-6 py-1.5 flex items-center gap-2">
-          <AlertTriangle className="w-3.5 h-3.5 text-[#F59E0B] shrink-0" />
-          <span className="text-[10px] text-[#F59E0B] font-medium truncate">
-            Conexão Meta expira em {daysUntilExpiry} dia{daysUntilExpiry !== 1 ? 's' : ''}
-          </span>
-          <button onClick={() => connectMeta()} className="text-[10px] text-[#F59E0B] underline font-semibold ml-1 shrink-0">Reconectar</button>
-        </div>
-      )}
-
-      {/* Main header — 52px */}
-      <div className="h-[52px] flex items-center justify-between px-4 md:px-5">
-        <div className="flex items-center gap-3 min-w-0">
-          {isMobile && onOpenSidebar && (
-            <button onClick={onOpenSidebar} className="p-1 text-[#6B7280] hover:text-[#F9FAFB] transition-colors">
-              <Menu className="w-4.5 h-4.5" />
-            </button>
-          )}
-
-          {/* Account dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => adAccounts.length > 1 && setAccountDropdownOpen(!accountDropdownOpen)}
-              className="flex items-center gap-1.5 min-w-0"
-            >
-              <h1 className="text-[13px] font-semibold text-[#F9FAFB] truncate max-w-[180px]">{accountName}</h1>
-              {adAccounts.length > 1 && <ChevronDown className={`w-3 h-3 text-[#6B7280] shrink-0 transition-transform ${accountDropdownOpen ? 'rotate-180' : ''}`} />}
-            </button>
-
-            {accountDropdownOpen && adAccounts.length > 1 && (
-              <div className="absolute top-full left-0 mt-1 w-[240px] bg-[#111827] border border-[#1F2937] rounded-lg shadow-xl z-50 py-1 max-h-[300px] overflow-y-auto">
-                {adAccounts.map(a => (
-                  <button
-                    key={a.id}
-                    onClick={() => handleSelectAccount(a)}
-                    className={`w-full text-left px-3 py-2 text-[11px] transition-colors truncate ${
-                      a.account_id === selectedAccountId
-                        ? 'bg-[#6366F1]/10 text-[#818CF8] font-medium'
-                        : 'text-[#E5E7EB] hover:bg-[#1F2937]'
-                    }`}
-                  >
-                    {a.account_name || `act_${a.account_id}`}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Objective toggle */}
-          <div className="flex items-center gap-0.5 bg-[#0A0F1E]/60 rounded-md p-0.5">
-            {([
-              { key: 'ecommerce' as AccountObjective, icon: ShoppingCart, label: 'E-com' },
-              { key: 'leads' as AccountObjective, icon: Users, label: 'Leads' },
-              { key: 'messages' as AccountObjective, icon: MessageSquare, label: 'Msgs' },
-            ]).map(({ key, icon: Icon, label }) => (
-              <button
-                key={key}
-                onClick={() => setAccountObjective(key)}
-                className={`flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded transition-all duration-150 ${
-                  accountObjective === key
-                    ? 'bg-[#6366F1]/15 text-[#818CF8] border border-[#6366F1]/30'
-                    : 'text-[#6B7280] hover:text-[#F9FAFB]'
-                }`}
-              >
-                <Icon className="w-3 h-3" />
-                {!isMobile && label}
-              </button>
-            ))}
-          </div>
-
-          {lastTime && !isMobile && (
-            <span className="flex items-center gap-1 text-[9px] text-[#6B7280]">
-              <Clock className="w-2.5 h-2.5" /> {lastTime}
-            </span>
-          )}
-        </div>
-
-        {/* Desktop controls */}
-        {!isMobile && (
-          <div className="flex items-center gap-2">
-            {periodPills}
-
-            {isCustomActive && dateRange && (
-              <div className="flex items-center gap-1 bg-[#6366F1]/10 border border-[#6366F1]/25 rounded-md px-2 py-0.5">
-                <Calendar className="w-2.5 h-2.5 text-[#818CF8]" />
-                <span className="text-[9px] text-[#818CF8] font-medium whitespace-nowrap">
-                  {dateRange.from.split('-').reverse().slice(0, 2).join('/')} → {dateRange.to.split('-').reverse().slice(0, 2).join('/')}
-                </span>
-                <button onClick={() => setDateRange(null)} className="text-[#818CF8] hover:text-white transition-colors ml-0.5">
-                  <XIcon className="w-2.5 h-2.5" />
-                </button>
-              </div>
-            )}
-
-            <div className="w-px h-4 bg-[#1F2937]" />
-
-            <AlertsPanel />
-
-            {isStale && (
-              <button
-                onClick={handleAtualizar}
-                className="text-[9px] text-[#F59E0B] bg-[#F59E0B]/10 border border-[#F59E0B]/25 px-2 py-0.5 rounded-md hover:bg-[#F59E0B]/15 transition-colors"
-              >
-                Desatualizado
-              </button>
-            )}
-
-            <button
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-semibold text-white rounded-lg bg-[#6366F1] hover:bg-[#5558E6] transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none"
-              onClick={handleAtualizar}
-              disabled={loading || (activeAccountIds.length === 0 && !selectedAccountId)}
-            >
-              {loading ? (
-                <><Loader2 className="w-3 h-3 animate-spin" />Atualizando</>
-              ) : (
-                <><RefreshCw className="w-3 h-3" />Atualizar</>
-              )}
-            </button>
-          </div>
+    <div className="sticky top-0 z-30 h-14 bg-[#0E1420] border-b border-[#1E2A42] flex items-center justify-between px-5">
+      {/* Left: section title */}
+      <div className="flex items-center gap-3">
+        {isMobile && onOpenSidebar && (
+          <button onClick={onOpenSidebar} className="p-1 text-[#4A5F7A] hover:text-[#F0F4FF] transition-colors">
+            <Menu className="w-5 h-5" />
+          </button>
         )}
-
-        {/* Mobile controls */}
-        {isMobile && (
-          <div className="flex items-center gap-2">
-            <AlertsPanel />
-            <button
-              className="flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-white rounded-lg bg-[#6366F1] disabled:opacity-40"
-              onClick={handleAtualizar}
-              disabled={loading || (activeAccountIds.length === 0 && !selectedAccountId)}
-            >
-              {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
-            </button>
-          </div>
-        )}
+        <h1 className="font-display font-semibold text-[16px] text-[#F0F4FF] tracking-tight">
+          {tabLabels[activeTab] || 'Dashboard'}
+        </h1>
       </div>
 
-      {/* Mobile period row */}
-      {isMobile && (
-        <div className="flex items-center gap-2 px-4 py-1.5 border-t border-[#1F2937]/40 overflow-x-auto hide-scrollbar">
-          {periodPills}
-        </div>
-      )}
-
-      {/* Metrics bar — compact, no heavy borders */}
-      {ad && (
-        <div className="h-7 flex items-center gap-5 px-4 md:px-5 bg-[#0A0F1E]/40 text-[10px] overflow-x-auto hide-scrollbar">
-          <span className={`font-semibold whitespace-nowrap ${getRoasColor(avgRoas, roasTarget)}`}>
-            ROAS {avgRoas.toFixed(1)}x
-            {delta !== null && delta !== 0 && <span className="opacity-50 ml-1 font-normal">{delta >= 0 ? '↑' : '↓'}{Math.abs(delta).toFixed(0)}%</span>}
-          </span>
-          <span className="text-[#6B7280] whitespace-nowrap">Gasto <span className="font-medium text-[#E5E7EB]">{currencySymbol} {(totalSpend / 1000).toFixed(1)}k</span></span>
-          <span className="text-[#6B7280] whitespace-nowrap hidden sm:inline">Receita <span className="font-medium text-[#10B981]/80">{currencySymbol} {(totalRevenue / 1000).toFixed(1)}k</span></span>
-          <span className="text-[#6B7280] whitespace-nowrap hidden md:inline">Vendas <span className="font-medium text-[#E5E7EB]">{totalSales}</span></span>
-          {isFromCache && (
-            <span className="text-[#6366F1]/30 hidden md:inline whitespace-nowrap">cache</span>
+      {/* Right: status + refresh + alerts */}
+      <div className="flex items-center gap-3">
+        {/* Connection status */}
+        <div className="flex items-center gap-1.5">
+          <Circle className={`w-2 h-2 flex-shrink-0 ${
+            isTokenExpired
+              ? 'fill-[#F05252] text-[#F05252] animate-pulse-dot'
+              : isConnected
+                ? 'fill-[#22D07A] text-[#22D07A] animate-pulse-dot'
+                : 'fill-[#4A5F7A] text-[#4A5F7A]'
+          }`} />
+          {isTokenExpired ? (
+            <button onClick={() => connectMeta()} className="text-[11px] text-[#F05252] font-medium hover:underline">
+              Reconectar
+            </button>
+          ) : isConnected ? (
+            <span className="text-[11px] text-[#7A8FAD] hidden sm:inline">Conectado</span>
+          ) : (
+            <span className="text-[11px] text-[#4A5F7A] hidden sm:inline">Desconectado</span>
           )}
         </div>
-      )}
+
+        <div className="w-px h-5 bg-[#1E2A42]" />
+
+        <AlertsPanel />
+
+        {/* Refresh button */}
+        <button
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium text-[#7A8FAD] rounded-lg hover:bg-white/[0.04] hover:text-[#F0F4FF] transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none"
+          onClick={handleAtualizar}
+          disabled={loading || (activeAccountIds.length === 0 && !selectedAccountId)}
+        >
+          {loading ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <RefreshCw className="w-4 h-4" />
+          )}
+          {!isMobile && (loading ? 'Atualizando' : 'Atualizar')}
+        </button>
+      </div>
     </div>
   );
 }

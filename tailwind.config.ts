@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["'Inter'", "'Plus Jakarta Sans'", "sans-serif"],
+        sans: ["'Inter'", "system-ui", "sans-serif"],
+        display: ["'Space Grotesk'", "'Inter'", "sans-serif"],
       },
       colors: {
         /* New design system tokens */
@@ -26,6 +27,7 @@ export default {
         "border-default": "hsl(var(--border-default))",
         "border-subtle": "hsl(var(--border-subtle))",
         "border-focus": "hsl(var(--border-focus))",
+        "border-highlight": "hsl(var(--border-highlight))",
 
         "text-primary": "hsl(var(--text-primary))",
         "text-secondary": "hsl(var(--text-secondary))",

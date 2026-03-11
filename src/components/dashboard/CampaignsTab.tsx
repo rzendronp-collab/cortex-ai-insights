@@ -738,7 +738,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
     );
   }
 
-  const maxHourlySpend = Math.max(...hourlyData.map(h => h.spend), 1);
+  const maxHourlySpend = Math.max(...hourlyData.filter(Boolean).map(h => h?.spend || 0), 1);
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
     if (sortColumn !== column) return <ArrowUpDown className="w-3 h-3 text-muted-foreground/30" />;

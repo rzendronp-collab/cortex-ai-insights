@@ -1042,8 +1042,8 @@ Responda SOMENTE com o JSON, sem markdown.`;
             return (
               <div
                 key={c.id}
-                className={`bg-white rounded-lg p-4 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ border: "1px solid #E4E7EF" }} ${!isActive ? 'opacity-60' : ''}`}
-                style={{ animationDelay: `${idx * 30}ms` }}
+                className={`bg-white rounded-lg p-4 animate-fade-in opacity-0 [animation-fill-mode:forwards] ${!isActive ? 'opacity-60' : ''}`}
+                style={{ animationDelay: `${idx * 30}ms`, border: '1px solid #E4E7EF' }}
               >
                 {/* Header: name + toggle */}
                 <div className="flex items-start justify-between gap-3 mb-3">
@@ -1109,7 +1109,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
       <div className="md:hidden"><PaginationBar /></div>
 
       {/* Sort indicator badge */}
-      <div className="hidden md:block bg-white rounded-lg overflow-x-auto" style="border: 1px solid #E4E7EF;">
+      <div className="hidden md:block bg-white rounded-lg overflow-x-auto" style={{ border: "1px solid #E4E7EF" }}>
         <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#E4E7EF]">
           <span className="text-[10px] text-text-muted">
             Ordenado por: <span className="font-semibold text-text-secondary">{

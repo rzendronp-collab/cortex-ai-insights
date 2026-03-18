@@ -564,9 +564,9 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Daily Evolution ─── */}
-      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up" style={{ minHeight: 320 }}>
+      <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up" style={{ minHeight: 320 }}>
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <h3 className="font-display font-semibold text-[14px] text-[#0F1523]">Evolução Diária</h3>
+          <h3 className="font-display font-semibold text-[14px] text-white">Evolução Diária</h3>
           <div className="flex gap-3 flex-wrap">
             {Object.entries(dailyMetricConfig).map(([key, cfg]) => (
               <label key={key} className="flex items-center gap-1.5 cursor-pointer select-none">

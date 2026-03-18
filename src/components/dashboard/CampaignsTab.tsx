@@ -10,6 +10,7 @@ import { useAdsets, ProcessedAdset } from '@/hooks/useAdsets';
 import { useAds, ProcessedAd } from '@/hooks/useAds';
 import { useCampaignActions } from '@/hooks/useCampaignActions';
 import { getRoasColor, formatCurrency, formatNumber } from '@/lib/mockData';
+import { exportCampaignsCSV } from '@/lib/exportCSV';
 import { ProcessedCampaign } from '@/hooks/useMetaData';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';

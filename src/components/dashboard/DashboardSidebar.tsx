@@ -30,7 +30,14 @@ interface DashboardSidebarProps {
 
 type AccountStatus = 'green' | 'red' | 'yellow' | null;
 
-const navItems = [
+type NavItem = {
+  id: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  badge?: string;
+};
+
+const navItems: NavItem[] = [
   { id: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
   { id: 'campaigns', label: 'Campanhas', icon: TrendingUp },
   { id: 'action-plan', label: 'CORTEX IA', icon: Brain, badge: 'AI' },
@@ -39,7 +46,7 @@ const navItems = [
   { id: 'comparison', label: 'Comparação', icon: Calendar },
   { id: 'consolidated', label: 'Relatórios', icon: FileText },
   { id: 'report', label: 'Notificações', icon: Bell },
-] as const;
+];
 
 const statusClasses: Record<Exclude<AccountStatus, null>, string> = {
   green: 'bg-success/70',

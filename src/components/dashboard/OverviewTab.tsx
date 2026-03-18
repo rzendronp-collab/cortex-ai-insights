@@ -301,11 +301,11 @@ export default function OverviewTab() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {staleWarning}
 
       {/* ─── KPIs ─── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-12 xl:gap-4">
         {(() => {
           const conversionLabel = accountObjective === 'leads' ? 'Leads' : accountObjective === 'messages' ? 'Mensagens' : 'Vendas Total';
           const conversionSubtitle = accountObjective === 'leads' ? 'Formulários preenchidos' : accountObjective === 'messages' ? 'Conversas iniciadas' : 'Conversões';
@@ -318,15 +318,22 @@ export default function OverviewTab() {
           const salesSparkline = dailyData.map((d: any) => d.sales ?? d.purchases ?? 0);
           const ctrSparkline = dailyData.map((d: any) => d.ctr ?? 0);
           return [
-            { label: `ROAS Médio ${roasSemaphore}`, value: `${avgRoas.toFixed(1)}x`, subtitle: "Retorno sobre investimento", delta: calcDelta(avgRoas, prevRoas), valueClassName: roasValueClass, isHero: true, sparklineData: roasSparkline, sparklineColor: '#2563EB' },
-            { label: "Gasto Total", value: formatCurrency(totalSpend, currency), subtitle: "Período selecionado", delta: calcDelta(totalSpend, prevSpend), sparklineData: spendSparkline, sparklineColor: '#D97706' },
-            { label: revenueLabel, value: formatCurrency(totalRevenue, currency), subtitle: "Total gerado", delta: calcDelta(totalRevenue, prevRevenue), valueClassName: "text-data-green", sparklineData: revenueSparkline, sparklineColor: '#16A34A' },
-            { label: conversionLabel, value: totalSales.toString(), subtitle: conversionSubtitle, delta: calcDelta(totalSales, prevSales), sparklineData: salesSparkline, sparklineColor: '#7C3AED' },
-            { label: "CTR Médio", value: `${avgCtr.toFixed(1)}%`, subtitle: "Taxa de cliques", delta: calcDelta(avgCtr, prevCtr), sparklineData: ctrSparkline, sparklineColor: '#2563EB' },
-            { label: costLabel, value: `${currency} ${costPerSale.toFixed(2)}`, subtitle: costSubtitle, delta: calcDelta(costPerSale, prevCpv), valueClassName: "text-data-yellow" },
+            { label: `ROAS Médio ${roasSemaphore}`, value: `${avgRoas.toFixed(1)}x`, subtitle: 'Retorno sobre investimento', delta: calcDelta(avgRoas, prevRoas), valueClassName: roasValueClass, isHero: true, sparklineData: roasSparkline, sparklineColor: 'hsl(var(--primary))' },
+            { label: 'Gasto Total', value: formatCurrency(totalSpend, currency), subtitle: 'Período selecionado', delta: calcDelta(totalSpend, prevSpend), sparklineData: spendSparkline, sparklineColor: 'hsl(var(--data-yellow))' },
+            { label: revenueLabel, value: formatCurrency(totalRevenue, currency), subtitle: 'Total gerado', delta: calcDelta(totalRevenue, prevRevenue), valueClassName: 'text-success', sparklineData: revenueSparkline, sparklineColor: 'hsl(var(--success))' },
+            { label: conversionLabel, value: totalSales.toString(), subtitle: conversionSubtitle, delta: calcDelta(totalSales, prevSales), sparklineData: salesSparkline, sparklineColor: 'hsl(var(--data-purple))' },
+            { label: 'CTR Médio', value: `${avgCtr.toFixed(1)}%`, subtitle: 'Taxa de cliques', delta: calcDelta(avgCtr, prevCtr), sparklineData: ctrSparkline, sparklineColor: 'hsl(var(--data-blue))' },
+            { label: costLabel, value: `${currency} ${costPerSale.toFixed(2)}`, subtitle: costSubtitle, delta: calcDelta(costPerSale, prevCpv), valueClassName: 'text-warning', sparklineColor: 'hsl(var(--warning))' },
           ];
         })().map((kpi, i) => (
-          <div key={kpi.label} style={{ animationDelay: `${i * 50}ms` }} className="animate-fade-in opacity-0 [animation-fill-mode:forwards]">
+          <div
+            key={kpi.label}
+            style={{ animationDelay: `${i * 45}ms` }}
+            className={cn(
+              'animate-fade-in opacity-0 [animation-fill-mode:forwards]',
+              i === 0 ? 'sm:col-span-2 xl:col-span-4' : 'xl:col-span-2',
+            )}
+          >
             <KPICard {...kpi} />
           </div>
         ))}

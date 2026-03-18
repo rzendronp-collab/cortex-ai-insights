@@ -1133,11 +1133,11 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 const align = colAlign[col.id] || 'right';
                 const sortKey = colSortKey[col.id];
                 return (
-                  <th
-                    key={col.id}
-                    onClick={() => sortKey ? handleSort(sortKey) : undefined}
-                    className={`px-3 py-2.5 text-[11px] font-semibold text-text-muted uppercase tracking-wider ${sortKey ? 'cursor-pointer hover:bg-[#F1F3F8]' : ''} transition-colors select-none ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'}`}
-                  >
+                    <th
+                      key={col.id}
+                      onClick={() => sortKey ? handleSort(sortKey) : undefined}
+                      className={`px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider ${sortKey ? 'cursor-pointer hover:bg-white/[0.04]' : ''} transition-colors select-none ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'}`}
+                    >
                     <div className={`flex items-center gap-1.5 ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start'}`}>
                       {col.label}
                       {sortKey && <SortIcon column={sortKey} />}

@@ -48,6 +48,8 @@ const dailyMetricConfig: Record<string, { label: string; color: string; type: 'l
 
 const ACCOUNT_COLORS = [DATA_BLUE, DATA_GREEN, DATA_PURPLE, DATA_YELLOW, DATA_RED, '#F472B6', '#38BDF8', '#16A34A'];
 
+const TAB_PERIODS = ['1d', '3d', '7d', '14d', '30d'] as const;
+
 export default function OverviewTab() {
   const [visibleMetrics, setVisibleMetrics] = useState<Set<string>>(new Set(['roas', 'spend']));
   const [chartMetric, setChartMetric] = useState<'roas' | 'spend' | 'revenue' | 'sales'>('roas');

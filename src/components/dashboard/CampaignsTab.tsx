@@ -1910,15 +1910,15 @@ Responda SOMENTE com o JSON, sem markdown.`;
 
       {/* ─── Análise de Criativos ─── */}
       {analysisData?.adCreatives && analysisData.adCreatives.length > 0 && (
-        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-lg overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#E4E7EF]">
-            <h3 className="text-xs font-semibold text-text-primary">Análise de Criativos</h3>
-            <span className="text-[10px] text-text-muted">{analysisData.adCreatives.length} criativos com gasto</span>
+        <div className="bg-[#0D1424] border border-white/[0.06] rounded-lg overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+            <h3 className="text-xs font-semibold text-white">Análise de Criativos</h3>
+            <span className="text-[10px] text-slate-400">{analysisData.adCreatives.length} criativos com gasto</span>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="w-full text-xs bg-[#0D1424]">
               <thead>
-                <tr className="border-b border-[#E4E7EF] bg-[#F8F9FC]">
+                <tr className="border-b border-white/[0.06] bg-[#080D1A]">
                   <th className="text-left px-3 py-2 text-text-muted font-semibold">Criativo</th>
                   <th className="text-right px-3 py-2 text-text-muted font-semibold">Gasto</th>
                   <th className="text-right px-3 py-2 text-text-muted font-semibold">Impr.</th>

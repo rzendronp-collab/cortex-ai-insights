@@ -2281,11 +2281,11 @@ function CampaignsTableSkeleton() {
         <div className="h-8 w-24 bg-[#E4E7EF] rounded-md animate-pulse" />
       </div>
       {/* Table skeleton */}
-      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-lg overflow-hidden">
+      <div className="bg-[#0D1424] border border-white/[0.06] rounded-lg overflow-hidden">
         {/* Header */}
-        <div className="flex items-center gap-2 px-3 py-2.5 bg-[#F8F9FC] border-b border-[#E4E7EF]">
+        <div className="flex items-center gap-2 px-3 py-2.5 bg-[#080D1A] border-b border-white/[0.06]">
           {colWidths.map((w, i) => (
-            <div key={i} className="h-3 bg-[#E4E7EF] rounded" style={{ width: w, flexShrink: 0 }} />
+            <div key={i} className="h-3 bg-white/[0.08] rounded" style={{ width: w, flexShrink: 0 }} />
           ))}
         </div>
         {/* Rows */}

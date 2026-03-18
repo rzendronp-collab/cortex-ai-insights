@@ -8,7 +8,7 @@ const DATA_GREEN = '#16A34A';
 const DATA_PURPLE = '#7C3AED';
 const CHART_GRID = 'hsl(var(--chart-grid-dark))';
 const CHART_AXIS = 'hsl(var(--chart-axis-dark))';
-const chartTooltipStyle: React.CSSProperties = {
+const chartTooltipStyle = {
   backgroundColor: 'hsl(var(--tooltip-surface))',
   border: '1px solid hsl(var(--tooltip-edge))',
   borderRadius: 8,

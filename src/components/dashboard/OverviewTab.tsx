@@ -916,8 +916,8 @@ export default function OverviewTab() {
 
       {/* ─── Gasto vs Receita Pie ─── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Gasto vs Receita</h3>
+        <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up">
+          <h3 className="font-display font-semibold text-[14px] text-white mb-4">Gasto vs Receita</h3>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie data={[{ name: 'Gasto', value: totalSpend }, { name: 'Receita', value: totalRevenue }]} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={0}>

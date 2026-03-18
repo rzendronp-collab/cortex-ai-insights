@@ -10,7 +10,7 @@ const STORAGE_KEY = 'cortexads_all_accounts';
 const MAX_ACCOUNTS = 10;
 const CHART_GRID = 'hsl(var(--chart-grid-dark))';
 const CHART_AXIS = 'hsl(var(--chart-axis-dark))';
-const chartTooltipStyle: React.CSSProperties = {
+const chartTooltipStyle = {
   backgroundColor: 'hsl(var(--tooltip-surface))',
   border: '1px solid hsl(var(--tooltip-edge))',
   borderRadius: 8,

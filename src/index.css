@@ -178,15 +178,18 @@
 
   /* Gradientes */
   .gradient-primary {
-    background: linear-gradient(135deg, #2563EB, #7C3AED);
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-dark)));
   }
   .gradient-subtle {
-    background: linear-gradient(135deg, rgba(37,99,235,0.12), rgba(124,58,237,0.12));
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.12), hsl(var(--primary-glow) / 0.12));
   }
   .text-gradient {
-    background: linear-gradient(135deg, #2563EB, #7C3AED);
+    background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-dark)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+  .panel-highlight {
+    background: var(--panel-highlight);
   }
 }

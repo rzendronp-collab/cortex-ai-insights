@@ -410,8 +410,8 @@ export default function OverviewTab() {
       {/* ─── Charts Row 1 ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* ROAS por Campanha */}
-        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '200ms' }}>
-          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">ROAS por Campanha <span className="text-text-muted font-normal">(top 10)</span></h3>
+        <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '200ms' }}>
+          <h3 className="font-display font-semibold text-[14px] text-white mb-4">ROAS por Campanha <span className="text-text-muted font-normal">(top 10)</span></h3>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={roasCampaignData} layout="vertical" barSize={28}>
               <defs>
@@ -429,7 +429,7 @@ export default function OverviewTab() {
               <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: CHART_AXIS }} width={85} axisLine={false} tickLine={false} />
               <Tooltip content={<RoasTooltip />} />
               <ReferenceLine x={roasTarget} stroke={MUTED} strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 9, fill: MUTED }} />
-              <Bar dataKey="roas" radius={[0, 6, 6, 0]} animationDuration={800} label={{ position: 'right', fontSize: 10, fill: '#0F1523', formatter: (v: number) => `${v}x` }}>
+              <Bar dataKey="roas" radius={[0, 6, 6, 0]} animationDuration={800} label={{ position: 'right', fontSize: 10, fill: '#E2E8F0', formatter: (v: number) => `${v}x` }}>
                 {roasCampaignData.map((entry, i) => (
                   <Cell key={i} fill={entry.roas >= roasTarget ? 'url(#barGreen)' : 'url(#barRed)'} />
                 ))}
@@ -439,8 +439,8 @@ export default function OverviewTab() {
         </div>
 
         {/* Funil de Conversão — V5 */}
-        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up" style={{ minHeight: 180 }}>
-          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-5">Funil de Conversão</h3>
+        <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up" style={{ minHeight: 180 }}>
+          <h3 className="font-display font-semibold text-[14px] text-white mb-5">Funil de Conversão</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left: visual funnel — 4 níveis com largura decrescente */}
             {(() => {

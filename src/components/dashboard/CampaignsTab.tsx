@@ -1330,64 +1330,23 @@ Responda SOMENTE com o JSON, sem markdown.`;
 
                 const isEditing = editingCampaignId === c.id;
 
-                const rowBg = rowIndex % 2 === 0 ? '#FFFFFF' : '#0A0F1A';
+                const rowBg = rowIndex % 2 === 0 ? '#0D1424' : '#080D1A';
 
                 return (
                   <React.Fragment key={c.id}>
                     <tr
                       onClick={() => setExpandedId(expanded ? null : c.id)}
-                      className={`border-b cursor-pointer transition-all duration-150 ${!isActive ? 'opacity-60' : ''} ${isEditing ? 'opacity-60 cursor-wait border-l-2 border-l-primary animate-pulse pointer-events-none' : ''} animate-fade-in [animation-fill-mode:forwards] ${compactMode ? '[&_td]:py-0 [&_td]:text-xs' : ''}`}
+                      className={`border-b border-white/[0.04] cursor-pointer transition-all duration-150 ${!isActive ? 'opacity-60' : ''} ${isEditing ? 'opacity-60 cursor-wait border-l-2 border-l-primary animate-pulse pointer-events-none' : ''} animate-fade-in [animation-fill-mode:forwards] ${compactMode ? '[&_td]:py-0 [&_td]:text-xs' : ''}`}
                       style={{ height: compactMode ? 38 : 52, animationDelay: `${rowIndex * 30}ms`, backgroundColor: rowBg }}
-                      onMouseEnter={e => { if (!expanded && !isEditing) (e.currentTarget as HTMLElement).style.backgroundColor = '#E4E7EF'; }}
+                      onMouseEnter={e => { if (!expanded && !isEditing) (e.currentTarget as HTMLElement).style.backgroundColor = '#131D32'; }}
                       onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = rowBg; }}
                     >
-                      {/* Checkbox */}
-                      <td className="px-2" onClick={e => e.stopPropagation()}>
-                        <Checkbox
-                          checked={selectedIds.has(c.id)}
-                          onCheckedChange={() => handleSelectRow(c.id, rowIndex, false)}
-                          onClick={(e: React.MouseEvent) => {
-                            e.stopPropagation();
-                            if (e.shiftKey) {
-                              e.preventDefault();
-                              handleSelectRow(c.id, rowIndex, true);
-                            }
-                          }}
-                          className="h-3.5 w-3.5"
-                        />
-                      </td>
-                      {activeColumns.map(col => renderCell(col.id))}
-                      {/* Actions: AI + duplicate + open in meta + expand */}
-                      <td className="px-2" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center gap-1">
-                          <TooltipProvider><Tooltip><TooltipTrigger asChild>
-                            <button onClick={() => openAiDrawer('campaign', c.name, { Gasto: c.spend, Receita: c.revenue, ROAS: c.roas, Vendas: c.purchases, CTR: c.ctr, CPM: c.cpm })} className="p-1 text-[#7C3AED]/60 hover:text-[#7C3AED] transition-colors">
-                              <Brain className="w-3.5 h-3.5" />
-                            </button>
-                          </TooltipTrigger><TooltipContent><p className="text-xs">Analisar com IA</p></TooltipContent></Tooltip></TooltipProvider>
-                          <TooltipProvider><Tooltip><TooltipTrigger asChild>
-                            <button onClick={() => { setDuplicateName(`Cópia de ${localNames[c.id] || c.name}`); setDuplicateKeepActive(false); setDuplicateDialog({ id: c.id, name: localNames[c.id] || c.name }); }} className="p-1 text-muted-foreground hover:text-primary transition-colors">
-                              <Copy className="w-3.5 h-3.5" />
-                            </button>
-                          </TooltipTrigger><TooltipContent><p className="text-xs">Duplicar campanha</p></TooltipContent></Tooltip></TooltipProvider>
-                          <TooltipProvider><Tooltip><TooltipTrigger asChild>
-                            <button onClick={() => openInMeta(c.id)} className="p-1 text-muted-foreground hover:text-primary transition-colors">
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </button>
-                          </TooltipTrigger><TooltipContent><p className="text-xs">Abrir no Meta</p></TooltipContent></Tooltip></TooltipProvider>
-                          <button onClick={() => setExpandedId(expanded ? null : c.id)} className="p-1 text-muted-foreground hover:text-foreground transition-colors">
-                            {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-
-                    {/* ADSETS SUB-TABLE */}
+...
                     {adsetExpandedId === c.id && (() => {
                       const campaignAdsets = adsets.get(c.id);
                       const isAdsetLoading = adsetsLoading.has(c.id);
                       return (
-                        <tr style={{ background: "#F8F9FC", borderBottom: "1px solid #E4E7EF" }}>
+                        <tr style={{ background: '#0A1222', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                           <td colSpan={activeColumns.length + 3} className="p-0">
                             <div className="pl-10 pr-4 py-3 border-l-2 border-l-data-blue/40 animate-fade-up">
                               <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider mb-2">Conjuntos de Anúncios</p>

@@ -667,7 +667,7 @@ export default function OverviewTab() {
                   <div key={i} className="flex items-center gap-2 min-w-0">
                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: s.fill }} />
                     <p className="text-[11px] text-[#9BA5B7] truncate flex-1">{s.name.slice(0, 22)}</p>
-                    <span className="text-[11px] font-medium text-[#0F1523] tabular-nums flex-shrink-0">{currency}{s.spend.toFixed(0)}</span>
+                    <span className="text-[11px] font-medium text-white tabular-nums flex-shrink-0">{currency}{s.spend.toFixed(0)}</span>
                   </div>
                 ));
               })()}
@@ -677,25 +677,25 @@ export default function OverviewTab() {
       )}
 
       {/* ─── Hourly ─── */}
-      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-        <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Desempenho por Hora</h3>
+      <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up">
+        <h3 className="font-display font-semibold text-[14px] text-white mb-4">Desempenho por Hora</h3>
         <HourlyBarChart data={hourlyData} currency={currency} />
       </div>
 
       {/* ─── Alcance por Região ─── */}
       {effectiveData?.regionData && effectiveData.regionData.length > 0 && (
-        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Alcance por Região</h3>
+        <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up">
+          <h3 className="font-display font-semibold text-[14px] text-white mb-4">Alcance por Região</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[#E4E7EF]">
-                  <th className="text-left py-2 text-text-muted font-semibold">Região</th>
-                  <th className="text-left py-2 text-text-muted font-semibold pl-4" style={{ width: '30%' }}>Alcance</th>
-                  <th className="text-right py-2 text-text-muted font-semibold">Impressões</th>
-                  <th className="text-right py-2 text-text-muted font-semibold">Cliques</th>
-                  <th className="text-right py-2 text-text-muted font-semibold">CTR</th>
-                  <th className="text-right py-2 text-text-muted font-semibold">Gasto</th>
+                <tr className="border-b border-white/[0.06] bg-[#080D1A]">
+                  <th className="text-left py-2 text-slate-400 font-semibold">Região</th>
+                  <th className="text-left py-2 text-slate-400 font-semibold pl-4" style={{ width: '30%' }}>Alcance</th>
+                  <th className="text-right py-2 text-slate-400 font-semibold">Impressões</th>
+                  <th className="text-right py-2 text-slate-400 font-semibold">Cliques</th>
+                  <th className="text-right py-2 text-slate-400 font-semibold">CTR</th>
+                  <th className="text-right py-2 text-slate-400 font-semibold">Gasto</th>
                 </tr>
               </thead>
               <tbody>
@@ -703,20 +703,20 @@ export default function OverviewTab() {
                   const maxImpr = effectiveData.regionData![0].impressions || 1;
                   const barWidth = Math.max((r.impressions / maxImpr) * 100, 5);
                   return (
-                    <tr key={r.region} className="border-b border-[#E4E7EF]/50">
-                      <td className="py-2 text-text-primary font-medium truncate max-w-[160px]">{r.region}</td>
+                    <tr key={r.region} className="border-b border-white/[0.04] hover:bg-white/[0.03]">
+                      <td className="py-2 text-white font-medium truncate max-w-[160px]">{r.region}</td>
                       <td className="py-2 pl-4">
-                        <div className="h-2 bg-[#F8F9FC] rounded-full overflow-hidden">
+                        <div className="h-2 bg-[#080D1A] rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-500"
                             style={{ width: `${barWidth}%`, background: `linear-gradient(90deg, #2563EB, #2563EB)` }}
                           />
                         </div>
                       </td>
-                      <td className="text-right py-2 text-text-primary">{r.impressions.toLocaleString()}</td>
-                      <td className="text-right py-2 text-text-primary">{r.clicks.toLocaleString()}</td>
-                      <td className="text-right py-2 text-text-primary">{r.ctr.toFixed(1)}%</td>
-                      <td className="text-right py-2 text-text-primary">{currency} {r.spend.toFixed(0)}</td>
+                      <td className="text-right py-2 text-white">{r.impressions.toLocaleString()}</td>
+                      <td className="text-right py-2 text-white">{r.clicks.toLocaleString()}</td>
+                      <td className="text-right py-2 text-white">{r.ctr.toFixed(1)}%</td>
+                      <td className="text-right py-2 text-white">{currency} {r.spend.toFixed(0)}</td>
                     </tr>
                   );
                 })}
@@ -731,10 +731,10 @@ export default function OverviewTab() {
         <h3 className="text-sm font-semibold text-text-primary mb-3">👥 Demográficos</h3>
         {demoByGender.length === 0 && demoByAge.length === 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
+            <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
               <p className="text-xs text-muted-foreground text-center">Dados demográficos não disponíveis para esta conta</p>
             </div>
-            <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
+            <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
               <p className="text-xs text-muted-foreground text-center">Dados demográficos não disponíveis para esta conta</p>
             </div>
           </div>

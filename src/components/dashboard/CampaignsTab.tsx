@@ -1844,9 +1844,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       <td className={`text-right px-3 py-2.5 font-bold ${getRoasColor(ad.roas, roasTarget)}`}>{ad.roas.toFixed(1)}x</td>
                       <td className="text-center px-3 py-2.5">
                         {isTop ? (
-                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#16A34A]/10 text-[#16A34A] border border-[#16A34A]/25">Top</span>
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-400">Top</span>
                         ) : shouldPause ? (
-                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#DC2626]/10 text-[#DC2626] border border-[#DC2626]/25">Pausar</span>
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded border border-red-500/20 bg-red-500/10 text-red-400">Pausar</span>
                         ) : (
                           <span className="text-[9px] text-text-muted">—</span>
                         )}

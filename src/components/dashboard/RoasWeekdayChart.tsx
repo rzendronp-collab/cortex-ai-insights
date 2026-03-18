@@ -13,22 +13,64 @@ interface Props {
 }
 
 const WEEKDAYS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+const WEEKDAY_INDEX_MAP: Record<string, number> = {
+  dom: 0,
+  domingo: 0,
+  sun: 0,
+  sunday: 0,
+  seg: 1,
+  segunda: 1,
+  monday: 1,
+  mon: 1,
+  ter: 2,
+  terca: 2,
+  terça: 2,
+  tuesday: 2,
+  tue: 2,
+  qua: 3,
+  quarta: 3,
+  wednesday: 3,
+  wed: 3,
+  qui: 4,
+  quinta: 4,
+  thursday: 4,
+  thu: 4,
+  sex: 5,
+  sexta: 5,
+  friday: 5,
+  fri: 5,
+  sab: 6,
+  sáb: 6,
+  sabado: 6,
+  sábado: 6,
+  saturday: 6,
+  sat: 6,
+};
+
+function getDayOfWeek(value: string): number | null {
+  const parsedDate = new Date(value);
+  if (!Number.isNaN(parsedDate.getTime())) return parsedDate.getDay();
+
+  const normalized = String(value || '').trim().toLowerCase();
+  return WEEKDAY_INDEX_MAP[normalized] ?? null;
+}
 
 export default function RoasWeekdayChart({ dailyData, roasTarget }: Props) {
   const data = useMemo(() => {
     const buckets: Record<number, { spend: number; revenue: number; count: number }> = {};
     for (let i = 0; i < 7; i++) buckets[i] = { spend: 0, revenue: 0, count: 0 };
 
-    dailyData.filter(Boolean).forEach(d => {
-      if (!d) return;
-      const dow = new Date(d.date).getDay();
-      buckets[dow].spend += d.spend || 0;
-      buckets[dow].revenue += d.revenue || 0;
+    (dailyData ?? []).filter(Boolean).forEach((d) => {
+      const dow = getDayOfWeek(d?.date);
+      if (dow === null || !buckets[dow]) return;
+
+      buckets[dow].spend += d?.spend || 0;
+      buckets[dow].revenue += d?.revenue || 0;
       buckets[dow].count++;
     });
 
     return Object.entries(buckets).map(([dow, b]) => ({
-      name: WEEKDAYS_PT[parseInt(dow)],
+      name: WEEKDAYS_PT[parseInt(dow, 10)],
       roas: b.spend > 0 ? b.revenue / b.spend : 0,
     }));
   }, [dailyData]);

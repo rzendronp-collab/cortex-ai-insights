@@ -93,35 +93,20 @@ function GeneratedAdsSection({ ads, generating, onGenerate }: { ads: GeneratedAd
 
               <div className="space-y-3">
                 {[
-                  { label: 'Hook', value: ad.hook, emphasized: true },
-                  { label: 'Título', value: ad.headline },
-                  { label: 'Body', value: ad.body },
-                  { label: 'CTA', value: ad.cta, cta: true },
+                  { label: 'HOOK', value: ad.hook, color: 'text-primary' },
+                  { label: 'HEADLINE', value: ad.headline, color: 'text-success' },
+                  { label: 'BODY', value: ad.body, color: 'text-warning' },
+                  { label: 'CTA', value: ad.cta, color: 'text-destructive' },
+                  { label: 'ANGULO', value: ad.angulo, color: 'text-text-secondary' },
+                  { label: 'COPY_B', value: ad.copy_b, color: 'text-primary' },
+                  { label: 'TESTE', value: ad.teste, color: 'text-success' },
                 ].map((item) => (
-                  <div key={item.label} className="flex items-start gap-3 rounded-2xl border border-border-subtle bg-card px-3 py-3">
-                    <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">{item.label}</span>
-                    <p
-                      className={cn(
-                        'flex-1 text-sm leading-6',
-                        item.cta ? 'font-semibold text-success' : item.emphasized ? 'font-semibold text-text-primary' : 'text-text-secondary',
-                      )}
-                    >
-                      {item.value}
-                    </p>
-                    <CopyButton text={item.value} />
+                  <div key={item.label} className="flex items-start gap-3 rounded-lg border border-[hsl(0_0%_100%/0.08)] bg-[hsl(0_0%_100%/0.03)] px-3 py-2">
+                    <span className={cn('w-16 shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em]', item.color)}>{item.label}</span>
+                    <p className="flex-1 text-sm leading-6 text-text-secondary">{item.value || '—'}</p>
+                    {item.value ? <CopyButton text={item.value} /> : null}
                   </div>
                 ))}
-
-                {ad.copy_b ? (
-                  <div className="rounded-2xl border border-border-subtle bg-card px-3 py-3">
-                    <div className="flex items-start gap-3">
-                      <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Copy B</span>
-                      <p className="flex-1 text-sm leading-6 text-text-secondary">{ad.copy_b}</p>
-                      <CopyButton text={ad.copy_b} />
-                    </div>
-                    <p className="mt-3 border-t border-border-subtle pt-3 text-xs text-primary">Teste sugerido: {ad.teste}</p>
-                  </div>
-                ) : null}
               </div>
             </article>
           ))}

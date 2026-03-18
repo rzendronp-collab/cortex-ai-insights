@@ -17,18 +17,19 @@ interface KPICardProps {
 }
 
 function DeltaPill({ delta }: { delta: number }) {
+  const neutral = Math.abs(delta) < 2;
   const positive = delta >= 0;
 
   return (
     <span
       className={cn(
         'inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold tabular-nums',
-        positive
-          ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
-          : 'border-red-500/20 bg-red-500/10 text-red-400',
+        neutral && 'border-slate-500/20 bg-slate-500/10 text-slate-400',
+        !neutral && positive && 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400',
+        !neutral && !positive && 'border-red-500/20 bg-red-500/10 text-red-400',
       )}
     >
-      {positive ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />}
+      {neutral ? null : positive ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />}
       {Math.abs(delta)}%
     </span>
   );

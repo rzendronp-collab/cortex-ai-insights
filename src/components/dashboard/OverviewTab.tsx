@@ -16,10 +16,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 
 // ─── Chart theme constants (V5 dark palette) ───
-const CHART_GRID = '#1E293B';
-const CHART_AXIS = '#7A8FAD';
-const TOOLTIP_BG = '#1A2540';
-const TOOLTIP_BORDER = '#2A3F6A';
+const CHART_GRID = 'hsl(215 28% 17%)';
+const CHART_AXIS = 'hsl(215 25% 27%)';
+const TOOLTIP_BG = 'hsl(215 28% 17%)';
+const TOOLTIP_BORDER = 'hsl(215 25% 35%)';
 
 const DATA_BLUE = '#2563EB';
 const DATA_GREEN = '#16A34A';
@@ -48,6 +48,8 @@ const dailyMetricConfig: Record<string, { label: string; color: string; type: 'l
 
 const ACCOUNT_COLORS = [DATA_BLUE, DATA_GREEN, DATA_PURPLE, DATA_YELLOW, DATA_RED, '#F472B6', '#38BDF8', '#16A34A'];
 
+const TAB_PERIODS = ['1d', '3d', '7d', '14d', '30d'] as const;
+
 export default function OverviewTab() {
   const [visibleMetrics, setVisibleMetrics] = useState<Set<string>>(new Set(['roas', 'spend']));
   const [chartMetric, setChartMetric] = useState<'roas' | 'spend' | 'revenue' | 'sales'>('roas');
@@ -55,7 +57,7 @@ export default function OverviewTab() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const {
     analysisData, isStale, selectedAccountId, currencySymbol, setActiveTab, analyzeRef,
-    activeAccountIds, consolidatedData, analysisCache, selectedPeriod, dateRange,
+    activeAccountIds, consolidatedData, analysisCache, selectedPeriod, setSelectedPeriod, dateRange,
     setSelectedAccountId, setSelectedAccountName, setSelectedAccountCurrency,
     accountObjective,
   } = useDashboard();
@@ -301,6 +303,21 @@ export default function OverviewTab() {
   return (
     <div className="space-y-5">
       {staleWarning}
+
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[hsl(0_0%_100%/0.08)] bg-[hsl(0_0%_100%/0.04)] p-2">
+        {TAB_PERIODS.map((period) => (
+          <button
+            key={period}
+            onClick={() => setSelectedPeriod(period)}
+            className={cn(
+              'rounded-lg border border-[hsl(0_0%_100%/0.08)] bg-transparent px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors',
+              selectedPeriod === period && 'border-transparent bg-[hsl(var(--accent))] text-white',
+            )}
+          >
+            {period}
+          </button>
+        ))}
+      </div>
 
       {/* ─── KPIs ─── */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-12 xl:gap-4">

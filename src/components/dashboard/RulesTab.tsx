@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Trash2, Zap, ShieldCheck, GitBranch, Sparkles } from 'lucide-react';
+import { Plus, Trash2, ShieldCheck, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,14 +16,14 @@ interface RuleCondition {
 interface Rule {
   id: string;
   name: string;
-  conditions: RuleCondition[];
   logic: 'AND' | 'OR';
-  action: 'Alertar' | 'Sugerir Pausa' | 'Sugerir Escala' | 'Notificar';
+  conditions: RuleCondition[];
+  action: 'alert' | 'pause_suggest' | 'scale_suggest';
   active: boolean;
   createdAt: string;
 }
 
-const STORAGE_KEY = 'cortexads_rules';
+const STORAGE_KEY = 'cortex_rules_v2';
 const METRICS = ['ROAS', 'CTR', 'CPV', 'Gasto', 'CPM', 'CPA', 'Frequencia'] as const;
 const OPERATORS: { value: RuleCondition['operator']; label: string }[] = [
   { value: '<', label: 'Menor que' },
@@ -32,17 +32,28 @@ const OPERATORS: { value: RuleCondition['operator']; label: string }[] = [
   { value: '>=', label: 'Maior ou igual' },
   { value: '<=', label: 'Menor ou igual' },
 ];
-const ACTIONS: Rule['action'][] = ['Alertar', 'Sugerir Pausa', 'Sugerir Escala', 'Notificar'];
+
+const ACTIONS: Rule['action'][] = ['alert', 'pause_suggest', 'scale_suggest'];
+
+const ACTION_LABEL: Record<Rule['action'], string> = {
+  alert: 'Alertar',
+  pause_suggest: 'Sugerir Pausa',
+  scale_suggest: 'Sugerir Escala',
+};
+
+const SUGGESTED_RULES: Omit<Rule, 'id' | 'active' | 'createdAt'>[] = [
+  { name: 'ROAS < 2.0x → Alertar', logic: 'AND', conditions: [{ metric: 'ROAS', operator: '<', value: 2.0 }], action: 'alert' },
+  { name: 'CTR < 1% → Pausar', logic: 'AND', conditions: [{ metric: 'CTR', operator: '<', value: 1 }], action: 'pause_suggest' },
+  { name: 'CPV > 50 → Alertar', logic: 'AND', conditions: [{ metric: 'CPV', operator: '>', value: 50 }], action: 'alert' },
+  { name: 'Gasto > 100 → Alertar', logic: 'AND', conditions: [{ metric: 'Gasto', operator: '>', value: 100 }], action: 'alert' },
+  { name: 'CPM > 35 → Alertar', logic: 'AND', conditions: [{ metric: 'CPM', operator: '>', value: 35 }], action: 'alert' },
+  { name: 'ROAS ≥ 4.0x → Escalar', logic: 'AND', conditions: [{ metric: 'ROAS', operator: '>=', value: 4.0 }], action: 'scale_suggest' },
+];
 
 function operatorSymbol(op: string) {
-  switch (op) {
-    case '>=':
-      return '≥';
-    case '<=':
-      return '≤';
-    default:
-      return op;
-  }
+  if (op === '>=') return '≥';
+  if (op === '<=') return '≤';
+  return op;
 }
 
 function uid(): string {
@@ -65,7 +76,8 @@ function saveRules(rules: Rule[]) {
 function checkRules(rules: Rule[], campaignMetrics: Record<string, number>): { rule: Rule; triggered: boolean }[] {
   return rules.map((rule) => {
     if (!rule.active) return { rule, triggered: false };
-    const results = rule.conditions.map((condition) => {
+
+    const conditionsMet = rule.conditions.map((condition) => {
       const value = campaignMetrics[condition.metric] ?? 0;
       switch (condition.operator) {
         case '<':
@@ -81,78 +93,14 @@ function checkRules(rules: Rule[], campaignMetrics: Record<string, number>): { r
       }
     });
 
-    const triggered = rule.logic === 'AND' ? results.every(Boolean) : results.some(Boolean);
-    return { rule, triggered };
+    return { rule, triggered: rule.logic === 'AND' ? conditionsMet.every(Boolean) : conditionsMet.some(Boolean) };
   });
 }
 
-const SUGGESTED_RULES: Omit<Rule, 'id' | 'active' | 'createdAt'>[] = [
-  {
-    name: 'ROAS Baixo + Gasto Alto',
-    conditions: [
-      { metric: 'ROAS', operator: '<', value: 2 },
-      { metric: 'Gasto', operator: '>', value: 100 },
-    ],
-    logic: 'AND',
-    action: 'Sugerir Pausa',
-  },
-  {
-    name: 'Performance Alta',
-    conditions: [
-      { metric: 'ROAS', operator: '>=', value: 4 },
-      { metric: 'CTR', operator: '>', value: 2 },
-    ],
-    logic: 'AND',
-    action: 'Sugerir Escala',
-  },
-  {
-    name: 'CPM Alto + CTR Baixo',
-    conditions: [
-      { metric: 'CPM', operator: '>', value: 35 },
-      { metric: 'CTR', operator: '<', value: 1 },
-    ],
-    logic: 'AND',
-    action: 'Alertar',
-  },
-  {
-    name: 'CPA Alto',
-    conditions: [
-      { metric: 'CPV', operator: '>', value: 50 },
-      { metric: 'ROAS', operator: '<', value: 1.5 },
-    ],
-    logic: 'AND',
-    action: 'Sugerir Pausa',
-  },
-  {
-    name: 'Escala Segura',
-    conditions: [
-      { metric: 'ROAS', operator: '>=', value: 3 },
-      { metric: 'Gasto', operator: '<', value: 50 },
-    ],
-    logic: 'AND',
-    action: 'Sugerir Escala',
-  },
-  {
-    name: 'Frequência Alta',
-    conditions: [{ metric: 'Frequencia', operator: '>', value: 3 }],
-    logic: 'AND',
-    action: 'Alertar',
-  },
-];
-
-function actionColor(action: string) {
-  switch (action) {
-    case 'Alertar':
-      return 'border-warning/20 bg-warning/10 text-warning';
-    case 'Sugerir Pausa':
-      return 'border-destructive/20 bg-destructive/10 text-destructive';
-    case 'Sugerir Escala':
-      return 'border-success/20 bg-success/10 text-success';
-    case 'Notificar':
-      return 'border-primary/20 bg-primary/10 text-primary';
-    default:
-      return 'border-border-default bg-secondary text-text-secondary';
-  }
+function actionColor(action: Rule['action']) {
+  if (action === 'alert') return 'border-warning/20 bg-warning/10 text-warning';
+  if (action === 'pause_suggest') return 'border-destructive/20 bg-destructive/10 text-destructive';
+  return 'border-success/20 bg-success/10 text-success';
 }
 
 export { checkRules };
@@ -162,7 +110,7 @@ export default function RulesTab() {
   const [rules, setRules] = useState<Rule[]>(loadRules);
   const [conditions, setConditions] = useState<RuleCondition[]>([{ metric: 'ROAS', operator: '<', value: 0 }]);
   const [logic, setLogic] = useState<'AND' | 'OR'>('AND');
-  const [action, setAction] = useState<Rule['action']>('Alertar');
+  const [action, setAction] = useState<Rule['action']>('alert');
   const [ruleName, setRuleName] = useState('');
 
   useEffect(() => {
@@ -182,14 +130,13 @@ export default function RulesTab() {
   };
 
   const createRule = () => {
-    const name =
-      ruleName.trim() || conditions.map((c) => `${c.metric} ${operatorSymbol(c.operator)} ${c.value}`).join(` ${logic} `);
+    const name = ruleName.trim() || conditions.map((c) => `${c.metric} ${operatorSymbol(c.operator)} ${c.value}`).join(` ${logic} `);
 
     const rule: Rule = {
       id: uid(),
       name,
-      conditions: [...conditions],
       logic,
+      conditions: [...conditions],
       action,
       active: true,
       createdAt: new Date().toISOString(),
@@ -200,7 +147,7 @@ export default function RulesTab() {
     setConditions([{ metric: 'ROAS', operator: '<', value: 0 }]);
     setRuleName('');
     setLogic('AND');
-    setAction('Alertar');
+    setAction('alert');
   };
 
   const toggleRule = (id: string) => {
@@ -216,8 +163,8 @@ export default function RulesTab() {
     const rule: Rule = {
       id: uid(),
       name: suggested.name,
-      conditions: [...suggested.conditions],
       logic: suggested.logic,
+      conditions: [...suggested.conditions],
       action: suggested.action,
       active: true,
       createdAt: new Date().toISOString(),
@@ -229,6 +176,7 @@ export default function RulesTab() {
 
   const canCreate = conditions.length > 0 && conditions.every((c) => c.metric && Number.isFinite(c.value));
   const activeCount = rules.filter((rule) => rule.active).length;
+
   const logicPreview = useMemo(
     () => conditions.map((c) => `${c.metric} ${operatorSymbol(c.operator)} ${c.value}`).join(` ${logic} `),
     [conditions, logic],
@@ -244,10 +192,10 @@ export default function RulesTab() {
                 <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-text-muted">Rule Builder</p>
                 <h3 className="mt-2 flex items-center gap-2 font-display text-xl font-bold tracking-[-0.04em] text-text-primary">
                   <Plus className="size-5 text-primary" />
-                  Multi-condition rules
+                  Sistema multi-condição
                 </h3>
                 <p className="mt-2 max-w-xl text-sm leading-6 text-text-secondary">
-                  Combine métricas com lógica <strong className="text-text-primary">AND</strong> ou <strong className="text-text-primary">OR</strong> para definir alertas e sugestões acionáveis.
+                  Configure condições com lógica <strong className="text-text-primary">AND</strong> / <strong className="text-text-primary">OR</strong> e acções de alerta, pausa sugerida ou escala sugerida.
                 </p>
               </div>
 
@@ -270,22 +218,16 @@ export default function RulesTab() {
               <Input
                 value={ruleName}
                 onChange={(e) => setRuleName(e.target.value)}
-                placeholder="Ex: Escalar quando ROAS sustentar acima da meta"
+                placeholder="Ex: Alertar quando ROAS cair abaixo da meta"
                 className="h-11 rounded-2xl border-border-default bg-background text-text-primary placeholder:text-text-muted"
               />
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-secondary/50 px-3 py-3">
-              <div className="flex items-center gap-2">
-                <span className="flex size-9 items-center justify-center rounded-xl border border-border-subtle bg-card text-text-muted">
-                  <GitBranch className="size-4" />
-                </span>
-                <div>
-                  <p className="text-xs font-semibold text-text-primary">Lógica entre condições</p>
-                  <p className="text-[11px] text-text-secondary">Use AND para restringir ou OR para ampliar o gatilho.</p>
-                </div>
+              <div>
+                <p className="text-xs font-semibold text-text-primary">Lógica entre condições</p>
+                <p className="text-[11px] text-text-secondary">AND para restringir, OR para ampliar gatilhos.</p>
               </div>
-
               <div className="inline-flex rounded-2xl border border-border-default bg-background p-1">
                 {(['AND', 'OR'] as const).map((option) => (
                   <button
@@ -306,10 +248,7 @@ export default function RulesTab() {
               {conditions.map((condition, idx) => (
                 <div key={idx} className="rounded-[1.4rem] border border-border-default bg-background p-4 shadow-sm">
                   <div className="mb-3 flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-muted">Condição {idx + 1}</p>
-                      <p className="mt-1 text-xs text-text-secondary">Escolha métrica, operador e limiar.</p>
-                    </div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-muted">Condição {idx + 1}</p>
                     {conditions.length > 1 ? (
                       <Button
                         variant="ghost"
@@ -392,7 +331,7 @@ export default function RulesTab() {
                   </SelectTrigger>
                   <SelectContent className="border-border-default bg-card text-text-primary">
                     {ACTIONS.map((item) => (
-                      <SelectItem key={item} value={item}>{item}</SelectItem>
+                      <SelectItem key={item} value={item}>{ACTION_LABEL[item]}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -413,7 +352,7 @@ export default function RulesTab() {
                 <Sparkles className="size-4 text-primary" />
                 Regras sugeridas
               </h3>
-              <p className="mt-1 text-xs text-text-secondary">Atalhos para cenários comuns de pausa, escala e alerta.</p>
+              <p className="mt-1 text-xs text-text-secondary">6 atalhos clicáveis para cenários mais comuns.</p>
             </div>
           </div>
 
@@ -437,7 +376,7 @@ export default function RulesTab() {
                     </p>
                   </div>
                   <span className={cn('rounded-full border px-2 py-1 text-[10px] font-semibold', actionColor(suggested.action))}>
-                    {suggested.action}
+                    {ACTION_LABEL[suggested.action]}
                   </span>
                 </div>
               </button>
@@ -461,7 +400,7 @@ export default function RulesTab() {
           {rules.length === 0 ? (
             <div className="rounded-[1.4rem] border border-dashed border-border-default bg-secondary/30 px-6 py-14 text-center">
               <p className="text-sm font-semibold text-text-primary">Nenhuma regra criada ainda</p>
-              <p className="mt-2 text-xs text-text-secondary">Monte sua primeira automação no builder ao lado.</p>
+              <p className="mt-2 text-xs text-text-secondary">Monte sua primeira automação no builder.</p>
             </div>
           ) : (
             rules.map((rule) => (
@@ -477,12 +416,10 @@ export default function RulesTab() {
                     <div className="flex flex-wrap items-center gap-2">
                       <h4 className="truncate text-sm font-semibold text-text-primary">{rule.name}</h4>
                       <span className={cn('rounded-full border px-2 py-1 text-[10px] font-semibold', actionColor(rule.action))}>
-                        {rule.action}
+                        {ACTION_LABEL[rule.action]}
                       </span>
                     </div>
-                    <p className="mt-1 text-[11px] text-text-muted">
-                      Criada em {new Date(rule.createdAt).toLocaleDateString('pt-BR')}
-                    </p>
+                    <p className="mt-1 text-[11px] text-text-muted">Criada em {new Date(rule.createdAt).toLocaleDateString('pt-BR')}</p>
                   </div>
 
                   <Button
@@ -502,9 +439,7 @@ export default function RulesTab() {
                         {condition.metric} {operatorSymbol(condition.operator)} {condition.value}
                       </span>
                       {index < rule.conditions.length - 1 ? (
-                        <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold tracking-[0.18em] text-primary">
-                          {rule.logic}
-                        </span>
+                        <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold tracking-[0.18em] text-primary">{rule.logic}</span>
                       ) : null}
                     </div>
                   ))}

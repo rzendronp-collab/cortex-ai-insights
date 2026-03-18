@@ -169,21 +169,30 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
 
   return (
     <aside className="flex h-screen w-[264px] min-w-[264px] flex-col overflow-hidden border-r border-sidebar-border bg-[image:var(--sidebar-hero)] text-sidebar-foreground">
-      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
-        <div className="flex size-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[0_12px_30px_-18px_hsl(var(--primary)/0.75)]">
-          <span className="font-mono text-sm font-semibold tracking-tight">CX</span>
-        </div>
+      <div className="border-b border-sidebar-border px-3 py-3">
+        <div className="panel-highlight rounded-[1.6rem] border border-border-highlight/50 bg-card/85 p-3 shadow-[0_22px_46px_-34px_hsl(var(--primary)/0.45)] backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <div className="flex size-11 items-center justify-center rounded-2xl border border-border-highlight/60 bg-primary text-primary-foreground shadow-[0_18px_34px_-22px_hsl(var(--primary)/0.8)]">
+              <Brain className="size-5" />
+            </div>
 
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-sm font-bold tracking-[-0.03em] text-text-primary">CORTEX v5</p>
-          <p className="truncate text-[11px] font-medium text-text-muted">Meta control tower</p>
-        </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <p className="truncate font-display text-sm font-bold tracking-[-0.04em] text-sidebar-foreground">CORTEX</p>
+                <span className="rounded-full border border-border-highlight/60 bg-background/70 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.22em] text-primary">
+                  v5
+                </span>
+              </div>
+              <p className="mt-1 truncate text-[11px] font-medium text-text-muted">Meta intelligence control tower</p>
+            </div>
 
-        {onCloseMobile ? (
-          <Button variant="ghost" size="icon" className="size-8 rounded-xl text-text-muted hover:bg-sidebar-accent hover:text-text-primary" onClick={onCloseMobile}>
-            <X className="size-4" />
-          </Button>
-        ) : null}
+            {onCloseMobile ? (
+              <Button variant="ghost" size="icon" className="size-8 rounded-xl text-text-muted hover:bg-sidebar-accent hover:text-sidebar-foreground" onClick={onCloseMobile}>
+                <X className="size-4" />
+              </Button>
+            ) : null}
+          </div>
+        </div>
       </div>
 
       <div className="border-b border-sidebar-border px-4 py-4">
@@ -226,9 +235,10 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
 
       <div className="px-3 py-3">
         <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-text-muted">Navegação</p>
-        <nav className="space-y-1">
+        <nav className="space-y-1.5">
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
+            const isCortex = item.id === 'action-plan';
             const Icon = item.icon;
 
             return (
@@ -239,15 +249,19 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                   'group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-all duration-200',
                   isActive
                     ? 'bg-primary text-primary-foreground shadow-[0_18px_32px_-22px_hsl(var(--primary)/0.9)]'
-                    : 'text-text-secondary hover:bg-sidebar-accent hover:text-text-primary',
+                    : isCortex
+                      ? 'panel-highlight border border-border-highlight/60 bg-card text-text-primary shadow-[0_16px_30px_-26px_hsl(var(--primary)/0.35)] hover:border-border-highlight hover:text-text-primary'
+                      : 'text-text-secondary hover:bg-sidebar-accent hover:text-text-primary',
                 )}
               >
                 <span
                   className={cn(
                     'flex size-9 shrink-0 items-center justify-center rounded-xl border transition-colors',
                     isActive
-                      ? 'border-white/10 bg-white/10 text-primary-foreground'
-                      : 'border-border-subtle bg-card text-text-muted group-hover:text-text-primary',
+                      ? 'border-primary-foreground/10 bg-primary-foreground/10 text-primary-foreground'
+                      : isCortex
+                        ? 'border-border-highlight/60 bg-primary/10 text-primary'
+                        : 'border-border-subtle bg-card text-text-muted group-hover:text-text-primary',
                   )}
                 >
                   <Icon className="size-4" />
@@ -261,7 +275,11 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                   <span
                     className={cn(
                       'rounded-full px-2 py-0.5 text-[10px] font-bold tracking-[0.12em]',
-                      isActive ? 'bg-white/14 text-primary-foreground' : 'bg-primary/10 text-primary',
+                      isActive
+                        ? 'bg-primary-foreground/14 text-primary-foreground'
+                        : isCortex
+                          ? 'border border-border-highlight/60 bg-background/80 text-primary'
+                          : 'bg-primary/10 text-primary',
                     )}
                   >
                     {item.badge}

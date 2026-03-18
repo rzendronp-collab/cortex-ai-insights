@@ -34,14 +34,7 @@ export default function CortexTab() {
   const { forecast, loading: forecastLoading, generateForecast } = useCortexForecast();
   const { executing, executeAction, history: cortexHistory, historyLoading, fetchHistory } = useCortexActions();
   const { results: fatigueResults, loading: fatigueLoading, analyzeFatigue } = useCortexFatigue();
-  const {
-    plan,
-    isGenerating,
-    generatePlan,
-    applyAction,
-    executeAction: _unused,
-    fetchHistory: fetchActionHistory,
-  } = useActionPlan() as any;
+  const { plan, isGenerating, generatePlan, applyAction } = useActionPlan();
 
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('action-plan');
   const [scopeOpen, setScopeOpen] = useState(false);

@@ -301,7 +301,7 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-[hsl(0_0%_100%/0.06)] bg-[hsl(var(--bg-card))] px-3 py-4 text-center text-xs text-slate-400">
+            <div className="rounded-xl border border-[hsl(0_0%_100%/0.06)] bg-[hsl(var(--bg-card-v5))] px-3 py-4 text-center text-xs text-slate-400">
               Nenhuma conta disponível.
             </div>
           )}

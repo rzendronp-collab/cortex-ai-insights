@@ -176,7 +176,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
         <Button
           onClick={handleRefresh}
           disabled={loading || (!selectedAccountId && activeAccountIds.length === 0)}
-          className="h-9 rounded-xl border border-[hsl(0_0%_100%/0.1)] bg-[hsl(var(--bg-card))] px-3 text-xs font-semibold text-slate-200 hover:bg-[hsl(var(--bg-elevated))]"
+          className="h-9 rounded-xl border border-[hsl(0_0%_100%/0.1)] bg-[hsl(var(--bg-card-v5))] px-3 text-xs font-semibold text-slate-200 hover:bg-[hsl(var(--bg-elevated))]"
         >
           {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
           Atualizar

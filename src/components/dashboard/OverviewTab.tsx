@@ -741,8 +741,8 @@ export default function OverviewTab() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* CARD 1 — Por Gênero */}
-            <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-              <h4 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Por Gênero</h4>
+            <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up">
+              <h4 className="font-display font-semibold text-[14px] text-white mb-4">Por Gênero</h4>
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0" style={{ width: 140, height: 140 }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -770,11 +770,10 @@ export default function OverviewTab() {
                   ))}
                 </div>
               </div>
-              {/* Gender table */}
-              <div className="mt-4 border-t border-[#E4E7EF] pt-3">
+              <div className="mt-4 border-t border-white/[0.06] pt-3">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="text-[10px] text-text-muted uppercase">
+                    <tr className="text-[10px] text-slate-400 uppercase">
                       <th className="text-left py-1 font-semibold">Gênero</th>
                       <th className="text-right py-1 font-semibold">Gasto</th>
                       <th className="text-right py-1 font-semibold">Vendas</th>
@@ -783,15 +782,15 @@ export default function OverviewTab() {
                   </thead>
                   <tbody>
                     {demoByGender.map(g => (
-                      <tr key={g.name} className="border-t border-[#E4E7EF]/50">
-                        <td className="py-1.5 text-text-primary font-medium flex items-center gap-1.5">
+                      <tr key={g.name} className="border-t border-white/[0.04]">
+                        <td className="py-1.5 text-white font-medium flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: g.fill }} />
                           {g.name}
                         </td>
-                        <td className="py-1.5 text-right text-text-primary">{formatCurrency(g.spend, currency)}</td>
-                        <td className="py-1.5 text-right text-text-primary">{g.purchases}</td>
+                        <td className="py-1.5 text-right text-white">{formatCurrency(g.spend, currency)}</td>
+                        <td className="py-1.5 text-right text-white">{g.purchases}</td>
                         <td className="py-1.5 text-right">
-                          <span className={`font-bold ${g.roas >= roasTarget ? 'text-data-green' : g.roas >= roasTarget * 0.7 ? 'text-data-yellow' : 'text-data-red'}`}>
+                          <span className={`font-bold ${g.roas >= roasTarget ? 'text-emerald-400' : g.roas >= roasTarget * 0.7 ? 'text-amber-400' : 'text-red-400'}`}>
                             {g.roas.toFixed(2)}x
                           </span>
                         </td>
@@ -803,8 +802,8 @@ export default function OverviewTab() {
             </div>
 
             {/* CARD 2 — Por Faixa Etária */}
-            <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-              <h4 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Por Faixa Etária</h4>
+            <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up">
+              <h4 className="font-display font-semibold text-[14px] text-white mb-4">Por Faixa Etária</h4>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={demoByAge} layout="vertical" margin={{ top: 0, right: 5, left: 5, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} horizontal={false} />

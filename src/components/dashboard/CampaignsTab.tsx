@@ -1477,7 +1477,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                           </tr>
                                           {/* ADS SUB-SUB-TABLE (3rd level) */}
                                           {isAdsOpen && (
-                                            <tr className="bg-[#F8F9FC] border-b border-[#E4E7EF]/20">
+                                            <tr className="bg-[#080D1A] border-b border-white/[0.06]">
                                               <td colSpan={10} className="p-0">
                                                 <div className="pl-16 pr-4 py-2 border-l-2 border-l-[#7C3AED]/30 animate-fade-up">
                                                   <p className="text-[9px] uppercase text-muted-foreground font-semibold tracking-wider mb-1.5">Anúncios</p>
@@ -1520,8 +1520,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                           else if (ad.roas >= roasTarget * 0.7) { adRBg = 'rgba(217,119,6,0.12)'; adRText = '#D97706'; adRBorder = 'rgba(217,119,6,0.25)'; }
                                                           else { adRBg = 'rgba(220,38,38,0.12)'; adRText = '#DC2626'; adRBorder = 'rgba(220,38,38,0.25)'; }
                                                           return (
-                                                            <tr key={ad.id} className={`border-b border-[#E4E7EF]/20 hover:bg-[#FFFFFF]/50 transition-colors ${!adActive ? 'opacity-50' : ''}`}>
-                                                              {/* Toggle */}
+                                                            <tr key={ad.id} className={`border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors ${!adActive ? 'opacity-50' : ''}`}>
                                                               <td className="py-1.5 px-1.5" onClick={e => e.stopPropagation()}>
                                                                 {isAdToggling ? (
                                                                   <div className="w-3 h-3 border-2 border-muted-foreground border-t-primary rounded-full animate-spin" />
@@ -1531,19 +1530,18 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                                     className="relative inline-flex items-center cursor-pointer"
                                                                     style={{ width: 28, height: 16, borderRadius: 8 }}
                                                                   >
-                                                                    <span className="block w-full h-full rounded-[8px] transition-colors duration-200" style={{ backgroundColor: adActive ? '#16A34A' : '#E4E7EF' }} />
+                                                                    <span className="block w-full h-full rounded-[8px] transition-colors duration-200" style={{ backgroundColor: adActive ? '#16A34A' : '#1E293B' }} />
                                                                     <span className="absolute block w-3 h-3 bg-white rounded-full shadow transition-transform duration-200" style={{ top: 1.5, left: adActive ? 13 : 1.5 }} />
                                                                   </button>
                                                                 )}
                                                               </td>
-                                                              {/* Thumbnail */}
                                                               <td className="py-1.5 px-1.5">
                                                                 {ad.thumbnailUrl ? (
-                                                                  <button onClick={() => setPreviewAd(ad)} className="w-8 h-8 rounded overflow-hidden border border-[#E4E7EF] hover:border-[#2563EB] transition-colors">
+                                                                  <button onClick={() => setPreviewAd(ad)} className="w-8 h-8 rounded overflow-hidden border border-white/[0.06] hover:border-primary/60 transition-colors">
                                                                     <img src={ad.thumbnailUrl} alt="" className="w-full h-full object-cover" />
                                                                   </button>
                                                                 ) : (
-                                                                  <div className="w-8 h-8 rounded bg-[#E4E7EF] flex items-center justify-center">
+                                                                  <div className="w-8 h-8 rounded bg-[#1E293B] flex items-center justify-center">
                                                                     <Image className="w-3 h-3 text-muted-foreground" />
                                                                   </div>
                                                                 )}
@@ -1561,11 +1559,10 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                               </td>
                                                               <td className="py-1.5 px-1.5 text-right text-text-primary">{ad.ctr.toFixed(2)}%</td>
                                                               <td className="py-1.5 px-1.5 text-right text-text-primary">{formatCurrency(ad.cpm, currency)}</td>
-                                                              {/* Actions */}
                                                               <td className="py-1.5 px-1.5 text-center">
                                                                 <div className="flex items-center justify-center gap-1">
                                                                   {ad.thumbnailUrl && (
-                                                                    <button onClick={() => setPreviewAd(ad)} className="p-0.5 text-muted-foreground hover:text-[#2563EB] transition-colors">
+                                                                    <button onClick={() => setPreviewAd(ad)} className="p-0.5 text-muted-foreground hover:text-primary transition-colors">
                                                                       <Eye className="w-3 h-3" />
                                                                     </button>
                                                                   )}

@@ -18,6 +18,19 @@
     --bg-sidebar: 220 29% 98%;
     --bg-tertiary: 220 25% 95%;
 
+    /* CortexAds v5 tokens */
+    --bg-primary: 224 50% 8%;
+    --bg-card-v5: 223 47% 10%;
+    --bg-sidebar-v5: 223 53% 7%;
+    --bg-elevated: 220 39% 11%;
+    --border-subtle-v5: 0 0% 100% / 0.06;
+    --border-default-v5: 0 0% 100% / 0.09;
+    --accent: 239 84% 67%;
+    --accent-hover: 244 75% 59%;
+    --green: 160 84% 39%;
+    --red: 0 84% 60%;
+    --yellow: 38 92% 50%;
+
     --border-default: 220 19% 88%;
     --border-subtle: 220 20% 93%;
     --border-focus: 218 76% 56%;

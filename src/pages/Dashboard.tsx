@@ -65,7 +65,7 @@ function DashboardContent() {
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[hsl(var(--bg-primary))]">
         <DashboardHeader onOpenSidebar={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto bg-background p-5 md:p-6">
+        <main className="flex-1 overflow-y-auto bg-[hsl(var(--bg-primary))] p-5 md:p-6">
           <div key={activeTab} className="h-full animate-fade-up">
             {renderTab()}
           </div>

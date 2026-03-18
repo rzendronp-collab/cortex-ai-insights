@@ -1341,7 +1341,50 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       onMouseEnter={e => { if (!expanded && !isEditing) (e.currentTarget as HTMLElement).style.backgroundColor = '#131D32'; }}
                       onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = rowBg; }}
                     >
-...
+                      <td className="px-2" onClick={e => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedIds.has(c.id)}
+                          onCheckedChange={() => handleSelectRow(c.id, rowIndex, false)}
+                          onClick={e => handleSelectRow(c.id, rowIndex, (e as React.MouseEvent).shiftKey)}
+                          className="h-3.5 w-3.5"
+                        />
+                      </td>
+                      {activeColumns.map(col => renderCell(col.id))}
+                      <td className="px-3" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => openAiDrawer('campaign', c.name, { Gasto: c.spend, Receita: c.revenue, ROAS: c.roas, Vendas: c.purchases, CTR: c.ctr, CPM: c.cpm })}
+                                  className="p-1 text-[#7C3AED]/60 hover:text-[#7C3AED] transition-colors"
+                                >
+                                  <Brain className="w-3.5 h-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent><p className="text-xs">Analisar com IA</p></TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  onClick={() => {
+                                    setDuplicateDialog({ id: c.id, name: c.name });
+                                    setDuplicateName(`${c.name} Copy`);
+                                    setDuplicateKeepActive(isActive);
+                                  }}
+                                  className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                  <Copy className="w-3.5 h-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent><p className="text-xs">Duplicar campanha</p></TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </td>
+                    </tr>
                     {adsetExpandedId === c.id && (() => {
                       const campaignAdsets = adsets.get(c.id);
                       const isAdsetLoading = adsetsLoading.has(c.id);

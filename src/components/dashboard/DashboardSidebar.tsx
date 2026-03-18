@@ -14,6 +14,7 @@ import {
   Sparkles,
   TrendingUp,
   X,
+  Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SettingsDialog from './SettingsDialog';
@@ -193,10 +194,8 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
           'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] transition-all duration-150',
           isActive && isCortex && 'border border-[hsl(var(--sidebar-cortex)/0.3)] bg-[hsl(var(--sidebar-cortex)/0.16)] text-[hsl(var(--primary))]',
           isActive && !isCortex && 'bg-[hsl(var(--sidebar-edge)/0.08)] text-sidebar-foreground',
-          !isActive && isCortex &&
-            'border border-[hsl(var(--sidebar-cortex)/0.16)] bg-[hsl(var(--sidebar-cortex)/0.06)] text-[hsl(var(--primary))] hover:border-[hsl(var(--sidebar-cortex)/0.28)] hover:bg-[hsl(var(--sidebar-cortex)/0.12)]',
-          !isActive && !isCortex && !isMuted &&
-            'text-text-secondary hover:bg-[hsl(var(--sidebar-edge)/0.04)] hover:text-sidebar-foreground',
+          !isActive && isCortex && 'border border-[hsl(var(--sidebar-cortex)/0.16)] bg-[hsl(var(--sidebar-cortex)/0.06)] text-[hsl(var(--primary))] hover:border-[hsl(var(--sidebar-cortex)/0.28)] hover:bg-[hsl(var(--sidebar-cortex)/0.12)]',
+          !isActive && !isCortex && !isMuted && 'text-text-secondary hover:bg-[hsl(var(--sidebar-edge)/0.04)] hover:text-sidebar-foreground',
           isMuted && 'text-[hsl(var(--sidebar-quiet))]',
         )}
       >
@@ -212,18 +211,18 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
   };
 
   return (
-    <aside className="flex min-h-screen w-[220px] min-w-[220px] flex-col border-r border-[hsl(var(--sidebar-edge)/0.05)] bg-[hsl(var(--sidebar-shell))] text-sidebar-foreground">
-      <div className="flex items-center gap-2.5 border-b border-[hsl(var(--sidebar-edge)/0.05)] px-4 py-4">
+    <aside className="flex min-h-screen w-[220px] min-w-[220px] flex-col border-r border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel-strong))] text-sidebar-foreground">
+      <div className="flex items-center gap-2.5 border-b border-[hsl(var(--surface-edge)/0.06)] px-4 py-4">
         <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[hsl(var(--primary-dark))] text-primary-foreground shadow-[0_12px_28px_-18px_hsl(var(--primary)/0.9)]">
-          <Brain className="size-4" />
+          <Zap className="size-4" />
         </div>
-        <span className="truncate text-sm font-bold tracking-tight text-sidebar-foreground">CortexAds</span>
-        <span className="ml-auto rounded-md bg-[hsl(var(--sidebar-cortex)/0.1)] px-1.5 py-0.5 text-[9px] font-semibold text-primary">v5</span>
+        <span className="truncate text-sm font-bold tracking-tight text-white">CortexAds</span>
+        <span className="ml-auto rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary">v5</span>
         {onCloseMobile ? (
           <Button
             variant="ghost"
             size="icon"
-            className="ml-1 size-8 rounded-lg text-text-muted hover:bg-[hsl(var(--sidebar-edge)/0.06)] hover:text-sidebar-foreground"
+            className="ml-1 size-8 rounded-lg text-text-muted hover:bg-[hsl(var(--surface-edge)/0.06)] hover:text-sidebar-foreground"
             onClick={onCloseMobile}
           >
             <X className="size-4" />
@@ -236,13 +235,13 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
 
         <div className="mt-3 space-y-1 px-3">
           {primaryNavItems.map(renderNavItem)}
-          <div className="mx-3 my-1 border-t border-[hsl(var(--sidebar-edge)/0.05)]" />
+          <div className="mx-3 my-1 border-t border-[hsl(var(--surface-edge)/0.06)]" />
           {cortexNavItems.map(renderNavItem)}
-          <div className="mx-3 my-1 border-t border-[hsl(var(--sidebar-edge)/0.05)]" />
+          <div className="mx-3 my-1 border-t border-[hsl(var(--surface-edge)/0.06)]" />
           {secondaryNavItems.map(renderNavItem)}
           {utilityNavItems.length ? (
             <>
-              <div className="mx-3 my-1 border-t border-[hsl(var(--sidebar-edge)/0.05)]" />
+              <div className="mx-3 my-1 border-t border-[hsl(var(--surface-edge)/0.06)]" />
               {utilityNavItems.map(renderNavItem)}
             </>
           ) : null}
@@ -262,16 +261,13 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
             </Button>
           ) : hasAccounts ? (
             <div className="space-y-3">
-              <div className="flex items-center justify-between px-1 text-[11px]">
-                <span className="text-text-secondary">{activeAccountIds.length} ativa{activeAccountIds.length === 1 ? '' : 's'}</span>
-                <div className="flex items-center gap-3">
-                  <button onClick={handleSelectAll} className="font-medium text-primary transition-colors hover:text-[hsl(var(--primary-glow))]">
-                    Todas
-                  </button>
-                  <button onClick={handleDeselectAll} className="font-medium text-text-muted transition-colors hover:text-sidebar-foreground">
-                    Limpar
-                  </button>
-                </div>
+              <div className="flex items-center justify-end gap-3 px-1 text-[11px]">
+                <button onClick={handleSelectAll} className="font-medium text-primary transition-colors hover:text-[hsl(var(--primary-glow))]">
+                  Todas
+                </button>
+                <button onClick={handleDeselectAll} className="font-medium text-text-muted transition-colors hover:text-sidebar-foreground">
+                  Limpar
+                </button>
               </div>
 
               <div className="hide-scrollbar max-h-[40vh] space-y-2 overflow-y-auto">
@@ -279,10 +275,10 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                   const isOpen = openBMs[bmName] ?? true;
 
                   return (
-                    <section key={bmName} className="rounded-xl border border-[hsl(var(--sidebar-edge)/0.05)] bg-[hsl(var(--sidebar-surface)/0.46)] backdrop-blur-sm">
+                    <section key={bmName} className="rounded-xl border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))/0.72] backdrop-blur-sm">
                       <button
                         onClick={() => setOpenBMs((prev) => ({ ...prev, [bmName]: !isOpen }))}
-                        className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition-colors hover:bg-[hsl(var(--sidebar-edge)/0.04)]"
+                        className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition-colors hover:bg-[hsl(var(--surface-edge)/0.04)]"
                       >
                         <div className="min-w-0">
                           <p className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-text-secondary">{bmName}</p>
@@ -292,7 +288,7 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                       </button>
 
                       {isOpen ? (
-                        <div className="space-y-1 border-t border-[hsl(var(--sidebar-edge)/0.05)] px-2 py-2">
+                        <div className="space-y-1 border-t border-[hsl(var(--surface-edge)/0.06)] px-2 py-2">
                           {accounts.map((account) => {
                             const accountId = account.account_id || '';
                             const isChecked = !!accountId && activeAccountIds.includes(accountId);
@@ -316,9 +312,7 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                                 }}
                                 className={cn(
                                   'flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-[12px] transition-all duration-150',
-                                  isChecked
-                                    ? 'bg-[hsl(var(--sidebar-edge)/0.08)] text-sidebar-foreground'
-                                    : 'text-text-secondary hover:bg-[hsl(var(--sidebar-edge)/0.04)] hover:text-sidebar-foreground',
+                                  isChecked ? 'bg-[hsl(var(--surface-edge)/0.08)] text-sidebar-foreground' : 'text-text-secondary hover:bg-[hsl(var(--surface-edge)/0.04)] hover:text-sidebar-foreground',
                                 )}
                               >
                                 <span className={cn('size-2 shrink-0 rounded-full', status ? statusClasses[status] : 'bg-success/80')} />
@@ -334,25 +328,28 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-[hsl(var(--sidebar-edge)/0.05)] bg-[hsl(var(--sidebar-surface)/0.4)] px-3 py-4 text-center text-xs text-text-secondary">
+            <div className="rounded-xl border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))/0.7] px-3 py-4 text-center text-xs text-text-secondary">
               Nenhuma conta disponível.
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 border-t border-[hsl(var(--sidebar-edge)/0.05)] px-4 py-3">
+      <div className="flex flex-col gap-2 border-t border-[hsl(var(--surface-edge)/0.06)] px-4 py-3">
         <div>
           <div className="mb-2 text-[9px] font-semibold uppercase tracking-[0.28em] text-[hsl(var(--sidebar-quiet))]">Configurações</div>
           <SettingsDialog />
         </div>
 
-        <div className="flex items-center gap-2 border-t border-[hsl(var(--sidebar-edge)/0.05)] pt-3">
+        <div className="flex items-center gap-2 border-t border-[hsl(var(--surface-edge)/0.06)] pt-3">
           <div className="flex size-9 items-center justify-center rounded-full bg-[hsl(var(--sidebar-cortex)/0.14)] text-sm font-bold text-primary">
             {initials}
           </div>
 
-          <p className="min-w-0 flex-1 truncate text-[13px] text-text-secondary">{profile?.name || user?.email || 'Utilizador'}</p>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[13px] text-slate-300">{profile?.name || user?.email || 'Utilizador'}</p>
+            <p className="truncate text-[10px] text-text-muted">{adAccounts.length} contas • {activeAccountIds.length} ativa{activeAccountIds.length === 1 ? '' : 's'}</p>
+          </div>
 
           <button onClick={signOut} className="text-text-muted transition-colors hover:text-sidebar-foreground">
             <LogOut className="h-3.5 w-3.5" />

@@ -15,11 +15,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-// ─── Chart theme constants (V5.2 DashCortex palette) ───
-const CHART_GRID = '#E4E7EF';
-const CHART_AXIS = '#9BA5B7';
-const TOOLTIP_BG = '#FFFFFF';
-const TOOLTIP_BORDER = '#C9D0E0';
+// ─── Chart theme constants (V5 dark palette) ───
+const CHART_GRID = '#1E293B';
+const CHART_AXIS = '#7A8FAD';
+const TOOLTIP_BG = '#1A2540';
+const TOOLTIP_BORDER = '#2A3F6A';
 
 const DATA_BLUE = '#2563EB';
 const DATA_GREEN = '#16A34A';
@@ -32,10 +32,8 @@ const chartTooltipStyle = {
   backgroundColor: TOOLTIP_BG,
   border: `1px solid ${TOOLTIP_BORDER}`,
   borderRadius: 8,
-  boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
   fontSize: 11,
-  color: '#0F1523',
-  fontFamily: "'Inter', sans-serif",
+  color: '#E2E8F0',
   padding: '10px 12px',
 };
 
@@ -320,10 +318,10 @@ export default function OverviewTab() {
           return [
             { label: `ROAS Médio ${roasSemaphore}`, value: `${avgRoas.toFixed(1)}x`, subtitle: 'Retorno sobre investimento', delta: calcDelta(avgRoas, prevRoas), valueClassName: roasValueClass, isHero: true, sparklineData: roasSparkline, sparklineColor: 'hsl(var(--primary))' },
             { label: 'Gasto Total', value: formatCurrency(totalSpend, currency), subtitle: 'Período selecionado', delta: calcDelta(totalSpend, prevSpend), sparklineData: spendSparkline, sparklineColor: 'hsl(var(--data-yellow))' },
-            { label: revenueLabel, value: formatCurrency(totalRevenue, currency), subtitle: 'Total gerado', delta: calcDelta(totalRevenue, prevRevenue), valueClassName: 'text-success', sparklineData: revenueSparkline, sparklineColor: 'hsl(var(--success))' },
+            { label: revenueLabel, value: formatCurrency(totalRevenue, currency), subtitle: 'Total gerado', delta: calcDelta(totalRevenue, prevRevenue), valueClassName: 'text-emerald-400', sparklineData: revenueSparkline, sparklineColor: 'hsl(var(--success))' },
             { label: conversionLabel, value: totalSales.toString(), subtitle: conversionSubtitle, delta: calcDelta(totalSales, prevSales), sparklineData: salesSparkline, sparklineColor: 'hsl(var(--data-purple))' },
             { label: 'CTR Médio', value: `${avgCtr.toFixed(1)}%`, subtitle: 'Taxa de cliques', delta: calcDelta(avgCtr, prevCtr), sparklineData: ctrSparkline, sparklineColor: 'hsl(var(--data-blue))' },
-            { label: costLabel, value: `${currency} ${costPerSale.toFixed(2)}`, subtitle: costSubtitle, delta: calcDelta(costPerSale, prevCpv), valueClassName: 'text-warning', sparklineColor: 'hsl(var(--warning))' },
+            { label: costLabel, value: `${currency} ${costPerSale.toFixed(2)}`, subtitle: costSubtitle, delta: calcDelta(costPerSale, prevCpv), valueClassName: 'text-white', sparklineColor: 'hsl(var(--warning))' },
           ];
         })().map((kpi, i) => (
           <div
@@ -341,17 +339,17 @@ export default function OverviewTab() {
 
       {/* ─── Accounts Table (multi-account) ─── */}
       {accountSummaries.length > 0 && (
-        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl overflow-hidden animate-fade-up">
-          <div className="px-4 py-3 border-b border-[#E4E7EF] flex items-center justify-between">
-            <h3 className="font-display font-semibold text-[14px] text-[#0F1523]">Contas Ativas</h3>
-            <span className="text-[10px] text-[#5A6478]">{accountSummaries.filter(a => a.hasData).length} com dados</span>
+        <div className="rounded-xl border border-white/[0.06] bg-[#0D1424] overflow-hidden animate-fade-up">
+          <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
+            <h3 className="font-display text-[14px] font-semibold text-white">Contas Ativas</h3>
+            <span className="text-[10px] text-slate-400">{accountSummaries.filter(a => a.hasData).length} com dados</span>
           </div>
           <div className="p-4">
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-[#F8F9FC]">
-                  <th className="text-left px-4 py-2.5 text-[10px] font-semibold text-[#5A6478] uppercase tracking-wider">Conta</th>
+                <tr className="bg-[#080D1A]">
+                  <th className="px-4 py-2.5 text-left text-[10px] font-semibold uppercase tracking-wider text-slate-400">Conta</th>
                   {[
                     { key: 'roas', label: 'ROAS' },
                     { key: 'spend', label: 'Gasto' },
@@ -362,7 +360,7 @@ export default function OverviewTab() {
                     <th
                       key={col.key}
                       onClick={() => handleSort(col.key)}
-                      className="text-right px-4 py-2.5 text-[10px] font-semibold text-[#5A6478] uppercase tracking-wider cursor-pointer hover:text-[#0F1523] transition-colors"
+                      className="px-4 py-2.5 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400 transition-colors hover:text-white"
                     >
                       <span className="inline-flex items-center gap-1">
                         {col.label}
@@ -370,38 +368,33 @@ export default function OverviewTab() {
                       </span>
                     </th>
                   ))}
-                  <th className="text-right px-4 py-2.5 text-[10px] font-semibold text-[#5A6478] uppercase tracking-wider">Status</th>
+                  <th className="px-4 py-2.5 text-right text-[10px] font-semibold uppercase tracking-wider text-slate-400">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedAccounts.map(a => {
                   const isAbove = a.roas >= roasTarget;
-                  const bgClass = a.hasData
-                    ? isAbove
-                      ? 'bg-data-green/[0.04] hover:bg-data-green/[0.08]'
-                      : 'bg-data-red/[0.04] hover:bg-data-red/[0.08]'
-                    : 'hover:bg-bg-card-hover';
                   return (
                     <tr
                       key={a.id}
                       onClick={() => handleAccountClick(a.id)}
-                      className={`border-t border-[#E4E7EF] hover:bg-[#F1F3F8] cursor-pointer transition-colors`}
+                      className="cursor-pointer border-t border-white/[0.06] transition-colors hover:bg-white/[0.03]"
                     >
-                      <td className="py-2.5 text-text-primary font-medium truncate max-w-[200px]">{a.name}</td>
-                      <td className={`py-2.5 text-right font-bold ${a.hasData ? getRoasColor(a.roas, roasTarget) : 'text-text-muted'}`}>
+                      <td className="py-2.5 text-white font-medium truncate max-w-[200px]">{a.name}</td>
+                      <td className={`py-2.5 text-right font-bold ${a.hasData ? getRoasColor(a.roas, roasTarget) : 'text-slate-500'}`}>
                         {a.hasData ? `${a.roas.toFixed(1)}x` : '—'}
                       </td>
-                      <td className="py-2.5 text-right text-text-primary">{a.hasData ? formatCurrency(a.spend, currency) : '—'}</td>
-                      <td className="py-2.5 text-right text-data-green">{a.hasData ? formatCurrency(a.revenue, currency) : '—'}</td>
-                      <td className="py-2.5 text-right text-text-primary">{a.hasData ? a.sales : '—'}</td>
-                      <td className="py-2.5 text-right text-text-primary">{a.hasData ? `${a.ctr.toFixed(1)}%` : '—'}</td>
+                      <td className="py-2.5 text-right text-white">{a.hasData ? formatCurrency(a.spend, currency) : '—'}</td>
+                      <td className="py-2.5 text-right text-emerald-400">{a.hasData ? formatCurrency(a.revenue, currency) : '—'}</td>
+                      <td className="py-2.5 text-right text-white">{a.hasData ? a.sales : '—'}</td>
+                      <td className="py-2.5 text-right text-white">{a.hasData ? `${a.ctr.toFixed(1)}%` : '—'}</td>
                       <td className="py-2.5 text-right">
                         {a.hasData ? (
-                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded ${isAbove ? 'bg-data-green/10 text-data-green' : 'bg-data-red/10 text-data-red'}`}>
-                            {isAbove ? '🟢 Acima' : '🔴 Abaixo'}
+                          <span className={`rounded border px-2 py-0.5 text-[10px] font-semibold ${isAbove ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' : 'border-red-500/20 bg-red-500/10 text-red-400'}`}>
+                            {isAbove ? 'Acima' : 'Abaixo'}
                           </span>
                         ) : (
-                          <span className="text-[10px] text-text-muted">⚪ Sem dados</span>
+                          <span className="text-[10px] text-slate-500">Sem dados</span>
                         )}
                       </td>
                     </tr>
@@ -417,8 +410,8 @@ export default function OverviewTab() {
       {/* ─── Charts Row 1 ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {/* ROAS por Campanha */}
-        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '200ms' }}>
-          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">ROAS por Campanha <span className="text-text-muted font-normal">(top 10)</span></h3>
+        <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '200ms' }}>
+          <h3 className="font-display font-semibold text-[14px] text-white mb-4">ROAS por Campanha <span className="text-text-muted font-normal">(top 10)</span></h3>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={roasCampaignData} layout="vertical" barSize={28}>
               <defs>
@@ -436,7 +429,7 @@ export default function OverviewTab() {
               <YAxis type="category" dataKey="name" tick={{ fontSize: 9, fill: CHART_AXIS }} width={85} axisLine={false} tickLine={false} />
               <Tooltip content={<RoasTooltip />} />
               <ReferenceLine x={roasTarget} stroke={MUTED} strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 9, fill: MUTED }} />
-              <Bar dataKey="roas" radius={[0, 6, 6, 0]} animationDuration={800} label={{ position: 'right', fontSize: 10, fill: '#0F1523', formatter: (v: number) => `${v}x` }}>
+              <Bar dataKey="roas" radius={[0, 6, 6, 0]} animationDuration={800} label={{ position: 'right', fontSize: 10, fill: '#E2E8F0', formatter: (v: number) => `${v}x` }}>
                 {roasCampaignData.map((entry, i) => (
                   <Cell key={i} fill={entry.roas >= roasTarget ? 'url(#barGreen)' : 'url(#barRed)'} />
                 ))}
@@ -446,8 +439,8 @@ export default function OverviewTab() {
         </div>
 
         {/* Funil de Conversão — V5 */}
-        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up" style={{ minHeight: 180 }}>
-          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-5">Funil de Conversão</h3>
+        <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up" style={{ minHeight: 180 }}>
+          <h3 className="font-display font-semibold text-[14px] text-white mb-5">Funil de Conversão</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left: visual funnel — 4 níveis com largura decrescente */}
             {(() => {
@@ -520,8 +513,8 @@ export default function OverviewTab() {
         </div>
 
         {/* Origem tráfego */}
-        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Origem do Tráfego</h3>
+        <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up">
+          <h3 className="font-display font-semibold text-[14px] text-white mb-4">Origem do Tráfego</h3>
           <div className="space-y-3 mt-2">
             {platformData.map((p, i) => {
               const colors = [DATA_BLUE, DATA_PURPLE, DATA_YELLOW, MUTED];
@@ -530,10 +523,10 @@ export default function OverviewTab() {
                 <div key={p.name} className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c }} />
                   <span className="text-[11px] text-text-secondary flex-1 capitalize">{p.name}</span>
-                  <div className="flex-1 h-2 bg-bg-base rounded-full overflow-hidden">
+                  <div className="flex-1 h-2 bg-[#080D1A] rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-all duration-500" style={{ width: `${p.value}%`, background: c }} />
                   </div>
-                  <span className="text-[11px] text-text-primary font-semibold w-8 text-right">{p.value}%</span>
+                  <span className="text-[11px] text-white font-semibold w-8 text-right">{p.value}%</span>
                 </div>
               );
             })}
@@ -542,8 +535,8 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Gasto vs Receita (Area Chart) ─── */}
-      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-        <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Gasto vs Receita</h3>
+      <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up">
+        <h3 className="font-display font-semibold text-[14px] text-white mb-4">Gasto vs Receita</h3>
         <ResponsiveContainer width="100%" height={180}>
           <AreaChart data={dailyData}>
             <defs>
@@ -571,9 +564,9 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Daily Evolution ─── */}
-      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up" style={{ minHeight: 320 }}>
+      <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up" style={{ minHeight: 320 }}>
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-          <h3 className="font-display font-semibold text-[14px] text-[#0F1523]">Evolução Diária</h3>
+          <h3 className="font-display font-semibold text-[14px] text-white">Evolução Diária</h3>
           <div className="flex gap-3 flex-wrap">
             {Object.entries(dailyMetricConfig).map(([key, cfg]) => (
               <label key={key} className="flex items-center gap-1.5 cursor-pointer select-none">
@@ -630,8 +623,8 @@ export default function OverviewTab() {
 
       {/* ─── Budget Distribution ─── */}
       {activeCampaigns.length > 0 && (
-        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '350ms' }}>
-          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Distribuição de Investimento</h3>
+        <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '350ms' }}>
+          <h3 className="font-display font-semibold text-[14px] text-white mb-4">Distribuição de Investimento</h3>
           <div className="flex items-center gap-6">
             <ResponsiveContainer width={160} height={160}>
               <PieChart>
@@ -923,8 +916,8 @@ export default function OverviewTab() {
 
       {/* ─── Gasto vs Receita Pie ─── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Gasto vs Receita</h3>
+        <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up">
+          <h3 className="font-display font-semibold text-[14px] text-white mb-4">Gasto vs Receita</h3>
           <ResponsiveContainer width="100%" height={160}>
             <PieChart>
               <Pie data={[{ name: 'Gasto', value: totalSpend }, { name: 'Receita', value: totalRevenue }]} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value" strokeWidth={0}>

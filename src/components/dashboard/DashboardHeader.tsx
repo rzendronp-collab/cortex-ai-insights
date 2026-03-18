@@ -33,6 +33,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
     setSelectedPeriod,
     cacheTimestamp,
     selectedAccountName,
+    analysisData,
   } = useDashboard();
   const { isConnected, isTokenExpired, connectMeta } = useMetaConnection();
   const { analyze, loading } = useMetaData();
@@ -77,8 +78,29 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
       ? `${activeAccountIds.length} contas ativas`
       : selectedAccountName || (selectedAccountId ? 'Conta ativa' : 'Nenhuma conta');
 
+  const totals = useMemo(() => {
+    const campaigns = analysisData?.campaigns?.filter((campaign) => campaign?.spend > 0) || [];
+    if (!campaigns.length) {
+      return { roas: '—', spend: '—', revenue: '—', purchases: '—' };
+    }
+
+    const spend = campaigns.reduce((sum, campaign) => sum + (campaign?.spend || 0), 0);
+    const revenue = campaigns.reduce((sum, campaign) => sum + (campaign?.revenue || 0), 0);
+    const purchases = campaigns.reduce((sum, campaign) => sum + (campaign?.purchases || 0), 0);
+    const roas = spend > 0 ? `${(revenue / spend).toFixed(1)}x` : '—';
+
+    const formatMoney = (value: number) => `${value.toFixed(value >= 100 ? 0 : 2)}`;
+
+    return {
+      roas,
+      spend: spend > 0 ? formatMoney(spend) : '—',
+      revenue: revenue > 0 ? formatMoney(revenue) : '—',
+      purchases: purchases > 0 ? String(purchases) : '—',
+    };
+  }, [analysisData]);
+
   return (
-    <header className="sticky top-0 z-30 border-b border-border-default bg-background/88 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-[hsl(var(--surface-edge)/0.06)] bg-background/88 backdrop-blur-xl">
       <div className="flex min-h-[76px] items-center justify-between gap-4 px-4 md:px-6">
         <div className="flex min-w-0 items-center gap-3 md:gap-4">
           {isMobile && onOpenSidebar ? (
@@ -86,7 +108,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
               variant="outline"
               size="icon"
               onClick={onOpenSidebar}
-              className="size-10 rounded-2xl border-border-default bg-card/80 text-text-secondary hover:bg-accent hover:text-text-primary"
+              className="size-10 rounded-2xl border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))/0.8] text-text-secondary hover:bg-accent hover:text-text-primary"
             >
               <Menu className="size-5" />
             </Button>
@@ -113,17 +135,12 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
         </div>
 
         <div className="flex items-center gap-2 md:gap-3">
-          <div className="hidden lg:flex items-center rounded-[1.25rem] border border-border-default bg-card/80 px-3 py-2 shadow-sm">
+          <div className="hidden items-center rounded-[1.25rem] border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))/0.85] px-3 py-2 shadow-sm lg:flex">
             <PeriodSelector value={selectedPeriod} onChange={setSelectedPeriod} />
           </div>
 
-          <div className="hidden xl:flex items-center gap-2 rounded-[1.25rem] border border-border-default bg-card/80 px-3 py-2 text-xs text-text-secondary shadow-sm">
-            <span
-              className={cn(
-                'size-2 rounded-full',
-                isTokenExpired ? 'bg-warning' : isConnected ? 'bg-success' : 'bg-muted-foreground',
-              )}
-            />
+          <div className="hidden items-center gap-2 rounded-[1.25rem] border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))/0.85] px-3 py-2 text-xs text-text-secondary shadow-sm xl:flex">
+            <span className={cn('size-2 rounded-full', isTokenExpired ? 'bg-warning' : isConnected ? 'bg-success' : 'bg-muted-foreground')} />
             <span>{statusLabel}</span>
             {isTokenExpired ? (
               <button className="font-semibold text-primary transition-colors hover:text-primary-dark" onClick={() => connectMeta()}>
@@ -137,7 +154,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
           </div>
 
           {lastUpdatedText ? (
-            <div className="hidden md:flex items-center gap-2 rounded-[1.25rem] border border-border-default bg-card/80 px-3 py-2 text-xs text-text-secondary shadow-sm">
+            <div className="hidden items-center gap-2 rounded-[1.25rem] border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))/0.85] px-3 py-2 text-xs text-text-secondary shadow-sm md:flex">
               <Sparkles className="size-3.5 text-primary" />
               <span>Atualizado {lastUpdatedText}</span>
             </div>
@@ -162,19 +179,30 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
         </div>
       </div>
 
-      <div className="border-t border-border-subtle px-4 py-2 lg:hidden md:px-6">
+      <div className="border-t border-[hsl(var(--surface-edge)/0.06)] px-4 py-2 md:px-6">
+        <div className="flex flex-wrap items-center gap-2 text-[10px]">
+          <span className="text-text-muted">ROAS</span>
+          <span className="font-semibold text-slate-200">{totals.roas}</span>
+          <span className="text-slate-700">·</span>
+          <span className="text-text-muted">Gasto</span>
+          <span className="font-semibold text-slate-200">{totals.spend === '—' ? '—' : `${totals.spend}`}</span>
+          <span className="text-slate-700">·</span>
+          <span className="text-text-muted">Receita</span>
+          <span className="font-semibold text-slate-200">{totals.revenue === '—' ? '—' : `${totals.revenue}`}</span>
+          <span className="text-slate-700">·</span>
+          <span className="text-text-muted">Vendas</span>
+          <span className="font-semibold text-slate-200">{totals.purchases}</span>
+        </div>
+      </div>
+
+      <div className="border-t border-[hsl(var(--surface-edge)/0.06)] px-4 py-2 lg:hidden md:px-6">
         <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1 overflow-hidden rounded-[1.1rem] border border-border-default bg-card/80 px-3 py-2 shadow-sm">
+          <div className="min-w-0 flex-1 overflow-hidden rounded-[1.1rem] border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))/0.85] px-3 py-2 shadow-sm">
             <PeriodSelector value={selectedPeriod} onChange={setSelectedPeriod} />
           </div>
 
-          <div className="flex items-center gap-2 rounded-[1.1rem] border border-border-default bg-card/80 px-3 py-2 text-xs text-text-secondary shadow-sm">
-            <span
-              className={cn(
-                'size-2 rounded-full',
-                isTokenExpired ? 'bg-warning' : isConnected ? 'bg-success' : 'bg-muted-foreground',
-              )}
-            />
+          <div className="flex items-center gap-2 rounded-[1.1rem] border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))/0.85] px-3 py-2 text-xs text-text-secondary shadow-sm">
+            <span className={cn('size-2 rounded-full', isTokenExpired ? 'bg-warning' : isConnected ? 'bg-success' : 'bg-muted-foreground')} />
             <span className="hidden sm:inline">{statusLabel}</span>
             {isTokenExpired ? (
               <button className="font-semibold text-primary transition-colors hover:text-primary-dark" onClick={() => connectMeta()}>

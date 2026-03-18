@@ -1042,8 +1042,8 @@ Responda SOMENTE com o JSON, sem markdown.`;
             return (
               <div
                 key={c.id}
-                className={`bg-white rounded-lg p-4 animate-fade-in opacity-0 [animation-fill-mode:forwards] ${!isActive ? 'opacity-60' : ''}`}
-                style={{ animationDelay: `${idx * 30}ms`, border: '1px solid #E4E7EF' }}
+                className={`rounded-lg bg-[#0D1424] p-4 animate-fade-in opacity-0 [animation-fill-mode:forwards] ${!isActive ? 'opacity-60' : ''}`}
+                style={{ animationDelay: `${idx * 30}ms`, border: '1px solid rgba(255,255,255,0.06)' }}
               >
                 {/* Header: name + toggle */}
                 <div className="flex items-start justify-between gap-3 mb-3">
@@ -1109,18 +1109,18 @@ Responda SOMENTE com o JSON, sem markdown.`;
       <div className="md:hidden"><PaginationBar /></div>
 
       {/* Sort indicator badge */}
-      <div className="hidden md:block bg-white rounded-lg overflow-x-auto" style={{ border: "1px solid #E4E7EF" }}>
-        <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#E4E7EF]">
-          <span className="text-[10px] text-text-muted">
-            Ordenado por: <span className="font-semibold text-text-secondary">{
+      <div className="hidden md:block rounded-lg overflow-x-auto bg-[#0D1424]" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/[0.06]">
+          <span className="text-[10px] text-slate-400">
+            Ordenado por: <span className="font-semibold text-slate-300">{
               { status: 'Status', name: 'Nome', spend: 'Gasto', budget: 'Orçamento', revenue: 'Receita', profit: 'Lucro', roas: 'ROAS', purchases: 'Vendas', cpa: 'CPA', ctr: 'CTR', cpm: 'CPM', impressions: 'Impressões', clicks: 'Cliques' }[sortColumn]
             }</span> {sortDirection === 'desc' ? '↓' : '↑'}
           </span>
-          <span className="text-[10px] text-text-muted">{sortedCampaigns.length} campanhas</span>
+          <span className="text-[10px] text-slate-400">{sortedCampaigns.length} campanhas</span>
         </div>
-        <table className="w-full text-left border-collapse min-w-[1000px]">
+        <table className="w-full text-left border-collapse min-w-[1000px] bg-[#0D1424]">
           <thead>
-            <tr style={{ background: "#F8F9FC", borderBottom: "1px solid #E4E7EF", position: "sticky", top: 0, zIndex: 10 }}>
+            <tr style={{ background: '#080D1A', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 10 }}>
               {/* Checkbox column */}
               <th className="px-2 py-2.5 w-8" onClick={e => e.stopPropagation()}>
                 <Checkbox
@@ -1133,11 +1133,11 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 const align = colAlign[col.id] || 'right';
                 const sortKey = colSortKey[col.id];
                 return (
-                  <th
-                    key={col.id}
-                    onClick={() => sortKey ? handleSort(sortKey) : undefined}
-                    className={`px-3 py-2.5 text-[11px] font-semibold text-text-muted uppercase tracking-wider ${sortKey ? 'cursor-pointer hover:bg-[#F1F3F8]' : ''} transition-colors select-none ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'}`}
-                  >
+                    <th
+                      key={col.id}
+                      onClick={() => sortKey ? handleSort(sortKey) : undefined}
+                      className={`px-3 py-2.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider ${sortKey ? 'cursor-pointer hover:bg-white/[0.04]' : ''} transition-colors select-none ${align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left'}`}
+                    >
                     <div className={`flex items-center gap-1.5 ${align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start'}`}>
                       {col.label}
                       {sortKey && <SortIcon column={sortKey} />}
@@ -1452,9 +1452,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
                               ) : !campaignAdsets || campaignAdsets.length === 0 ? (
                                 <p className="text-xs text-muted-foreground py-3">Nenhum adset encontrado</p>
                               ) : (
-                                <table className="w-full text-left text-xs">
+                                <table className="w-full text-left text-xs bg-[#0D1424]">
                                   <thead>
-                                    <tr className="border-b border-[#E4E7EF]/50">
+                                    <tr className="border-b border-white/[0.06] bg-[#080D1A]">
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase w-10"></th>
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase w-10">Status</th>
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase">Nome</th>
@@ -1585,9 +1585,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                   ) : !adsetAds || adsetAds.length === 0 ? (
                                                     <p className="text-[11px] text-muted-foreground py-2">Nenhum anúncio encontrado</p>
                                                   ) : (
-                                                    <table className="w-full text-left text-[11px]">
+                                                    <table className="w-full text-left text-[11px] bg-[#080D1A]">
                                                       <thead>
-                                                        <tr className="border-b border-[#E4E7EF]/30">
+                                                        <tr className="border-b border-white/[0.06]">
                                                           <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase w-8">St</th>
                                                           <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase w-10"></th>
                                                           <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase">Nome</th>
@@ -1910,15 +1910,15 @@ Responda SOMENTE com o JSON, sem markdown.`;
 
       {/* ─── Análise de Criativos ─── */}
       {analysisData?.adCreatives && analysisData.adCreatives.length > 0 && (
-        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-lg overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#E4E7EF]">
-            <h3 className="text-xs font-semibold text-text-primary">Análise de Criativos</h3>
-            <span className="text-[10px] text-text-muted">{analysisData.adCreatives.length} criativos com gasto</span>
+        <div className="bg-[#0D1424] border border-white/[0.06] rounded-lg overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+            <h3 className="text-xs font-semibold text-white">Análise de Criativos</h3>
+            <span className="text-[10px] text-slate-400">{analysisData.adCreatives.length} criativos com gasto</span>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="w-full text-xs bg-[#0D1424]">
               <thead>
-                <tr className="border-b border-[#E4E7EF] bg-[#F8F9FC]">
+                <tr className="border-b border-white/[0.06] bg-[#080D1A]">
                   <th className="text-left px-3 py-2 text-text-muted font-semibold">Criativo</th>
                   <th className="text-right px-3 py-2 text-text-muted font-semibold">Gasto</th>
                   <th className="text-right px-3 py-2 text-text-muted font-semibold">Impr.</th>
@@ -1933,7 +1933,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                   const isTop = i === 0 && ad.roas > 0;
                   const shouldPause = ad.ctr < 1 && ad.spend > 10;
                   return (
-                    <tr key={ad.id} className="border-b border-[#E4E7EF]/50 hover:bg-[#E4E7EF]/30 transition-colors">
+                    <tr key={ad.id} className="border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors">
                       <td className="px-3 py-2.5">
                         <p className="text-text-primary font-medium truncate max-w-[220px]">{ad.name}</p>
                         {ad.campaignName && <p className="text-[10px] text-text-muted truncate max-w-[220px]">{ad.campaignName}</p>}
@@ -2230,9 +2230,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     { label: 'Compras', value: String(previewAd.purchases) },
                     { label: 'Receita', value: formatCurrency(previewAd.revenue, currency) },
                   ].map(m => (
-                    <div key={m.label} className="bg-[#F8F9FC] rounded-lg p-2.5 border border-[#E4E7EF]">
-                      <p className="text-[9px] text-[#5A6478] uppercase">{m.label}</p>
-                      <p className="text-[13px] font-bold mt-0.5" style={{ color: m.color || '#0F1523' }}>{m.value}</p>
+                    <div key={m.label} className="bg-[#080D1A] rounded-lg p-2.5 border border-white/[0.06]">
+                      <p className="text-[9px] text-slate-400 uppercase">{m.label}</p>
+                      <p className="text-[13px] font-bold mt-0.5" style={{ color: m.color || '#E2E8F0' }}>{m.value}</p>
                     </div>
                   ))}
                 </div>
@@ -2281,11 +2281,11 @@ function CampaignsTableSkeleton() {
         <div className="h-8 w-24 bg-[#E4E7EF] rounded-md animate-pulse" />
       </div>
       {/* Table skeleton */}
-      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-lg overflow-hidden">
+      <div className="bg-[#0D1424] border border-white/[0.06] rounded-lg overflow-hidden">
         {/* Header */}
-        <div className="flex items-center gap-2 px-3 py-2.5 bg-[#F8F9FC] border-b border-[#E4E7EF]">
+        <div className="flex items-center gap-2 px-3 py-2.5 bg-[#080D1A] border-b border-white/[0.06]">
           {colWidths.map((w, i) => (
-            <div key={i} className="h-3 bg-[#E4E7EF] rounded" style={{ width: w, flexShrink: 0 }} />
+            <div key={i} className="h-3 bg-white/[0.08] rounded" style={{ width: w, flexShrink: 0 }} />
           ))}
         </div>
         {/* Rows */}

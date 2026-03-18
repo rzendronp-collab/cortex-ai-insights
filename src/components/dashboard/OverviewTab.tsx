@@ -13,6 +13,7 @@ import RoasWeekdayChart from './RoasWeekdayChart';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 // ─── Chart theme constants (V5.2 DashCortex palette) ───
 const CHART_GRID = '#E4E7EF';

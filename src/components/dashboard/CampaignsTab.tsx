@@ -768,12 +768,12 @@ Responda SOMENTE com o JSON, sem markdown.`;
     clicks: 'clicks',
   };
 
-  const handlePageChange = useCallback((page: number) => {
+  const handlePageChange = (page: number) => {
     const nextPage = Math.max(1, Math.min(page, totalPages || 1));
     setCurrentPage(nextPage);
-  }, [totalPages]);
+  };
 
-  const exportCsv = useCallback(() => {
+  const exportCsv = () => {
     exportCampaignsCSV(
       sortedCampaigns.map(c => ({
         name: c.name,
@@ -790,7 +790,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
       selectedPeriod,
       currency,
     );
-  }, [sortedCampaigns, localStatuses, selectedAccountId, selectedPeriod, currency]);
+  };
 
   const getRecommendation = (campaign: ProcessedCampaign) => {
     // Campaigns with zero spend show a neutral "no data" badge

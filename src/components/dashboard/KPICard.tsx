@@ -24,8 +24,8 @@ function DeltaPill({ delta }: { delta: number }) {
       className={cn(
         'inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold tabular-nums',
         positive
-          ? 'border-success/20 bg-success/10 text-success'
-          : 'border-destructive/20 bg-destructive/10 text-destructive',
+          ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+          : 'border-red-500/20 bg-red-500/10 text-red-400',
       )}
     >
       {positive ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />}
@@ -82,10 +82,10 @@ export default function KPICard({
   return (
     <div
       className={cn(
-        'group relative overflow-hidden rounded-[1.5rem] border p-4 md:p-5 transition-all duration-200',
+        'group relative overflow-hidden rounded-[1.5rem] border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))] p-4 transition-all duration-200 md:p-5',
         isHero
-          ? 'panel-highlight border-border-highlight bg-card shadow-[0_24px_55px_-34px_hsl(var(--primary)/0.55)]'
-          : 'border-border-default bg-card/95 hover:border-border-hover hover:shadow-[0_18px_40px_-34px_hsl(var(--foreground)/0.28)]',
+          ? 'shadow-[0_24px_55px_-34px_hsl(var(--primary)/0.28)]'
+          : 'hover:border-[hsl(var(--surface-edge)/0.1)] hover:shadow-[0_18px_40px_-34px_hsl(var(--foreground)/0.28)]',
       )}
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
@@ -93,7 +93,7 @@ export default function KPICard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex items-center gap-2">
           {Icon ? (
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-xl border border-border-subtle bg-secondary text-text-muted">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-xl border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-elevated))] text-text-muted">
               <Icon className="size-4" />
             </span>
           ) : null}
@@ -110,7 +110,7 @@ export default function KPICard({
       <div className="mt-5 flex items-end justify-between gap-3">
         <p
           className={cn(
-            'min-w-0 truncate font-mono leading-none tracking-[-0.04em] text-text-primary tabular-nums',
+            'min-w-0 truncate font-mono leading-none tracking-[-0.04em] text-white tabular-nums',
             isHero ? 'text-[2rem] md:text-[2.4rem]' : 'text-[1.65rem] md:text-[1.85rem]',
             valueClassName,
           )}

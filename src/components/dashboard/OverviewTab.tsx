@@ -513,8 +513,8 @@ export default function OverviewTab() {
         </div>
 
         {/* Origem tráfego */}
-        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Origem do Tráfego</h3>
+        <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up">
+          <h3 className="font-display font-semibold text-[14px] text-white mb-4">Origem do Tráfego</h3>
           <div className="space-y-3 mt-2">
             {platformData.map((p, i) => {
               const colors = [DATA_BLUE, DATA_PURPLE, DATA_YELLOW, MUTED];
@@ -523,10 +523,10 @@ export default function OverviewTab() {
                 <div key={p.name} className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: c }} />
                   <span className="text-[11px] text-text-secondary flex-1 capitalize">{p.name}</span>
-                  <div className="flex-1 h-2 bg-bg-base rounded-full overflow-hidden">
+                  <div className="flex-1 h-2 bg-[#080D1A] rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-all duration-500" style={{ width: `${p.value}%`, background: c }} />
                   </div>
-                  <span className="text-[11px] text-text-primary font-semibold w-8 text-right">{p.value}%</span>
+                  <span className="text-[11px] text-white font-semibold w-8 text-right">{p.value}%</span>
                 </div>
               );
             })}
@@ -535,8 +535,8 @@ export default function OverviewTab() {
       </div>
 
       {/* ─── Gasto vs Receita (Area Chart) ─── */}
-      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-        <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Gasto vs Receita</h3>
+      <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up">
+        <h3 className="font-display font-semibold text-[14px] text-white mb-4">Gasto vs Receita</h3>
         <ResponsiveContainer width="100%" height={180}>
           <AreaChart data={dailyData}>
             <defs>

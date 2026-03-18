@@ -94,8 +94,8 @@
   }
 
   body {
-    background: var(--bg-base);
-    color: var(--text-primary);
+    background: hsl(var(--bg-base));
+    color: hsl(var(--text-primary));
     font-family: 'DM Sans', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -104,13 +104,13 @@
   /* Scrollbar subtil */
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #E4E7EF; border-radius: 10px; }
-  ::-webkit-scrollbar-thumb:hover { background: #C9D0E0; }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--border-default)); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--border-hover)); }
 
   /* Focus reset */
   *:focus { outline: none; }
   *:focus-visible {
-    outline: 2px solid #2563EB;
+    outline: 2px solid hsl(var(--primary));
     outline-offset: 2px;
   }
 
@@ -119,9 +119,9 @@
   textarea,
   select {
     font-family: 'DM Sans', system-ui, sans-serif;
-    background: #F1F3F8;
-    border: 1px solid #E4E7EF;
-    color: #0F1523;
+    background: hsl(var(--bg-tertiary));
+    border: 1px solid hsl(var(--border-default));
+    color: hsl(var(--text-primary));
     border-radius: 6px;
   }
 
@@ -129,14 +129,14 @@
   textarea:focus-visible,
   [data-radix-select-trigger]:focus-visible {
     outline: none;
-    background: #FFFFFF;
-    border-color: #2563EB !important;
-    box-shadow: 0 0 0 3px rgba(37,99,235,0.1) !important;
+    background: hsl(var(--bg-card));
+    border-color: hsl(var(--border-focus)) !important;
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.1) !important;
   }
 
   input::placeholder,
   textarea::placeholder {
-    color: #9BA5B7;
+    color: hsl(var(--text-muted));
   }
 }
 

@@ -132,7 +132,7 @@ export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps)
         <div ref={dropdownRef} className="relative min-w-0">
           <button
             onClick={() => setAccountsOpen((prev) => !prev)}
-            className="inline-flex max-w-[260px] items-center gap-2 rounded-xl border border-[hsl(0_0%_100%/0.1)] bg-[hsl(var(--bg-card))] px-3 py-2 text-sm text-slate-200"
+            className="inline-flex max-w-[260px] items-center gap-2 rounded-xl border border-[hsl(0_0%_100%/0.1)] bg-[hsl(var(--bg-card-v5))] px-3 py-2 text-sm text-slate-200"
           >
             <span className="size-2 rounded-full bg-[hsl(var(--green))]" />
             <span className="truncate">{accountLabel}</span>

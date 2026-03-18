@@ -190,7 +190,7 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
   };
 
   return (
-    <aside className="flex min-h-screen w-[220px] min-w-[220px] flex-col border-r border-[hsl(0_0%_100%/0.05)] bg-[hsl(var(--bg-sidebar))] text-white">
+    <aside className="flex min-h-screen w-[220px] min-w-[220px] flex-col border-r border-[hsl(0_0%_100%/0.05)] bg-[hsl(var(--bg-sidebar-v5))] text-white">
       <div className="flex items-center gap-2.5 border-b border-[hsl(0_0%_100%/0.05)] px-4 py-4">
         <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--accent-hover))] text-primary-foreground shadow-[0_12px_28px_-18px_hsl(var(--accent)/0.9)]">
           <Zap className="size-4" />

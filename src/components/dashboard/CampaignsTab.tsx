@@ -1933,7 +1933,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                   const isTop = i === 0 && ad.roas > 0;
                   const shouldPause = ad.ctr < 1 && ad.spend > 10;
                   return (
-                    <tr key={ad.id} className="border-b border-[#E4E7EF]/50 hover:bg-[#E4E7EF]/30 transition-colors">
+                    <tr key={ad.id} className="border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors">
                       <td className="px-3 py-2.5">
                         <p className="text-text-primary font-medium truncate max-w-[220px]">{ad.name}</p>
                         {ad.campaignName && <p className="text-[10px] text-text-muted truncate max-w-[220px]">{ad.campaignName}</p>}

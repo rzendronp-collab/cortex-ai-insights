@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
-import { useMetaConnection } from '@/hooks/useMetaConnection';
+
 import { useCortexCreatives, CreativeScore } from '@/hooks/useCortexCreatives';
 import { useCortexForecast } from '@/hooks/useCortexForecast';
 import { useCortexActions, CortexAction } from '@/hooks/useCortexActions';

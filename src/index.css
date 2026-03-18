@@ -11,62 +11,79 @@
 
 @layer base {
   :root {
-    /* ── CORTEX v7 Palette — Light ── */
-    --bg-base:        #F8F9FC;
-    --bg-card:        #FFFFFF;
-    --bg-tertiary:    #F1F3F8;
-    --border-default: #E4E7EF;
-    --border-focus:   #C9D0E0;
+    /* ── CORTEX v5 Palette — Light Control Tower ── */
+    --bg-base: 220 23% 97%;
+    --bg-card: 0 0% 100%;
+    --bg-card-hover: 220 33% 96%;
+    --bg-sidebar: 220 29% 98%;
+    --bg-tertiary: 220 25% 95%;
 
-    --text-primary:   #0F1523;
-    --text-secondary: #5A6478;
-    --text-muted:     #9BA5B7;
+    --border-default: 220 19% 88%;
+    --border-subtle: 220 20% 93%;
+    --border-focus: 218 76% 56%;
+    --border-highlight: 217 88% 72%;
+    --border-hover: 220 18% 82%;
 
-    --accent:         #2563EB;
-    --accent-hover:   #1D4ED8;
-    --accent-subtle:  #EFF4FF;
+    --text-primary: 224 39% 13%;
+    --text-secondary: 221 20% 33%;
+    --text-muted: 220 13% 54%;
+    --text-secondary-legacy: 221 20% 33%;
 
-    --green:          #16A34A;
-    --green-subtle:   #F0FDF4;
-    --red:            #DC2626;
-    --red-subtle:     #FEF2F2;
-    --yellow:         #D97706;
-    --yellow-subtle:  #FFFBEB;
+    --data-blue: 221 83% 53%;
+    --data-green: 142 71% 45%;
+    --data-red: 0 72% 51%;
+    --data-yellow: 38 92% 50%;
+    --data-purple: 262 83% 58%;
 
-    /* Shadcn tokens — remapeados para tema claro */
-    --background:             0 0% 100%;
-    --foreground:             222 47% 11%;
-    --card:                   0 0% 100%;
-    --card-foreground:        222 47% 11%;
-    --popover:                0 0% 100%;
-    --popover-foreground:     222 47% 11%;
-    --primary:                221 83% 53%;
-    --primary-foreground:     0 0% 100%;
-    --secondary:              220 14% 96%;
-    --secondary-foreground:   222 47% 11%;
-    --muted:                  220 14% 96%;
-    --muted-foreground:       215 16% 47%;
-    --accent-shadcn:          220 14% 96%;
-    --accent-foreground:      222 47% 11%;
-    --destructive:            0 72% 51%;
+    --chart-grid: 220 19% 90%;
+    --chart-tooltip-bg: 0 0% 100%;
+    --chart-tooltip-border: 220 19% 88%;
+
+    --primary-dark: 221 83% 45%;
+    --primary-glow: 217 91% 68%;
+    --card-secondary: 220 33% 96%;
+    --card-hover: 220 33% 96%;
+
+    /* Shadcn semantic tokens */
+    --background: 220 23% 97%;
+    --foreground: 224 39% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 224 39% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 39% 13%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 33% 96%;
+    --secondary-foreground: 224 39% 13%;
+    --muted: 220 33% 96%;
+    --muted-foreground: 220 13% 54%;
+    --accent: 220 33% 96%;
+    --accent-foreground: 224 39% 13%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --success:                142 71% 45%;
-    --success-foreground:     0 0% 100%;
-    --warning:                38 92% 50%;
-    --warning-foreground:     0 0% 100%;
-    --border:                 220 13% 91%;
-    --input:                  220 13% 91%;
-    --ring:                   221 83% 53%;
-    --radius:                 0.625rem;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --border: 220 19% 88%;
+    --input: 220 19% 88%;
+    --ring: 221 83% 53%;
+    --radius: 0.875rem;
 
-    --sidebar-background:          0 0% 100%;
-    --sidebar-foreground:          222 47% 11%;
-    --sidebar-primary:             221 83% 53%;
-    --sidebar-primary-foreground:  0 0% 100%;
-    --sidebar-accent:              220 14% 96%;
-    --sidebar-accent-foreground:   222 47% 11%;
-    --sidebar-border:              220 13% 91%;
-    --sidebar-ring:                221 83% 53%;
+    --sidebar-background: 220 29% 98%;
+    --sidebar-foreground: 224 39% 13%;
+    --sidebar-primary: 221 83% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 33% 96%;
+    --sidebar-accent-foreground: 224 39% 13%;
+    --sidebar-border: 220 19% 88%;
+    --sidebar-ring: 221 83% 53%;
+
+    --sidebar-hero: linear-gradient(180deg, hsl(var(--sidebar-background)) 0%, hsl(var(--background)) 100%);
+    --panel-highlight: linear-gradient(135deg, hsl(var(--primary) / 0.14), hsl(var(--primary-glow) / 0.06));
+    --status-green-bg: 142 71% 96%;
+    --status-red-bg: 0 72% 96%;
+    --status-yellow-bg: 48 100% 96%;
   }
 }
 

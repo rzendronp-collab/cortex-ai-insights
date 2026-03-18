@@ -746,6 +746,52 @@ Responda SOMENTE com o JSON, sem markdown.`;
     return sortDirection === 'asc' ? <ArrowUp className="w-3 h-3 text-primary" /> : <ArrowDown className="w-3 h-3 text-primary" />;
   };
 
+  const colAlign: Record<string, 'left' | 'right' | 'center'> = {
+    status: 'left',
+    campaign: 'left',
+    notes: 'center',
+  };
+
+  const colSortKey: Partial<Record<string, SortColumn>> = {
+    status: 'status',
+    campaign: 'name',
+    spend: 'spend',
+    budget: 'budget',
+    revenue: 'revenue',
+    profit: 'profit',
+    roas: 'roas',
+    sales: 'purchases',
+    cpa: 'cpa',
+    ctr: 'ctr',
+    cpm: 'cpm',
+    impressions: 'impressions',
+    clicks: 'clicks',
+  };
+
+  const handlePageChange = useCallback((page: number) => {
+    const nextPage = Math.max(1, Math.min(page, totalPages || 1));
+    setCurrentPage(nextPage);
+  }, [totalPages]);
+
+  const exportCsv = useCallback(() => {
+    exportCampaignsCSV(
+      sortedCampaigns.map(c => ({
+        name: c.name,
+        status: localStatuses[c.id] || c.status,
+        roas: c.roas,
+        spend: c.spend,
+        revenue: c.revenue,
+        purchases: c.purchases,
+        ctr: c.ctr,
+        cpm: c.cpm,
+        cpv: c.cpv || 0,
+      })),
+      selectedAccountId || 'account',
+      selectedPeriod,
+      currency,
+    );
+  }, [sortedCampaigns, localStatuses, selectedAccountId, selectedPeriod, currency]);
+
   const getRecommendation = (campaign: ProcessedCampaign) => {
     // Campaigns with zero spend show a neutral "no data" badge
     if (campaign.spend === 0) return { label: 'Sem dados', bg: 'hsl(var(--muted) / 0.5)', text: 'hsl(var(--muted-foreground))', border: 'hsl(var(--border))' };

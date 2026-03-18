@@ -1399,31 +1399,14 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                       const isSavingAdsetBgt = savingAdsetBudgetId === adset.id;
                                       return (
                                         <React.Fragment key={adset.id}>
-                                          <tr className={`border-b border-[#E4E7EF]/30 hover:bg-[#FFFFFF]/50 transition-colors ${!adsetActive ? 'opacity-50' : ''}`}>
-                                            {/* Expand chevron */}
-                                            <td className="py-2 px-2">
-                                              <button
-                                                onClick={() => {
-                                                  const next = isAdsOpen ? null : adset.id;
-                                                  setAdsExpandedId(next);
-                                                  if (next) fetchAds(adset.id, selectedPeriod);
-                                                }}
-                                                className="p-0.5 text-muted-foreground hover:text-foreground"
-                                              >
-                                                <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${isAdsOpen ? 'rotate-90' : ''}`} />
-                                              </button>
-                                            </td>
-                                            {/* Toggle */}
-                                            <td className="py-2 px-2" onClick={e => e.stopPropagation()}>
-                                              {isAdsetToggling ? (
-                                                <div className="w-3.5 h-3.5 border-2 border-muted-foreground border-t-primary rounded-full animate-spin" />
-                                              ) : (
+                                          <tr className={`border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors ${!adsetActive ? 'opacity-50' : ''}`}>
+...
                                                 <button
                                                   onClick={() => executeSubToggle(adset.id, effAdsetStatus)}
                                                   className="relative inline-flex items-center cursor-pointer"
                                                   style={{ width: 32, height: 18, borderRadius: 9 }}
                                                 >
-                                                  <span className="block w-full h-full rounded-[9px] transition-colors duration-200" style={{ backgroundColor: adsetActive ? '#16A34A' : '#E4E7EF' }} />
+                                                  <span className="block w-full h-full rounded-[9px] transition-colors duration-200" style={{ backgroundColor: adsetActive ? '#16A34A' : '#1E293B' }} />
                                                   <span className="absolute block w-3.5 h-3.5 bg-white rounded-full shadow transition-transform duration-200" style={{ top: 2, left: adsetActive ? 15 : 2 }} />
                                                 </button>
                                               )}

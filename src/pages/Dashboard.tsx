@@ -39,7 +39,7 @@ function DashboardContent() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+    <div className="flex min-h-screen overflow-hidden bg-[hsl(var(--bg-primary))] text-foreground">
       <OnboardingModal />
 
       {/* Mobile sidebar overlay */}

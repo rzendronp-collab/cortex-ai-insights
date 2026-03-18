@@ -20,32 +20,32 @@ export default function CortexConfirmModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl w-full max-w-md p-6 shadow-2xl animate-fade-up">
-        <div className="flex items-center gap-2 mb-4">
-          <Zap className="w-5 h-5 text-[#6C63FF]" />
-          <h3 className="text-sm font-semibold text-text-primary">Confirmar Otimização</h3>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/60">
+      <div className="w-full max-w-md animate-fade-up rounded-xl border border-[hsl(var(--surface-edge)/0.08)] bg-[hsl(var(--surface-panel))] p-6 shadow-2xl">
+        <div className="mb-4 flex items-center gap-2">
+          <Zap className="h-5 w-5 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">Confirmar Otimização</h3>
         </div>
 
-        <div className="space-y-3 mb-6">
-          <div className="bg-[#080B14] rounded-lg p-3 space-y-2">
+        <div className="mb-6 space-y-3">
+          <div className="space-y-2 rounded-lg border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel-strong))] p-3">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-text-muted uppercase">Campanha</span>
-              <span className="text-[12px] text-text-primary font-medium truncate ml-2 max-w-[250px]">{campaignName}</span>
+              <span className="text-[10px] uppercase text-text-muted">Campanha</span>
+              <span className="ml-2 max-w-[250px] truncate text-[12px] font-medium text-foreground">{campaignName}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-text-muted uppercase">Ação</span>
-              <span className="text-[12px] text-text-primary font-semibold">{actionLabel}</span>
+              <span className="text-[10px] uppercase text-text-muted">Ação</span>
+              <span className="text-[12px] font-semibold text-foreground">{actionLabel}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[10px] text-text-muted uppercase">Motivo</span>
-              <span className="text-[11px] text-text-muted text-right max-w-[250px]">{reasoning}</span>
+              <span className="text-[10px] uppercase text-text-muted">Motivo</span>
+              <span className="max-w-[250px] text-right text-[11px] text-text-muted">{reasoning}</span>
             </div>
           </div>
 
-          <div className="bg-[#6C63FF]/5 border border-[#6C63FF]/20 rounded-lg p-3">
-            <p className="text-[10px] text-[#8B85FF] font-medium mb-0.5">Impacto esperado</p>
-            <p className="text-[12px] text-text-primary">{expectedImpact}</p>
+          <div className="rounded-lg border border-primary/20 bg-primary/10 p-3">
+            <p className="mb-0.5 text-[10px] font-medium text-primary">Impacto esperado</p>
+            <p className="text-[12px] text-foreground">{expectedImpact}</p>
           </div>
         </div>
 
@@ -54,17 +54,17 @@ export default function CortexConfirmModal({
             variant="outline"
             onClick={onClose}
             disabled={loading}
-            className="flex-1 text-[12px] border-[#1E2A42] text-text-muted"
+            className="flex-1 text-[12px]"
           >
             Cancelar
           </Button>
           <Button
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 text-[12px] bg-[#6C63FF] hover:bg-[#5558E6] text-white gap-2"
+            className="flex-1 gap-2 text-[12px]"
           >
             {loading ? (
-              <><Loader2 className="w-3.5 h-3.5 animate-spin" />Executando...</>
+              <><Loader2 className="h-3.5 w-3.5 animate-spin" />Executando...</>
             ) : (
               'Confirmar'
             )}

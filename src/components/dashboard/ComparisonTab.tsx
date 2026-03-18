@@ -3,9 +3,9 @@ import { mockCampaigns } from '@/lib/mockData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { ArrowUp, ArrowDown, Inbox } from 'lucide-react';
 
-const DATA_BLUE = '#2563EB';
-const DATA_GREEN = '#16A34A';
-const DATA_PURPLE = '#7C3AED';
+const DATA_BLUE = 'hsl(var(--data-blue))';
+const DATA_GREEN = 'hsl(var(--data-green))';
+const DATA_PURPLE = 'hsl(var(--data-purple))';
 const CHART_GRID = 'hsl(var(--chart-grid-dark))';
 const CHART_AXIS = 'hsl(var(--chart-axis-dark))';
 const chartTooltipStyle = {
@@ -13,7 +13,7 @@ const chartTooltipStyle = {
   border: '1px solid hsl(var(--tooltip-edge))',
   borderRadius: 8,
   fontSize: 11,
-  color: '#E2E8F0',
+  color: 'hsl(var(--foreground))',
   padding: '10px 12px',
 };
 
@@ -30,9 +30,9 @@ export default function ComparisonTab() {
 
   if (analysisData && campaigns.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-[hsl(var(--surface-edge)/0.05)] bg-[hsl(var(--surface-panel))] py-20 text-center">
+      <div className="flex flex-col items-center justify-center rounded-xl border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))] py-20 text-center">
         <Inbox className="mb-4 h-12 w-12 text-text-muted" />
-        <h3 className="mb-1 text-sm font-semibold text-white">Sem dados de comparação</h3>
+        <h3 className="mb-1 text-sm font-semibold text-foreground">Sem dados de comparação</h3>
         <p className="text-xs text-text-muted">Analise os dados primeiro clicando em Analisar.</p>
       </div>
     );
@@ -80,8 +80,8 @@ export default function ComparisonTab() {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {comparisonData.map((c, i) => (
-          <div key={i} className="animate-fade-up rounded-xl border border-[hsl(var(--surface-edge)/0.05)] bg-[hsl(var(--surface-panel))] p-4 transition-colors duration-200 hover:border-primary/30">
-            <p className="mb-3 text-sm font-semibold text-white">{c.name}</p>
+          <div key={i} className="animate-fade-up rounded-xl border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))] p-4 transition-colors duration-200 hover:border-primary/30">
+            <p className="mb-3 text-sm font-semibold text-foreground">{c.name}</p>
             <div className="grid grid-cols-5 gap-3">
               {[
                 { label: 'ROAS', current: c['ROAS Atual'], prev: c['ROAS Anterior'], suffix: 'x' },
@@ -92,7 +92,7 @@ export default function ComparisonTab() {
               ].map((m) => (
                 <div key={m.label}>
                   <p className="text-[10px] uppercase tracking-wider text-text-muted">{m.label}</p>
-                  <p className="text-xs font-bold text-white">
+                  <p className="text-xs font-bold text-foreground">
                     {m.prefix ? `${m.prefix} ` : ''}
                     {typeof m.current === 'number' ? m.current.toFixed(m.suffix === 'x' || m.suffix === '%' ? 1 : 0) : m.current}
                     {m.suffix || ''}
@@ -111,7 +111,7 @@ export default function ComparisonTab() {
       </div>
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <div className="animate-fade-up rounded-xl border border-[hsl(var(--surface-edge)/0.05)] bg-[hsl(var(--surface-panel))] p-5">
+        <div className="animate-fade-up rounded-xl border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))] p-5">
           <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-text-muted">ROAS: Atual vs Anterior</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={comparisonData}>
@@ -125,7 +125,7 @@ export default function ComparisonTab() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <div className="animate-fade-up rounded-xl border border-[hsl(var(--surface-edge)/0.05)] bg-[hsl(var(--surface-panel))] p-5">
+        <div className="animate-fade-up rounded-xl border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))] p-5">
           <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-wider text-text-muted">Gasto: Atual vs Anterior</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={comparisonData}>

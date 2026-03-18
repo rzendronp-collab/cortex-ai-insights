@@ -1585,9 +1585,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                   ) : !adsetAds || adsetAds.length === 0 ? (
                                                     <p className="text-[11px] text-muted-foreground py-2">Nenhum anúncio encontrado</p>
                                                   ) : (
-                                                    <table className="w-full text-left text-[11px]">
+                                                    <table className="w-full text-left text-[11px] bg-[#080D1A]">
                                                       <thead>
-                                                        <tr className="border-b border-[#E4E7EF]/30">
+                                                        <tr className="border-b border-white/[0.06]">
                                                           <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase w-8">St</th>
                                                           <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase w-10"></th>
                                                           <th className="py-1 px-1.5 text-[9px] font-semibold text-text-muted uppercase">Nome</th>

@@ -16,10 +16,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 
 // ─── Chart theme constants (V5 dark palette) ───
-const CHART_GRID = '#1E293B';
-const CHART_AXIS = '#7A8FAD';
-const TOOLTIP_BG = '#1A2540';
-const TOOLTIP_BORDER = '#2A3F6A';
+const CHART_GRID = 'hsl(215 28% 17%)';
+const CHART_AXIS = 'hsl(215 25% 27%)';
+const TOOLTIP_BG = 'hsl(215 28% 17%)';
+const TOOLTIP_BORDER = 'hsl(215 25% 35%)';
 
 const DATA_BLUE = '#2563EB';
 const DATA_GREEN = '#16A34A';

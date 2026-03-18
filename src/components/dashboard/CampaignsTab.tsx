@@ -2230,9 +2230,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
                     { label: 'Compras', value: String(previewAd.purchases) },
                     { label: 'Receita', value: formatCurrency(previewAd.revenue, currency) },
                   ].map(m => (
-                    <div key={m.label} className="bg-[#F8F9FC] rounded-lg p-2.5 border border-[#E4E7EF]">
-                      <p className="text-[9px] text-[#5A6478] uppercase">{m.label}</p>
-                      <p className="text-[13px] font-bold mt-0.5" style={{ color: m.color || '#0F1523' }}>{m.value}</p>
+                    <div key={m.label} className="bg-[#080D1A] rounded-lg p-2.5 border border-white/[0.06]">
+                      <p className="text-[9px] text-slate-400 uppercase">{m.label}</p>
+                      <p className="text-[13px] font-bold mt-0.5" style={{ color: m.color || '#E2E8F0' }}>{m.value}</p>
                     </div>
                   ))}
                 </div>

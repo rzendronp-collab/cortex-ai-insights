@@ -39,13 +39,13 @@ function DashboardContent() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: "#F8F9FC" }}>
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
       <OnboardingModal />
 
       {/* Mobile sidebar overlay */}
       {isMobile && sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-40 transition-opacity duration-250"
+          className="fixed inset-0 z-40 bg-foreground/60 transition-opacity duration-250"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -63,10 +63,10 @@ function DashboardContent() {
         <DashboardSidebar />
       )}
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-background">
         <DashboardHeader onOpenSidebar={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-5 md:p-6">
-          <div key={activeTab} className="animate-fade-up h-full">
+        <main className="flex-1 overflow-y-auto bg-background p-5 md:p-6">
+          <div key={activeTab} className="h-full animate-fade-up">
             {renderTab()}
           </div>
         </main>

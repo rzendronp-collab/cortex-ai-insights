@@ -1,86 +1,57 @@
 import React, { useId } from 'react';
-import { ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowDown, ArrowUp } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area } from 'recharts';
-
-// ── Types ───────────────────────────────────────────────────────────────────
+import { Area, AreaChart, ResponsiveContainer } from 'recharts';
+import { cn } from '@/lib/utils';
 
 interface KPICardProps {
   label: string;
   value: string;
   subtitle?: string;
-  /** Signed percentage, e.g. 4.2 → +4.2%, -1.8 → −1.8% */
   delta?: number;
   valueClassName?: string;
-  /** Renders a subtle accent background */
   isHero?: boolean;
   icon?: LucideIcon;
   sparklineData?: number[];
   sparklineColor?: string;
 }
 
-// ── Palette tokens ──────────────────────────────────────────────────────────
-
-const C = {
-  bg:          '#FFFFFF',
-  bgHero:      '#F5F8FF',
-  border:      '#E4E7EF',
-  borderHover: '#C9D0E0',
-  borderHero:  '#C7D7FD',
-  textPrimary: '#0F1523',
-  textMuted:   '#9BA5B7',
-  accent:      '#2563EB',
-  green:       '#16A34A',
-  greenBg:     '#F0FDF4',
-  greenBorder: '#BBF7D0',
-  red:         '#DC2626',
-  redBg:       '#FEF2F2',
-  redBorder:   '#FECACA',
-} as const;
-
-// ── DeltaPill ───────────────────────────────────────────────────────────────
-
 function DeltaPill({ delta }: { delta: number }) {
   const positive = delta >= 0;
+
   return (
     <span
-      className="inline-flex items-center gap-[3px] whitespace-nowrap"
-      style={{
-        fontSize: 11, fontWeight: 600, lineHeight: 1,
-        fontFamily: "'DM Sans', sans-serif",
-        background: positive ? C.greenBg : C.redBg,
-        color:      positive ? C.green   : C.red,
-        border:     `1px solid ${positive ? C.greenBorder : C.redBorder}`,
-        borderRadius: 20, padding: '2px 7px',
-      }}
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-semibold tabular-nums',
+        positive
+          ? 'border-success/20 bg-success/10 text-success'
+          : 'border-destructive/20 bg-destructive/10 text-destructive',
+      )}
     >
-      {positive
-        ? <ArrowUp   className="w-2.5 h-2.5 shrink-0" />
-        : <ArrowDown className="w-2.5 h-2.5 shrink-0" />}
+      {positive ? <ArrowUp className="size-3" /> : <ArrowDown className="size-3" />}
       {Math.abs(delta)}%
     </span>
   );
 }
 
-// ── Sparkline ───────────────────────────────────────────────────────────────
-
 function Sparkline({ data, color, gradientId }: { data: number[]; color: string; gradientId: string }) {
-  const chartData = data.map(v => ({ v }));
+  const chartData = data.map((value) => ({ value }));
+
   return (
-    <div style={{ marginTop: 10, height: 36, width: '100%' }}>
+    <div className="mt-4 h-10 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} margin={{ top: 2, right: 0, left: 0, bottom: 0 }}>
+        <AreaChart data={chartData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"   stopColor={color} stopOpacity={0.12} />
-              <stop offset="100%" stopColor={color} stopOpacity={0}    />
+              <stop offset="0%" stopColor={color} stopOpacity={0.22} />
+              <stop offset="100%" stopColor={color} stopOpacity={0} />
             </linearGradient>
           </defs>
           <Area
             type="monotone"
-            dataKey="v"
+            dataKey="value"
             stroke={color}
-            strokeWidth={1.5}
+            strokeWidth={2}
             fill={`url(#${gradientId})`}
             dot={false}
             activeDot={false}
@@ -92,88 +63,63 @@ function Sparkline({ data, color, gradientId }: { data: number[]; color: string;
   );
 }
 
-// ── KPICard ─────────────────────────────────────────────────────────────────
-
 export default function KPICard({
   label,
   value,
   subtitle,
   delta,
+  valueClassName,
   isHero = false,
   icon: Icon,
   sparklineData,
   sparklineColor,
 }: KPICardProps) {
-  const uid        = useId();
+  const uid = useId();
   const gradientId = `kpi-grad-${uid.replace(/:/g, '')}`;
-  const lineColor  = sparklineColor ?? C.accent;
+  const lineColor = sparklineColor ?? 'hsl(var(--primary))';
   const hasSparkline = Array.isArray(sparklineData) && sparklineData.length >= 2;
 
   return (
     <div
-      className="relative flex flex-col cursor-default"
-      style={{
-        background:   isHero ? C.bgHero : C.bg,
-        border:       `1px solid ${isHero ? C.borderHero : C.border}`,
-        borderRadius: 10,
-        padding:      '16px 20px',
-        transition:   'all 150ms ease',
-      }}
-      onMouseEnter={e => {
-        const el = e.currentTarget as HTMLElement;
-        el.style.borderColor = isHero ? '#A5C0F8' : C.borderHover;
-        el.style.boxShadow   = '0 2px 8px rgba(0,0,0,0.06)';
-        el.style.transform   = 'translateY(-1px)';
-      }}
-      onMouseLeave={e => {
-        const el = e.currentTarget as HTMLElement;
-        el.style.borderColor = isHero ? C.borderHero : C.border;
-        el.style.boxShadow   = 'none';
-        el.style.transform   = 'translateY(0)';
-      }}
+      className={cn(
+        'group relative overflow-hidden rounded-[1.5rem] border p-4 md:p-5 transition-all duration-200',
+        isHero
+          ? 'panel-highlight border-border-highlight bg-card shadow-[0_24px_55px_-34px_hsl(var(--primary)/0.55)]'
+          : 'border-border-default bg-card/95 hover:border-border-hover hover:shadow-[0_18px_40px_-34px_hsl(var(--foreground)/0.28)]',
+      )}
     >
-      {/* Header: label + icon */}
-      <div className="flex items-start justify-between gap-2" style={{ marginBottom: 10 }}>
-        <div className="flex items-center gap-1.5 min-w-0">
-          {Icon && <Icon style={{ width: 13, height: 13, color: C.textMuted, flexShrink: 0 }} />}
-          <p style={{
-            fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 600, fontSize: 11,
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            color: C.textMuted,
-          }} className="truncate">
-            {label}
-          </p>
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex items-center gap-2">
+          {Icon ? (
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-xl border border-border-subtle bg-secondary text-text-muted">
+              <Icon className="size-4" />
+            </span>
+          ) : null}
+
+          <div className="min-w-0">
+            <p className="truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-text-muted">{label}</p>
+            {subtitle ? <p className="mt-1 truncate text-xs text-text-secondary">{subtitle}</p> : null}
+          </div>
         </div>
-        {delta !== undefined && <DeltaPill delta={delta} />}
+
+        {delta !== undefined ? <DeltaPill delta={delta} /> : null}
       </div>
 
-      {/* KPI value — DM Mono */}
-      <p
-        className="leading-none tabular-nums"
-        style={{
-          fontFamily:    "'DM Mono', monospace",
-          fontWeight:    isHero ? 700 : 600,
-          fontSize:      isHero ? 36 : 28,
-          color:         C.textPrimary,
-          letterSpacing: '-0.02em',
-        }}
-      >
-        {value}
-      </p>
-
-      {/* Optional subtitle */}
-      {subtitle && (
-        <p style={{ marginTop: 6, fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: C.textMuted }}>
-          {subtitle}
+      <div className="mt-5 flex items-end justify-between gap-3">
+        <p
+          className={cn(
+            'min-w-0 truncate font-mono leading-none tracking-[-0.04em] text-text-primary tabular-nums',
+            isHero ? 'text-[2rem] md:text-[2.4rem]' : 'text-[1.65rem] md:text-[1.85rem]',
+            valueClassName,
+          )}
+        >
+          {value}
         </p>
-      )}
+      </div>
 
-      {/* Sparkline */}
-      {hasSparkline && (
-        <Sparkline data={sparklineData!} color={lineColor} gradientId={gradientId} />
-      )}
+      {hasSparkline ? <Sparkline data={sparklineData!} color={lineColor} gradientId={gradientId} /> : null}
     </div>
   );
 }

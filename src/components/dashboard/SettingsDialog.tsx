@@ -83,9 +83,9 @@ export default function SettingsDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="flex items-center gap-2.5 w-full px-5 py-3 hover:bg-bg-card-hover transition-colors">
-          <Settings className="w-4 h-4 text-text-muted" />
-          <span className="text-[13px] font-medium text-text-primary">⚙ Configurações</span>
+        <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium text-text-secondary transition-all duration-150 hover:bg-[hsl(var(--sidebar-edge)/0.04)] hover:text-text-primary">
+          <Settings className="h-3.5 w-3.5" />
+          <span>Configurações</span>
         </button>
       </DialogTrigger>
       <DialogContent className="bg-bg-card border-border-default sm:max-w-[420px]">

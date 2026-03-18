@@ -44,6 +44,13 @@
     --card-secondary: 220 33% 96%;
     --card-hover: 220 33% 96%;
 
+    /* Sidebar v5 semantic tokens */
+    --sidebar-shell: 220 30% 98%;
+    --sidebar-surface: 0 0% 100%;
+    --sidebar-edge: 220 16% 82%;
+    --sidebar-quiet: 220 12% 46%;
+    --sidebar-cortex: 221 83% 53%;
+
     /* Shadcn semantic tokens */
     --background: 220 23% 97%;
     --foreground: 224 39% 13%;
@@ -118,6 +125,12 @@
     --primary-glow: 217 91% 74%;
     --card-secondary: 223 24% 16%;
     --card-hover: 223 24% 16%;
+
+    --sidebar-shell: 224 43% 7%;
+    --sidebar-surface: 221 39% 12%;
+    --sidebar-edge: 0 0% 100%;
+    --sidebar-quiet: 218 15% 40%;
+    --sidebar-cortex: 233 89% 67%;
 
     --background: 222 34% 9%;
     --foreground: 210 40% 96%;

@@ -85,6 +85,79 @@
     --status-red-bg: 0 72% 96%;
     --status-yellow-bg: 48 100% 96%;
   }
+
+  .dark {
+    --bg-base: 222 34% 9%;
+    --bg-card: 223 30% 12%;
+    --bg-card-hover: 223 24% 16%;
+    --bg-sidebar: 224 32% 10%;
+    --bg-tertiary: 223 24% 16%;
+
+    --border-default: 220 20% 22%;
+    --border-subtle: 220 18% 18%;
+    --border-focus: 217 91% 68%;
+    --border-highlight: 217 91% 68%;
+    --border-hover: 220 18% 28%;
+
+    --text-primary: 210 40% 96%;
+    --text-secondary: 216 21% 78%;
+    --text-muted: 218 12% 62%;
+    --text-secondary-legacy: 216 21% 78%;
+
+    --data-blue: 217 91% 68%;
+    --data-green: 142 70% 55%;
+    --data-red: 0 84% 66%;
+    --data-yellow: 41 96% 63%;
+    --data-purple: 262 83% 72%;
+
+    --chart-grid: 220 16% 24%;
+    --chart-tooltip-bg: 223 30% 12%;
+    --chart-tooltip-border: 220 20% 22%;
+
+    --primary-dark: 221 83% 60%;
+    --primary-glow: 217 91% 74%;
+    --card-secondary: 223 24% 16%;
+    --card-hover: 223 24% 16%;
+
+    --background: 222 34% 9%;
+    --foreground: 210 40% 96%;
+    --card: 223 30% 12%;
+    --card-foreground: 210 40% 96%;
+    --popover: 223 30% 12%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 217 91% 68%;
+    --primary-foreground: 224 39% 13%;
+    --secondary: 223 24% 16%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 223 24% 16%;
+    --muted-foreground: 218 12% 62%;
+    --accent: 223 24% 16%;
+    --accent-foreground: 210 40% 96%;
+    --destructive: 0 84% 66%;
+    --destructive-foreground: 224 39% 13%;
+    --success: 142 70% 55%;
+    --success-foreground: 224 39% 13%;
+    --warning: 41 96% 63%;
+    --warning-foreground: 224 39% 13%;
+    --border: 220 20% 22%;
+    --input: 220 20% 22%;
+    --ring: 217 91% 68%;
+
+    --sidebar-background: 224 32% 10%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 217 91% 68%;
+    --sidebar-primary-foreground: 224 39% 13%;
+    --sidebar-accent: 223 24% 16%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 220 20% 22%;
+    --sidebar-ring: 217 91% 68%;
+
+    --sidebar-hero: linear-gradient(180deg, hsl(var(--sidebar-background)) 0%, hsl(222 34% 8%) 100%);
+    --panel-highlight: linear-gradient(135deg, hsl(var(--primary) / 0.22), hsl(var(--primary-glow) / 0.08));
+    --status-green-bg: 142 70% 18%;
+    --status-red-bg: 0 55% 20%;
+    --status-yellow-bg: 42 60% 18%;
+  }
 }
 
 @layer base {

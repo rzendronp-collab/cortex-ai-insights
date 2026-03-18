@@ -15,11 +15,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
-// ─── Chart theme constants (V5.2 DashCortex palette) ───
-const CHART_GRID = '#E4E7EF';
-const CHART_AXIS = '#9BA5B7';
-const TOOLTIP_BG = '#FFFFFF';
-const TOOLTIP_BORDER = '#C9D0E0';
+// ─── Chart theme constants (V5 dark palette) ───
+const CHART_GRID = '#1E293B';
+const CHART_AXIS = '#7A8FAD';
+const TOOLTIP_BG = '#1A2540';
+const TOOLTIP_BORDER = '#2A3F6A';
 
 const DATA_BLUE = '#2563EB';
 const DATA_GREEN = '#16A34A';
@@ -32,10 +32,8 @@ const chartTooltipStyle = {
   backgroundColor: TOOLTIP_BG,
   border: `1px solid ${TOOLTIP_BORDER}`,
   borderRadius: 8,
-  boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
   fontSize: 11,
-  color: '#0F1523',
-  fontFamily: "'Inter', sans-serif",
+  color: '#E2E8F0',
   padding: '10px 12px',
 };
 

@@ -1042,8 +1042,8 @@ Responda SOMENTE com o JSON, sem markdown.`;
             return (
               <div
                 key={c.id}
-                className={`bg-white rounded-lg p-4 animate-fade-in opacity-0 [animation-fill-mode:forwards] ${!isActive ? 'opacity-60' : ''}`}
-                style={{ animationDelay: `${idx * 30}ms`, border: '1px solid #E4E7EF' }}
+                className={`rounded-lg bg-[#0D1424] p-4 animate-fade-in opacity-0 [animation-fill-mode:forwards] ${!isActive ? 'opacity-60' : ''}`}
+                style={{ animationDelay: `${idx * 30}ms`, border: '1px solid rgba(255,255,255,0.06)' }}
               >
                 {/* Header: name + toggle */}
                 <div className="flex items-start justify-between gap-3 mb-3">

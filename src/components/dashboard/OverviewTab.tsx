@@ -304,6 +304,21 @@ export default function OverviewTab() {
     <div className="space-y-5">
       {staleWarning}
 
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-[hsl(0_0%_100%/0.08)] bg-[hsl(0_0%_100%/0.04)] p-2">
+        {TAB_PERIODS.map((period) => (
+          <button
+            key={period}
+            onClick={() => setSelectedPeriod(period)}
+            className={cn(
+              'rounded-lg border border-[hsl(0_0%_100%/0.08)] bg-transparent px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors',
+              selectedPeriod === period && 'border-transparent bg-[hsl(var(--accent))] text-white',
+            )}
+          >
+            {period}
+          </button>
+        ))}
+      </div>
+
       {/* ─── KPIs ─── */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-12 xl:gap-4">
         {(() => {

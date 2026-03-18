@@ -426,7 +426,7 @@ function ActionPlanSection({
           </div>
           <div className="text-center">
             <p className="text-text-muted text-[10px]">Estimado</p>
-            <p className="font-bold text-emerald-400">{plan.roas_estimado?.toFixed(1)}x</p>
+            <p className="font-bold text-success">{plan.roas_estimado?.toFixed(1)}x</p>
           </div>
         </div>
       </div>
@@ -444,7 +444,7 @@ function ActionPlanSection({
               {actions.map((a: any) => {
                 const conf = calculateConfidence(a, campaigns);
                 return (
-                  <div key={a.campaign_id} className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-lg p-3 flex items-center gap-3 hover:border-[#C9D0E0] transition-colors">
+                  <div key={a.campaign_id} className="rounded-lg border border-border-default bg-card p-3 flex items-center gap-3 transition-colors hover:border-border-hover">
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] font-medium text-text-primary truncate">{a.campaign_name}</p>
                       <p className="text-[10px] text-text-muted">{a.motivo}</p>
@@ -452,7 +452,7 @@ function ActionPlanSection({
                     <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${conf.color}`} title={`Confiança: ${conf.score}%`}>
                       {conf.score}% {conf.label}
                     </span>
-                    <span className="text-[10px] text-emerald-400 font-medium flex-shrink-0">{a.impacto_estimado}</span>
+                    <span className="text-[10px] text-success font-medium flex-shrink-0">{a.impacto_estimado}</span>
                     <span className="text-[10px] text-text-muted flex-shrink-0">
                       {currencySymbol} {a.valor_atual?.toFixed(0)} → {a.valor_novo?.toFixed(0)}
                     </span>

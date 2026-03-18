@@ -747,76 +747,19 @@ Responda SOMENTE com o JSON, sem markdown.`;
 
   const getRecommendation = (campaign: ProcessedCampaign) => {
     // Campaigns with zero spend show a neutral "no data" badge
-    if (campaign.spend === 0) return { label: 'Sem dados', bg: 'rgba(100,116,139,0.12)', text: '#94A3B8', border: 'rgba(100,116,139,0.25)' };
-    if (campaign.roas >= roasTarget * 1.3) return { label: 'Escalar', bg: 'rgba(22,163,74,0.1)', text: '#16A34A', border: 'rgba(22,163,74,0.25)' };
-    if (campaign.roas < roasTarget * 0.5 && campaign.spend > 10) return { label: 'Pausar', bg: 'rgba(220,38,38,0.1)', text: '#DC2626', border: 'rgba(220,38,38,0.25)' };
-    return { label: 'Otimizar', bg: 'rgba(37,99,235,0.1)', text: '#2563EB', border: 'rgba(37,99,235,0.25)' };
+    if (campaign.spend === 0) return { label: 'Sem dados', bg: 'hsl(var(--muted) / 0.5)', text: 'hsl(var(--muted-foreground))', border: 'hsl(var(--border))' };
+    if (campaign.roas >= roasTarget * 1.3) return { label: 'Escalar', bg: 'hsl(var(--success) / 0.1)', text: 'hsl(var(--success))', border: 'hsl(var(--success) / 0.25)' };
+    if (campaign.roas < roasTarget * 0.5 && campaign.spend > 10) return { label: 'Pausar', bg: 'hsl(var(--destructive) / 0.1)', text: 'hsl(var(--destructive))', border: 'hsl(var(--destructive) / 0.25)' };
+    return { label: 'Otimizar', bg: 'hsl(var(--primary) / 0.1)', text: 'hsl(var(--primary))', border: 'hsl(var(--primary) / 0.25)' };
   };
 
-  // Column ID → sort key mapping
-  const colSortKey: Record<string, SortColumn | null> = {
-    status: 'status', campaign: 'name', spend: 'spend', budget: 'budget',
-    revenue: 'revenue', profit: 'profit', roas: 'roas', sales: 'purchases',
-    cpa: 'cpa', ctr: 'ctr', cpm: 'cpm', impressions: 'impressions', clicks: 'clicks', notes: null,
-  };
-  const colAlign: Record<string, string> = {
-    status: 'left', campaign: 'left', notes: 'center',
-  };
-  // default align = right for metrics
-
-
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  // CSV Export
-  const exportCsv = () => {
-    const accountName = selectedAccountId || 'conta';
-    const date = new Date().toISOString().slice(0, 10);
-    const headers = ['Nome', 'Gasto', 'Orçamento', 'Faturamento', 'Lucro', 'ROAS', 'Vendas', 'CPA', 'CTR', 'CPM', 'Impressões', 'Cliques'];
-    const rows = sortedCampaigns.map(c => {
-      const budget = analysisData?.budgetByCampaignId?.[c.id] ?? '';
-      const profit = c.revenue - c.spend;
-      const cpa = c.purchases > 0 ? (c.spend / c.purchases).toFixed(2) : '0';
-      return [
-        `"${c.name.replace(/"/g, '""')}"`,
-        c.spend.toFixed(2), budget !== '' ? Number(budget).toFixed(2) : '',
-        c.revenue.toFixed(2), profit.toFixed(2), c.roas.toFixed(2),
-        c.purchases, cpa, c.ctr.toFixed(2), c.cpm.toFixed(2),
-        c.impressions, c.clicks,
-      ].join(',');
-    });
-    const bom = '\uFEFF';
-    const csv = bom + [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `campanhas_${accountName}_${date}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('CSV exportado ✓');
-  };
-
-  const roasFilterOptions = [
-    { value: 'all', label: 'Todos' },
-    { value: 'scaling', label: '🚀 Escalando' },
-    { value: 'above', label: '✅ Acima da meta' },
-    { value: 'near', label: '⚠️ Próximo da meta' },
-    { value: 'below', label: '❌ Abaixo da meta' },
-  ] as const;
-
-  const roasFilterLabel = roasFilterOptions.find(o => o.value === roasFilter)?.label || 'ROAS';
-
-  // Pagination bar component
   const PaginationBar = () => {
-    if (sortedCampaigns.length <= PAGE_SIZE) return null;
+    if (totalPages <= 1) return null;
     const start = (currentPage - 1) * PAGE_SIZE + 1;
     const end = Math.min(currentPage * PAGE_SIZE, sortedCampaigns.length);
-    const maxVisible = 5;
+
     const pages: (number | string)[] = [];
+    const maxVisible = 5;
     if (totalPages <= maxVisible + 2) {
       for (let i = 1; i <= totalPages; i++) pages.push(i);
     } else {
@@ -827,7 +770,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
       pages.push(totalPages);
     }
     return (
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 py-3 border-t border-[#E4E7EF]">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 px-4 py-3 border-t border-border-subtle">
         <span className="text-[11px] text-text-muted">Mostrando {start}-{end} de {sortedCampaigns.length} campanhas</span>
         <div className="flex items-center gap-1">
           <button
@@ -846,7 +789,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 onClick={() => handlePageChange(p)}
                 className={`w-7 h-7 text-[11px] font-medium rounded-md transition-colors ${
                   currentPage === p
-                    ? 'bg-data-blue text-white'
+                    ? 'bg-primary text-primary-foreground'
                     : 'border border-border-default text-text-secondary hover:text-text-primary'
                 }`}
               >
@@ -875,34 +818,33 @@ Responda SOMENTE com o JSON, sem markdown.`;
             placeholder="Buscar campanha..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full sm:w-64 h-8 text-xs bg-[#0D1424] border-white/[0.06] text-slate-300"
+            className="w-full sm:w-64 h-8 text-xs border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))] text-foreground"
           />
-          <div className="flex items-center bg-[#0D1424] border border-white/[0.06] rounded-md">
+          <div className="flex items-center rounded-md border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))]">
             <button
               onClick={() => setStatusFilter('all')}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
             >
               Todos
             </button>
             <button
               onClick={() => setStatusFilter('active')}
-              className={`px-3 py-1.5 text-xs font-medium border-l border-white/[0.06] transition-colors ${statusFilter === 'active' ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`px-3 py-1.5 text-xs font-medium border-l border-[hsl(var(--surface-edge)/0.06)] transition-colors ${statusFilter === 'active' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
             >
               Ativo
             </button>
             <button
               onClick={() => setStatusFilter('paused')}
-              className={`px-3 py-1.5 text-xs font-medium border-l border-white/[0.06] transition-colors ${statusFilter === 'paused' ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200'}`}
+              className={`px-3 py-1.5 text-xs font-medium border-l border-[hsl(var(--surface-edge)/0.06)] transition-colors ${statusFilter === 'paused' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
             >
               Pausado
             </button>
           </div>
-...
           {availableCountries.length > 0 && (
-            <div className="flex items-center bg-[#0D1424] border border-white/[0.06] rounded-md">
+            <div className="flex items-center rounded-md border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))]">
               <button
                 onClick={() => setCountryFilter('all')}
-                className={`px-2 py-1.5 text-xs font-medium transition-colors ${countryFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200'}`}
+                className={`px-2 py-1.5 text-xs font-medium transition-colors ${countryFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
               >
                 🌍
               </button>
@@ -910,7 +852,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 <button
                   key={c}
                   onClick={() => setCountryFilter(c as any)}
-                  className={`px-2 py-1.5 text-xs font-medium border-l border-white/[0.06] transition-colors ${countryFilter === c ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200'}`}
+                  className={`px-2 py-1.5 text-xs font-medium border-l border-[hsl(var(--surface-edge)/0.06)] transition-colors ${countryFilter === c ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                   {{ PT: '🇵🇹', ES: '🇪🇸', GR: '🇬🇷', BR: '🇧🇷' }[c]}
                 </button>
@@ -962,12 +904,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
           <button
             onClick={() => setCompactMode(!compactMode)}
             title={compactMode ? 'Vista normal' : 'Vista compacta'}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium border rounded-md transition-colors"
-            style={{
-              background: compactMode ? 'rgba(37,99,235,0.10)' : 'transparent',
-              color: compactMode ? '#2563EB' : '#9BA5B7',
-              borderColor: compactMode ? 'rgba(37,99,235,0.30)' : '#E4E7EF',
-            }}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium border rounded-md transition-colors ${compactMode ? 'border-primary/30 bg-primary/10 text-primary' : 'border-border-subtle text-muted-foreground hover:text-foreground'}`}
           >
             <Columns3 className="w-3.5 h-3.5" />
           </button>

@@ -1,37 +1,23 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Bell, Loader2, Menu, RefreshCw, Sparkles, Wifi, WifiOff } from 'lucide-react';
 import { useDashboard } from '@/context/DashboardContext';
 import { useMetaData } from '@/hooks/useMetaData';
 import { useMetaConnection } from '@/hooks/useMetaConnection';
-import { useProfile } from '@/hooks/useProfile';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Loader2, RefreshCw, Menu, Bell } from 'lucide-react';
 import AlertsPanel from './AlertsPanel';
 import PeriodSelector from '@/components/ui/PeriodSelector';
-
-const C = {
-  bg:            '#FFFFFF',
-  border:        '#E4E7EF',
-  accent:        '#2563EB',
-  accentHover:   '#1D4ED8',
-  accentSubtle:  '#EFF4FF',
-  accentBorder:  '#C7D7FD',
-  textPrimary:   '#0F1523',
-  textSecondary: '#5A6478',
-  textMuted:     '#9BA5B7',
-  bgHover:       '#F1F3F8',
-  green:         '#16A34A',
-  red:           '#DC2626',
-} as const;
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const tabLabels: Record<string, string> = {
-  overview:      'Visão Geral',
-  campaigns:     'Campanhas',
+  overview: 'Visão Geral',
+  campaigns: 'Campanhas',
   'action-plan': 'CORTEX IA',
-  comparison:    'Comparação',
-  consolidated:  'Relatórios',
-  rules:         'Regras',
-  chat:          'Chat',
-  report:        'Notificações',
+  comparison: 'Comparação',
+  consolidated: 'Relatórios',
+  rules: 'Regras',
+  chat: 'Chat',
+  report: 'Notificações',
 };
 
 interface DashboardHeaderProps {
@@ -40,140 +26,165 @@ interface DashboardHeaderProps {
 
 export default function DashboardHeader({ onOpenSidebar }: DashboardHeaderProps) {
   const {
-    activeTab, activeAccountIds, selectedAccountId, selectedPeriod, setSelectedPeriod,
-    cacheTimestamp, selectedAccountName,
+    activeTab,
+    activeAccountIds,
+    selectedAccountId,
+    selectedPeriod,
+    setSelectedPeriod,
+    cacheTimestamp,
+    selectedAccountName,
   } = useDashboard();
   const { isConnected, isTokenExpired, connectMeta } = useMetaConnection();
   const { analyze, loading } = useMetaData();
   const isMobile = useIsMobile();
-  const { profile } = useProfile();
 
   const [lastUpdatedText, setLastUpdatedText] = useState<string | null>(null);
 
   useEffect(() => {
     const compute = () => {
-      if (!cacheTimestamp) { setLastUpdatedText(null); return; }
-      const diffMs  = Date.now() - cacheTimestamp;
+      if (!cacheTimestamp) {
+        setLastUpdatedText(null);
+        return;
+      }
+
+      const diffMs = Date.now() - cacheTimestamp;
       const diffMin = Math.floor(diffMs / 60000);
-      if (diffMin < 1)  setLastUpdatedText('Agora');
+
+      if (diffMin < 1) setLastUpdatedText('Agora');
       else if (diffMin < 60) setLastUpdatedText(`${diffMin}min atrás`);
       else setLastUpdatedText(`${Math.floor(diffMin / 60)}h atrás`);
     };
+
     compute();
-    const interval = setInterval(compute, 30000);
-    return () => clearInterval(interval);
+    const interval = window.setInterval(compute, 30000);
+    return () => window.clearInterval(interval);
   }, [cacheTimestamp]);
 
-  const handleAtualizar = useCallback(async () => {
+  const handleRefresh = useCallback(async () => {
     if (activeAccountIds.length === 0) return;
-    await Promise.all(activeAccountIds.map(id => analyze(id)));
+    await Promise.all(activeAccountIds.map((id) => analyze(id)));
   }, [activeAccountIds, analyze]);
 
+  const statusLabel = useMemo(() => {
+    if (isTokenExpired) return 'Token expirado';
+    if (isConnected) return 'Meta conectada';
+    return 'Meta desconectada';
+  }, [isConnected, isTokenExpired]);
+
+  const tabLabel = tabLabels[activeTab] || 'Dashboard';
+  const accountLabel =
+    activeAccountIds.length > 1
+      ? `${activeAccountIds.length} contas ativas`
+      : selectedAccountName || (selectedAccountId ? 'Conta ativa' : 'Nenhuma conta');
+
   return (
-    <div
-      className="sticky top-0 z-30 flex items-center justify-between px-6"
-      style={{ height: 52, background: C.bg, borderBottom: `1px solid ${C.border}` }}
-    >
-      {/* ── Left ──────────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-3">
-        {isMobile && onOpenSidebar && (
-          <button
-            onClick={onOpenSidebar}
-            className="p-1 rounded"
-            style={{ color: C.textMuted }}
-            onMouseEnter={e => (e.currentTarget.style.background = C.bgHover)}
-            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-        )}
-
-        <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 16, color: C.textPrimary, letterSpacing: '-0.3px' }}>
-          {tabLabels[activeTab] || 'Dashboard'}
-        </h1>
-
-        {(selectedAccountName || activeAccountIds.length > 0) && (
-          <span
-            className="hidden md:inline-block"
-            style={{
-              fontSize: 11, fontWeight: 600, color: C.textSecondary,
-              background: C.bgHover, border: `1px solid ${C.border}`,
-              borderRadius: 6, padding: '3px 10px',
-              fontFamily: "'DM Sans', sans-serif",
-            }}
-          >
-            {activeAccountIds.length > 1
-              ? `${activeAccountIds.length} contas`
-              : selectedAccountName || 'Conta activa'}
-          </span>
-        )}
-      </div>
-
-      {/* ── Right ─────────────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2">
-
-        {/* Period Selector */}
-        <PeriodSelector value={selectedPeriod} onChange={setSelectedPeriod} />
-
-        <div className="w-px h-4 hidden sm:block" style={{ background: C.border }} />
-
-        {/* Last updated */}
-        {lastUpdatedText && (
-          <span className="hidden sm:inline" style={{ fontSize: 11, color: C.textMuted, fontFamily: "'DM Sans', sans-serif" }}>
-            Atualizado {lastUpdatedText}
-          </span>
-        )}
-
-        {/* Refresh button — PRIMARY */}
-        <button
-          onClick={handleAtualizar}
-          disabled={loading || (activeAccountIds.length === 0 && !selectedAccountId)}
-          className="flex items-center gap-1.5 rounded-md transition-all duration-150 disabled:opacity-40 disabled:pointer-events-none"
-          style={{
-            background: loading ? '#1D4ED8' : C.accent,
-            color: '#FFFFFF',
-            fontSize: 13, fontWeight: 600,
-            padding: '6px 12px',
-            fontFamily: "'DM Sans', sans-serif",
-            boxShadow: '0 1px 2px rgba(37,99,235,0.2)',
-          }}
-          onMouseEnter={e => !loading && ((e.currentTarget as HTMLElement).style.background = C.accentHover)}
-          onMouseLeave={e => !loading && ((e.currentTarget as HTMLElement).style.background = C.accent)}
-        >
-          {loading
-            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            : <RefreshCw className="w-3.5 h-3.5" />
-          }
-          {!isMobile && <span>{loading ? 'Atualizando' : 'Atualizar'}</span>}
-        </button>
-
-        <div className="w-px h-4 hidden sm:block" style={{ background: C.border }} />
-
-        {/* Alerts */}
-        <AlertsPanel />
-
-        {/* Connection status */}
-        <div className="flex items-center gap-1.5 hidden sm:flex">
-          <div
-            className="w-1.5 h-1.5 rounded-full animate-pulse-dot"
-            style={{ background: isTokenExpired ? '#D97706' : isConnected ? C.green : C.textMuted }}
-          />
-          {isTokenExpired ? (
-            <button
-              onClick={() => connectMeta()}
-              style={{ fontSize: 11, color: C.red, fontWeight: 500 }}
-              onMouseEnter={e => ((e.currentTarget as HTMLElement).style.textDecoration = 'underline')}
-              onMouseLeave={e => ((e.currentTarget as HTMLElement).style.textDecoration = 'none')}
+    <header className="sticky top-0 z-30 border-b border-border-default bg-background/88 backdrop-blur-xl">
+      <div className="flex min-h-[76px] items-center justify-between gap-4 px-4 md:px-6">
+        <div className="flex min-w-0 items-center gap-3 md:gap-4">
+          {isMobile && onOpenSidebar ? (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={onOpenSidebar}
+              className="size-10 rounded-2xl border-border-default bg-card/80 text-text-secondary hover:bg-accent hover:text-text-primary"
             >
-              Reconectar
-            </button>
-          ) : isConnected ? (
-            <span style={{ fontSize: 11, color: C.green, fontFamily: "'DM Sans', sans-serif" }}>Conectado</span>
-          ) : (
-            <span style={{ fontSize: 11, color: C.textMuted }}>Desconectado</span>
-          )}
+              <Menu className="size-5" />
+            </Button>
+          ) : null}
+
+          <div className="min-w-0">
+            <div className="flex min-w-0 items-center gap-2">
+              <h1 className="truncate font-display text-lg font-bold tracking-[-0.04em] text-text-primary md:text-[1.35rem]">
+                {tabLabel}
+              </h1>
+              {activeTab === 'action-plan' ? (
+                <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-primary">
+                  AI
+                </span>
+              ) : null}
+            </div>
+
+            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2 text-xs text-text-secondary">
+              <span className="truncate">{accountLabel}</span>
+              <span className="hidden h-1 w-1 rounded-full bg-border-default sm:block" />
+              <span className="hidden sm:inline">Período {selectedPeriod}</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="hidden lg:flex items-center rounded-[1.25rem] border border-border-default bg-card/80 px-3 py-2 shadow-sm">
+            <PeriodSelector value={selectedPeriod} onChange={setSelectedPeriod} />
+          </div>
+
+          <div className="hidden xl:flex items-center gap-2 rounded-[1.25rem] border border-border-default bg-card/80 px-3 py-2 text-xs text-text-secondary shadow-sm">
+            <span
+              className={cn(
+                'size-2 rounded-full',
+                isTokenExpired ? 'bg-warning' : isConnected ? 'bg-success' : 'bg-muted-foreground',
+              )}
+            />
+            <span>{statusLabel}</span>
+            {isTokenExpired ? (
+              <button className="font-semibold text-primary transition-colors hover:text-primary-dark" onClick={() => connectMeta()}>
+                Reconectar
+              </button>
+            ) : isConnected ? (
+              <Wifi className="size-3.5 text-success" />
+            ) : (
+              <WifiOff className="size-3.5 text-text-muted" />
+            )}
+          </div>
+
+          {lastUpdatedText ? (
+            <div className="hidden md:flex items-center gap-2 rounded-[1.25rem] border border-border-default bg-card/80 px-3 py-2 text-xs text-text-secondary shadow-sm">
+              <Sparkles className="size-3.5 text-primary" />
+              <span>Atualizado {lastUpdatedText}</span>
+            </div>
+          ) : null}
+
+          <div className="hidden md:block">
+            <AlertsPanel />
+          </div>
+
+          <Button
+            onClick={handleRefresh}
+            disabled={loading || (activeAccountIds.length === 0 && !selectedAccountId)}
+            className="h-10 rounded-2xl px-4 text-sm font-semibold shadow-[0_18px_36px_-22px_hsl(var(--primary)/0.9)]"
+          >
+            {loading ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+            <span className="hidden sm:inline">{loading ? 'Atualizando' : 'Atualizar'}</span>
+          </Button>
+
+          <div className="md:hidden">
+            <AlertsPanel />
+          </div>
         </div>
       </div>
-    </div>
+
+      <div className="border-t border-border-subtle px-4 py-2 lg:hidden md:px-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1 overflow-hidden rounded-[1.1rem] border border-border-default bg-card/80 px-3 py-2 shadow-sm">
+            <PeriodSelector value={selectedPeriod} onChange={setSelectedPeriod} />
+          </div>
+
+          <div className="flex items-center gap-2 rounded-[1.1rem] border border-border-default bg-card/80 px-3 py-2 text-xs text-text-secondary shadow-sm">
+            <span
+              className={cn(
+                'size-2 rounded-full',
+                isTokenExpired ? 'bg-warning' : isConnected ? 'bg-success' : 'bg-muted-foreground',
+              )}
+            />
+            <span className="hidden sm:inline">{statusLabel}</span>
+            {isTokenExpired ? (
+              <button className="font-semibold text-primary transition-colors hover:text-primary-dark" onClick={() => connectMeta()}>
+                Reconectar
+              </button>
+            ) : null}
+            {!isTokenExpired && isConnected ? <Bell className="size-3.5 text-primary/80 sm:hidden" /> : null}
+          </div>
+        </div>
+      </div>
+    </header>
   );
 }

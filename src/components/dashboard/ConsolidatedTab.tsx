@@ -15,7 +15,7 @@ const chartTooltipStyle = {
   border: '1px solid hsl(var(--tooltip-edge))',
   borderRadius: 8,
   fontSize: 11,
-  color: '#E2E8F0',
+  color: 'hsl(var(--foreground))',
   padding: '10px 12px',
 };
 
@@ -121,20 +121,20 @@ export default function ConsolidatedTab() {
           </div>
           <div className={`${panelClass} p-4 animate-fade-up`}>
             <p className="text-[10px] uppercase text-muted-foreground">Vendas Total</p>
-            <p className="text-2xl font-extrabold text-white">{totalSales}</p>
+            <p className="text-2xl font-extrabold text-foreground">{totalSales}</p>
           </div>
           <div className={`${panelClass} p-4 animate-fade-up`}>
             <p className="text-[10px] uppercase text-muted-foreground">Gasto Total</p>
-            <p className="text-xl font-bold text-white">{formatCurrency(totalSpend, currency)}</p>
+            <p className="text-xl font-bold text-foreground">{formatCurrency(totalSpend, currency)}</p>
           </div>
           <div className={`${panelClass} p-4 animate-fade-up`}>
             <p className="text-[10px] uppercase text-muted-foreground">Receita Total</p>
-            <p className="text-xl font-bold text-emerald-400">{formatCurrency(totalRevenue, currency)}</p>
+            <p className="text-xl font-bold text-success">{formatCurrency(totalRevenue, currency)}</p>
           </div>
         </div>
 
         <div className={`${panelClass} p-4 animate-fade-up`}>
-          <h3 className="mb-3 text-xs font-semibold text-white">ROAS por Conta</h3>
+          <h3 className="mb-3 text-xs font-semibold text-foreground">ROAS por Conta</h3>
           <ResponsiveContainer width="100%" height={Math.max(200, allAccounts.length * 40)}>
             <BarChart data={chartData} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
@@ -144,7 +144,11 @@ export default function ConsolidatedTab() {
               <ReferenceLine x={roasTarget} stroke={CHART_AXIS} strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 10, fill: CHART_AXIS }} />
               <Bar dataKey="roas" radius={[0, 4, 4, 0]}>
                 {chartData.map((a, i) => {
-                  const fill = a.roas >= roasTarget * 1.2 ? '#16A34A' : a.roas >= roasTarget ? '#2563EB' : '#DC2626';
+                  const fill = a.roas >= roasTarget * 1.2
+                    ? 'hsl(var(--data-green))'
+                    : a.roas >= roasTarget
+                      ? 'hsl(var(--data-blue))'
+                      : 'hsl(var(--data-red))';
                   return <Cell key={i} fill={fill} />;
                 })}
               </Bar>
@@ -153,7 +157,7 @@ export default function ConsolidatedTab() {
         </div>
 
         <div className={`${panelClass} p-4 animate-fade-up`}>
-          <h3 className="mb-3 text-xs font-semibold text-white">Detalhes por Conta</h3>
+          <h3 className="mb-3 text-xs font-semibold text-foreground">Detalhes por Conta</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
@@ -169,11 +173,11 @@ export default function ConsolidatedTab() {
               <tbody>
                 {allAccounts.map((a) => (
                   <tr key={a.accountId} className="border-b border-[hsl(var(--surface-edge)/0.05)] hover:bg-[hsl(var(--surface-edge)/0.03)]">
-                    <td className="max-w-[200px] truncate py-2 font-medium text-white">{a.name}</td>
+                    <td className="max-w-[200px] truncate py-2 font-medium text-foreground">{a.name}</td>
                     <td className={`py-2 text-right font-bold ${getRoasColor(a.roas, roasTarget)}`}>{a.roas.toFixed(1)}x</td>
-                    <td className="py-2 text-right text-white">{formatCurrency(a.totalSpend, currency)}</td>
-                    <td className="py-2 text-right text-emerald-400">{formatCurrency(a.totalRevenue, currency)}</td>
-                    <td className="py-2 text-right text-white">{a.purchases}</td>
+                    <td className="py-2 text-right text-foreground">{formatCurrency(a.totalSpend, currency)}</td>
+                    <td className="py-2 text-right text-success">{formatCurrency(a.totalRevenue, currency)}</td>
+                    <td className="py-2 text-right text-foreground">{a.purchases}</td>
                     <td className="py-2 text-right text-muted-foreground">{a.period}</td>
                   </tr>
                 ))}
@@ -206,20 +210,20 @@ export default function ConsolidatedTab() {
         </div>
         <div className={`${panelClass} p-4 animate-fade-up`}>
           <p className="text-[10px] uppercase text-muted-foreground">Vendas Total</p>
-          <p className="text-2xl font-extrabold text-white">{totalSales}</p>
+          <p className="text-2xl font-extrabold text-foreground">{totalSales}</p>
         </div>
         <div className={`${panelClass} p-4 animate-fade-up`}>
           <p className="text-[10px] uppercase text-muted-foreground">Gasto Total</p>
-          <p className="text-xl font-bold text-white">{formatCurrency(totalSpend, currency)}</p>
+          <p className="text-xl font-bold text-foreground">{formatCurrency(totalSpend, currency)}</p>
         </div>
         <div className={`${panelClass} p-4 animate-fade-up`}>
           <p className="text-[10px] uppercase text-muted-foreground">Receita Total</p>
-          <p className="text-xl font-bold text-emerald-400">{formatCurrency(totalRevenue, currency)}</p>
+          <p className="text-xl font-bold text-success">{formatCurrency(totalRevenue, currency)}</p>
         </div>
       </div>
 
       <div className={`${panelClass} p-4 animate-fade-up`}>
-        <h3 className="mb-3 text-xs font-semibold text-white">ROAS por Campanha</h3>
+        <h3 className="mb-3 text-xs font-semibold text-foreground">ROAS por Campanha</h3>
         <ResponsiveContainer width="100%" height={Math.max(250, chartData.length * 30)}>
           <BarChart data={chartData} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} />
@@ -229,7 +233,11 @@ export default function ConsolidatedTab() {
             <ReferenceLine x={roasTarget} stroke={CHART_AXIS} strokeDasharray="5 5" label={{ value: 'Meta', fontSize: 10, fill: CHART_AXIS }} />
             <Bar dataKey="roas" radius={[0, 4, 4, 0]}>
               {chartData.map((a, i) => {
-                const fill = a.roas >= roasTarget * 1.2 ? '#16A34A' : a.roas >= roasTarget ? '#2563EB' : '#DC2626';
+                const fill = a.roas >= roasTarget * 1.2
+                  ? 'hsl(var(--data-green))'
+                  : a.roas >= roasTarget
+                    ? 'hsl(var(--data-blue))'
+                    : 'hsl(var(--data-red))';
                 return <Cell key={i} fill={fill} />;
               })}
             </Bar>
@@ -238,7 +246,7 @@ export default function ConsolidatedTab() {
       </div>
 
       <div className={`${panelClass} p-4 animate-fade-up`}>
-        <h3 className="mb-3 text-xs font-semibold text-white">Detalhes por Campanha</h3>
+        <h3 className="mb-3 text-xs font-semibold text-foreground">Detalhes por Campanha</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
@@ -254,12 +262,12 @@ export default function ConsolidatedTab() {
             <tbody>
               {campaigns.filter((c) => c.spend > 0).map((c) => (
                 <tr key={c.id} className="border-b border-[hsl(var(--surface-edge)/0.05)] hover:bg-[hsl(var(--surface-edge)/0.03)]">
-                  <td className="max-w-[200px] truncate py-2 font-medium text-white">{c.name}</td>
+                  <td className="max-w-[200px] truncate py-2 font-medium text-foreground">{c.name}</td>
                   <td className={`py-2 text-right font-bold ${getRoasColor(c.roas, roasTarget)}`}>{c.roas.toFixed(1)}x</td>
-                  <td className="py-2 text-right text-white">{formatCurrency(c.spend, currency)}</td>
-                  <td className="py-2 text-right text-emerald-400">{formatCurrency(c.revenue, currency)}</td>
-                  <td className="py-2 text-right text-white">{c.purchases}</td>
-                  <td className="py-2 text-right text-white">{c.ctr.toFixed(1)}%</td>
+                  <td className="py-2 text-right text-foreground">{formatCurrency(c.spend, currency)}</td>
+                  <td className="py-2 text-right text-success">{formatCurrency(c.revenue, currency)}</td>
+                  <td className="py-2 text-right text-foreground">{c.purchases}</td>
+                  <td className="py-2 text-right text-foreground">{c.ctr.toFixed(1)}%</td>
                 </tr>
               ))}
             </tbody>

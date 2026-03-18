@@ -468,7 +468,7 @@ export default function OverviewTab() {
                           transition: 'width 0.5s ease',
                         }}
                       >
-                        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: '#0F1523', fontSize: 15, lineHeight: 1 }}>
+                        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: '#E2E8F0', fontSize: 15, lineHeight: 1 }}>
                           {item.value.toLocaleString()}
                         </span>
                         <span style={{ color: '#9BA5B7', fontSize: 10, marginTop: 3 }}>
@@ -497,9 +497,9 @@ export default function OverviewTab() {
                   <div key={item.name}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[11px] text-[#9BA5B7]">{item.name}</span>
-                      <span className="text-[11px] font-semibold text-[#0F1523]">{rate.toFixed(1)}%</span>
+                      <span className="text-[11px] font-semibold text-white">{rate.toFixed(1)}%</span>
                     </div>
-                    <div className="h-1.5 bg-[#E4E7EF] rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-[#080D1A] rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-700"
                         style={{ width: `${pct}%`, background: i === funnelData.length - 1 ? '#16A34A' : '#2563EB' }}

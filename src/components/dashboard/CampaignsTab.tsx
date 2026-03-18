@@ -1400,7 +1400,22 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                       return (
                                         <React.Fragment key={adset.id}>
                                           <tr className={`border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors ${!adsetActive ? 'opacity-50' : ''}`}>
-...
+                                            <td className="py-2 px-2">
+                                              <button
+                                                onClick={() => {
+                                                  const next = isAdsOpen ? null : adset.id;
+                                                  setAdsExpandedId(next);
+                                                  if (next) fetchAds(adset.id, selectedPeriod);
+                                                }}
+                                                className="p-0.5 text-muted-foreground hover:text-foreground"
+                                              >
+                                                <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${isAdsOpen ? 'rotate-90' : ''}`} />
+                                              </button>
+                                            </td>
+                                            <td className="py-2 px-2" onClick={e => e.stopPropagation()}>
+                                              {isAdsetToggling ? (
+                                                <div className="w-3.5 h-3.5 border-2 border-muted-foreground border-t-primary rounded-full animate-spin" />
+                                              ) : (
                                                 <button
                                                   onClick={() => executeSubToggle(adset.id, effAdsetStatus)}
                                                   className="relative inline-flex items-center cursor-pointer"
@@ -1423,7 +1438,6 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                             <td className="py-2 px-2 text-right text-[12px] text-text-primary">{adset.purchases}</td>
                                             <td className="py-2 px-2 text-right text-[12px] text-text-primary">{adset.ctr.toFixed(2)}%</td>
                                             <td className="py-2 px-2 text-right text-[12px] text-text-primary">{formatCurrency(adset.cpm, currency)}</td>
-                                            {/* Budget inline edit */}
                                             <td className="py-2 px-2 text-right" onClick={e => e.stopPropagation()}>
                                               {isEditingAdsetBgt ? (
                                                 <input
@@ -1450,7 +1464,6 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                 </div>
                                               )}
                                             </td>
-                                            {/* Actions: AI analysis */}
                                             <td className="py-2 px-2 text-center">
                                               <TooltipProvider><Tooltip><TooltipTrigger asChild>
                                                 <button

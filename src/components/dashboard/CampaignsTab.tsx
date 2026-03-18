@@ -1109,18 +1109,18 @@ Responda SOMENTE com o JSON, sem markdown.`;
       <div className="md:hidden"><PaginationBar /></div>
 
       {/* Sort indicator badge */}
-      <div className="hidden md:block bg-white rounded-lg overflow-x-auto" style={{ border: "1px solid #E4E7EF" }}>
-        <div className="flex items-center justify-between px-3 py-1.5 border-b border-[#E4E7EF]">
-          <span className="text-[10px] text-text-muted">
-            Ordenado por: <span className="font-semibold text-text-secondary">{
+      <div className="hidden md:block rounded-lg overflow-x-auto bg-[#0D1424]" style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center justify-between px-3 py-1.5 border-b border-white/[0.06]">
+          <span className="text-[10px] text-slate-400">
+            Ordenado por: <span className="font-semibold text-slate-300">{
               { status: 'Status', name: 'Nome', spend: 'Gasto', budget: 'Orçamento', revenue: 'Receita', profit: 'Lucro', roas: 'ROAS', purchases: 'Vendas', cpa: 'CPA', ctr: 'CTR', cpm: 'CPM', impressions: 'Impressões', clicks: 'Cliques' }[sortColumn]
             }</span> {sortDirection === 'desc' ? '↓' : '↑'}
           </span>
-          <span className="text-[10px] text-text-muted">{sortedCampaigns.length} campanhas</span>
+          <span className="text-[10px] text-slate-400">{sortedCampaigns.length} campanhas</span>
         </div>
-        <table className="w-full text-left border-collapse min-w-[1000px]">
+        <table className="w-full text-left border-collapse min-w-[1000px] bg-[#0D1424]">
           <thead>
-            <tr style={{ background: "#F8F9FC", borderBottom: "1px solid #E4E7EF", position: "sticky", top: 0, zIndex: 10 }}>
+            <tr style={{ background: '#080D1A', borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'sticky', top: 0, zIndex: 10 }}>
               {/* Checkbox column */}
               <th className="px-2 py-2.5 w-8" onClick={e => e.stopPropagation()}>
                 <Checkbox

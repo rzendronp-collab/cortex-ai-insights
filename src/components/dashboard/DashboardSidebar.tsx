@@ -49,10 +49,14 @@ const navItems: NavItem[] = [
 ];
 
 const statusClasses: Record<Exclude<AccountStatus, null>, string> = {
-  green: 'bg-success/70',
-  red: 'bg-destructive/70',
-  yellow: 'bg-warning/75',
+  green: 'bg-success/80',
+  red: 'bg-destructive/80',
+  yellow: 'bg-warning/80',
 };
+
+const primaryNavIds = ['overview', 'campaigns'];
+const cortexNavIds = ['action-plan'];
+const utilityNavIds = ['report'];
 
 export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
   const { user, signOut } = useAuth();
@@ -81,8 +85,8 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
         .map((name) => name[0])
         .join('')
         .slice(0, 2)
-        .toUpperCase() || 'U',
-    [profile?.name],
+        .toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U',
+    [profile?.name, user?.email],
   );
 
   const accountsByBm = useMemo(() => {
@@ -95,6 +99,14 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
   }, [adAccounts]);
 
   const bmEntries = useMemo(() => Object.entries(accountsByBm), [accountsByBm]);
+
+  const primaryNavItems = useMemo(() => navItems.filter((item) => primaryNavIds.includes(item.id)), []);
+  const cortexNavItems = useMemo(() => navItems.filter((item) => cortexNavIds.includes(item.id)), []);
+  const utilityNavItems = useMemo(() => navItems.filter((item) => utilityNavIds.includes(item.id)), []);
+  const secondaryNavItems = useMemo(
+    () => navItems.filter((item) => !primaryNavIds.includes(item.id) && !cortexNavIds.includes(item.id) && !utilityNavIds.includes(item.id)),
+    [],
+  );
 
   useEffect(() => {
     if (!bmEntries.length) return;
@@ -167,262 +179,184 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
 
   const hasAccounts = isConnected && !isTokenExpired && adAccounts.length > 0;
 
+  const renderNavItem = (item: NavItem) => {
+    const isActive = activeTab === item.id;
+    const isCortex = item.id === 'action-plan';
+    const isMuted = item.id === 'report' && !isActive;
+    const Icon = item.icon;
+
+    return (
+      <button
+        key={item.id}
+        onClick={() => handleNavClick(item.id)}
+        className={cn(
+          'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] transition-all duration-150',
+          isActive && isCortex && 'border border-[hsl(var(--sidebar-cortex)/0.3)] bg-[hsl(var(--sidebar-cortex)/0.16)] text-[hsl(var(--primary))]',
+          isActive && !isCortex && 'bg-[hsl(var(--sidebar-edge)/0.08)] text-sidebar-foreground',
+          !isActive && isCortex &&
+            'border border-[hsl(var(--sidebar-cortex)/0.16)] bg-[hsl(var(--sidebar-cortex)/0.06)] text-[hsl(var(--primary))] hover:border-[hsl(var(--sidebar-cortex)/0.28)] hover:bg-[hsl(var(--sidebar-cortex)/0.12)]',
+          !isActive && !isCortex && !isMuted &&
+            'text-text-secondary hover:bg-[hsl(var(--sidebar-edge)/0.04)] hover:text-sidebar-foreground',
+          isMuted && 'text-[hsl(var(--sidebar-quiet))]',
+        )}
+      >
+        <Icon className="size-3.5 shrink-0" />
+        <span className="min-w-0 flex-1 truncate font-semibold">{isCortex ? 'CORTEX' : item.label}</span>
+        {item.badge ? (
+          <span className={cn('rounded-md px-1.5 py-0.5 text-[9px] font-semibold', isCortex ? 'bg-[hsl(var(--sidebar-cortex)/0.14)] text-[hsl(var(--primary))]' : 'bg-[hsl(var(--sidebar-edge)/0.08)] text-text-muted')}>
+            {item.badge}
+          </span>
+        ) : null}
+      </button>
+    );
+  };
+
   return (
-    <aside className="flex h-screen w-[264px] min-w-[264px] flex-col overflow-hidden border-r border-sidebar-border bg-[image:var(--sidebar-hero)] text-sidebar-foreground">
-      <div className="border-b border-sidebar-border px-3 py-3">
-        <div className="panel-highlight rounded-[1.6rem] border border-border-highlight/50 bg-card/85 p-3 shadow-[0_22px_46px_-34px_hsl(var(--primary)/0.45)] backdrop-blur-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex size-11 items-center justify-center rounded-2xl border border-border-highlight/60 bg-primary text-primary-foreground shadow-[0_18px_34px_-22px_hsl(var(--primary)/0.8)]">
-              <Brain className="size-5" />
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <p className="truncate font-display text-sm font-bold tracking-[-0.04em] text-sidebar-foreground">CORTEX</p>
-                <span className="rounded-full border border-border-highlight/60 bg-background/70 px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.22em] text-primary">
-                  v5
-                </span>
-              </div>
-              <p className="mt-1 truncate text-[11px] font-medium text-text-muted">Meta intelligence control tower</p>
-            </div>
-
-            {onCloseMobile ? (
-              <Button variant="ghost" size="icon" className="size-8 rounded-xl text-text-muted hover:bg-sidebar-accent hover:text-sidebar-foreground" onClick={onCloseMobile}>
-                <X className="size-4" />
-              </Button>
-            ) : null}
-          </div>
+    <aside className="flex min-h-screen w-[220px] min-w-[220px] flex-col border-r border-[hsl(var(--sidebar-edge)/0.05)] bg-[hsl(var(--sidebar-shell))] text-sidebar-foreground">
+      <div className="flex items-center gap-2.5 border-b border-[hsl(var(--sidebar-edge)/0.05)] px-4 py-4">
+        <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[hsl(var(--primary-dark))] text-primary-foreground shadow-[0_12px_28px_-18px_hsl(var(--primary)/0.9)]">
+          <Brain className="size-4" />
         </div>
+        <span className="truncate text-sm font-bold tracking-tight text-sidebar-foreground">CortexAds</span>
+        <span className="ml-auto rounded-md bg-[hsl(var(--sidebar-cortex)/0.1)] px-1.5 py-0.5 text-[9px] font-semibold text-primary">v5</span>
+        {onCloseMobile ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-1 size-8 rounded-lg text-text-muted hover:bg-[hsl(var(--sidebar-edge)/0.06)] hover:text-sidebar-foreground"
+            onClick={onCloseMobile}
+          >
+            <X className="size-4" />
+          </Button>
+        ) : null}
       </div>
 
-      <div className="border-b border-sidebar-border px-4 py-4">
-        <div className="panel-highlight rounded-3xl border border-border-highlight/50 bg-card/80 p-4 shadow-[0_18px_40px_-30px_hsl(var(--primary)/0.35)] backdrop-blur-sm">
-          <div className="mb-3 flex items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-text-muted">Workspace</p>
-              <h2 className="mt-1 text-sm font-semibold text-text-primary">{profile?.name || 'Operação ativa'}</h2>
-            </div>
-            <div className={cn('mt-1 size-2 rounded-full', isTokenExpired ? 'bg-warning' : isConnected ? 'bg-success' : 'bg-muted-foreground')} />
-          </div>
+      <div className="flex-1 overflow-y-auto py-4">
+        <div className="px-4 text-[9px] font-semibold uppercase tracking-[0.28em] text-[hsl(var(--sidebar-quiet))]">Navegação</div>
 
-          <p className="mb-4 text-xs leading-5 text-text-secondary">
-            {isTokenExpired
-              ? 'Sua sessão da Meta expirou. Reconecte para retomar sincronização.'
-              : isConnected
-                ? `${activeAccountIds.length || 0} conta${activeAccountIds.length === 1 ? '' : 's'} ativa${activeAccountIds.length === 1 ? '' : 's'} para análise.`
-                : 'Conecte sua conta Meta para desbloquear navegação por contas e análises.'}
-          </p>
+        <div className="mt-3 space-y-1 px-3">
+          {primaryNavItems.map(renderNavItem)}
+          <div className="mx-3 my-1 border-t border-[hsl(var(--sidebar-edge)/0.05)]" />
+          {cortexNavItems.map(renderNavItem)}
+          <div className="mx-3 my-1 border-t border-[hsl(var(--sidebar-edge)/0.05)]" />
+          {secondaryNavItems.map(renderNavItem)}
+          {utilityNavItems.length ? (
+            <>
+              <div className="mx-3 my-1 border-t border-[hsl(var(--sidebar-edge)/0.05)]" />
+              {utilityNavItems.map(renderNavItem)}
+            </>
+          ) : null}
+        </div>
 
+        <div className="mt-6 px-4 text-[9px] font-semibold uppercase tracking-[0.28em] text-[hsl(var(--sidebar-quiet))]">Conta Meta</div>
+
+        <div className="mt-3 px-3">
           {(!isConnected || isTokenExpired) ? (
-            <Button className="h-10 w-full rounded-2xl px-4 text-xs font-semibold shadow-[0_16px_30px_-18px_hsl(var(--primary)/0.8)]" onClick={handleConnectMeta} disabled={connecting}>
+            <Button
+              className="h-10 w-full rounded-xl bg-primary text-primary-foreground shadow-[0_16px_30px_-20px_hsl(var(--primary)/0.9)] hover:bg-[hsl(var(--primary-dark))]"
+              onClick={handleConnectMeta}
+              disabled={connecting}
+            >
               {connecting ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
               {connecting ? 'Conectando...' : isTokenExpired ? 'Reconectar Meta' : 'Conectar Meta'}
             </Button>
+          ) : hasAccounts ? (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between px-1 text-[11px]">
+                <span className="text-text-secondary">{activeAccountIds.length} ativa{activeAccountIds.length === 1 ? '' : 's'}</span>
+                <div className="flex items-center gap-3">
+                  <button onClick={handleSelectAll} className="font-medium text-primary transition-colors hover:text-[hsl(var(--primary-glow))]">
+                    Todas
+                  </button>
+                  <button onClick={handleDeselectAll} className="font-medium text-text-muted transition-colors hover:text-sidebar-foreground">
+                    Limpar
+                  </button>
+                </div>
+              </div>
+
+              <div className="hide-scrollbar max-h-[40vh] space-y-2 overflow-y-auto">
+                {bmEntries.map(([bmName, accounts]) => {
+                  const isOpen = openBMs[bmName] ?? true;
+
+                  return (
+                    <section key={bmName} className="rounded-xl border border-[hsl(var(--sidebar-edge)/0.05)] bg-[hsl(var(--sidebar-surface)/0.46)] backdrop-blur-sm">
+                      <button
+                        onClick={() => setOpenBMs((prev) => ({ ...prev, [bmName]: !isOpen }))}
+                        className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition-colors hover:bg-[hsl(var(--sidebar-edge)/0.04)]"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-text-secondary">{bmName}</p>
+                          <p className="mt-0.5 text-[10px] text-text-muted">{accounts.length} conta{accounts.length === 1 ? '' : 's'}</p>
+                        </div>
+                        {isOpen ? <ChevronDown className="size-4 text-text-muted" /> : <ChevronRight className="size-4 text-text-muted" />}
+                      </button>
+
+                      {isOpen ? (
+                        <div className="space-y-1 border-t border-[hsl(var(--sidebar-edge)/0.05)] px-2 py-2">
+                          {accounts.map((account) => {
+                            const accountId = account.account_id || '';
+                            const isChecked = !!accountId && activeAccountIds.includes(accountId);
+                            const status = getAccountStatus(account.account_id);
+
+                            return (
+                              <button
+                                key={account.id}
+                                onClick={() => {
+                                  if (!account.account_id) return;
+
+                                  const wasActive = activeAccountIds.includes(account.account_id);
+                                  toggleActiveAccount(account.account_id);
+
+                                  if (!wasActive) {
+                                    setSelectedAccountId(account.account_id);
+                                    setSelectedAccountName(account.account_name || account.account_id);
+                                    setSelectedAccountCurrency(account.currency || null);
+                                    setTimeout(() => analyzeRef.current?.(account.account_id), 300);
+                                  }
+                                }}
+                                className={cn(
+                                  'flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-[12px] transition-all duration-150',
+                                  isChecked
+                                    ? 'bg-[hsl(var(--sidebar-edge)/0.08)] text-sidebar-foreground'
+                                    : 'text-text-secondary hover:bg-[hsl(var(--sidebar-edge)/0.04)] hover:text-sidebar-foreground',
+                                )}
+                              >
+                                <span className={cn('size-2 shrink-0 rounded-full', status ? statusClasses[status] : 'bg-success/80')} />
+                                <span className="min-w-0 flex-1 truncate">{account.account_name || 'Sem nome'}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : null}
+                    </section>
+                  );
+                })}
+              </div>
+            </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-2xl border border-border-subtle bg-card/80 px-3 py-2">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-text-muted">Contas</p>
-                <p className="mt-1 text-sm font-semibold text-text-primary">{adAccounts.length}</p>
-              </div>
-              <div className="rounded-2xl border border-border-subtle bg-card/80 px-3 py-2">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-text-muted">Ativas</p>
-                <p className="mt-1 text-sm font-semibold text-text-primary">{activeAccountIds.length}</p>
-              </div>
+            <div className="rounded-xl border border-[hsl(var(--sidebar-edge)/0.05)] bg-[hsl(var(--sidebar-surface)/0.4)] px-3 py-4 text-center text-xs text-text-secondary">
+              Nenhuma conta disponível.
             </div>
           )}
         </div>
       </div>
 
-      <div className="px-3 py-3">
-        <p className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-text-muted">Navegação</p>
-        <nav className="space-y-1.5">
-          {navItems.map((item) => {
-            const isActive = activeTab === item.id;
-            const isCortex = item.id === 'action-plan';
-            const Icon = item.icon;
-
-            return (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item.id)}
-                className={cn(
-                  'group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-all duration-200',
-                  isActive
-                    ? 'bg-primary text-primary-foreground shadow-[0_18px_32px_-22px_hsl(var(--primary)/0.9)]'
-                    : isCortex
-                      ? 'panel-highlight border border-border-highlight/60 bg-card text-text-primary shadow-[0_16px_30px_-26px_hsl(var(--primary)/0.35)] hover:border-border-highlight hover:text-text-primary'
-                      : 'text-text-secondary hover:bg-sidebar-accent hover:text-text-primary',
-                )}
-              >
-                <span
-                  className={cn(
-                    'flex size-9 shrink-0 items-center justify-center rounded-xl border transition-colors',
-                    isActive
-                      ? 'border-primary-foreground/10 bg-primary-foreground/10 text-primary-foreground'
-                      : isCortex
-                        ? 'border-border-highlight/60 bg-primary/10 text-primary'
-                        : 'border-border-subtle bg-card text-text-muted group-hover:text-text-primary',
-                  )}
-                >
-                  <Icon className="size-4" />
-                </span>
-
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[13px] font-semibold">{item.label}</span>
-                </span>
-
-                {item.badge ? (
-                  <span
-                    className={cn(
-                      'rounded-full px-2 py-0.5 text-[10px] font-bold tracking-[0.12em]',
-                      isActive
-                        ? 'bg-primary-foreground/14 text-primary-foreground'
-                        : isCortex
-                          ? 'border border-border-highlight/60 bg-background/80 text-primary'
-                          : 'bg-primary/10 text-primary',
-                    )}
-                  >
-                    {item.badge}
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      <div className="min-h-0 flex-1 border-t border-sidebar-border px-3 pb-3 pt-3">
-        {hasAccounts ? (
-          <div className="flex h-full min-h-0 flex-col rounded-[1.5rem] border border-sidebar-border bg-card/80 backdrop-blur-sm">
-            <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-text-muted">Contas</p>
-                <p className="mt-1 text-xs text-text-secondary">{activeAccountIds.length} selecionada{activeAccountIds.length === 1 ? '' : 's'}</p>
-              </div>
-
-              <div className="flex items-center gap-2 text-[11px] font-medium">
-                <button onClick={handleSelectAll} className="text-primary transition-colors hover:text-primary-dark">
-                  Todas
-                </button>
-                <button onClick={handleDeselectAll} className="text-text-muted transition-colors hover:text-text-primary">
-                  Limpar
-                </button>
-              </div>
-            </div>
-
-            <div className="hide-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-3">
-              {bmEntries.map(([bmName, accounts]) => {
-                const isOpen = openBMs[bmName] ?? true;
-
-                return (
-                  <section key={bmName} className="rounded-2xl border border-border-subtle bg-background/70">
-                    <button
-                      onClick={() => setOpenBMs((prev) => ({ ...prev, [bmName]: !isOpen }))}
-                      className="flex w-full items-center justify-between gap-3 px-3 py-3 text-left transition-colors hover:bg-sidebar-accent/70"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate text-[11px] font-semibold uppercase tracking-[0.18em] text-text-secondary">{bmName}</p>
-                        <p className="mt-1 text-[11px] text-text-muted">{accounts.length} conta{accounts.length === 1 ? '' : 's'}</p>
-                      </div>
-
-                      {isOpen ? <ChevronDown className="size-4 text-text-muted" /> : <ChevronRight className="size-4 text-text-muted" />}
-                    </button>
-
-                    {isOpen ? (
-                      <div className="space-y-1 border-t border-border-subtle px-2 py-2">
-                        {accounts.map((account) => {
-                          const accountId = account.account_id || '';
-                          const isChecked = !!accountId && activeAccountIds.includes(accountId);
-                          const status = getAccountStatus(account.account_id);
-
-                          return (
-                            <button
-                              key={account.id}
-                              onClick={() => {
-                                if (!account.account_id) return;
-
-                                const wasActive = activeAccountIds.includes(account.account_id);
-                                toggleActiveAccount(account.account_id);
-
-                                if (!wasActive) {
-                                  setSelectedAccountId(account.account_id);
-                                  setSelectedAccountName(account.account_name || account.account_id);
-                                  setSelectedAccountCurrency(account.currency || null);
-                                  setTimeout(() => analyzeRef.current?.(account.account_id), 300);
-                                }
-                              }}
-                              className={cn(
-                                'flex w-full items-center gap-3 rounded-2xl px-3 py-2.5 text-left transition-all duration-200',
-                                isChecked
-                                  ? 'bg-primary/10 text-primary ring-1 ring-primary/20'
-                                  : 'text-text-secondary hover:bg-sidebar-accent hover:text-text-primary',
-                              )}
-                            >
-                              <span className={cn('size-2 shrink-0 rounded-full', status ? statusClasses[status] : 'bg-muted-foreground/60')} />
-
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-[12px] font-semibold">{account.account_name || 'Sem nome'}</p>
-                                <p className="truncate text-[11px] text-text-muted">
-                                  {account.account_id || 'Sem ID'}
-                                  {account.currency ? ` • ${account.currency}` : ''}
-                                </p>
-                              </div>
-
-                              <span
-                                className={cn(
-                                  'rounded-full border px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em]',
-                                  isChecked
-                                    ? 'border-primary/20 bg-primary/10 text-primary'
-                                    : 'border-border-subtle bg-card text-text-muted',
-                                )}
-                              >
-                                {isChecked ? 'On' : 'Off'}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : null}
-                  </section>
-                );
-              })}
-            </div>
-          </div>
-        ) : (
-          <div className="flex h-full items-center justify-center rounded-[1.5rem] border border-dashed border-sidebar-border bg-card/50 px-6 text-center">
-            <div>
-              <p className="text-sm font-semibold text-text-primary">Nenhuma conta disponível</p>
-              <p className="mt-2 text-xs leading-5 text-text-secondary">
-                Conecte a Meta para ver Business Managers e selecionar contas para análise.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="border-t border-sidebar-border bg-card/70 px-3 py-3 backdrop-blur-sm">
-        <div className="mb-2 overflow-hidden rounded-2xl border border-border-subtle bg-background/70">
+      <div className="flex flex-col gap-2 border-t border-[hsl(var(--sidebar-edge)/0.05)] px-4 py-3">
+        <div>
+          <div className="mb-2 text-[9px] font-semibold uppercase tracking-[0.28em] text-[hsl(var(--sidebar-quiet))]">Configurações</div>
           <SettingsDialog />
         </div>
 
-        <div className="flex items-center gap-3 rounded-[1.5rem] border border-border-subtle bg-background/80 px-3 py-3">
-          <div className="flex size-11 items-center justify-center rounded-2xl bg-sidebar-accent text-sm font-bold text-text-primary">
+        <div className="flex items-center gap-2 border-t border-[hsl(var(--sidebar-edge)/0.05)] pt-3">
+          <div className="flex size-9 items-center justify-center rounded-full bg-[hsl(var(--sidebar-cortex)/0.14)] text-sm font-bold text-primary">
             {initials}
           </div>
 
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-semibold text-text-primary">{profile?.name || 'Utilizador'}</p>
-            <p className="truncate text-[11px] text-text-muted">{user?.email || 'Sem email'}</p>
-          </div>
+          <p className="min-w-0 flex-1 truncate text-[13px] text-text-secondary">{profile?.name || user?.email || 'Utilizador'}</p>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-9 rounded-2xl text-text-muted hover:bg-destructive/10 hover:text-destructive"
-            onClick={signOut}
-          >
-            <LogOut className="size-4" />
-          </Button>
+          <button onClick={signOut} className="text-text-muted transition-colors hover:text-sidebar-foreground">
+            <LogOut className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
     </aside>

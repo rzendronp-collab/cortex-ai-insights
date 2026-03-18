@@ -1,37 +1,43 @@
+import { useState } from 'react';
+import { Check, Copy, Loader2, Sparkles } from 'lucide-react';
 import { CreativeScore, GeneratedAd } from '@/hooks/useCortexCreatives';
 import { useDashboard } from '@/context/DashboardContext';
-import { Loader2, Sparkles, Copy, Check } from 'lucide-react';
-import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
-const STATUS_BADGES: Record<string, { label: string; color: string }> = {
-  top_performer: { label: 'Top Performer', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
-  escalavel: { label: 'Escalável', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-  monitorar: { label: 'Monitorar', color: 'bg-[#4A5F7A]/10 text-[#7A8FAD] border-[#4A5F7A]/20' },
-  otimizar: { label: 'Otimizar', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
-  pausar: { label: 'Pausar', color: 'bg-red-500/10 text-red-400 border-red-500/20' },
+const STATUS_BADGES: Record<string, { label: string; color: string; accent: string }> = {
+  top_performer: { label: 'Top Performer', color: 'border-success/20 bg-success/10 text-success', accent: 'hsl(var(--success))' },
+  escalavel: { label: 'Escalável', color: 'border-primary/20 bg-primary/10 text-primary', accent: 'hsl(var(--primary))' },
+  monitorar: { label: 'Monitorar', color: 'border-border-default bg-secondary text-text-secondary', accent: 'hsl(var(--text-muted))' },
+  otimizar: { label: 'Otimizar', color: 'border-warning/20 bg-warning/10 text-warning', accent: 'hsl(var(--warning))' },
+  pausar: { label: 'Pausar', color: 'border-destructive/20 bg-destructive/10 text-destructive', accent: 'hsl(var(--destructive))' },
 };
 
-function ScoreCircle({ score }: { score: number }) {
+function ScoreCircle({ score, color }: { score: number; color: string }) {
   const radius = 32;
   const circumference = 2 * Math.PI * radius;
   const progress = (score / 100) * circumference;
-  const color = score >= 80 ? '#22D07A' : score >= 50 ? '#F5A623' : '#F05252';
 
   return (
-    <div className="relative w-20 h-20 flex-shrink-0">
-      <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-        <circle cx="40" cy="40" r={radius} fill="none" stroke="#1E2A42" strokeWidth="5" />
+    <div className="relative h-20 w-20 shrink-0">
+      <svg className="h-20 w-20 -rotate-90" viewBox="0 0 80 80">
+        <circle cx="40" cy="40" r={radius} fill="none" stroke="hsl(var(--border-subtle))" strokeWidth="5" />
         <circle
-          cx="40" cy="40" r={radius} fill="none"
-          stroke={color} strokeWidth="5" strokeLinecap="round"
+          cx="40"
+          cy="40"
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth="5"
+          strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={circumference - progress}
-          className="transition-all duration-1000 ease-out"
+          className="transition-all duration-700 ease-out"
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-xl font-bold text-text-primary">{score}</span>
-        <span className="text-[8px] text-text-muted uppercase">Score</span>
+        <span className="text-[8px] uppercase tracking-[0.18em] text-text-muted">Score</span>
       </div>
     </div>
   );
@@ -39,83 +45,89 @@ function ScoreCircle({ score }: { score: number }) {
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
+
   return (
     <button
-      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-      className="text-text-muted hover:text-text-primary transition-colors p-0.5"
+      onClick={() => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      className="rounded-lg p-1 text-text-muted transition-colors hover:bg-accent hover:text-text-primary"
       title="Copiar"
     >
-      {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+      {copied ? <Check className="size-3.5 text-success" /> : <Copy className="size-3.5" />}
     </button>
   );
 }
 
 function GeneratedAdsSection({ ads, generating, onGenerate }: { ads: GeneratedAd[]; generating: boolean; onGenerate: () => void }) {
   return (
-    <div className="mt-6">
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="text-[11px] uppercase tracking-wider text-text-muted font-semibold flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-[#6C63FF]" />
-          AI Ad Generator
-        </h4>
-        <button
-          onClick={onGenerate}
-          disabled={generating}
-          className="text-[10px] font-semibold px-3 py-1.5 rounded-lg bg-[#6C63FF]/15 text-[#8B85FF] hover:bg-[#6C63FF]/25 transition-colors disabled:opacity-40 flex items-center gap-1.5"
-        >
-          {generating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
-          {generating ? 'Gerando...' : 'Gerar Anúncios'}
-        </button>
+    <section className="overflow-hidden rounded-[1.75rem] border border-border-default bg-card shadow-[0_20px_50px_-36px_hsl(var(--foreground)/0.22)]">
+      <div className="flex flex-col gap-4 border-b border-border-subtle px-5 py-5 md:flex-row md:items-center md:justify-between md:px-6">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-text-muted">AI Generator</p>
+          <h4 className="mt-2 flex items-center gap-2 text-lg font-semibold text-text-primary">
+            <Sparkles className="size-4 text-primary" />
+            Variações de anúncio
+          </h4>
+          <p className="mt-1 text-sm text-text-secondary">Gere novas copys a partir dos criativos com melhor score.</p>
+        </div>
+
+        <Button onClick={onGenerate} disabled={generating} className="h-10 rounded-2xl px-4 text-sm font-semibold">
+          {generating ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+          {generating ? 'Gerando...' : 'Gerar anúncios'}
+        </Button>
       </div>
 
-      {ads.length > 0 && (
-        <div className="space-y-3">
-          {ads.map((ad, i) => (
-            <div key={i} className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-4 hover:border-[#2A3A5C] transition-colors">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[10px] font-semibold text-[#8B85FF] bg-[#6C63FF]/10 px-2 py-0.5 rounded">Anúncio {i + 1}</span>
-                <span className="text-[9px] text-text-muted bg-[#080B14] px-2 py-0.5 rounded">{ad.angulo}</span>
+      {ads.length > 0 ? (
+        <div className="grid gap-3 px-5 py-5 md:grid-cols-2 md:px-6">
+          {ads.map((ad, index) => (
+            <article key={index} className="rounded-[1.4rem] border border-border-default bg-background/70 p-4 transition-all hover:border-border-hover">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <span className="rounded-full border border-primary/20 bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
+                  Anúncio {index + 1}
+                </span>
+                <span className="rounded-full border border-border-default bg-card px-2.5 py-1 text-[10px] text-text-secondary">{ad.angulo}</span>
               </div>
-              <div className="space-y-2">
-                <div className="flex items-start gap-2">
-                  <span className="text-[9px] text-text-muted uppercase w-16 flex-shrink-0 pt-0.5">Hook</span>
-                  <p className="text-[12px] font-semibold text-text-primary flex-1">{ad.hook}</p>
-                  <CopyButton text={ad.hook} />
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-[9px] text-text-muted uppercase w-16 flex-shrink-0 pt-0.5">Título</span>
-                  <p className="text-[11px] text-text-primary flex-1">{ad.headline}</p>
-                  <CopyButton text={ad.headline} />
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-[9px] text-text-muted uppercase w-16 flex-shrink-0 pt-0.5">Body</span>
-                  <p className="text-[11px] text-text-muted flex-1">{ad.body}</p>
-                  <CopyButton text={ad.body} />
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-[9px] text-text-muted uppercase w-16 flex-shrink-0 pt-0.5">CTA</span>
-                  <p className="text-[11px] font-semibold text-emerald-400 flex-1">{ad.cta}</p>
-                  <CopyButton text={ad.cta} />
-                </div>
-                {ad.copy_b && (
-                  <div className="mt-2 pt-2 border-t border-[#1E2A42]">
-                    <div className="flex items-start gap-2">
-                      <span className="text-[9px] text-text-muted uppercase w-16 flex-shrink-0 pt-0.5">Copy B</span>
-                      <p className="text-[11px] text-text-muted flex-1">{ad.copy_b}</p>
+
+              <div className="space-y-3">
+                {[
+                  { label: 'Hook', value: ad.hook, emphasized: true },
+                  { label: 'Título', value: ad.headline },
+                  { label: 'Body', value: ad.body },
+                  { label: 'CTA', value: ad.cta, cta: true },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-start gap-3 rounded-2xl border border-border-subtle bg-card px-3 py-3">
+                    <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">{item.label}</span>
+                    <p
+                      className={cn(
+                        'flex-1 text-sm leading-6',
+                        item.cta ? 'font-semibold text-success' : item.emphasized ? 'font-semibold text-text-primary' : 'text-text-secondary',
+                      )}
+                    >
+                      {item.value}
+                    </p>
+                    <CopyButton text={item.value} />
+                  </div>
+                ))}
+
+                {ad.copy_b ? (
+                  <div className="rounded-2xl border border-border-subtle bg-card px-3 py-3">
+                    <div className="flex items-start gap-3">
+                      <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Copy B</span>
+                      <p className="flex-1 text-sm leading-6 text-text-secondary">{ad.copy_b}</p>
                       <CopyButton text={ad.copy_b} />
                     </div>
-                    <div className="flex items-start gap-2 mt-1">
-                      <span className="text-[9px] text-text-muted uppercase w-16 flex-shrink-0 pt-0.5">Teste</span>
-                      <p className="text-[10px] text-[#8B85FF] flex-1">{ad.teste}</p>
-                    </div>
+                    <p className="mt-3 border-t border-border-subtle pt-3 text-xs text-primary">Teste sugerido: {ad.teste}</p>
                   </div>
-                )}
+                ) : null}
               </div>
-            </div>
+            </article>
           ))}
         </div>
-      )}
-    </div>
+      ) : null}
+    </section>
   );
 }
 
@@ -133,8 +145,8 @@ export default function CortexCreativeScore({ creatives, loading, onAction, gene
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16 gap-3">
-        <Loader2 className="w-5 h-5 animate-spin text-[#6C63FF]" />
+      <div className="flex items-center justify-center gap-3 py-16">
+        <Loader2 className="size-5 animate-spin text-primary" />
         <span className="text-sm text-text-muted">Calculando scores de criativos...</span>
       </div>
     );
@@ -142,69 +154,93 @@ export default function CortexCreativeScore({ creatives, loading, onAction, gene
 
   if (creatives.length === 0) {
     return (
-      <div className="text-center py-16">
-        <div className="text-4xl mb-3 opacity-30">🎨</div>
-        <p className="text-sm text-text-muted">Execute a análise para ver os scores de criativos.</p>
+      <div className="rounded-[1.75rem] border border-dashed border-border-default bg-card px-6 py-16 text-center">
+        <div className="mb-4 text-4xl opacity-30">🎨</div>
+        <p className="text-sm font-semibold text-text-primary">Sem criativos avaliados ainda</p>
+        <p className="mt-2 text-xs text-text-secondary">Execute a análise para ver score, recomendação e potencial de escala.</p>
       </div>
     );
   }
 
   return (
-    <div>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-      {creatives.map((c, i) => {
-        const badge = STATUS_BADGES[c.status] || STATUS_BADGES.monitorar;
-        const showAction = c.status !== 'monitorar' && onAction;
-        return (
-          <div
-            key={c.id}
-            className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-4 flex gap-4 animate-fade-up hover:border-[#2A3A5C] transition-colors"
-            style={{ animationDelay: `${i * 50}ms` }}
-          >
-            <ScoreCircle score={c.score} />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <div className="min-w-0">
-                  <p className="text-[12px] font-semibold text-text-primary truncate">{c.name}</p>
-                  {c.campaignName && (
-                    <p className="text-[10px] text-text-muted truncate">{c.campaignName}</p>
-                  )}
-                </div>
-                <span className={`text-[9px] font-semibold px-2 py-0.5 rounded border whitespace-nowrap ${badge.color}`}>
-                  {badge.label}
-                </span>
-              </div>
-              <p className="text-[10px] text-text-muted mb-2 line-clamp-1">{c.reasoning}</p>
-              <div className="flex items-center gap-3 text-[10px] text-text-muted flex-wrap">
-                <span>CTR <b className="text-text-primary">{c.ctr.toFixed(1)}%</b></span>
-                <span>CPM <b className="text-text-primary">{currencySymbol}{c.cpm.toFixed(0)}</b></span>
-                <span>ROAS <b className={c.roas >= 3 ? 'text-emerald-400' : c.roas >= 1 ? 'text-amber-400' : 'text-red-400'}>{c.roas.toFixed(1)}x</b></span>
-                <span>Gasto <b className="text-text-primary">{currencySymbol}{c.spend.toFixed(0)}</b></span>
-              </div>
-              {showAction && (
-                <button
-                  onClick={() => onAction!(c)}
-                  className={`mt-2 text-[10px] font-semibold px-3 py-1 rounded transition-colors ${
-                    c.status === 'pausar'
-                      ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
-                      : c.status === 'escalavel' || c.status === 'top_performer'
-                        ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
-                        : 'bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
-                  }`}
-                >
-                  {c.action}
-                </button>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    <div className="space-y-4">
+      <section className="overflow-hidden rounded-[1.75rem] border border-border-default bg-card shadow-[0_20px_50px_-36px_hsl(var(--foreground)/0.22)]">
+        <div className="panel-highlight border-b border-border-subtle px-5 py-5 md:px-6">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-text-muted">Creative Scoring</p>
+          <h3 className="mt-2 font-display text-xl font-bold tracking-[-0.04em] text-text-primary">Leitura de performance criativa</h3>
+          <p className="mt-2 text-sm text-text-secondary">Classifique rapidamente o que escalar, otimizar, monitorar ou pausar.</p>
+        </div>
 
-    {/* AI Ad Generator */}
-    {onGenerateAds && (
-      <GeneratedAdsSection ads={generatedAds} generating={generating} onGenerate={onGenerateAds} />
-    )}
+        <div className="grid gap-3 px-5 py-5 md:grid-cols-2 md:px-6">
+          {creatives.map((creative, index) => {
+            const badge = STATUS_BADGES[creative.status] || STATUS_BADGES.monitorar;
+            const showAction = creative.status !== 'monitorar' && onAction;
+            const roasClass = creative.roas >= 3 ? 'text-success' : creative.roas >= 1 ? 'text-warning' : 'text-destructive';
+
+            return (
+              <article
+                key={creative.id}
+                style={{ animationDelay: `${index * 45}ms` }}
+                className="animate-fade-up rounded-[1.5rem] border border-border-default bg-background/70 p-4 opacity-0 [animation-fill-mode:forwards] transition-all hover:border-border-hover hover:shadow-[0_16px_36px_-30px_hsl(var(--foreground)/0.22)]"
+              >
+                <div className="flex gap-4">
+                  <ScoreCircle score={creative.score} color={badge.accent} />
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-text-primary">{creative.name}</p>
+                        {creative.campaignName ? <p className="mt-1 truncate text-xs text-text-secondary">{creative.campaignName}</p> : null}
+                      </div>
+                      <span className={cn('rounded-full border px-2.5 py-1 text-[10px] font-semibold', badge.color)}>{badge.label}</span>
+                    </div>
+
+                    <p className="mt-3 text-xs leading-6 text-text-secondary">{creative.reasoning}</p>
+
+                    <div className="mt-4 grid grid-cols-2 gap-2 text-[11px] sm:grid-cols-4">
+                      <div className="rounded-2xl border border-border-subtle bg-card px-3 py-2">
+                        <p className="text-text-muted">CTR</p>
+                        <p className="mt-1 font-semibold text-text-primary">{creative.ctr.toFixed(1)}%</p>
+                      </div>
+                      <div className="rounded-2xl border border-border-subtle bg-card px-3 py-2">
+                        <p className="text-text-muted">CPM</p>
+                        <p className="mt-1 font-semibold text-text-primary">{currencySymbol}{creative.cpm.toFixed(0)}</p>
+                      </div>
+                      <div className="rounded-2xl border border-border-subtle bg-card px-3 py-2">
+                        <p className="text-text-muted">ROAS</p>
+                        <p className={cn('mt-1 font-semibold', roasClass)}>{creative.roas.toFixed(1)}x</p>
+                      </div>
+                      <div className="rounded-2xl border border-border-subtle bg-card px-3 py-2">
+                        <p className="text-text-muted">Gasto</p>
+                        <p className="mt-1 font-semibold text-text-primary">{currencySymbol}{creative.spend.toFixed(0)}</p>
+                      </div>
+                    </div>
+
+                    {showAction ? (
+                      <Button
+                        onClick={() => onAction?.(creative)}
+                        variant="outline"
+                        className={cn(
+                          'mt-4 h-9 rounded-2xl border px-4 text-xs font-semibold',
+                          creative.status === 'pausar'
+                            ? 'border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15'
+                            : creative.status === 'escalavel' || creative.status === 'top_performer'
+                              ? 'border-success/20 bg-success/10 text-success hover:bg-success/15'
+                              : 'border-warning/20 bg-warning/10 text-warning hover:bg-warning/15',
+                        )}
+                      >
+                        {creative.action}
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      {onGenerateAds ? <GeneratedAdsSection ads={generatedAds} generating={generating} onGenerate={onGenerateAds} /> : null}
     </div>
   );
 }

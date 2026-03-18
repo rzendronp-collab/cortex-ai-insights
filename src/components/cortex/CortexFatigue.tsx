@@ -1,12 +1,33 @@
 import { FatigueResult } from '@/hooks/useCortexFatigue';
-import { Loader2, AlertTriangle, TrendingDown, TrendingUp, Minus, Flame } from 'lucide-react';
+import { AlertTriangle, Flame, Loader2, Minus, TrendingDown, TrendingUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const STATUS_CONFIG = {
-  healthy: { label: 'Saudável', color: 'bg-emerald-500/10 text-emerald-400', ring: 'stroke-emerald-400' },
-  warning: { label: 'Atenção', color: 'bg-amber-500/10 text-amber-400', ring: 'stroke-amber-400' },
-  fatigued: { label: 'Fatigado', color: 'bg-orange-500/10 text-orange-400', ring: 'stroke-orange-400' },
-  critical: { label: 'Crítico', color: 'bg-red-500/10 text-red-400', ring: 'stroke-red-400' },
-};
+  healthy: {
+    label: 'Saudável',
+    badge: 'border-success/20 bg-success/10 text-success',
+    ring: 'hsl(var(--success))',
+    spark: 'hsl(var(--success))',
+  },
+  warning: {
+    label: 'Atenção',
+    badge: 'border-warning/20 bg-warning/10 text-warning',
+    ring: 'hsl(var(--warning))',
+    spark: 'hsl(var(--warning))',
+  },
+  fatigued: {
+    label: 'Fatigado',
+    badge: 'border-data-yellow/20 bg-data-yellow/10 text-data-yellow',
+    ring: 'hsl(var(--data-yellow))',
+    spark: 'hsl(var(--data-yellow))',
+  },
+  critical: {
+    label: 'Crítico',
+    badge: 'border-destructive/20 bg-destructive/10 text-destructive',
+    ring: 'hsl(var(--destructive))',
+    spark: 'hsl(var(--destructive))',
+  },
+} as const;
 
 const TREND_ICON = {
   improving: TrendingUp,
@@ -29,15 +50,19 @@ interface Props {
 
 function MiniSparkline({ data, color }: { data: number[]; color: string }) {
   if (data.length < 2) return null;
+
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min || 1;
-  const w = 60;
-  const h = 20;
-  const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
+  const width = 72;
+  const height = 24;
+  const points = data
+    .map((value, index) => `${(index / (data.length - 1)) * width},${height - ((value - min) / range) * height}`)
+    .join(' ');
+
   return (
-    <svg width={w} height={h} className="flex-shrink-0">
-      <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width={width} height={height} className="shrink-0 overflow-visible">
+      <polyline points={points} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -45,8 +70,8 @@ function MiniSparkline({ data, color }: { data: number[]; color: string }) {
 export default function CortexFatigue({ results, loading }: Props) {
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16 gap-3">
-        <Loader2 className="w-5 h-5 animate-spin text-[#6C63FF]" />
+      <div className="flex items-center justify-center gap-3 py-16">
+        <Loader2 className="size-5 animate-spin text-primary" />
         <span className="text-sm text-text-muted">Analisando fadiga criativa...</span>
       </div>
     );
@@ -54,107 +79,134 @@ export default function CortexFatigue({ results, loading }: Props) {
 
   if (results.length === 0) {
     return (
-      <div className="text-center py-16">
-        <Flame className="w-8 h-8 text-text-muted mx-auto mb-3 opacity-30" />
-        <p className="text-sm text-text-muted">Execute a análise para detectar fadiga criativa.</p>
-        <p className="text-[10px] text-text-muted mt-1">Compara CTR, CPM e frequência dos últimos 7 dias.</p>
+      <div className="rounded-[1.75rem] border border-dashed border-border-default bg-card px-6 py-16 text-center">
+        <Flame className="mx-auto mb-4 size-10 text-text-muted/50" />
+        <p className="text-sm font-semibold text-text-primary">Sem análise de fadiga ainda</p>
+        <p className="mt-2 text-xs text-text-secondary">Execute a análise para comparar CTR, CPM e frequência dos últimos 7 dias.</p>
       </div>
     );
   }
 
-  const critical = results.filter(r => r.status === 'critical').length;
-  const fatigued = results.filter(r => r.status === 'fatigued').length;
-  const warning = results.filter(r => r.status === 'warning').length;
-  const healthy = results.filter(r => r.status === 'healthy').length;
+  const critical = results.filter((item) => item.status === 'critical').length;
+  const fatigued = results.filter((item) => item.status === 'fatigued').length;
+  const warning = results.filter((item) => item.status === 'warning').length;
+  const healthy = results.filter((item) => item.status === 'healthy').length;
 
   return (
     <div className="space-y-4">
-      {/* Summary bar */}
-      <div className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-4 flex items-center gap-6">
-        <div className="flex items-center gap-2">
-          <Flame className="w-4 h-4 text-[#6C63FF]" />
-          <span className="text-[12px] font-semibold text-text-primary">Fadiga Criativa</span>
-        </div>
-        <div className="flex gap-4 text-[11px]">
-          {critical > 0 && <span className="text-red-400 font-medium">{critical} crítico{critical > 1 ? 's' : ''}</span>}
-          {fatigued > 0 && <span className="text-orange-400 font-medium">{fatigued} fatigado{fatigued > 1 ? 's' : ''}</span>}
-          {warning > 0 && <span className="text-amber-400 font-medium">{warning} atenção</span>}
-          <span className="text-emerald-400 font-medium">{healthy} saudável{healthy !== 1 ? 'is' : ''}</span>
-        </div>
-        <span className="text-[10px] text-text-muted ml-auto">{results.length} anúncios analisados</span>
-      </div>
+      <section className="overflow-hidden rounded-[1.75rem] border border-border-default bg-card shadow-[0_20px_50px_-36px_hsl(var(--foreground)/0.22)]">
+        <div className="panel-highlight flex flex-col gap-4 border-b border-border-subtle px-5 py-5 md:flex-row md:items-center md:justify-between md:px-6">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-text-muted">Creative Health</p>
+            <h3 className="mt-2 flex items-center gap-2 font-display text-xl font-bold tracking-[-0.04em] text-text-primary">
+              <Flame className="size-5 text-primary" />
+              Radar de fadiga
+            </h3>
+            <p className="mt-2 text-sm text-text-secondary">Identifica saturação criativa com base em tendência, frequência e deterioração de performance.</p>
+          </div>
 
-      {/* Cards grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {results.map(r => {
-          const config = STATUS_CONFIG[r.status];
-          const TrendIcon = TREND_ICON[r.trend];
-
-          // SVG ring for fatigue score
-          const radius = 22;
-          const circumference = 2 * Math.PI * radius;
-          const offset = circumference - (r.fatigueScore / 100) * circumference;
-
-          return (
-            <div key={r.adId} className="bg-[#0E1420] border border-[#1E2A42] rounded-xl p-4 hover:border-[#2A3A5C] transition-colors">
-              <div className="flex items-start gap-3">
-                {/* Score ring */}
-                <div className="relative flex-shrink-0">
-                  <svg width="52" height="52" className="-rotate-90">
-                    <circle cx="26" cy="26" r={radius} fill="none" stroke="#1E2A42" strokeWidth="3" />
-                    <circle
-                      cx="26" cy="26" r={radius}
-                      fill="none"
-                      className={config.ring}
-                      strokeWidth="3"
-                      strokeDasharray={circumference}
-                      strokeDashoffset={offset}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="absolute inset-0 flex items-center justify-center text-[13px] font-bold text-text-primary">
-                    {r.fatigueScore}
-                  </span>
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-[12px] font-semibold text-text-primary truncate">{r.adName}</p>
-                  <p className="text-[10px] text-text-muted truncate">{r.campaignName}</p>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <span className={`text-[9px] font-semibold px-2 py-0.5 rounded ${config.color}`}>
-                      {config.label}
-                    </span>
-                    <span className="flex items-center gap-0.5 text-[10px] text-text-muted">
-                      <TrendIcon className="w-3 h-3" />
-                      {TREND_LABEL[r.trend]}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Sparklines */}
-                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[9px] text-text-muted">CTR</span>
-                    <MiniSparkline data={r.ctrTrend} color={r.status === 'healthy' ? '#22D07A' : r.status === 'warning' ? '#F5A623' : '#F05252'} />
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[9px] text-text-muted">CPM</span>
-                    <MiniSparkline data={r.cpmTrend} color="#6C63FF" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Details row */}
-              <div className="mt-3 pt-2 border-t border-[#1E2A42] flex items-center gap-4 text-[10px]">
-                <span className="text-text-muted">Dias: <b className="text-text-primary">{r.daysRunning}</b></span>
-                <span className="text-text-muted">Freq: <b className="text-text-primary">{r.frequencyAvg.toFixed(1)}x</b></span>
-                <span className="text-text-muted flex-1 truncate">{r.reasoning}</span>
-              </div>
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+            <div className="rounded-2xl border border-destructive/15 bg-destructive/5 px-3 py-3 text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Crítico</p>
+              <p className="mt-1 text-lg font-semibold text-destructive">{critical}</p>
             </div>
-          );
-        })}
-      </div>
+            <div className="rounded-2xl border border-data-yellow/15 bg-data-yellow/5 px-3 py-3 text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Fatigado</p>
+              <p className="mt-1 text-lg font-semibold text-data-yellow">{fatigued}</p>
+            </div>
+            <div className="rounded-2xl border border-warning/15 bg-warning/5 px-3 py-3 text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Atenção</p>
+              <p className="mt-1 text-lg font-semibold text-warning">{warning}</p>
+            </div>
+            <div className="rounded-2xl border border-success/15 bg-success/5 px-3 py-3 text-center">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-text-muted">Saudável</p>
+              <p className="mt-1 text-lg font-semibold text-success">{healthy}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-3 px-5 py-5 md:grid-cols-2 md:px-6">
+          {results.map((result) => {
+            const config = STATUS_CONFIG[result.status];
+            const TrendIcon = TREND_ICON[result.trend];
+            const radius = 24;
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (result.fatigueScore / 100) * circumference;
+
+            return (
+              <article key={result.adId} className="rounded-[1.5rem] border border-border-default bg-background/70 p-4 transition-all hover:border-border-hover hover:shadow-[0_16px_36px_-30px_hsl(var(--foreground)/0.22)]">
+                <div className="flex gap-4">
+                  <div className="relative shrink-0">
+                    <svg width="58" height="58" className="-rotate-90">
+                      <circle cx="29" cy="29" r={radius} fill="none" stroke="hsl(var(--border-subtle))" strokeWidth="4" />
+                      <circle
+                        cx="29"
+                        cy="29"
+                        r={radius}
+                        fill="none"
+                        stroke={config.ring}
+                        strokeWidth="4"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={offset}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-sm font-bold text-text-primary">{result.fatigueScore}</span>
+                      <span className="text-[9px] uppercase tracking-[0.18em] text-text-muted">Score</span>
+                    </div>
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-text-primary">{result.adName}</p>
+                        <p className="mt-1 truncate text-xs text-text-secondary">{result.campaignName}</p>
+                      </div>
+
+                      <span className={cn('rounded-full border px-2.5 py-1 text-[10px] font-semibold', config.badge)}>
+                        {config.label}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+                      <span className="rounded-full border border-border-default bg-card px-2.5 py-1 text-text-secondary">
+                        <TrendIcon className="mr-1 inline size-3" />
+                        {TREND_LABEL[result.trend]}
+                      </span>
+                      <span className="rounded-full border border-border-default bg-card px-2.5 py-1 text-text-secondary">
+                        Freq <strong className="text-text-primary">{result.frequencyAvg.toFixed(1)}x</strong>
+                      </span>
+                      <span className="rounded-full border border-border-default bg-card px-2.5 py-1 text-text-secondary">
+                        Dias <strong className="text-text-primary">{result.daysRunning}</strong>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 border-t border-border-subtle pt-4 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-border-subtle bg-card px-3 py-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-text-muted">CTR</span>
+                      <span className="text-[10px] text-text-secondary">7 dias</span>
+                    </div>
+                    <MiniSparkline data={result.ctrTrend} color={config.spark} />
+                  </div>
+                  <div className="rounded-2xl border border-border-subtle bg-card px-3 py-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-text-muted">CPM</span>
+                      <span className="text-[10px] text-text-secondary">7 dias</span>
+                    </div>
+                    <MiniSparkline data={result.cpmTrend} color="hsl(var(--primary))" />
+                  </div>
+                </div>
+
+                <p className="mt-4 text-xs leading-6 text-text-secondary">{result.reasoning}</p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
 }

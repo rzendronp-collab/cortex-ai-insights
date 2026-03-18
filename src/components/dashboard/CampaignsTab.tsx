@@ -1452,9 +1452,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
                               ) : !campaignAdsets || campaignAdsets.length === 0 ? (
                                 <p className="text-xs text-muted-foreground py-3">Nenhum adset encontrado</p>
                               ) : (
-                                <table className="w-full text-left text-xs">
+                                <table className="w-full text-left text-xs bg-[#0D1424]">
                                   <thead>
-                                    <tr className="border-b border-[#E4E7EF]/50">
+                                    <tr className="border-b border-white/[0.06] bg-[#080D1A]">
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase w-10"></th>
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase w-10">Status</th>
                                       <th className="py-1.5 px-2 text-[10px] font-semibold text-text-muted uppercase">Nome</th>

@@ -875,77 +875,34 @@ Responda SOMENTE com o JSON, sem markdown.`;
             placeholder="Buscar campanha..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full sm:w-64 h-8 text-xs bg-[#FFFFFF]"
+            className="w-full sm:w-64 h-8 text-xs bg-[#0D1424] border-white/[0.06] text-slate-300"
           />
-          <div className="flex items-center bg-[#FFFFFF] border border-[#E4E7EF] rounded-md">
+          <div className="flex items-center bg-[#0D1424] border border-white/[0.06] rounded-md">
             <button
               onClick={() => setStatusFilter('all')}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200'}`}
             >
               Todos
             </button>
             <button
               onClick={() => setStatusFilter('active')}
-              className={`px-3 py-1.5 text-xs font-medium border-l border-border transition-colors ${statusFilter === 'active' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`px-3 py-1.5 text-xs font-medium border-l border-white/[0.06] transition-colors ${statusFilter === 'active' ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200'}`}
             >
               Ativo
             </button>
             <button
               onClick={() => setStatusFilter('paused')}
-              className={`px-3 py-1.5 text-xs font-medium border-l border-border transition-colors ${statusFilter === 'paused' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`px-3 py-1.5 text-xs font-medium border-l border-white/[0.06] transition-colors ${statusFilter === 'paused' ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200'}`}
             >
               Pausado
             </button>
           </div>
-          <button
-            onClick={() => setActiveTodayFilter(!activeTodayFilter)}
-            className={`px-3 py-1.5 text-xs font-medium border rounded-md transition-colors ${activeTodayFilter ? 'bg-primary/15 text-primary border-primary/40' : 'bg-card border-border text-muted-foreground hover:text-foreground'}`}
-          >
-            {activeTodayFilter ? 'Com dados' : 'Todas'}
-            <span className="ml-1 text-[10px] opacity-60">
-              ({activeTodayFilter ? filteredCampaigns.length : rawCampaigns.length})
-            </span>
-          </button>
-
-          {/* ROAS Filter Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setRoasDropdownOpen(!roasDropdownOpen)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-md transition-colors ${
-                roasFilter !== 'all'
-                  ? 'bg-primary/15 text-primary border-primary/40'
-                  : 'bg-card border-border text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {roasFilterLabel}
-              <ChevronDown className={`w-3 h-3 transition-transform ${roasDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {roasDropdownOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setRoasDropdownOpen(false)} />
-                <div className="absolute top-full left-0 mt-1 w-48 bg-bg-card border border-border-default rounded-lg shadow-xl z-50 py-1">
-                  {roasFilterOptions.map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => { setRoasFilter(opt.value); setRoasDropdownOpen(false); }}
-                      className={`w-full text-left px-3 py-2 text-xs transition-colors ${
-                        roasFilter === opt.value ? 'bg-primary/10 text-primary font-medium' : 'text-text-secondary hover:bg-bg-card-hover hover:text-text-primary'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Country Filter */}
+...
           {availableCountries.length > 0 && (
-            <div className="flex items-center bg-[#FFFFFF] border border-[#E4E7EF] rounded-md">
+            <div className="flex items-center bg-[#0D1424] border border-white/[0.06] rounded-md">
               <button
                 onClick={() => setCountryFilter('all')}
-                className={`px-2 py-1.5 text-xs font-medium transition-colors ${countryFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                className={`px-2 py-1.5 text-xs font-medium transition-colors ${countryFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200'}`}
               >
                 🌍
               </button>
@@ -953,7 +910,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 <button
                   key={c}
                   onClick={() => setCountryFilter(c as any)}
-                  className={`px-2 py-1.5 text-xs font-medium border-l border-[#E4E7EF] transition-colors ${countryFilter === c ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`px-2 py-1.5 text-xs font-medium border-l border-white/[0.06] transition-colors ${countryFilter === c ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                   {{ PT: '🇵🇹', ES: '🇪🇸', GR: '🇬🇷', BR: '🇧🇷' }[c]}
                 </button>
@@ -1373,64 +1330,23 @@ Responda SOMENTE com o JSON, sem markdown.`;
 
                 const isEditing = editingCampaignId === c.id;
 
-                const rowBg = rowIndex % 2 === 0 ? '#FFFFFF' : '#0A0F1A';
+                const rowBg = rowIndex % 2 === 0 ? '#0D1424' : '#080D1A';
 
                 return (
                   <React.Fragment key={c.id}>
                     <tr
                       onClick={() => setExpandedId(expanded ? null : c.id)}
-                      className={`border-b cursor-pointer transition-all duration-150 ${!isActive ? 'opacity-60' : ''} ${isEditing ? 'opacity-60 cursor-wait border-l-2 border-l-primary animate-pulse pointer-events-none' : ''} animate-fade-in [animation-fill-mode:forwards] ${compactMode ? '[&_td]:py-0 [&_td]:text-xs' : ''}`}
+                      className={`border-b border-white/[0.04] cursor-pointer transition-all duration-150 ${!isActive ? 'opacity-60' : ''} ${isEditing ? 'opacity-60 cursor-wait border-l-2 border-l-primary animate-pulse pointer-events-none' : ''} animate-fade-in [animation-fill-mode:forwards] ${compactMode ? '[&_td]:py-0 [&_td]:text-xs' : ''}`}
                       style={{ height: compactMode ? 38 : 52, animationDelay: `${rowIndex * 30}ms`, backgroundColor: rowBg }}
-                      onMouseEnter={e => { if (!expanded && !isEditing) (e.currentTarget as HTMLElement).style.backgroundColor = '#E4E7EF'; }}
+                      onMouseEnter={e => { if (!expanded && !isEditing) (e.currentTarget as HTMLElement).style.backgroundColor = '#131D32'; }}
                       onMouseLeave={e => { if (!expanded) (e.currentTarget as HTMLElement).style.backgroundColor = rowBg; }}
                     >
-                      {/* Checkbox */}
-                      <td className="px-2" onClick={e => e.stopPropagation()}>
-                        <Checkbox
-                          checked={selectedIds.has(c.id)}
-                          onCheckedChange={() => handleSelectRow(c.id, rowIndex, false)}
-                          onClick={(e: React.MouseEvent) => {
-                            e.stopPropagation();
-                            if (e.shiftKey) {
-                              e.preventDefault();
-                              handleSelectRow(c.id, rowIndex, true);
-                            }
-                          }}
-                          className="h-3.5 w-3.5"
-                        />
-                      </td>
-                      {activeColumns.map(col => renderCell(col.id))}
-                      {/* Actions: AI + duplicate + open in meta + expand */}
-                      <td className="px-2" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center gap-1">
-                          <TooltipProvider><Tooltip><TooltipTrigger asChild>
-                            <button onClick={() => openAiDrawer('campaign', c.name, { Gasto: c.spend, Receita: c.revenue, ROAS: c.roas, Vendas: c.purchases, CTR: c.ctr, CPM: c.cpm })} className="p-1 text-[#7C3AED]/60 hover:text-[#7C3AED] transition-colors">
-                              <Brain className="w-3.5 h-3.5" />
-                            </button>
-                          </TooltipTrigger><TooltipContent><p className="text-xs">Analisar com IA</p></TooltipContent></Tooltip></TooltipProvider>
-                          <TooltipProvider><Tooltip><TooltipTrigger asChild>
-                            <button onClick={() => { setDuplicateName(`Cópia de ${localNames[c.id] || c.name}`); setDuplicateKeepActive(false); setDuplicateDialog({ id: c.id, name: localNames[c.id] || c.name }); }} className="p-1 text-muted-foreground hover:text-primary transition-colors">
-                              <Copy className="w-3.5 h-3.5" />
-                            </button>
-                          </TooltipTrigger><TooltipContent><p className="text-xs">Duplicar campanha</p></TooltipContent></Tooltip></TooltipProvider>
-                          <TooltipProvider><Tooltip><TooltipTrigger asChild>
-                            <button onClick={() => openInMeta(c.id)} className="p-1 text-muted-foreground hover:text-primary transition-colors">
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </button>
-                          </TooltipTrigger><TooltipContent><p className="text-xs">Abrir no Meta</p></TooltipContent></Tooltip></TooltipProvider>
-                          <button onClick={() => setExpandedId(expanded ? null : c.id)} className="p-1 text-muted-foreground hover:text-foreground transition-colors">
-                            {expanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-
-                    {/* ADSETS SUB-TABLE */}
+...
                     {adsetExpandedId === c.id && (() => {
                       const campaignAdsets = adsets.get(c.id);
                       const isAdsetLoading = adsetsLoading.has(c.id);
                       return (
-                        <tr style={{ background: "#F8F9FC", borderBottom: "1px solid #E4E7EF" }}>
+                        <tr style={{ background: '#0A1222', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                           <td colSpan={activeColumns.length + 3} className="p-0">
                             <div className="pl-10 pr-4 py-3 border-l-2 border-l-data-blue/40 animate-fade-up">
                               <p className="text-[10px] uppercase text-muted-foreground font-semibold tracking-wider mb-2">Conjuntos de Anúncios</p>
@@ -1483,8 +1399,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                       const isSavingAdsetBgt = savingAdsetBudgetId === adset.id;
                                       return (
                                         <React.Fragment key={adset.id}>
-                                          <tr className={`border-b border-[#E4E7EF]/30 hover:bg-[#FFFFFF]/50 transition-colors ${!adsetActive ? 'opacity-50' : ''}`}>
-                                            {/* Expand chevron */}
+                                          <tr className={`border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors ${!adsetActive ? 'opacity-50' : ''}`}>
                                             <td className="py-2 px-2">
                                               <button
                                                 onClick={() => {
@@ -1497,7 +1412,6 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                 <ChevronRight className={`w-3 h-3 transition-transform duration-200 ${isAdsOpen ? 'rotate-90' : ''}`} />
                                               </button>
                                             </td>
-                                            {/* Toggle */}
                                             <td className="py-2 px-2" onClick={e => e.stopPropagation()}>
                                               {isAdsetToggling ? (
                                                 <div className="w-3.5 h-3.5 border-2 border-muted-foreground border-t-primary rounded-full animate-spin" />
@@ -1507,7 +1421,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                   className="relative inline-flex items-center cursor-pointer"
                                                   style={{ width: 32, height: 18, borderRadius: 9 }}
                                                 >
-                                                  <span className="block w-full h-full rounded-[9px] transition-colors duration-200" style={{ backgroundColor: adsetActive ? '#16A34A' : '#E4E7EF' }} />
+                                                  <span className="block w-full h-full rounded-[9px] transition-colors duration-200" style={{ backgroundColor: adsetActive ? '#16A34A' : '#1E293B' }} />
                                                   <span className="absolute block w-3.5 h-3.5 bg-white rounded-full shadow transition-transform duration-200" style={{ top: 2, left: adsetActive ? 15 : 2 }} />
                                                 </button>
                                               )}
@@ -1524,7 +1438,6 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                             <td className="py-2 px-2 text-right text-[12px] text-text-primary">{adset.purchases}</td>
                                             <td className="py-2 px-2 text-right text-[12px] text-text-primary">{adset.ctr.toFixed(2)}%</td>
                                             <td className="py-2 px-2 text-right text-[12px] text-text-primary">{formatCurrency(adset.cpm, currency)}</td>
-                                            {/* Budget inline edit */}
                                             <td className="py-2 px-2 text-right" onClick={e => e.stopPropagation()}>
                                               {isEditingAdsetBgt ? (
                                                 <input
@@ -1551,7 +1464,6 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                 </div>
                                               )}
                                             </td>
-                                            {/* Actions: AI analysis */}
                                             <td className="py-2 px-2 text-center">
                                               <TooltipProvider><Tooltip><TooltipTrigger asChild>
                                                 <button
@@ -1565,7 +1477,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                           </tr>
                                           {/* ADS SUB-SUB-TABLE (3rd level) */}
                                           {isAdsOpen && (
-                                            <tr className="bg-[#F8F9FC] border-b border-[#E4E7EF]/20">
+                                            <tr className="bg-[#080D1A] border-b border-white/[0.06]">
                                               <td colSpan={10} className="p-0">
                                                 <div className="pl-16 pr-4 py-2 border-l-2 border-l-[#7C3AED]/30 animate-fade-up">
                                                   <p className="text-[9px] uppercase text-muted-foreground font-semibold tracking-wider mb-1.5">Anúncios</p>
@@ -1608,8 +1520,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                           else if (ad.roas >= roasTarget * 0.7) { adRBg = 'rgba(217,119,6,0.12)'; adRText = '#D97706'; adRBorder = 'rgba(217,119,6,0.25)'; }
                                                           else { adRBg = 'rgba(220,38,38,0.12)'; adRText = '#DC2626'; adRBorder = 'rgba(220,38,38,0.25)'; }
                                                           return (
-                                                            <tr key={ad.id} className={`border-b border-[#E4E7EF]/20 hover:bg-[#FFFFFF]/50 transition-colors ${!adActive ? 'opacity-50' : ''}`}>
-                                                              {/* Toggle */}
+                                                            <tr key={ad.id} className={`border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors ${!adActive ? 'opacity-50' : ''}`}>
                                                               <td className="py-1.5 px-1.5" onClick={e => e.stopPropagation()}>
                                                                 {isAdToggling ? (
                                                                   <div className="w-3 h-3 border-2 border-muted-foreground border-t-primary rounded-full animate-spin" />
@@ -1619,19 +1530,18 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                                     className="relative inline-flex items-center cursor-pointer"
                                                                     style={{ width: 28, height: 16, borderRadius: 8 }}
                                                                   >
-                                                                    <span className="block w-full h-full rounded-[8px] transition-colors duration-200" style={{ backgroundColor: adActive ? '#16A34A' : '#E4E7EF' }} />
+                                                                    <span className="block w-full h-full rounded-[8px] transition-colors duration-200" style={{ backgroundColor: adActive ? '#16A34A' : '#1E293B' }} />
                                                                     <span className="absolute block w-3 h-3 bg-white rounded-full shadow transition-transform duration-200" style={{ top: 1.5, left: adActive ? 13 : 1.5 }} />
                                                                   </button>
                                                                 )}
                                                               </td>
-                                                              {/* Thumbnail */}
                                                               <td className="py-1.5 px-1.5">
                                                                 {ad.thumbnailUrl ? (
-                                                                  <button onClick={() => setPreviewAd(ad)} className="w-8 h-8 rounded overflow-hidden border border-[#E4E7EF] hover:border-[#2563EB] transition-colors">
+                                                                  <button onClick={() => setPreviewAd(ad)} className="w-8 h-8 rounded overflow-hidden border border-white/[0.06] hover:border-primary/60 transition-colors">
                                                                     <img src={ad.thumbnailUrl} alt="" className="w-full h-full object-cover" />
                                                                   </button>
                                                                 ) : (
-                                                                  <div className="w-8 h-8 rounded bg-[#E4E7EF] flex items-center justify-center">
+                                                                  <div className="w-8 h-8 rounded bg-[#1E293B] flex items-center justify-center">
                                                                     <Image className="w-3 h-3 text-muted-foreground" />
                                                                   </div>
                                                                 )}
@@ -1649,11 +1559,10 @@ Responda SOMENTE com o JSON, sem markdown.`;
                                                               </td>
                                                               <td className="py-1.5 px-1.5 text-right text-text-primary">{ad.ctr.toFixed(2)}%</td>
                                                               <td className="py-1.5 px-1.5 text-right text-text-primary">{formatCurrency(ad.cpm, currency)}</td>
-                                                              {/* Actions */}
                                                               <td className="py-1.5 px-1.5 text-center">
                                                                 <div className="flex items-center justify-center gap-1">
                                                                   {ad.thumbnailUrl && (
-                                                                    <button onClick={() => setPreviewAd(ad)} className="p-0.5 text-muted-foreground hover:text-[#2563EB] transition-colors">
+                                                                    <button onClick={() => setPreviewAd(ad)} className="p-0.5 text-muted-foreground hover:text-primary transition-colors">
                                                                       <Eye className="w-3 h-3" />
                                                                     </button>
                                                                   )}
@@ -1945,9 +1854,9 @@ Responda SOMENTE com o JSON, sem markdown.`;
                       <td className={`text-right px-3 py-2.5 font-bold ${getRoasColor(ad.roas, roasTarget)}`}>{ad.roas.toFixed(1)}x</td>
                       <td className="text-center px-3 py-2.5">
                         {isTop ? (
-                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#16A34A]/10 text-[#16A34A] border border-[#16A34A]/25">Top</span>
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-400">Top</span>
                         ) : shouldPause ? (
-                          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-[#DC2626]/10 text-[#DC2626] border border-[#DC2626]/25">Pausar</span>
+                          <span className="text-[9px] font-bold px-2 py-0.5 rounded border border-red-500/20 bg-red-500/10 text-red-400">Pausar</span>
                         ) : (
                           <span className="text-[9px] text-text-muted">—</span>
                         )}

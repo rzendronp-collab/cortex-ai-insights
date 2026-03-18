@@ -468,7 +468,7 @@ export default function OverviewTab() {
                           transition: 'width 0.5s ease',
                         }}
                       >
-                        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: '#0F1523', fontSize: 15, lineHeight: 1 }}>
+                        <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 700, color: '#E2E8F0', fontSize: 15, lineHeight: 1 }}>
                           {item.value.toLocaleString()}
                         </span>
                         <span style={{ color: '#9BA5B7', fontSize: 10, marginTop: 3 }}>
@@ -497,9 +497,9 @@ export default function OverviewTab() {
                   <div key={item.name}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[11px] text-[#9BA5B7]">{item.name}</span>
-                      <span className="text-[11px] font-semibold text-[#0F1523]">{rate.toFixed(1)}%</span>
+                      <span className="text-[11px] font-semibold text-white">{rate.toFixed(1)}%</span>
                     </div>
-                    <div className="h-1.5 bg-[#E4E7EF] rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-[#080D1A] rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-700"
                         style={{ width: `${pct}%`, background: i === funnelData.length - 1 ? '#16A34A' : '#2563EB' }}
@@ -667,7 +667,7 @@ export default function OverviewTab() {
                   <div key={i} className="flex items-center gap-2 min-w-0">
                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: s.fill }} />
                     <p className="text-[11px] text-[#9BA5B7] truncate flex-1">{s.name.slice(0, 22)}</p>
-                    <span className="text-[11px] font-medium text-[#0F1523] tabular-nums flex-shrink-0">{currency}{s.spend.toFixed(0)}</span>
+                    <span className="text-[11px] font-medium text-white tabular-nums flex-shrink-0">{currency}{s.spend.toFixed(0)}</span>
                   </div>
                 ));
               })()}
@@ -677,25 +677,25 @@ export default function OverviewTab() {
       )}
 
       {/* ─── Hourly ─── */}
-      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-        <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Desempenho por Hora</h3>
+      <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up">
+        <h3 className="font-display font-semibold text-[14px] text-white mb-4">Desempenho por Hora</h3>
         <HourlyBarChart data={hourlyData} currency={currency} />
       </div>
 
       {/* ─── Alcance por Região ─── */}
       {effectiveData?.regionData && effectiveData.regionData.length > 0 && (
-        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Alcance por Região</h3>
+        <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up">
+          <h3 className="font-display font-semibold text-[14px] text-white mb-4">Alcance por Região</h3>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-[#E4E7EF]">
-                  <th className="text-left py-2 text-text-muted font-semibold">Região</th>
-                  <th className="text-left py-2 text-text-muted font-semibold pl-4" style={{ width: '30%' }}>Alcance</th>
-                  <th className="text-right py-2 text-text-muted font-semibold">Impressões</th>
-                  <th className="text-right py-2 text-text-muted font-semibold">Cliques</th>
-                  <th className="text-right py-2 text-text-muted font-semibold">CTR</th>
-                  <th className="text-right py-2 text-text-muted font-semibold">Gasto</th>
+                <tr className="border-b border-white/[0.06] bg-[#080D1A]">
+                  <th className="text-left py-2 text-slate-400 font-semibold">Região</th>
+                  <th className="text-left py-2 text-slate-400 font-semibold pl-4" style={{ width: '30%' }}>Alcance</th>
+                  <th className="text-right py-2 text-slate-400 font-semibold">Impressões</th>
+                  <th className="text-right py-2 text-slate-400 font-semibold">Cliques</th>
+                  <th className="text-right py-2 text-slate-400 font-semibold">CTR</th>
+                  <th className="text-right py-2 text-slate-400 font-semibold">Gasto</th>
                 </tr>
               </thead>
               <tbody>
@@ -703,20 +703,20 @@ export default function OverviewTab() {
                   const maxImpr = effectiveData.regionData![0].impressions || 1;
                   const barWidth = Math.max((r.impressions / maxImpr) * 100, 5);
                   return (
-                    <tr key={r.region} className="border-b border-[#E4E7EF]/50">
-                      <td className="py-2 text-text-primary font-medium truncate max-w-[160px]">{r.region}</td>
+                    <tr key={r.region} className="border-b border-white/[0.04] hover:bg-white/[0.03]">
+                      <td className="py-2 text-white font-medium truncate max-w-[160px]">{r.region}</td>
                       <td className="py-2 pl-4">
-                        <div className="h-2 bg-[#F8F9FC] rounded-full overflow-hidden">
+                        <div className="h-2 bg-[#080D1A] rounded-full overflow-hidden">
                           <div
                             className="h-full rounded-full transition-all duration-500"
                             style={{ width: `${barWidth}%`, background: `linear-gradient(90deg, #2563EB, #2563EB)` }}
                           />
                         </div>
                       </td>
-                      <td className="text-right py-2 text-text-primary">{r.impressions.toLocaleString()}</td>
-                      <td className="text-right py-2 text-text-primary">{r.clicks.toLocaleString()}</td>
-                      <td className="text-right py-2 text-text-primary">{r.ctr.toFixed(1)}%</td>
-                      <td className="text-right py-2 text-text-primary">{currency} {r.spend.toFixed(0)}</td>
+                      <td className="text-right py-2 text-white">{r.impressions.toLocaleString()}</td>
+                      <td className="text-right py-2 text-white">{r.clicks.toLocaleString()}</td>
+                      <td className="text-right py-2 text-white">{r.ctr.toFixed(1)}%</td>
+                      <td className="text-right py-2 text-white">{currency} {r.spend.toFixed(0)}</td>
                     </tr>
                   );
                 })}
@@ -731,18 +731,18 @@ export default function OverviewTab() {
         <h3 className="text-sm font-semibold text-text-primary mb-3">👥 Demográficos</h3>
         {demoByGender.length === 0 && demoByAge.length === 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
+            <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
               <p className="text-xs text-muted-foreground text-center">Dados demográficos não disponíveis para esta conta</p>
             </div>
-            <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
+            <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 flex items-center justify-center" style={{ minHeight: 280 }}>
               <p className="text-xs text-muted-foreground text-center">Dados demográficos não disponíveis para esta conta</p>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* CARD 1 — Por Gênero */}
-            <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-              <h4 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Por Gênero</h4>
+            <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up">
+              <h4 className="font-display font-semibold text-[14px] text-white mb-4">Por Gênero</h4>
               <div className="flex items-center gap-4">
                 <div className="flex-shrink-0" style={{ width: 140, height: 140 }}>
                   <ResponsiveContainer width="100%" height="100%">
@@ -770,11 +770,10 @@ export default function OverviewTab() {
                   ))}
                 </div>
               </div>
-              {/* Gender table */}
-              <div className="mt-4 border-t border-[#E4E7EF] pt-3">
+              <div className="mt-4 border-t border-white/[0.06] pt-3">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="text-[10px] text-text-muted uppercase">
+                    <tr className="text-[10px] text-slate-400 uppercase">
                       <th className="text-left py-1 font-semibold">Gênero</th>
                       <th className="text-right py-1 font-semibold">Gasto</th>
                       <th className="text-right py-1 font-semibold">Vendas</th>
@@ -783,15 +782,15 @@ export default function OverviewTab() {
                   </thead>
                   <tbody>
                     {demoByGender.map(g => (
-                      <tr key={g.name} className="border-t border-[#E4E7EF]/50">
-                        <td className="py-1.5 text-text-primary font-medium flex items-center gap-1.5">
+                      <tr key={g.name} className="border-t border-white/[0.04]">
+                        <td className="py-1.5 text-white font-medium flex items-center gap-1.5">
                           <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: g.fill }} />
                           {g.name}
                         </td>
-                        <td className="py-1.5 text-right text-text-primary">{formatCurrency(g.spend, currency)}</td>
-                        <td className="py-1.5 text-right text-text-primary">{g.purchases}</td>
+                        <td className="py-1.5 text-right text-white">{formatCurrency(g.spend, currency)}</td>
+                        <td className="py-1.5 text-right text-white">{g.purchases}</td>
                         <td className="py-1.5 text-right">
-                          <span className={`font-bold ${g.roas >= roasTarget ? 'text-data-green' : g.roas >= roasTarget * 0.7 ? 'text-data-yellow' : 'text-data-red'}`}>
+                          <span className={`font-bold ${g.roas >= roasTarget ? 'text-emerald-400' : g.roas >= roasTarget * 0.7 ? 'text-amber-400' : 'text-red-400'}`}>
                             {g.roas.toFixed(2)}x
                           </span>
                         </td>
@@ -803,8 +802,8 @@ export default function OverviewTab() {
             </div>
 
             {/* CARD 2 — Por Faixa Etária */}
-            <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-              <h4 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Por Faixa Etária</h4>
+            <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-up">
+              <h4 className="font-display font-semibold text-[14px] text-white mb-4">Por Faixa Etária</h4>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={demoByAge} layout="vertical" margin={{ top: 0, right: 5, left: 5, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} horizontal={false} />

@@ -10,8 +10,6 @@ import {
   Loader2,
   LogOut,
   MessageSquare,
-  Shield,
-  Sparkles,
   TrendingUp,
   X,
   Zap,
@@ -35,18 +33,18 @@ type NavItem = {
   id: string;
   label: string;
   icon: typeof LayoutDashboard;
-  badge?: string;
+  special?: boolean;
+  disabled?: boolean;
 };
 
 const navItems: NavItem[] = [
   { id: 'overview', label: 'Visão Geral', icon: LayoutDashboard },
   { id: 'campaigns', label: 'Campanhas', icon: TrendingUp },
-  { id: 'action-plan', label: 'CORTEX IA', icon: Brain, badge: 'AI' },
-  { id: 'chat', label: 'Chat', icon: MessageSquare },
-  { id: 'rules', label: 'Regras', icon: Shield },
+  { id: 'action-plan', label: 'CORTEX', icon: Brain, special: true },
   { id: 'comparison', label: 'Comparação', icon: Calendar },
-  { id: 'consolidated', label: 'Relatórios', icon: FileText },
-  { id: 'report', label: 'Notificações', icon: Bell },
+  { id: 'consolidated', label: 'Consolidado', icon: FileText },
+  { id: 'chat', label: 'Chat IA', icon: MessageSquare, disabled: true },
+  { id: 'report', label: 'Relatório', icon: Bell, disabled: true },
 ];
 
 const statusClasses: Record<Exclude<AccountStatus, null>, string> = {
@@ -54,10 +52,6 @@ const statusClasses: Record<Exclude<AccountStatus, null>, string> = {
   red: 'bg-destructive/80',
   yellow: 'bg-warning/80',
 };
-
-const primaryNavIds = ['overview', 'campaigns'];
-const cortexNavIds = ['action-plan'];
-const utilityNavIds = ['report'];
 
 export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProps) {
   const { user, signOut } = useAuth();
@@ -101,14 +95,6 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
 
   const bmEntries = useMemo(() => Object.entries(accountsByBm), [accountsByBm]);
 
-  const primaryNavItems = useMemo(() => navItems.filter((item) => primaryNavIds.includes(item.id)), []);
-  const cortexNavItems = useMemo(() => navItems.filter((item) => cortexNavIds.includes(item.id)), []);
-  const utilityNavItems = useMemo(() => navItems.filter((item) => utilityNavIds.includes(item.id)), []);
-  const secondaryNavItems = useMemo(
-    () => navItems.filter((item) => !primaryNavIds.includes(item.id) && !cortexNavIds.includes(item.id) && !utilityNavIds.includes(item.id)),
-    [],
-  );
-
   useEffect(() => {
     if (!bmEntries.length) return;
     setOpenBMs((prev) => {
@@ -128,14 +114,14 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
     }
   };
 
-  const handleNavClick = (tabId: string) => {
-    setActiveTab(tabId);
+  const handleNavClick = (item: NavItem) => {
+    if (item.disabled) return;
+    setActiveTab(item.id);
     onCloseMobile?.();
   };
 
   const getAccountStatus = (accountId: string | null): AccountStatus => {
     if (!accountId) return null;
-
     const target = profile?.roas_target || 3;
 
     for (const [key, entry] of Object.entries(analysisCache)) {
@@ -182,47 +168,40 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
 
   const renderNavItem = (item: NavItem) => {
     const isActive = activeTab === item.id;
-    const isCortex = item.id === 'action-plan';
-    const isMuted = item.id === 'report' && !isActive;
     const Icon = item.icon;
 
     return (
       <button
         key={item.id}
-        onClick={() => handleNavClick(item.id)}
+        onClick={() => handleNavClick(item)}
         className={cn(
-          'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] transition-all duration-150',
-          isActive && isCortex && 'border border-[hsl(var(--sidebar-cortex)/0.3)] bg-[hsl(var(--sidebar-cortex)/0.16)] text-[hsl(var(--primary))]',
-          isActive && !isCortex && 'bg-[hsl(var(--sidebar-edge)/0.08)] text-sidebar-foreground',
-          !isActive && isCortex && 'border border-[hsl(var(--sidebar-cortex)/0.16)] bg-[hsl(var(--sidebar-cortex)/0.06)] text-[hsl(var(--primary))] hover:border-[hsl(var(--sidebar-cortex)/0.28)] hover:bg-[hsl(var(--sidebar-cortex)/0.12)]',
-          !isActive && !isCortex && !isMuted && 'text-text-secondary hover:bg-[hsl(var(--sidebar-edge)/0.04)] hover:text-sidebar-foreground',
-          isMuted && 'text-[hsl(var(--sidebar-quiet))]',
+          'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-[13px] font-medium transition-all duration-150',
+          item.disabled && 'cursor-not-allowed text-slate-500',
+          item.special && !isActive && !item.disabled && 'border border-[hsl(var(--accent)/0.15)] bg-[hsl(var(--accent)/0.06)] text-[hsl(var(--accent))] hover:bg-[hsl(var(--accent)/0.12)]',
+          item.special && isActive && 'border border-[hsl(var(--accent)/0.3)] bg-[hsl(var(--accent)/0.15)] text-indigo-300',
+          !item.special && !item.disabled && !isActive && 'text-slate-400 hover:bg-[hsl(0_0%_100%/0.04)] hover:text-white',
+          !item.special && !item.disabled && isActive && 'bg-[hsl(0_0%_100%/0.08)] text-white',
         )}
       >
         <Icon className="size-3.5 shrink-0" />
-        <span className="min-w-0 flex-1 truncate font-semibold">{isCortex ? 'CORTEX' : item.label}</span>
-        {item.badge ? (
-          <span className={cn('rounded-md px-1.5 py-0.5 text-[9px] font-semibold', isCortex ? 'bg-[hsl(var(--sidebar-cortex)/0.14)] text-[hsl(var(--primary))]' : 'bg-[hsl(var(--sidebar-edge)/0.08)] text-text-muted')}>
-            {item.badge}
-          </span>
-        ) : null}
+        <span className="min-w-0 flex-1 truncate">{item.label}</span>
       </button>
     );
   };
 
   return (
-    <aside className="flex min-h-screen w-[220px] min-w-[220px] flex-col border-r border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel-strong))] text-sidebar-foreground">
-      <div className="flex items-center gap-2.5 border-b border-[hsl(var(--surface-edge)/0.06)] px-4 py-4">
-        <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[hsl(var(--primary-dark))] text-primary-foreground shadow-[0_12px_28px_-18px_hsl(var(--primary)/0.9)]">
+    <aside className="flex min-h-screen w-[220px] min-w-[220px] flex-col border-r border-[hsl(0_0%_100%/0.05)] bg-[hsl(var(--bg-sidebar))] text-white">
+      <div className="flex items-center gap-2.5 border-b border-[hsl(0_0%_100%/0.05)] px-4 py-4">
+        <div className="flex size-9 items-center justify-center rounded-xl bg-gradient-to-br from-[hsl(var(--accent))] to-[hsl(var(--accent-hover))] text-primary-foreground shadow-[0_12px_28px_-18px_hsl(var(--accent)/0.9)]">
           <Zap className="size-4" />
         </div>
-        <span className="truncate text-sm font-bold tracking-tight text-white">CortexAds</span>
-        <span className="ml-auto rounded bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary">v5</span>
+        <span className="truncate text-sm font-bold tracking-tight">CortexAds</span>
+        <span className="ml-auto rounded bg-indigo-500/10 px-1.5 py-0.5 text-[9px] text-indigo-400">v5</span>
         {onCloseMobile ? (
           <Button
             variant="ghost"
             size="icon"
-            className="ml-1 size-8 rounded-lg text-text-muted hover:bg-[hsl(var(--surface-edge)/0.06)] hover:text-sidebar-foreground"
+            className="ml-1 size-8 rounded-lg text-slate-400 hover:bg-[hsl(0_0%_100%/0.06)] hover:text-white"
             onClick={onCloseMobile}
           >
             <X className="size-4" />
@@ -231,41 +210,35 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
       </div>
 
       <div className="flex-1 overflow-y-auto py-4">
-        <div className="px-4 text-[9px] font-semibold uppercase tracking-[0.28em] text-[hsl(var(--sidebar-quiet))]">Navegação</div>
+        <div className="px-4 pt-4 pb-1 text-[9px] font-semibold uppercase tracking-widest text-slate-600">NAVEGAÇÃO</div>
 
-        <div className="mt-3 space-y-1 px-3">
-          {primaryNavItems.map(renderNavItem)}
-          <div className="mx-3 my-1 border-t border-[hsl(var(--surface-edge)/0.06)]" />
-          {cortexNavItems.map(renderNavItem)}
-          <div className="mx-3 my-1 border-t border-[hsl(var(--surface-edge)/0.06)]" />
-          {secondaryNavItems.map(renderNavItem)}
-          {utilityNavItems.length ? (
-            <>
-              <div className="mx-3 my-1 border-t border-[hsl(var(--surface-edge)/0.06)]" />
-              {utilityNavItems.map(renderNavItem)}
-            </>
-          ) : null}
+        <div className="mt-2 space-y-1 px-3">
+          {navItems.slice(0, 2).map(renderNavItem)}
+          <div className="my-1 border-t border-[hsl(0_0%_100%/0.05)]" />
+          {renderNavItem(navItems[2])}
+          <div className="my-1 border-t border-[hsl(0_0%_100%/0.05)]" />
+          {navItems.slice(3).map(renderNavItem)}
         </div>
 
-        <div className="mt-6 px-4 text-[9px] font-semibold uppercase tracking-[0.28em] text-[hsl(var(--sidebar-quiet))]">Conta Meta</div>
+        <div className="px-4 pt-4 pb-1 text-[9px] font-semibold uppercase tracking-widest text-slate-600">CONTA META</div>
 
-        <div className="mt-3 px-3">
-          {(!isConnected || isTokenExpired) ? (
+        <div className="mt-2 px-3">
+          {!isConnected || isTokenExpired ? (
             <Button
-              className="h-10 w-full rounded-xl bg-primary text-primary-foreground shadow-[0_16px_30px_-20px_hsl(var(--primary)/0.9)] hover:bg-[hsl(var(--primary-dark))]"
+              className="h-10 w-full rounded-xl bg-[hsl(var(--accent))] text-white shadow-[0_16px_30px_-20px_hsl(var(--accent)/0.9)] hover:bg-[hsl(var(--accent-hover))]"
               onClick={handleConnectMeta}
               disabled={connecting}
             >
-              {connecting ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+              {connecting ? <Loader2 className="size-4 animate-spin" /> : <Zap className="size-4" />}
               {connecting ? 'Conectando...' : isTokenExpired ? 'Reconectar Meta' : 'Conectar Meta'}
             </Button>
           ) : hasAccounts ? (
             <div className="space-y-3">
               <div className="flex items-center justify-end gap-3 px-1 text-[11px]">
-                <button onClick={handleSelectAll} className="font-medium text-primary transition-colors hover:text-[hsl(var(--primary-glow))]">
+                <button onClick={handleSelectAll} className="font-medium text-[hsl(var(--accent))] transition-colors hover:text-indigo-300">
                   Todas
                 </button>
-                <button onClick={handleDeselectAll} className="font-medium text-text-muted transition-colors hover:text-sidebar-foreground">
+                <button onClick={handleDeselectAll} className="font-medium text-slate-500 transition-colors hover:text-slate-300">
                   Limpar
                 </button>
               </div>
@@ -275,20 +248,20 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                   const isOpen = openBMs[bmName] ?? true;
 
                   return (
-                    <section key={bmName} className="rounded-xl border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))/0.72] backdrop-blur-sm">
+                    <section key={bmName} className="rounded-xl border border-[hsl(0_0%_100%/0.06)] bg-[hsl(var(--bg-card))]">
                       <button
                         onClick={() => setOpenBMs((prev) => ({ ...prev, [bmName]: !isOpen }))}
-                        className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition-colors hover:bg-[hsl(var(--surface-edge)/0.04)]"
+                        className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition-colors hover:bg-[hsl(0_0%_100%/0.04)]"
                       >
                         <div className="min-w-0">
-                          <p className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-text-secondary">{bmName}</p>
-                          <p className="mt-0.5 text-[10px] text-text-muted">{accounts.length} conta{accounts.length === 1 ? '' : 's'}</p>
+                          <p className="truncate text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-300">{bmName}</p>
+                          <p className="mt-0.5 text-[10px] text-slate-500">{accounts.length} conta{accounts.length === 1 ? '' : 's'}</p>
                         </div>
-                        {isOpen ? <ChevronDown className="size-4 text-text-muted" /> : <ChevronRight className="size-4 text-text-muted" />}
+                        {isOpen ? <ChevronDown className="size-4 text-slate-500" /> : <ChevronRight className="size-4 text-slate-500" />}
                       </button>
 
                       {isOpen ? (
-                        <div className="space-y-1 border-t border-[hsl(var(--surface-edge)/0.06)] px-2 py-2">
+                        <div className="space-y-1 border-t border-[hsl(0_0%_100%/0.05)] px-2 py-2">
                           {accounts.map((account) => {
                             const accountId = account.account_id || '';
                             const isChecked = !!accountId && activeAccountIds.includes(accountId);
@@ -312,7 +285,7 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                                 }}
                                 className={cn(
                                   'flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-[12px] transition-all duration-150',
-                                  isChecked ? 'bg-[hsl(var(--surface-edge)/0.08)] text-sidebar-foreground' : 'text-text-secondary hover:bg-[hsl(var(--surface-edge)/0.04)] hover:text-sidebar-foreground',
+                                  isChecked ? 'bg-[hsl(0_0%_100%/0.08)] text-white' : 'text-slate-400 hover:bg-[hsl(0_0%_100%/0.04)] hover:text-white',
                                 )}
                               >
                                 <span className={cn('size-2 shrink-0 rounded-full', status ? statusClasses[status] : 'bg-success/80')} />
@@ -328,30 +301,28 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
               </div>
             </div>
           ) : (
-            <div className="rounded-xl border border-[hsl(var(--surface-edge)/0.06)] bg-[hsl(var(--surface-panel))/0.7] px-3 py-4 text-center text-xs text-text-secondary">
+            <div className="rounded-xl border border-[hsl(0_0%_100%/0.06)] bg-[hsl(var(--bg-card))] px-3 py-4 text-center text-xs text-slate-400">
               Nenhuma conta disponível.
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 border-t border-[hsl(var(--surface-edge)/0.06)] px-4 py-3">
-        <div>
-          <div className="mb-2 text-[9px] font-semibold uppercase tracking-[0.28em] text-[hsl(var(--sidebar-quiet))]">Configurações</div>
-          <SettingsDialog />
-        </div>
+      <div className="border-t border-[hsl(0_0%_100%/0.05)] px-4 py-3">
+        <div className="px-0 pt-1 pb-2 text-[9px] font-semibold uppercase tracking-widest text-slate-600">CONFIGURAÇÕES</div>
+        <SettingsDialog />
 
-        <div className="flex items-center gap-2 border-t border-[hsl(var(--surface-edge)/0.06)] pt-3">
-          <div className="flex size-9 items-center justify-center rounded-full bg-[hsl(var(--sidebar-cortex)/0.14)] text-sm font-bold text-primary">
+        <div className="mt-3 flex items-center gap-2 border-t border-[hsl(0_0%_100%/0.05)] pt-3">
+          <div className="flex size-9 items-center justify-center rounded-full bg-[hsl(var(--accent)/0.14)] text-sm font-bold text-[hsl(var(--accent))]">
             {initials}
           </div>
 
           <div className="min-w-0 flex-1">
             <p className="truncate text-[13px] text-slate-300">{profile?.name || user?.email || 'Utilizador'}</p>
-            <p className="truncate text-[10px] text-text-muted">{adAccounts.length} contas • {activeAccountIds.length} ativa{activeAccountIds.length === 1 ? '' : 's'}</p>
+            <p className="truncate text-[10px] text-slate-500">{adAccounts.length} contas • {activeAccountIds.length} ativa{activeAccountIds.length === 1 ? '' : 's'}</p>
           </div>
 
-          <button onClick={signOut} className="text-text-muted transition-colors hover:text-sidebar-foreground">
+          <button onClick={signOut} className="text-slate-500 transition-colors hover:text-white">
             <LogOut className="h-3.5 w-3.5" />
           </button>
         </div>

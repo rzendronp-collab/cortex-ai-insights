@@ -875,77 +875,34 @@ Responda SOMENTE com o JSON, sem markdown.`;
             placeholder="Buscar campanha..." 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full sm:w-64 h-8 text-xs bg-[#FFFFFF]"
+            className="w-full sm:w-64 h-8 text-xs bg-[#0D1424] border-white/[0.06] text-slate-300"
           />
-          <div className="flex items-center bg-[#FFFFFF] border border-[#E4E7EF] rounded-md">
+          <div className="flex items-center bg-[#0D1424] border border-white/[0.06] rounded-md">
             <button
               onClick={() => setStatusFilter('all')}
-              className={`px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${statusFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200'}`}
             >
               Todos
             </button>
             <button
               onClick={() => setStatusFilter('active')}
-              className={`px-3 py-1.5 text-xs font-medium border-l border-border transition-colors ${statusFilter === 'active' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`px-3 py-1.5 text-xs font-medium border-l border-white/[0.06] transition-colors ${statusFilter === 'active' ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200'}`}
             >
               Ativo
             </button>
             <button
               onClick={() => setStatusFilter('paused')}
-              className={`px-3 py-1.5 text-xs font-medium border-l border-border transition-colors ${statusFilter === 'paused' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+              className={`px-3 py-1.5 text-xs font-medium border-l border-white/[0.06] transition-colors ${statusFilter === 'paused' ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200'}`}
             >
               Pausado
             </button>
           </div>
-          <button
-            onClick={() => setActiveTodayFilter(!activeTodayFilter)}
-            className={`px-3 py-1.5 text-xs font-medium border rounded-md transition-colors ${activeTodayFilter ? 'bg-primary/15 text-primary border-primary/40' : 'bg-card border-border text-muted-foreground hover:text-foreground'}`}
-          >
-            {activeTodayFilter ? 'Com dados' : 'Todas'}
-            <span className="ml-1 text-[10px] opacity-60">
-              ({activeTodayFilter ? filteredCampaigns.length : rawCampaigns.length})
-            </span>
-          </button>
-
-          {/* ROAS Filter Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setRoasDropdownOpen(!roasDropdownOpen)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-md transition-colors ${
-                roasFilter !== 'all'
-                  ? 'bg-primary/15 text-primary border-primary/40'
-                  : 'bg-card border-border text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {roasFilterLabel}
-              <ChevronDown className={`w-3 h-3 transition-transform ${roasDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {roasDropdownOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setRoasDropdownOpen(false)} />
-                <div className="absolute top-full left-0 mt-1 w-48 bg-bg-card border border-border-default rounded-lg shadow-xl z-50 py-1">
-                  {roasFilterOptions.map(opt => (
-                    <button
-                      key={opt.value}
-                      onClick={() => { setRoasFilter(opt.value); setRoasDropdownOpen(false); }}
-                      className={`w-full text-left px-3 py-2 text-xs transition-colors ${
-                        roasFilter === opt.value ? 'bg-primary/10 text-primary font-medium' : 'text-text-secondary hover:bg-bg-card-hover hover:text-text-primary'
-                      }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Country Filter */}
+...
           {availableCountries.length > 0 && (
-            <div className="flex items-center bg-[#FFFFFF] border border-[#E4E7EF] rounded-md">
+            <div className="flex items-center bg-[#0D1424] border border-white/[0.06] rounded-md">
               <button
                 onClick={() => setCountryFilter('all')}
-                className={`px-2 py-1.5 text-xs font-medium transition-colors ${countryFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                className={`px-2 py-1.5 text-xs font-medium transition-colors ${countryFilter === 'all' ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200'}`}
               >
                 🌍
               </button>
@@ -953,7 +910,7 @@ Responda SOMENTE com o JSON, sem markdown.`;
                 <button
                   key={c}
                   onClick={() => setCountryFilter(c as any)}
-                  className={`px-2 py-1.5 text-xs font-medium border-l border-[#E4E7EF] transition-colors ${countryFilter === c ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`px-2 py-1.5 text-xs font-medium border-l border-white/[0.06] transition-colors ${countryFilter === c ? 'bg-primary/10 text-primary' : 'text-slate-400 hover:text-slate-200'}`}
                 >
                   {{ PT: '🇵🇹', ES: '🇪🇸', GR: '🇬🇷', BR: '🇧🇷' }[c]}
                 </button>

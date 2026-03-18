@@ -1,17 +1,14 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, Zap, ShieldCheck } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Plus, Trash2, Zap, ShieldCheck, GitBranch, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
+import { cn } from '@/lib/utils';
 
 interface RuleCondition {
-  metric: string;  // 'ROAS' | 'CTR' | 'CPV' | 'Gasto' | 'CPM' | 'CPA' | 'Frequencia'
+  metric: string;
   operator: '<' | '>' | '=' | '>=' | '<=';
   value: number;
 }
@@ -26,14 +23,8 @@ interface Rule {
   createdAt: string;
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
 const STORAGE_KEY = 'cortexads_rules';
-
 const METRICS = ['ROAS', 'CTR', 'CPV', 'Gasto', 'CPM', 'CPA', 'Frequencia'] as const;
-
 const OPERATORS: { value: RuleCondition['operator']; label: string }[] = [
   { value: '<', label: 'Menor que' },
   { value: '>', label: 'Maior que' },
@@ -41,14 +32,16 @@ const OPERATORS: { value: RuleCondition['operator']; label: string }[] = [
   { value: '>=', label: 'Maior ou igual' },
   { value: '<=', label: 'Menor ou igual' },
 ];
-
 const ACTIONS: Rule['action'][] = ['Alertar', 'Sugerir Pausa', 'Sugerir Escala', 'Notificar'];
 
 function operatorSymbol(op: string) {
   switch (op) {
-    case '>=': return '\u2265';
-    case '<=': return '\u2264';
-    default: return op;
+    case '>=':
+      return '≥';
+    case '<=':
+      return '≤';
+    default:
+      return op;
   }
 }
 
@@ -69,31 +62,29 @@ function saveRules(rules: Rule[]) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(rules));
 }
 
-// ---------------------------------------------------------------------------
-// Rule evaluation
-// ---------------------------------------------------------------------------
-
 function checkRules(rules: Rule[], campaignMetrics: Record<string, number>): { rule: Rule; triggered: boolean }[] {
-  return rules.map(rule => {
+  return rules.map((rule) => {
     if (!rule.active) return { rule, triggered: false };
-    const results = rule.conditions.map(c => {
-      const val = campaignMetrics[c.metric] ?? 0;
-      switch (c.operator) {
-        case '<': return val < c.value;
-        case '>': return val > c.value;
-        case '=': return val === c.value;
-        case '>=': return val >= c.value;
-        case '<=': return val <= c.value;
+    const results = rule.conditions.map((condition) => {
+      const value = campaignMetrics[condition.metric] ?? 0;
+      switch (condition.operator) {
+        case '<':
+          return value < condition.value;
+        case '>':
+          return value > condition.value;
+        case '=':
+          return value === condition.value;
+        case '>=':
+          return value >= condition.value;
+        case '<=':
+          return value <= condition.value;
       }
     });
+
     const triggered = rule.logic === 'AND' ? results.every(Boolean) : results.some(Boolean);
     return { rule, triggered };
   });
 }
-
-// ---------------------------------------------------------------------------
-// Suggested (pre-built) rules
-// ---------------------------------------------------------------------------
 
 const SUGGESTED_RULES: Omit<Rule, 'id' | 'active' | 'createdAt'>[] = [
   {
@@ -142,68 +133,58 @@ const SUGGESTED_RULES: Omit<Rule, 'id' | 'active' | 'createdAt'>[] = [
     action: 'Sugerir Escala',
   },
   {
-    name: 'Frequ\u00eancia Alta',
-    conditions: [
-      { metric: 'Frequencia', operator: '>', value: 3 },
-    ],
+    name: 'Frequência Alta',
+    conditions: [{ metric: 'Frequencia', operator: '>', value: 3 }],
     logic: 'AND',
     action: 'Alertar',
   },
 ];
 
-// ---------------------------------------------------------------------------
-// Action badge color
-// ---------------------------------------------------------------------------
-
 function actionColor(action: string) {
   switch (action) {
-    case 'Alertar': return 'bg-amber-500/15 text-amber-400';
-    case 'Sugerir Pausa': return 'bg-red-500/15 text-red-400';
-    case 'Sugerir Escala': return 'bg-emerald-500/15 text-emerald-400';
-    case 'Notificar': return 'bg-blue-500/15 text-blue-400';
-    default: return 'bg-[#7C3AED]/15 text-[#7C3AED]';
+    case 'Alertar':
+      return 'border-warning/20 bg-warning/10 text-warning';
+    case 'Sugerir Pausa':
+      return 'border-destructive/20 bg-destructive/10 text-destructive';
+    case 'Sugerir Escala':
+      return 'border-success/20 bg-success/10 text-success';
+    case 'Notificar':
+      return 'border-primary/20 bg-primary/10 text-primary';
+    default:
+      return 'border-border-default bg-secondary text-text-secondary';
   }
 }
-
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 
 export { checkRules };
 export type { Rule, RuleCondition };
 
 export default function RulesTab() {
-  // ---- State: persisted rules ----
   const [rules, setRules] = useState<Rule[]>(loadRules);
+  const [conditions, setConditions] = useState<RuleCondition[]>([{ metric: 'ROAS', operator: '<', value: 0 }]);
+  const [logic, setLogic] = useState<'AND' | 'OR'>('AND');
+  const [action, setAction] = useState<Rule['action']>('Alertar');
+  const [ruleName, setRuleName] = useState('');
 
   useEffect(() => {
     saveRules(rules);
   }, [rules]);
 
-  // ---- State: builder ----
-  const [conditions, setConditions] = useState<RuleCondition[]>([
-    { metric: 'ROAS', operator: '<', value: 0 },
-  ]);
-  const [logic, setLogic] = useState<'AND' | 'OR'>('AND');
-  const [action, setAction] = useState<Rule['action']>('Alertar');
-  const [ruleName, setRuleName] = useState('');
-
-  // ---- Condition helpers ----
   const updateCondition = (idx: number, patch: Partial<RuleCondition>) => {
-    setConditions(prev => prev.map((c, i) => (i === idx ? { ...c, ...patch } : c)));
+    setConditions((prev) => prev.map((condition, i) => (i === idx ? { ...condition, ...patch } : condition)));
   };
 
   const removeCondition = (idx: number) => {
-    setConditions(prev => prev.filter((_, i) => i !== idx));
+    setConditions((prev) => prev.filter((_, i) => i !== idx));
   };
 
   const addCondition = () => {
-    setConditions(prev => [...prev, { metric: 'ROAS', operator: '<', value: 0 }]);
+    setConditions((prev) => [...prev, { metric: 'ROAS', operator: '<', value: 0 }]);
   };
 
-  // ---- Rule CRUD ----
   const createRule = () => {
-    const name = ruleName.trim() || conditions.map(c => `${c.metric} ${operatorSymbol(c.operator)} ${c.value}`).join(` ${logic} `);
+    const name =
+      ruleName.trim() || conditions.map((c) => `${c.metric} ${operatorSymbol(c.operator)} ${c.value}`).join(` ${logic} `);
+
     const rule: Rule = {
       id: uid(),
       name,
@@ -213,19 +194,21 @@ export default function RulesTab() {
       active: true,
       createdAt: new Date().toISOString(),
     };
-    setRules(prev => [...prev, rule]);
+
+    setRules((prev) => [...prev, rule]);
     toast.success(`Regra "${rule.name}" criada!`);
-    // reset builder
     setConditions([{ metric: 'ROAS', operator: '<', value: 0 }]);
     setRuleName('');
+    setLogic('AND');
+    setAction('Alertar');
   };
 
   const toggleRule = (id: string) => {
-    setRules(prev => prev.map(r => (r.id === id ? { ...r, active: !r.active } : r)));
+    setRules((prev) => prev.map((rule) => (rule.id === id ? { ...rule, active: !rule.active } : rule)));
   };
 
   const deleteRule = (id: string) => {
-    setRules(prev => prev.filter(r => r.id !== id));
+    setRules((prev) => prev.filter((rule) => rule.id !== id));
     toast('Regra removida');
   };
 
@@ -239,245 +222,306 @@ export default function RulesTab() {
       active: true,
       createdAt: new Date().toISOString(),
     };
-    setRules(prev => [...prev, rule]);
+
+    setRules((prev) => [...prev, rule]);
     toast.success(`Regra "${rule.name}" adicionada!`);
   };
 
-  // ---- Render ----
-  const canCreate = conditions.length > 0 && conditions.every(c => c.value !== 0 || c.metric);
+  const canCreate = conditions.length > 0 && conditions.every((c) => c.metric && Number.isFinite(c.value));
+  const activeCount = rules.filter((rule) => rule.active).length;
+  const logicPreview = useMemo(
+    () => conditions.map((c) => `${c.metric} ${operatorSymbol(c.operator)} ${c.value}`).join(` ${logic} `),
+    [conditions, logic],
+  );
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      {/* ================================================================ */}
-      {/* LEFT — Rule Builder                                              */}
-      {/* ================================================================ */}
-      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-        <h3 className="text-[12px] font-semibold text-white mb-4 flex items-center gap-2">
-          <Plus className="w-4 h-4 text-[#7C3AED]" />
-          Criar Regra
-        </h3>
+    <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+      <div className="space-y-4">
+        <section className="overflow-hidden rounded-[1.75rem] border border-border-default bg-card shadow-[0_20px_50px_-36px_hsl(var(--foreground)/0.25)]">
+          <div className="panel-highlight border-b border-border-subtle px-5 py-5 md:px-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-text-muted">Rule Builder</p>
+                <h3 className="mt-2 flex items-center gap-2 font-display text-xl font-bold tracking-[-0.04em] text-text-primary">
+                  <Plus className="size-5 text-primary" />
+                  Multi-condition rules
+                </h3>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-text-secondary">
+                  Combine métricas com lógica <strong className="text-text-primary">AND</strong> ou <strong className="text-text-primary">OR</strong> para definir alertas e sugestões acionáveis.
+                </p>
+              </div>
 
-        {/* Name */}
-        <Input
-          value={ruleName}
-          onChange={e => setRuleName(e.target.value)}
-          placeholder="Nome da regra (opcional)"
-          className="h-8 text-[12px] bg-[#F8F9FC] border-[#E4E7EF] text-white placeholder:text-[#5A6478] mb-3 rounded-lg"
-        />
-
-        {/* Conditions */}
-        <div className="space-y-2 mb-3">
-          {conditions.map((cond, idx) => (
-            <div key={idx} className="flex items-center gap-2">
-              {/* Metric */}
-              <Select value={cond.metric} onValueChange={v => updateCondition(idx, { metric: v })}>
-                <SelectTrigger className="h-8 w-[110px] text-[12px] bg-[#F8F9FC] border-[#E4E7EF] text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-[#FFFFFF] border-[#E4E7EF]">
-                  {METRICS.map(m => (
-                    <SelectItem key={m} value={m} className="text-[12px] text-white">{m}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Operator */}
-              <Select value={cond.operator} onValueChange={v => updateCondition(idx, { operator: v as RuleCondition['operator'] })}>
-                <SelectTrigger className="h-8 w-[130px] text-[12px] bg-[#F8F9FC] border-[#E4E7EF] text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-[#FFFFFF] border-[#E4E7EF]">
-                  {OPERATORS.map(o => (
-                    <SelectItem key={o.value} value={o.value} className="text-[12px] text-white">{o.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Value */}
-              <Input
-                type="number"
-                value={cond.value || ''}
-                onChange={e => updateCondition(idx, { value: parseFloat(e.target.value) || 0 })}
-                placeholder="Valor"
-                className="h-8 w-[80px] text-[12px] bg-[#F8F9FC] border-[#E4E7EF] text-white placeholder:text-[#5A6478] rounded-lg"
-              />
-
-              {/* Remove condition */}
-              {conditions.length > 1 && (
-                <button
-                  onClick={() => removeCondition(idx)}
-                  className="text-[#5A6478] hover:text-[#DC2626] transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* Add condition + logic toggle row */}
-        <div className="flex items-center gap-2 mb-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={addCondition}
-            className="h-7 text-[10px] border-[#E4E7EF] bg-[#F8F9FC] text-[#9BA5B7] hover:text-white hover:border-[#7C3AED]"
-          >
-            <Plus className="w-3 h-3 mr-1" />
-            Condição
-          </Button>
-
-          {conditions.length > 1 && (
-            <div className="flex items-center bg-[#F8F9FC] border border-[#E4E7EF] rounded-lg overflow-hidden ml-auto">
-              <button
-                onClick={() => setLogic('AND')}
-                className={`px-3 py-1 text-[10px] font-semibold transition-colors ${
-                  logic === 'AND'
-                    ? 'bg-[#7C3AED] text-white'
-                    : 'text-[#9BA5B7] hover:text-white'
-                }`}
-              >
-                AND
-              </button>
-              <button
-                onClick={() => setLogic('OR')}
-                className={`px-3 py-1 text-[10px] font-semibold transition-colors ${
-                  logic === 'OR'
-                    ? 'bg-[#7C3AED] text-white'
-                    : 'text-[#9BA5B7] hover:text-white'
-                }`}
-              >
-                OR
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Action */}
-        <div className="mb-4">
-          <label className="text-[10px] text-[#5A6478] uppercase tracking-wider mb-1 block">Ação</label>
-          <Select value={action} onValueChange={v => setAction(v as Rule['action'])}>
-            <SelectTrigger className="h-8 text-[12px] bg-[#F8F9FC] border-[#E4E7EF] text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#FFFFFF] border-[#E4E7EF]">
-              {ACTIONS.map(a => (
-                <SelectItem key={a} value={a} className="text-[12px] text-white">{a}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Submit */}
-        <Button
-          onClick={createRule}
-          disabled={!canCreate}
-          className="w-full h-9 text-[12px] font-semibold bg-[#7C3AED] hover:bg-[#5558e6] text-white rounded-lg"
-        >
-          <Plus className="w-3.5 h-3.5 mr-1" />
-          Criar Regra
-        </Button>
-      </div>
-
-      {/* ================================================================ */}
-      {/* RIGHT — Active Rules                                             */}
-      {/* ================================================================ */}
-      <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-        <h3 className="text-[12px] font-semibold text-white mb-3 flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-[#7C3AED]" />
-          Regras Ativas ({rules.filter(r => r.active).length}/{rules.length})
-        </h3>
-
-        {rules.length === 0 ? (
-          <p className="text-[12px] text-[#5A6478] text-center py-10">Nenhuma regra criada ainda</p>
-        ) : (
-          <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
-            {rules.map(rule => (
-              <div
-                key={rule.id}
-                className={`bg-[#F8F9FC] border rounded-lg p-3 transition-all ${
-                  rule.active ? 'border-[#7C3AED]/30' : 'border-[#E4E7EF] opacity-50'
-                }`}
-              >
-                {/* Header row */}
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[12px] font-medium text-white flex-1 truncate">{rule.name}</span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${actionColor(rule.action)}`}>
-                    {rule.action}
-                  </span>
+              <div className="grid grid-cols-2 gap-2 sm:min-w-[220px]">
+                <div className="rounded-2xl border border-border-subtle bg-background/80 px-3 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-text-muted">Regras</p>
+                  <p className="mt-1 text-lg font-semibold text-text-primary">{rules.length}</p>
                 </div>
-
-                {/* Conditions inline */}
-                <div className="flex flex-wrap gap-1 mb-2">
-                  {rule.conditions.map((c, ci) => (
-                    <span key={ci} className="inline-flex items-center">
-                      <span className="text-[10px] bg-[#FFFFFF] text-[#0F1523] px-2 py-0.5 rounded">
-                        {c.metric} {operatorSymbol(c.operator)} {c.value}
-                      </span>
-                      {ci < rule.conditions.length - 1 && (
-                        <span className="text-[10px] text-[#7C3AED] font-semibold mx-1">{rule.logic}</span>
-                      )}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Actions row */}
-                <div className="flex items-center gap-2">
-                  <Switch
-                    checked={rule.active}
-                    onCheckedChange={() => toggleRule(rule.id)}
-                    className="data-[state=checked]:bg-[#7C3AED] scale-75 origin-left"
-                  />
-                  <span className="text-[10px] text-[#5A6478] flex-1">
-                    {rule.active ? 'Ativa' : 'Inativa'}
-                  </span>
-                  <button
-                    onClick={() => deleteRule(rule.id)}
-                    className="text-[#5A6478] hover:text-[#DC2626] transition-colors"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                <div className="rounded-2xl border border-border-subtle bg-background/80 px-3 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-text-muted">Ativas</p>
+                  <p className="mt-1 text-lg font-semibold text-text-primary">{activeCount}</p>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
-        )}
-      </div>
 
-      {/* ================================================================ */}
-      {/* BOTTOM — Suggested Rules (full width)                            */}
-      {/* ================================================================ */}
-      <div className="lg:col-span-2 bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-up">
-        <h3 className="text-[12px] font-semibold text-white mb-3 flex items-center gap-2">
-          <Zap className="w-4 h-4 text-[#7C3AED]" />
-          Regras Sugeridas
-        </h3>
+          <div className="space-y-5 px-5 py-5 md:px-6">
+            <div className="space-y-2">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-muted">Nome da regra</label>
+              <Input
+                value={ruleName}
+                onChange={(e) => setRuleName(e.target.value)}
+                placeholder="Ex: Escalar quando ROAS sustentar acima da meta"
+                className="h-11 rounded-2xl border-border-default bg-background text-text-primary placeholder:text-text-muted"
+              />
+            </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-          {SUGGESTED_RULES.map((suggested, i) => (
-            <button
-              key={i}
-              onClick={() => adoptSuggested(suggested)}
-              className="bg-[#F8F9FC] hover:bg-[#E4E7EF] border border-[#E4E7EF] hover:border-[#7C3AED]/40 rounded-lg p-3 text-left transition-all group"
-            >
-              <p className="text-[12px] font-semibold text-white mb-1 truncate">{suggested.name}</p>
-              <div className="space-y-0.5 mb-2">
-                {suggested.conditions.map((c, ci) => (
-                  <p key={ci} className="text-[10px] text-[#9BA5B7]">
-                    {c.metric} {operatorSymbol(c.operator)} {c.value}
-                    {ci < suggested.conditions.length - 1 && (
-                      <span className="text-[#7C3AED] font-semibold ml-1">{suggested.logic}</span>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border-subtle bg-secondary/50 px-3 py-3">
+              <div className="flex items-center gap-2">
+                <span className="flex size-9 items-center justify-center rounded-xl border border-border-subtle bg-card text-text-muted">
+                  <GitBranch className="size-4" />
+                </span>
+                <div>
+                  <p className="text-xs font-semibold text-text-primary">Lógica entre condições</p>
+                  <p className="text-[11px] text-text-secondary">Use AND para restringir ou OR para ampliar o gatilho.</p>
+                </div>
+              </div>
+
+              <div className="inline-flex rounded-2xl border border-border-default bg-background p-1">
+                {(['AND', 'OR'] as const).map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => setLogic(option)}
+                    className={cn(
+                      'rounded-xl px-4 py-2 text-xs font-semibold transition-colors',
+                      logic === option ? 'bg-primary text-primary-foreground' : 'text-text-secondary hover:text-text-primary',
                     )}
-                  </p>
+                  >
+                    {option}
+                  </button>
                 ))}
               </div>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${actionColor(suggested.action)}`}>
-                {suggested.action}
-              </span>
-            </button>
-          ))}
-        </div>
+            </div>
+
+            <div className="space-y-3">
+              {conditions.map((condition, idx) => (
+                <div key={idx} className="rounded-[1.4rem] border border-border-default bg-background p-4 shadow-sm">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-muted">Condição {idx + 1}</p>
+                      <p className="mt-1 text-xs text-text-secondary">Escolha métrica, operador e limiar.</p>
+                    </div>
+                    {conditions.length > 1 ? (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeCondition(idx)}
+                        className="size-9 rounded-2xl text-text-muted hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    ) : null}
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-[1.1fr_1fr_0.8fr]">
+                    <Select value={condition.metric} onValueChange={(value) => updateCondition(idx, { metric: value })}>
+                      <SelectTrigger className="h-11 rounded-2xl border-border-default bg-card text-text-primary">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="border-border-default bg-card text-text-primary">
+                        {METRICS.map((metric) => (
+                          <SelectItem key={metric} value={metric}>{metric}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Select
+                      value={condition.operator}
+                      onValueChange={(value) => updateCondition(idx, { operator: value as RuleCondition['operator'] })}
+                    >
+                      <SelectTrigger className="h-11 rounded-2xl border-border-default bg-card text-text-primary">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="border-border-default bg-card text-text-primary">
+                        {OPERATORS.map((operator) => (
+                          <SelectItem key={operator.value} value={operator.value}>{operator.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Input
+                      type="number"
+                      value={condition.value || ''}
+                      onChange={(e) => updateCondition(idx, { value: parseFloat(e.target.value) || 0 })}
+                      placeholder="Valor"
+                      className="h-11 rounded-2xl border-border-default bg-card text-text-primary placeholder:text-text-muted"
+                    />
+                  </div>
+
+                  {idx < conditions.length - 1 ? (
+                    <div className="mt-3 flex items-center justify-center">
+                      <span className="rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-[10px] font-bold tracking-[0.18em] text-primary">
+                        {logic}
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <Button
+                variant="outline"
+                onClick={addCondition}
+                className="h-10 rounded-2xl border-border-default bg-background text-text-secondary hover:bg-accent hover:text-text-primary"
+              >
+                <Plus className="mr-1 size-4" />
+                Adicionar condição
+              </Button>
+
+              <div className="rounded-2xl border border-border-subtle bg-secondary/40 px-3 py-2 text-[11px] text-text-secondary">
+                <span className="font-semibold text-text-primary">Preview:</span> {logicPreview}
+              </div>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold uppercase tracking-[0.18em] text-text-muted">Ação</label>
+                <Select value={action} onValueChange={(value) => setAction(value as Rule['action'])}>
+                  <SelectTrigger className="h-11 rounded-2xl border-border-default bg-background text-text-primary">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="border-border-default bg-card text-text-primary">
+                    {ACTIONS.map((item) => (
+                      <SelectItem key={item} value={item}>{item}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button onClick={createRule} disabled={!canCreate} className="h-11 rounded-2xl px-6 text-sm font-semibold shadow-[0_18px_36px_-22px_hsl(var(--primary)/0.9)]">
+                <Plus className="mr-1 size-4" />
+                Criar regra
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <section className="overflow-hidden rounded-[1.75rem] border border-border-default bg-card shadow-[0_20px_50px_-36px_hsl(var(--foreground)/0.22)]">
+          <div className="flex items-center justify-between border-b border-border-subtle px-5 py-4 md:px-6">
+            <div>
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                <Sparkles className="size-4 text-primary" />
+                Regras sugeridas
+              </h3>
+              <p className="mt-1 text-xs text-text-secondary">Atalhos para cenários comuns de pausa, escala e alerta.</p>
+            </div>
+          </div>
+
+          <div className="grid gap-3 px-5 py-5 md:grid-cols-2 xl:grid-cols-3 md:px-6">
+            {SUGGESTED_RULES.map((suggested, index) => (
+              <button
+                key={index}
+                onClick={() => adoptSuggested(suggested)}
+                className="rounded-[1.4rem] border border-border-default bg-background p-4 text-left transition-all hover:border-border-hover hover:shadow-[0_16px_36px_-30px_hsl(var(--foreground)/0.22)]"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-text-primary">{suggested.name}</p>
+                    <p className="mt-2 text-xs leading-5 text-text-secondary">
+                      {suggested.conditions.map((condition, i) => (
+                        <span key={i}>
+                          {condition.metric} {operatorSymbol(condition.operator)} {condition.value}
+                          {i < suggested.conditions.length - 1 ? <strong className="mx-1 text-primary">{suggested.logic}</strong> : null}
+                        </span>
+                      ))}
+                    </p>
+                  </div>
+                  <span className={cn('rounded-full border px-2 py-1 text-[10px] font-semibold', actionColor(suggested.action))}>
+                    {suggested.action}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
       </div>
+
+      <section className="overflow-hidden rounded-[1.75rem] border border-border-default bg-card shadow-[0_20px_50px_-36px_hsl(var(--foreground)/0.22)]">
+        <div className="flex items-center justify-between border-b border-border-subtle px-5 py-4 md:px-6">
+          <div>
+            <h3 className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+              <ShieldCheck className="size-4 text-primary" />
+              Regras ativas
+            </h3>
+            <p className="mt-1 text-xs text-text-secondary">{activeCount}/{rules.length} ligadas no momento.</p>
+          </div>
+        </div>
+
+        <div className="hide-scrollbar max-h-[960px] space-y-3 overflow-y-auto px-5 py-5 md:px-6">
+          {rules.length === 0 ? (
+            <div className="rounded-[1.4rem] border border-dashed border-border-default bg-secondary/30 px-6 py-14 text-center">
+              <p className="text-sm font-semibold text-text-primary">Nenhuma regra criada ainda</p>
+              <p className="mt-2 text-xs text-text-secondary">Monte sua primeira automação no builder ao lado.</p>
+            </div>
+          ) : (
+            rules.map((rule) => (
+              <article
+                key={rule.id}
+                className={cn(
+                  'rounded-[1.4rem] border p-4 transition-all',
+                  rule.active ? 'border-primary/20 bg-primary/5' : 'border-border-default bg-background/70 opacity-75',
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="truncate text-sm font-semibold text-text-primary">{rule.name}</h4>
+                      <span className={cn('rounded-full border px-2 py-1 text-[10px] font-semibold', actionColor(rule.action))}>
+                        {rule.action}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-text-muted">
+                      Criada em {new Date(rule.createdAt).toLocaleDateString('pt-BR')}
+                    </p>
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => deleteRule(rule.id)}
+                    className="size-9 rounded-2xl text-text-muted hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  {rule.conditions.map((condition, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <span className="rounded-full border border-border-default bg-card px-3 py-1.5 text-[11px] font-medium text-text-primary">
+                        {condition.metric} {operatorSymbol(condition.operator)} {condition.value}
+                      </span>
+                      {index < rule.conditions.length - 1 ? (
+                        <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold tracking-[0.18em] text-primary">
+                          {rule.logic}
+                        </span>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-4 flex items-center justify-between rounded-2xl border border-border-subtle bg-background/70 px-3 py-2">
+                  <div>
+                    <p className="text-xs font-semibold text-text-primary">{rule.active ? 'Regra ativa' : 'Regra inativa'}</p>
+                    <p className="text-[11px] text-text-secondary">Controle rápido para habilitar ou pausar este gatilho.</p>
+                  </div>
+                  <Switch checked={rule.active} onCheckedChange={() => toggleRule(rule.id)} className="data-[state=checked]:bg-primary" />
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
     </div>
   );
 }

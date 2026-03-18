@@ -318,10 +318,10 @@ export default function OverviewTab() {
           return [
             { label: `ROAS Médio ${roasSemaphore}`, value: `${avgRoas.toFixed(1)}x`, subtitle: 'Retorno sobre investimento', delta: calcDelta(avgRoas, prevRoas), valueClassName: roasValueClass, isHero: true, sparklineData: roasSparkline, sparklineColor: 'hsl(var(--primary))' },
             { label: 'Gasto Total', value: formatCurrency(totalSpend, currency), subtitle: 'Período selecionado', delta: calcDelta(totalSpend, prevSpend), sparklineData: spendSparkline, sparklineColor: 'hsl(var(--data-yellow))' },
-            { label: revenueLabel, value: formatCurrency(totalRevenue, currency), subtitle: 'Total gerado', delta: calcDelta(totalRevenue, prevRevenue), valueClassName: 'text-success', sparklineData: revenueSparkline, sparklineColor: 'hsl(var(--success))' },
+            { label: revenueLabel, value: formatCurrency(totalRevenue, currency), subtitle: 'Total gerado', delta: calcDelta(totalRevenue, prevRevenue), valueClassName: 'text-emerald-400', sparklineData: revenueSparkline, sparklineColor: 'hsl(var(--success))' },
             { label: conversionLabel, value: totalSales.toString(), subtitle: conversionSubtitle, delta: calcDelta(totalSales, prevSales), sparklineData: salesSparkline, sparklineColor: 'hsl(var(--data-purple))' },
             { label: 'CTR Médio', value: `${avgCtr.toFixed(1)}%`, subtitle: 'Taxa de cliques', delta: calcDelta(avgCtr, prevCtr), sparklineData: ctrSparkline, sparklineColor: 'hsl(var(--data-blue))' },
-            { label: costLabel, value: `${currency} ${costPerSale.toFixed(2)}`, subtitle: costSubtitle, delta: calcDelta(costPerSale, prevCpv), valueClassName: 'text-warning', sparklineColor: 'hsl(var(--warning))' },
+            { label: costLabel, value: `${currency} ${costPerSale.toFixed(2)}`, subtitle: costSubtitle, delta: calcDelta(costPerSale, prevCpv), valueClassName: 'text-white', sparklineColor: 'hsl(var(--warning))' },
           ];
         })().map((kpi, i) => (
           <div

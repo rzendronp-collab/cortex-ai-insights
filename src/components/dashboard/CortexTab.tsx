@@ -12,6 +12,7 @@ import CortexForecastPanel from '@/components/cortex/CortexForecast';
 import CortexConfirmModal from '@/components/cortex/CortexConfirmModal';
 import CortexHistory from '@/components/cortex/CortexHistory';
 import CortexFatigue from '@/components/cortex/CortexFatigue';
+import CortexActionPlan, { calculateActionConfidence } from '@/components/cortex/CortexActionPlan';
 import { Button } from '@/components/ui/button';
 import { Loader2, Zap, Settings2, Clock, BarChart3, TrendingUp, History, Flame } from 'lucide-react';
 import { toast } from 'sonner';
@@ -29,16 +30,18 @@ const SUB_TABS: { key: SubTab; label: string; icon: typeof Zap }[] = [
 
 export default function CortexTab() {
   const { analysisData, activeAccountIds, currencySymbol } = useDashboard();
-  const { adAccounts } = useMetaConnection();
   const { creatives, loading: creativesLoading, analyzeCreatives, generatedAds, generating: adGenerating, generateAdCopy } = useCortexCreatives();
   const { forecast, loading: forecastLoading, generateForecast } = useCortexForecast();
   const { executing, executeAction, history: cortexHistory, historyLoading, fetchHistory } = useCortexActions();
   const { results: fatigueResults, loading: fatigueLoading, analyzeFatigue } = useCortexFatigue();
   const {
-    plan, isGenerating, isApplying, appliedCount,
-    generatePlan, applyAction, applyAllActions, simulatePlan, fetchHistory: fetchActionHistory,
-    history: actionHistory,
-  } = useActionPlan();
+    plan,
+    isGenerating,
+    generatePlan,
+    applyAction,
+    executeAction: _unused,
+    fetchHistory: fetchActionHistory,
+  } = useActionPlan() as any;
 
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('action-plan');
   const [scopeOpen, setScopeOpen] = useState(false);
@@ -46,13 +49,17 @@ export default function CortexTab() {
     try {
       const saved = JSON.parse(localStorage.getItem('cortex_scope') || '{}');
       return saved.accountIds || activeAccountIds;
-    } catch { return activeAccountIds; }
+    } catch {
+      return activeAccountIds;
+    }
   });
   const [lastAnalysis, setLastAnalysis] = useState<string | null>(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('cortex_scope') || '{}');
       return saved.analyzedAt || null;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   });
   const [analyzing, setAnalyzing] = useState(false);
   const [progress, setProgress] = useState('');
@@ -103,8 +110,9 @@ export default function CortexTab() {
       setProgress('Carregando histórico...');
       await fetchHistory(scopeIds);
 
-      setLastAnalysis(new Date().toISOString());
-      localStorage.setItem('cortex_scope', JSON.stringify({ accountIds: scopeIds, analyzedAt: new Date().toISOString() }));
+      const now = new Date().toISOString();
+      setLastAnalysis(now);
+      localStorage.setItem('cortex_scope', JSON.stringify({ accountIds: scopeIds, analyzedAt: now }));
       toast.success('Análise CORTEX completa!');
     } catch (err: any) {
       toast.error(err?.message || 'Erro na análise.');
@@ -126,11 +134,13 @@ export default function CortexTab() {
       title: creative.name,
       reasoning: creative.reasoning,
       expectedImpact: creative.action,
-      apiCall: isPause ? {
-        method: 'POST',
-        endpoint: creative.id,
-        body: { status: 'PAUSED' },
-      } : undefined,
+      apiCall: isPause
+        ? {
+            method: 'POST',
+            endpoint: creative.id,
+            body: { status: 'PAUSED' },
+          }
+        : undefined,
       status: 'pending',
       metricsBefore: {
         roas: creative.roas,
@@ -155,9 +165,7 @@ export default function CortexTab() {
   const handleConfirmExecute = async () => {
     if (!confirmAction?.action) return;
     const success = await executeAction(confirmAction.action);
-    if (success) {
-      await fetchHistory(scopeIds);
-    }
+    if (success) await fetchHistory(scopeIds);
     setConfirmAction(null);
   };
 
@@ -173,60 +181,64 @@ export default function CortexTab() {
 
   return (
     <div className="space-y-5">
-      <div className="overflow-hidden rounded-[1.75rem] border border-border-highlight bg-card shadow-[0_24px_60px_-38px_hsl(var(--primary)/0.45)]">
-        <div className="panel-highlight border-b border-border-subtle px-5 py-5 md:px-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div className="min-w-0">
-              <div className="flex items-center gap-3">
-                <div className="flex size-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-[0_18px_40px_-24px_hsl(var(--primary)/0.8)]">
-                  <Zap className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="font-display text-xl font-bold tracking-[-0.04em] text-text-primary">CORTEX Intelligence</h2>
-                  <p className="mt-1 text-sm text-text-secondary">Análise profunda · execução real · histórico comparado</p>
-                </div>
+      <div className="rounded-xl border border-[hsl(var(--accent)/0.15)] bg-gradient-to-r from-[hsl(var(--accent)/0.08)] to-[hsl(262_83%_58%/0.05)] p-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-xl bg-[hsl(var(--accent)/0.18)] text-[hsl(var(--accent))]">
+                <Zap className="h-5 w-5" />
               </div>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2.5">
-              {lastTimeFormatted ? (
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-border-default bg-background/80 px-3 py-1.5 text-[11px] font-medium text-text-secondary">
-                  <Clock className="h-3.5 w-3.5 text-primary" />
-                  Última análise {lastTimeFormatted}
-                </div>
-              ) : null}
-
-              <button
-                onClick={() => setScopeOpen(true)}
-                className="inline-flex items-center gap-2 rounded-2xl border border-border-default bg-background px-3.5 py-2 text-xs font-semibold text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary"
-              >
-                <Settings2 className="h-4 w-4" />
-                Contas selecionadas: {scopeIds.length}
-              </button>
-
-              <Button
-                onClick={handleFullAnalysis}
-                disabled={analyzing || scopeIds.length === 0}
-                className="h-11 rounded-2xl px-5 text-sm font-semibold shadow-[0_18px_36px_-22px_hsl(var(--primary)/0.85)]"
-              >
-                {analyzing ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" />{progress || 'Analisando...'}</>
-                ) : (
-                  <><Zap className="h-4 w-4" />Executar análise completa</>
-                )}
-              </Button>
+              <div>
+                <h2 className="font-display text-xl font-bold tracking-[-0.04em] text-text-primary">⚡ CORTEX Intelligence</h2>
+                <p className="mt-1 text-sm text-text-secondary">Análise profunda · Execução real · Histórico comparado</p>
+              </div>
             </div>
           </div>
 
-          {analyzing ? (
-            <div className="mt-4">
-              <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                <div className="gradient-primary h-full w-3/5 rounded-full animate-pulse" />
+          <div className="flex flex-wrap items-center gap-2.5">
+            {lastTimeFormatted ? (
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-border-default bg-background/80 px-3 py-1.5 text-[11px] font-medium text-text-secondary">
+                <Clock className="h-3.5 w-3.5 text-primary" />
+                Última análise {lastTimeFormatted}
               </div>
-              <p className="mt-2 text-xs font-medium text-primary">{progress}</p>
-            </div>
-          ) : null}
+            ) : null}
+
+            <button
+              onClick={() => setScopeOpen(true)}
+              className="inline-flex items-center gap-2 rounded-2xl border border-border-default bg-background px-3.5 py-2 text-xs font-semibold text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary"
+            >
+              <Settings2 className="h-4 w-4" />
+              Contas selecionadas: {scopeIds.length}
+            </button>
+
+            <Button
+              onClick={handleFullAnalysis}
+              disabled={analyzing || scopeIds.length === 0}
+              className="h-11 rounded-2xl px-5 text-sm font-semibold shadow-[0_18px_36px_-22px_hsl(var(--primary)/0.85)]"
+            >
+              {analyzing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {progress || 'Analisando...'}
+                </>
+              ) : (
+                <>
+                  <Zap className="h-4 w-4" />
+                  Executar análise completa
+                </>
+              )}
+            </Button>
+          </div>
         </div>
+
+        {analyzing ? (
+          <div className="mt-4">
+            <div className="h-2 overflow-hidden rounded-full bg-secondary">
+              <div className="gradient-primary h-full w-3/5 animate-pulse rounded-full" />
+            </div>
+            <p className="mt-2 text-xs font-medium text-primary">{progress}</p>
+          </div>
+        ) : null}
       </div>
 
       <div className="flex items-center gap-1 rounded-2xl border border-border-default bg-card p-1.5 shadow-sm">
@@ -237,10 +249,10 @@ export default function CortexTab() {
               key={tab.key}
               onClick={() => setActiveSubTab(tab.key)}
               className={cn(
-                'flex items-center gap-1.5 rounded-xl px-4 py-2 text-[11px] font-medium transition-all duration-150',
+                'flex items-center gap-1.5 rounded-xl border px-4 py-2 text-[11px] font-medium transition-all duration-150',
                 activeSubTab === tab.key
-                  ? 'bg-primary/10 text-primary border border-primary/20'
-                  : 'text-text-muted hover:text-text-primary',
+                  ? 'border-[hsl(var(--accent)/0.25)] bg-[hsl(var(--accent)/0.15)] text-indigo-300'
+                  : 'border-transparent text-slate-500 hover:text-slate-300',
               )}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -289,12 +301,7 @@ export default function CortexTab() {
 
       {activeSubTab === 'history' && <CortexHistory history={cortexHistory} loading={historyLoading} />}
 
-      <CortexScopeSelector
-        open={scopeOpen}
-        onClose={() => setScopeOpen(false)}
-        onConfirm={handleScopeConfirm}
-        selectedIds={scopeIds}
-      />
+      <CortexScopeSelector open={scopeOpen} onClose={() => setScopeOpen(false)} onConfirm={handleScopeConfirm} selectedIds={scopeIds} />
 
       <CortexConfirmModal
         open={!!confirmAction}
@@ -311,39 +318,13 @@ export default function CortexTab() {
   );
 }
 
-function calculateConfidence(action: any, campaigns: any[]): { score: number; label: string; tone: string; bar: string } {
-  let score = 50;
-
-  if (campaigns.length >= 5) score += 10;
-  else if (campaigns.length >= 3) score += 5;
-
-  if (action.valor_atual && action.valor_novo) score += 10;
-  if (action.motivo && action.motivo.length > 20) score += 5;
-
-  const campaign = campaigns.find((c: any) => c.id === action.campaign_id || c.name === action.campaign_name);
-  if (campaign) {
-    const spend = campaign.spend || 0;
-    const revenue = campaign.revenue || 0;
-    const roas = spend > 0 ? revenue / spend : 0;
-
-    if (roas < 1 || roas > 5) score += 15;
-    else if (roas < 1.5 || roas > 4) score += 10;
-
-    if (spend > 500) score += 10;
-    else if (spend > 100) score += 5;
-  }
-
-  if (action.prioridade === 1) score += 5;
-
-  score = Math.min(99, Math.max(20, score));
-
-  if (score >= 80) return { score, label: 'Alta', tone: 'text-success', bar: 'bg-success' };
-  if (score >= 60) return { score, label: 'Média', tone: 'text-warning', bar: 'bg-warning' };
-  return { score, label: 'Baixa', tone: 'text-destructive', bar: 'bg-destructive' };
-}
-
 function ActionPlanSection({
-  plan, isGenerating, campaigns, generatePlan, applyAction, currencySymbol,
+  plan,
+  isGenerating,
+  campaigns,
+  generatePlan,
+  applyAction,
+  currencySymbol,
 }: {
   plan: any;
   isGenerating: boolean;
@@ -419,31 +400,19 @@ function ActionPlanSection({
             </h4>
             <div className={cn('space-y-3 border-l-2 pl-4', priority.color)}>
               {actions.map((action: any) => {
-                const confidence = calculateConfidence(action, campaigns);
+                const confidenceScore = calculateActionConfidence(action, campaigns);
                 return (
                   <article key={action.campaign_id} className="rounded-[1.4rem] border border-border-default bg-card p-4 transition-all hover:border-border-hover hover:shadow-[0_16px_36px_-30px_hsl(var(--foreground)/0.22)]">
                     <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="truncate text-sm font-semibold text-text-primary">{action.campaign_name}</p>
-                          <span className={cn('rounded-full px-2 py-1 text-[10px] font-semibold', confidence.tone, 'bg-secondary')}>
-                            {confidence.score}% confiança
-                          </span>
+                          <CortexActionPlan score={confidenceScore} />
                         </div>
                         <p className="mt-2 text-xs leading-6 text-text-secondary">{action.motivo}</p>
                       </div>
 
-                      <div className="grid gap-3 sm:grid-cols-[190px_auto_auto] xl:items-center">
-                        <div className="rounded-2xl border border-border-subtle bg-background/80 px-3 py-3">
-                          <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.16em] text-text-muted">
-                            <span>Confiança</span>
-                            <span className={confidence.tone}>{confidence.label}</span>
-                          </div>
-                          <div className="h-2 overflow-hidden rounded-full bg-secondary">
-                            <div className={cn('h-full rounded-full', confidence.bar)} style={{ width: `${confidence.score}%` }} />
-                          </div>
-                        </div>
-
+                      <div className="grid gap-3 sm:grid-cols-[auto_auto] xl:items-center">
                         <div className="rounded-2xl border border-border-subtle bg-background/80 px-3 py-3 text-xs text-text-secondary">
                           <p>Impacto</p>
                           <p className="mt-1 font-semibold text-success">{action.impacto_estimado}</p>

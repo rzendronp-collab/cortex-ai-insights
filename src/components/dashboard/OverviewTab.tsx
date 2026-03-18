@@ -57,7 +57,7 @@ export default function OverviewTab() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const {
     analysisData, isStale, selectedAccountId, currencySymbol, setActiveTab, analyzeRef,
-    activeAccountIds, consolidatedData, analysisCache, selectedPeriod, dateRange,
+    activeAccountIds, consolidatedData, analysisCache, selectedPeriod, setSelectedPeriod, dateRange,
     setSelectedAccountId, setSelectedAccountName, setSelectedAccountCurrency,
     accountObjective,
   } = useDashboard();

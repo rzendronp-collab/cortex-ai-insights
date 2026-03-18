@@ -623,8 +623,8 @@ export default function OverviewTab() {
 
       {/* ─── Budget Distribution ─── */}
       {activeCampaigns.length > 0 && (
-        <div className="bg-[#FFFFFF] border border-[#E4E7EF] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '350ms' }}>
-          <h3 className="font-display font-semibold text-[14px] text-[#0F1523] mb-4">Distribuição de Investimento</h3>
+        <div className="bg-[#0D1424] border border-white/[0.06] rounded-xl p-5 animate-fade-in opacity-0 [animation-fill-mode:forwards]" style={{ animationDelay: '350ms' }}>
+          <h3 className="font-display font-semibold text-[14px] text-white mb-4">Distribuição de Investimento</h3>
           <div className="flex items-center gap-6">
             <ResponsiveContainer width={160} height={160}>
               <PieChart>

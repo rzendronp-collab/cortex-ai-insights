@@ -248,7 +248,7 @@ export default function DashboardSidebar({ onCloseMobile }: DashboardSidebarProp
                   const isOpen = openBMs[bmName] ?? true;
 
                   return (
-                    <section key={bmName} className="rounded-xl border border-[hsl(0_0%_100%/0.06)] bg-[hsl(var(--bg-card))]">
+                    <section key={bmName} className="rounded-xl border border-[hsl(0_0%_100%/0.06)] bg-[hsl(var(--bg-card-v5))]">
                       <button
                         onClick={() => setOpenBMs((prev) => ({ ...prev, [bmName]: !isOpen }))}
                         className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition-colors hover:bg-[hsl(0_0%_100%/0.04)]"
